@@ -1,0 +1,45 @@
+import { useNavigate } from "react-router-dom";
+import { Wind, Notebook, Brain, Moon, HandFist, Flower } from "@phosphor-icons/react";
+import { ArrowRight } from "@phosphor-icons/react";
+
+const tools = [
+  { path: "/herramientas/journal", label: "Diario", desc: "Escribí lo que sentís", icon: Notebook, color: "bg-accent/15 text-accent-foreground" },
+  { path: "/herramientas/pensamientos", label: "Registro de Pensamientos", desc: "Técnica TCC paso a paso", icon: Brain, color: "bg-secondary text-secondary-foreground" },
+  { path: "/herramientas/suenos", label: "Registro de Sueños", desc: "Anotá y explorá tus sueños", icon: Moon, color: "bg-primary/10 text-foreground" },
+  { path: "/herramientas/respiracion", label: "Respiración Guiada", desc: "Patrones para regular tu cuerpo", icon: Wind, color: "bg-success/10 text-foreground" },
+  { path: "/herramientas/grounding", label: "Grounding 5-4-3-2-1", desc: "Anclaje con los 5 sentidos", icon: HandFist, color: "bg-destructive/10 text-foreground" },
+  { path: "/herramientas/mindfulness", label: "Mindfulness", desc: "Timer de meditación", icon: Flower, color: "bg-accent/10 text-foreground" },
+];
+
+export default function Tools() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="px-5 pt-14 pb-4 safe-area-top">
+      <h1 className="mb-2 font-display text-xl font-semibold">Herramientas</h1>
+      <p className="mb-6 text-sm text-muted-foreground">Recursos para tu bienestar diario.</p>
+
+      <div className="space-y-3">
+        {tools.map((tool) => {
+          const Icon = tool.icon;
+          return (
+            <button
+              key={tool.path}
+              onClick={() => navigate(tool.path)}
+              className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
+            >
+              <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${tool.color}`}>
+                <Icon size={22} weight="duotone" />
+              </div>
+              <div className="flex-1">
+                <p className="font-display text-sm font-medium">{tool.label}</p>
+                <p className="text-xs text-muted-foreground">{tool.desc}</p>
+              </div>
+              <ArrowRight size={14} className="text-muted-foreground" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
