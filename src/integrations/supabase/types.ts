@@ -14,7 +14,156 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string | null
+          id: string
+          mood_score: number | null
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string | null
+          id?: string
+          mood_score?: number | null
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string | null
+          id?: string
+          mood_score?: number | null
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      exercise_sessions: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          duration_seconds: number | null
+          exercise_name: string | null
+          exercise_type: string
+          id: string
+          mood_after: number | null
+          mood_before: number | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          exercise_name?: string | null
+          exercise_type: string
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          exercise_name?: string | null
+          exercise_type?: string
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patient_app_profiles: {
+        Row: {
+          areas_of_interest: string[] | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          life_stage: string | null
+          onboarding_completed: boolean | null
+          recent_feelings: string[] | null
+          treatment_status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          areas_of_interest?: string[] | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          life_stage?: string | null
+          onboarding_completed?: boolean | null
+          recent_feelings?: string[] | null
+          treatment_status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          areas_of_interest?: string[] | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          life_stage?: string | null
+          onboarding_completed?: boolean | null
+          recent_feelings?: string[] | null
+          treatment_status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patients_intake: {
+        Row: {
+          age: number | null
+          created_at: string | null
+          email: string | null
+          first_name: string
+          id: string
+          insurance: string | null
+          last_name: string
+          modality: string | null
+          phone: string | null
+          reason: string | null
+          status: string | null
+          user_id: string | null
+          zone: string | null
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          insurance?: string | null
+          last_name: string
+          modality?: string | null
+          phone?: string | null
+          reason?: string | null
+          status?: string | null
+          user_id?: string | null
+          zone?: string | null
+        }
+        Update: {
+          age?: number | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          insurance?: string | null
+          last_name?: string
+          modality?: string | null
+          phone?: string | null
+          reason?: string | null
+          status?: string | null
+          user_id?: string | null
+          zone?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
