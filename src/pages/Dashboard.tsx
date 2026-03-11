@@ -1,8 +1,10 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sun, Moon, CloudSun, Stethoscope, ArrowRight } from "@phosphor-icons/react";
+import { Sun, Moon, CloudSun, Stethoscope, ArrowRight, Wind } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const moodShapes = [
   { value: 1, label: "Muy bajo", color: "bg-destructive/60" },
@@ -21,17 +23,29 @@ function getGreeting(): { text: string; icon: typeof Sun } {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const greeting = useMemo(() => getGreeting(), []);
   const GreetingIcon = greeting.icon;
 
-  const handleCheckin = () => {
-    if (!selectedMood) return;
-    // TODO: save to Supabase daily_checkins
+  const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "";
+
+  const handleCheckin = async () => {
+    if (!selectedMood || !user) return;
+
+    await supabase.from("daily_checkins").upsert({
+      user_id: user.id,
+      mood_score: selectedMood,
+      note: note || null,
+      checkin_date: new Date().toISOString().split("T")[0],
+    }, { onConflict: "user_id,checkin_date" });
+
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 3000);
+    setSelectedMood(null);
+    setNote("");
   };
 
   return (
@@ -40,12 +54,13 @@ export default function Dashboard() {
       <div className="mb-8 flex items-center gap-3">
         <GreetingIcon size={28} weight="duotone" className="text-accent" />
         <div>
-          <h1 className="font-display text-xl font-semibold">{greeting.text}</h1>
+          <h1 className="font-display text-xl font-semibold">
+            {greeting.text}{displayName ? `, ${displayName}` : ""}
+          </h1>
           <p className="text-xs text-muted-foreground">¿Cómo te sentís hoy?</p>
         </div>
       </div>
 
-      {/* Divider */}
       <div className="mb-6 h-px bg-border" />
 
       {/* Check-in */}
@@ -110,7 +125,6 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* Divider */}
       <div className="mb-6 h-px bg-border" />
 
       {/* Foco del día */}
@@ -119,11 +133,11 @@ export default function Dashboard() {
           Foco de hoy
         </h2>
         <button
-          onClick={() => navigate("/respiracion")}
+          onClick={() => navigate("/herramientas/respiracion")}
           className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary">
-            <span className="font-display text-lg">🫁</span>
+            <Wind size={24} weight="duotone" className="text-secondary-foreground" />
           </div>
           <div className="flex-1">
             <p className="font-display text-sm font-medium">Respiración guiada</p>
@@ -133,13 +147,12 @@ export default function Dashboard() {
         </button>
       </section>
 
-      {/* Divider */}
       <div className="mb-6 h-px bg-border" />
 
       {/* Solicitar tratamiento CTA */}
       <section>
         <button
-          onClick={() => navigate("/perfil")}
+          onClick={() => navigate("/tratamiento")}
           className="flex w-full items-center gap-4 rounded-2xl border border-accent/30 bg-accent/5 p-4 text-left"
         >
           <Stethoscope size={24} className="text-accent" weight="duotone" />

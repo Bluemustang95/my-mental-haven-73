@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_progress: {
+        Row: {
+          completed: boolean | null
+          content_id: string
+          id: string
+          last_accessed: string | null
+          progress_percent: number | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          content_id: string
+          id?: string
+          last_accessed?: string | null
+          progress_percent?: number | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          content_id?: string
+          id?: string
+          last_accessed?: string | null
+          progress_percent?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_progress_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "psychoeducation_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_checkins: {
         Row: {
           checkin_date: string
@@ -153,6 +188,7 @@ export type Database = {
           display_name: string | null
           id: string
           life_stage: string | null
+          linked_professional_code: string | null
           onboarding_completed: boolean | null
           recent_feelings: string[] | null
           treatment_status: string | null
@@ -165,6 +201,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           life_stage?: string | null
+          linked_professional_code?: string | null
           onboarding_completed?: boolean | null
           recent_feelings?: string[] | null
           treatment_status?: string | null
@@ -177,6 +214,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           life_stage?: string | null
+          linked_professional_code?: string | null
           onboarding_completed?: boolean | null
           recent_feelings?: string[] | null
           treatment_status?: string | null
@@ -230,6 +268,54 @@ export type Database = {
           status?: string | null
           user_id?: string | null
           zone?: string | null
+        }
+        Relationships: []
+      }
+      psychoeducation_content: {
+        Row: {
+          category: string
+          content_type: string
+          content_url: string
+          created_at: string | null
+          description: string | null
+          duration: string | null
+          id: string
+          is_premium: boolean | null
+          is_published: boolean | null
+          sort_order: number | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          category: string
+          content_type: string
+          content_url: string
+          created_at?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_premium?: boolean | null
+          is_published?: boolean | null
+          sort_order?: number | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          category?: string
+          content_type?: string
+          content_url?: string
+          created_at?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_premium?: boolean | null
+          is_published?: boolean | null
+          sort_order?: number | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
         }
         Relationships: []
       }

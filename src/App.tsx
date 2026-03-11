@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Breathing from "@/pages/Breathing";
@@ -14,33 +15,58 @@ import ThoughtRecord from "@/pages/ThoughtRecord";
 import DreamLog from "@/pages/DreamLog";
 import Grounding from "@/pages/Grounding";
 import Mindfulness from "@/pages/Mindfulness";
+import ContentLibrary from "@/pages/ContentLibrary";
 import Tests from "@/pages/Tests";
+import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
+import TreatmentRequest from "@/pages/TreatmentRequest";
+import LinkProfessional from "@/pages/LinkProfessional";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/herramientas" element={<Tools />} />
-            <Route path="/herramientas/respiracion" element={<Breathing />} />
-            <Route path="/herramientas/journal" element={<Journal />} />
-            <Route path="/herramientas/pensamientos" element={<ThoughtRecord />} />
-            <Route path="/herramientas/suenos" element={<DreamLog />} />
-            <Route path="/herramientas/grounding" element={<Grounding />} />
-            <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
-            <Route path="/tests" element={<Tests />} />
-            <Route path="/resmita" element={<Resmita />} />
-            <Route path="/perfil" element={<Profile />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/herramientas" element={<Tools />} />
+              <Route path="/herramientas/respiracion" element={<Breathing />} />
+              <Route path="/herramientas/journal" element={<Journal />} />
+              <Route path="/herramientas/pensamientos" element={<ThoughtRecord />} />
+              <Route path="/herramientas/suenos" element={<DreamLog />} />
+              <Route path="/herramientas/grounding" element={<Grounding />} />
+              <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
+              <Route path="/herramientas/contenido" element={<ContentLibrary />} />
+              <Route path="/tests" element={<Tests />} />
+              <Route path="/resmita" element={<Resmita />} />
+              <Route path="/perfil" element={<Profile />} />
+              <Route path="/tratamiento" element={<TreatmentRequest />} />
+              <Route path="/vincular" element={<LinkProfessional />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
