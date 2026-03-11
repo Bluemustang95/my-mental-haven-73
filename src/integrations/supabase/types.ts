@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_favorites: {
+        Row: {
+          content_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_favorites_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "psychoeducation_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_progress: {
         Row: {
           completed: boolean | null
@@ -319,6 +348,33 @@ export type Database = {
         }
         Relationships: []
       }
+      session_notes: {
+        Row: {
+          created_at: string | null
+          id: string
+          mood_after: number | null
+          note: string
+          session_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mood_after?: number | null
+          note: string
+          session_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mood_after?: number | null
+          note?: string
+          session_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       test_results: {
         Row: {
           answers: Json | null
@@ -409,6 +465,33 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_goals: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          goal_text: string
+          id: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          goal_text: string
+          id?: string
+          user_id: string
+          week_start?: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          goal_text?: string
+          id?: string
+          user_id?: string
+          week_start?: string
         }
         Relationships: []
       }

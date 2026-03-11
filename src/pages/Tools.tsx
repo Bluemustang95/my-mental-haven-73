@@ -9,6 +9,7 @@ const tools = [
   { path: "/herramientas/grounding", label: "Grounding 5-4-3-2-1", desc: "Anclaje con los 5 sentidos", icon: HandFist, color: "bg-destructive/10 text-foreground" },
   { path: "/herramientas/mindfulness", label: "Mindfulness", desc: "Timer de meditación", icon: Flower, color: "bg-accent/10 text-foreground" },
   { path: "/herramientas/contenido", label: "Psicoeducación", desc: "Videos, audios y lecturas", icon: BookOpen, color: "bg-primary/5 text-foreground" },
+  { path: "/herramientas/sesiones", label: "Notas de Sesión", desc: "Reflexiones post-terapia", icon: Notebook, color: "bg-secondary text-secondary-foreground" },
 ];
 
 export default function Tools() {

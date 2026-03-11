@@ -17,6 +17,8 @@ import Grounding from "@/pages/Grounding";
 import Mindfulness from "@/pages/Mindfulness";
 import ContentLibrary from "@/pages/ContentLibrary";
 import Tests from "@/pages/Tests";
+import Progress from "@/pages/Progress";
+import SessionNotes from "@/pages/SessionNotes";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import TreatmentRequest from "@/pages/TreatmentRequest";
@@ -65,7 +67,9 @@ const App = () => (
               <Route path="/herramientas/grounding" element={<Grounding />} />
               <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
+              <Route path="/herramientas/sesiones" element={<SessionNotes />} />
               <Route path="/tests" element={<Tests />} />
+              <Route path="/progreso" element={<Progress />} />
               <Route path="/resmita" element={<Resmita />} />
               <Route path="/perfil" element={<Profile />} />
               <Route path="/tratamiento" element={<TreatmentRequest />} />
