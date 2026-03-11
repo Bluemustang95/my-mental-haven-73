@@ -17,6 +17,8 @@ import Grounding from "@/pages/Grounding";
 import Mindfulness from "@/pages/Mindfulness";
 import ContentLibrary from "@/pages/ContentLibrary";
 import Tests from "@/pages/Tests";
+import Progress from "@/pages/Progress";
+import SessionNotes from "@/pages/SessionNotes";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import TreatmentRequest from "@/pages/TreatmentRequest";
