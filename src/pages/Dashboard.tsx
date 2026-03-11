@@ -128,6 +128,11 @@ export default function Dashboard() {
 
       <div className="mb-6 h-px bg-border" />
 
+      {/* Weekly goals */}
+      <WeeklyGoalsWidget />
+
+      <div className="mb-6 h-px bg-border" />
+
       {/* Foco del día */}
       <section className="mb-6">
         <h2 className="mb-4 font-display text-sm font-medium uppercase tracking-wider text-muted-foreground">
@@ -150,13 +155,24 @@ export default function Dashboard() {
 
       <div className="mb-6 h-px bg-border" />
 
-      {/* Solicitar tratamiento CTA */}
-      <section>
+      {/* Quick links */}
+      <section className="space-y-3">
+        <button
+          onClick={() => navigate("/progreso")}
+          className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
+        >
+          <TrendUp size={20} weight="duotone" className="text-accent" />
+          <div className="flex-1">
+            <p className="font-display text-sm font-medium">Mi progreso</p>
+            <p className="text-xs text-muted-foreground">Mirá tu evolución</p>
+          </div>
+          <ArrowRight size={16} className="text-muted-foreground" />
+        </button>
         <button
           onClick={() => navigate("/tratamiento")}
           className="flex w-full items-center gap-4 rounded-2xl border border-accent/30 bg-accent/5 p-4 text-left"
         >
-          <Stethoscope size={24} className="text-accent" weight="duotone" />
+          <Stethoscope size={20} className="text-accent" weight="duotone" />
           <div className="flex-1">
             <p className="font-display text-sm font-medium">Solicitar tratamiento</p>
             <p className="text-xs text-muted-foreground">Conectá con un profesional RESMA</p>
