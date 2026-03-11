@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sun, Moon, CloudSun, Stethoscope, ArrowRight, Wind } from "@phosphor-icons/react";
+import { Sun, Moon, CloudSun, Stethoscope, ArrowRight, Wind, TrendUp } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { WeeklyGoalsWidget } from "@/components/WeeklyGoalsWidget";
 
 const moodShapes = [
   { value: 1, label: "Muy bajo", color: "bg-destructive/60" },
