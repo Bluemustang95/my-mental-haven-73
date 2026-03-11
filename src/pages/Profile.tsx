@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Moon, Sun, SignOut, Stethoscope, Gear, Bell, Link as LinkIcon, UserCircle } from "@phosphor-icons/react";
+import { Moon, Sun, SignOut, Stethoscope, Gear, Bell, Link as LinkIcon, UserCircle, Lifebuoy, Phone, X } from "@phosphor-icons/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+
+const emergencyLines = [
+  { label: "Centro de Asistencia al Suicida", number: "135" },
+  { label: "Línea contra la Violencia", number: "137" },
+];
 
 export default function Profile() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
+  const [crisisOpen, setCrisisOpen] = useState(false);
 
   const toggleDark = () => {
     document.documentElement.classList.toggle("dark");
@@ -37,11 +44,7 @@ export default function Profile() {
 
       {/* Settings */}
       <div className="space-y-3">
-        {/* Dark mode */}
-        <button
-          onClick={toggleDark}
-          className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4"
-        >
+        <button onClick={toggleDark} className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4">
           {darkMode ? <Moon size={20} weight="duotone" /> : <Sun size={20} weight="duotone" />}
           <span className="flex-1 text-left font-display text-sm font-medium">
             {darkMode ? "Modo oscuro" : "Modo claro"}
@@ -51,11 +54,7 @@ export default function Profile() {
           </div>
         </button>
 
-        {/* Link professional */}
-        <button
-          onClick={() => navigate("/vincular")}
-          className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left"
-        >
+        <button onClick={() => navigate("/vincular")} className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left">
           <LinkIcon size={20} weight="duotone" />
           <div className="flex-1">
             <p className="font-display text-sm font-medium">Vincular profesional</p>
@@ -63,14 +62,12 @@ export default function Profile() {
           </div>
         </button>
 
-        {/* Notifications */}
         <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
           <Bell size={20} weight="duotone" />
           <span className="flex-1 font-display text-sm font-medium">Notificaciones</span>
           <span className="text-xs text-muted-foreground">Próximamente</span>
         </div>
 
-        {/* Settings */}
         <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
           <Gear size={20} weight="duotone" />
           <span className="flex-1 font-display text-sm font-medium">Preferencias</span>
@@ -92,6 +89,20 @@ export default function Profile() {
         </div>
       </button>
 
+      <div className="my-4 h-px bg-border" />
+
+      {/* Crisis button */}
+      <button
+        onClick={() => setCrisisOpen(true)}
+        className="flex w-full items-center gap-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-left"
+      >
+        <Lifebuoy size={20} className="text-destructive" weight="bold" />
+        <div className="flex-1">
+          <p className="font-display text-sm font-medium text-destructive">Línea de crisis</p>
+          <p className="text-xs text-muted-foreground">Ayuda inmediata 24hs</p>
+        </div>
+      </button>
+
       <div className="my-6 h-px bg-border" />
 
       {/* Logout */}
@@ -102,6 +113,55 @@ export default function Profile() {
         <SignOut size={20} />
         <span className="font-display text-sm font-medium">Cerrar sesión</span>
       </button>
+
+      {/* Crisis modal */}
+      <AnimatePresence>
+        {crisisOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-end justify-center bg-foreground/40 backdrop-blur-sm"
+            onClick={() => setCrisisOpen(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-t-3xl bg-card p-6 pb-10"
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="font-display text-lg font-semibold">¿Necesitás ayuda ahora?</h2>
+                <button onClick={() => setCrisisOpen(false)} className="text-muted-foreground">
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="mb-6 text-sm text-muted-foreground font-body">
+                Si estás en crisis o conocés a alguien que lo está, estas líneas son gratuitas, confidenciales y funcionan las 24 horas.
+              </p>
+              <div className="space-y-3">
+                {emergencyLines.map((line) => (
+                  <a
+                    key={line.number}
+                    href={`tel:${line.number}`}
+                    className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4 transition-colors active:bg-muted"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                      <Phone size={20} weight="fill" />
+                    </div>
+                    <div>
+                      <p className="font-display text-sm font-medium">{line.label}</p>
+                      <p className="font-display text-lg font-bold">{line.number}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
