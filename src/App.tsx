@@ -71,6 +71,13 @@ const App = () => (
               <Route path="/tratamiento" element={<TreatmentRequest />} />
               <Route path="/vincular" element={<LinkProfessional />} />
             </Route>
+            <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/contenido" element={<ContentManager />} />
+              <Route path="/admin/solicitudes" element={<TreatmentRequests />} />
+              <Route path="/admin/pacientes" element={<PatientList />} />
+              <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
