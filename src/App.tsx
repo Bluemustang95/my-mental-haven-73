@@ -22,6 +22,13 @@ import ResetPassword from "@/pages/ResetPassword";
 import TreatmentRequest from "@/pages/TreatmentRequest";
 import LinkProfessional from "@/pages/LinkProfessional";
 import NotFound from "@/pages/NotFound";
+import { AdminRoute } from "@/components/admin/AdminRoute";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import ContentManager from "@/pages/admin/ContentManager";
+import TreatmentRequests from "@/pages/admin/TreatmentRequests";
+import PatientList from "@/pages/admin/PatientList";
+import PatientDetail from "@/pages/admin/PatientDetail";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +70,13 @@ const App = () => (
               <Route path="/perfil" element={<Profile />} />
               <Route path="/tratamiento" element={<TreatmentRequest />} />
               <Route path="/vincular" element={<LinkProfessional />} />
+            </Route>
+            <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/contenido" element={<ContentManager />} />
+              <Route path="/admin/solicitudes" element={<TreatmentRequests />} />
+              <Route path="/admin/pacientes" element={<PatientList />} />
+              <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
