@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      dream_log: {
+        Row: {
+          created_at: string | null
+          description: string
+          dream_date: string | null
+          emotions: string[] | null
+          id: string
+          lucid: boolean | null
+          sleep_quality: number | null
+          themes: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          dream_date?: string | null
+          emotions?: string[] | null
+          id?: string
+          lucid?: boolean | null
+          sleep_quality?: number | null
+          themes?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          dream_date?: string | null
+          emotions?: string[] | null
+          id?: string
+          lucid?: boolean | null
+          sleep_quality?: number | null
+          themes?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       exercise_sessions: {
         Row: {
           completed: boolean | null
@@ -73,6 +109,39 @@ export type Database = {
           id?: string
           mood_after?: number | null
           mood_before?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          content: string
+          created_at: string | null
+          emotion_tags: string[] | null
+          entry_date: string | null
+          id: string
+          prompt: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          emotion_tags?: string[] | null
+          entry_date?: string | null
+          id?: string
+          prompt?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          emotion_tags?: string[] | null
+          entry_date?: string | null
+          id?: string
+          prompt?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -161,6 +230,81 @@ export type Database = {
           status?: string | null
           user_id?: string | null
           zone?: string | null
+        }
+        Relationships: []
+      }
+      test_results: {
+        Row: {
+          answers: Json | null
+          created_at: string | null
+          id: string
+          score: number
+          severity: string | null
+          test_type: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          created_at?: string | null
+          id?: string
+          score: number
+          severity?: string | null
+          test_type: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json | null
+          created_at?: string | null
+          id?: string
+          score?: number
+          severity?: string | null
+          test_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      thought_records: {
+        Row: {
+          alternative_thought: string | null
+          automatic_thought: string | null
+          created_at: string | null
+          emotion: string | null
+          emotion_intensity: number | null
+          evidence_against: string | null
+          evidence_for: string | null
+          id: string
+          new_emotion: string | null
+          new_emotion_intensity: number | null
+          situation: string
+          user_id: string
+        }
+        Insert: {
+          alternative_thought?: string | null
+          automatic_thought?: string | null
+          created_at?: string | null
+          emotion?: string | null
+          emotion_intensity?: number | null
+          evidence_against?: string | null
+          evidence_for?: string | null
+          id?: string
+          new_emotion?: string | null
+          new_emotion_intensity?: number | null
+          situation: string
+          user_id: string
+        }
+        Update: {
+          alternative_thought?: string | null
+          automatic_thought?: string | null
+          created_at?: string | null
+          emotion?: string | null
+          emotion_intensity?: number | null
+          evidence_against?: string | null
+          evidence_for?: string | null
+          id?: string
+          new_emotion?: string | null
+          new_emotion_intensity?: number | null
+          situation?: string
+          user_id?: string
         }
         Relationships: []
       }
