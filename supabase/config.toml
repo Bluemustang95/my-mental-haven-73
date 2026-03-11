@@ -1,0 +1,4 @@
+project_id = "tolsdjjncyswosioxzmm"
+
+[functions.resmita-chat]
+verify_jwt = false
