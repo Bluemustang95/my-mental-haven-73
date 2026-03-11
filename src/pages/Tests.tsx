@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, ChartLineUp } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 type TestDef = {
   id: string;
@@ -10,21 +12,38 @@ type TestDef = {
   description: string;
   questions: string[];
   options: { label: string; value: number }[];
+  preamble: string;
   interpret: (score: number) => { severity: string; color: string; message: string };
 };
 
-const phq9Options = [
+const freq4Options = [
   { label: "Nunca", value: 0 },
   { label: "Varios días", value: 1 },
   { label: "Más de la mitad de los días", value: 2 },
   { label: "Casi todos los días", value: 3 },
 ];
 
+const freq5Options = [
+  { label: "Nunca", value: 0 },
+  { label: "Casi nunca", value: 1 },
+  { label: "A veces", value: 2 },
+  { label: "Frecuentemente", value: 3 },
+  { label: "Muy frecuentemente", value: 4 },
+];
+
+const agree4Options = [
+  { label: "Muy en desacuerdo", value: 0 },
+  { label: "En desacuerdo", value: 1 },
+  { label: "De acuerdo", value: 2 },
+  { label: "Muy de acuerdo", value: 3 },
+];
+
 const tests: TestDef[] = [
   {
     id: "PHQ-9",
     name: "PHQ-9 · Depresión",
-    description: "Cuestionario sobre el estado de ánimo en las últimas 2 semanas.",
+    description: "Estado de ánimo en las últimas 2 semanas.",
+    preamble: "En las últimas 2 semanas, ¿con qué frecuencia te ha molestado...",
     questions: [
       "Poco interés o placer en hacer cosas",
       "Sentirse desanimado/a, deprimido/a o sin esperanza",
@@ -36,7 +55,7 @@ const tests: TestDef[] = [
       "Moverse o hablar tan lento que otros lo notaron, o lo contrario",
       "Pensamientos de que estaría mejor muerto/a o de hacerse daño",
     ],
-    options: phq9Options,
+    options: freq4Options,
     interpret: (score) => {
       if (score <= 4) return { severity: "Mínima", color: "text-success", message: "Tu puntaje sugiere síntomas mínimos de depresión." };
       if (score <= 9) return { severity: "Leve", color: "text-accent", message: "Tu puntaje sugiere síntomas leves. Las herramientas de la app pueden ayudarte." };
@@ -48,7 +67,8 @@ const tests: TestDef[] = [
   {
     id: "GAD-7",
     name: "GAD-7 · Ansiedad",
-    description: "Cuestionario sobre ansiedad en las últimas 2 semanas.",
+    description: "Ansiedad generalizada en las últimas 2 semanas.",
+    preamble: "En las últimas 2 semanas, ¿con qué frecuencia te ha molestado...",
     questions: [
       "Sentirse nervioso/a, ansioso/a o con los nervios de punta",
       "No poder dejar de preocuparse o no poder controlar la preocupación",
@@ -58,18 +78,95 @@ const tests: TestDef[] = [
       "Enojarse o irritarse fácilmente",
       "Sentir miedo como si algo terrible pudiera pasar",
     ],
-    options: phq9Options,
+    options: freq4Options,
     interpret: (score) => {
       if (score <= 4) return { severity: "Mínima", color: "text-success", message: "Tu puntaje sugiere ansiedad mínima." };
-      if (score <= 9) return { severity: "Leve", color: "text-accent", message: "Tu puntaje sugiere ansiedad leve. Las técnicas de respiración y mindfulness pueden ayudarte." };
+      if (score <= 9) return { severity: "Leve", color: "text-accent", message: "Tu puntaje sugiere ansiedad leve. Respiración y mindfulness pueden ayudarte." };
       if (score <= 14) return { severity: "Moderada", color: "text-accent-foreground", message: "Tu puntaje sugiere ansiedad moderada. Te recomendamos hablar con un profesional." };
       return { severity: "Severa", color: "text-destructive", message: "Tu puntaje sugiere ansiedad severa. Es importante buscar ayuda profesional." };
+    },
+  },
+  {
+    id: "PSS-10",
+    name: "PSS-10 · Estrés",
+    description: "Nivel de estrés percibido en el último mes.",
+    preamble: "En el último mes, ¿con qué frecuencia...",
+    questions: [
+      "¿Te sentiste afectado/a por algo que ocurrió inesperadamente?",
+      "¿Sentiste que no podías controlar las cosas importantes de tu vida?",
+      "¿Te sentiste nervioso/a o estresado/a?",
+      "¿Sentiste confianza en tu capacidad de manejar tus problemas personales?",
+      "¿Sentiste que las cosas iban bien?",
+      "¿Sentiste que no podías afrontar todas las cosas que tenías que hacer?",
+      "¿Pudiste controlar las dificultades de tu vida?",
+      "¿Sentiste que tenías todo bajo control?",
+      "¿Te enojaste por cosas que estaban fuera de tu control?",
+      "¿Sentiste que las dificultades se acumulaban tanto que no podías superarlas?",
+    ],
+    options: freq5Options,
+    interpret: (score) => {
+      if (score <= 13) return { severity: "Bajo", color: "text-success", message: "Tu nivel de estrés percibido es bajo." };
+      if (score <= 26) return { severity: "Moderado", color: "text-accent", message: "Tu nivel de estrés es moderado. Las herramientas de la app pueden ayudarte." };
+      return { severity: "Alto", color: "text-destructive", message: "Tu nivel de estrés es alto. Te recomendamos hablar con un profesional." };
+    },
+  },
+  {
+    id: "ISI",
+    name: "ISI · Insomnio",
+    description: "Severidad del insomnio en las últimas 2 semanas.",
+    preamble: "En las últimas 2 semanas...",
+    questions: [
+      "¿Qué tan difícil te resultó quedarte dormido/a?",
+      "¿Qué tan difícil te resultó mantener el sueño durante la noche?",
+      "¿Te despertaste demasiado temprano?",
+      "¿Qué tan satisfecho/a estás con tu patrón de sueño actual?",
+      "¿Cuánto notás que tu problema de sueño interfiere con tu funcionamiento diario?",
+      "¿Qué tanto se nota para otros que tu calidad de sueño afecta tu calidad de vida?",
+      "¿Qué tan preocupado/a estás por tu problema de sueño actual?",
+    ],
+    options: [
+      { label: "Nada", value: 0 },
+      { label: "Leve", value: 1 },
+      { label: "Moderado", value: 2 },
+      { label: "Severo", value: 3 },
+      { label: "Muy severo", value: 4 },
+    ],
+    interpret: (score) => {
+      if (score <= 7) return { severity: "Sin insomnio clínico", color: "text-success", message: "Tu sueño parece estar dentro de rangos normales." };
+      if (score <= 14) return { severity: "Insomnio leve", color: "text-accent", message: "Podrías beneficiarte de mejorar tu higiene del sueño." };
+      if (score <= 21) return { severity: "Insomnio moderado", color: "text-accent-foreground", message: "Te recomendamos consultar con un profesional sobre tu sueño." };
+      return { severity: "Insomnio severo", color: "text-destructive", message: "Es importante buscar ayuda profesional para tu problema de sueño." };
+    },
+  },
+  {
+    id: "Rosenberg",
+    name: "Rosenberg · Autoestima",
+    description: "Escala de autoestima global.",
+    preamble: "¿Qué tan de acuerdo estás con las siguientes afirmaciones?",
+    questions: [
+      "Siento que soy una persona digna de aprecio, al menos en igual medida que los demás",
+      "Siento que tengo cualidades positivas",
+      "En general, me inclino a pensar que soy un fracaso",
+      "Soy capaz de hacer las cosas tan bien como la mayoría de la gente",
+      "Siento que no tengo mucho de lo que estar orgulloso/a",
+      "Tengo una actitud positiva hacia mí mismo/a",
+      "En general, estoy satisfecho/a conmigo mismo/a",
+      "Desearía poder tener más respeto por mí mismo/a",
+      "A veces me siento verdaderamente inútil",
+      "A veces pienso que no sirvo para nada",
+    ],
+    options: agree4Options,
+    interpret: (score) => {
+      if (score >= 25) return { severity: "Alta", color: "text-success", message: "Tu autoestima parece saludable." };
+      if (score >= 15) return { severity: "Normal", color: "text-accent", message: "Tu autoestima está en un rango normal. Siempre podés trabajar en fortalecerla." };
+      return { severity: "Baja", color: "text-destructive", message: "Tu autoestima podría beneficiarse de trabajo terapéutico. Considerá hablar con un profesional." };
     },
   },
 ];
 
 export default function Tests() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTest, setActiveTest] = useState<TestDef | null>(null);
   const [questionIdx, setQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -82,7 +179,7 @@ export default function Tests() {
     setResult(null);
   };
 
-  const answer = (value: number) => {
+  const answer = async (value: number) => {
     const newAnswers = [...answers, value];
     setAnswers(newAnswers);
 
@@ -92,7 +189,16 @@ export default function Tests() {
       const score = newAnswers.reduce((a, b) => a + b, 0);
       const interp = activeTest.interpret(score);
       setResult({ score, ...interp });
-      // TODO: save to Supabase test_results
+
+      if (user) {
+        await supabase.from("test_results").insert({
+          user_id: user.id,
+          test_type: activeTest.id,
+          score,
+          answers: newAnswers,
+          severity: interp.severity,
+        });
+      }
     }
   };
 
@@ -101,7 +207,7 @@ export default function Tests() {
     setResult(null);
   };
 
-  // Test list view
+  // Test list
   if (!activeTest) {
     return (
       <div className="px-5 pt-14 pb-4 safe-area-top">
@@ -135,7 +241,7 @@ export default function Tests() {
     );
   }
 
-  // Result view
+  // Result
   if (result) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-5 safe-area-top">
@@ -148,17 +254,11 @@ export default function Tests() {
           <p className="mb-8 text-sm text-muted-foreground">{result.message}</p>
 
           <div className="space-y-3">
-            <button
-              onClick={backToList}
-              className="w-full rounded-2xl bg-primary py-3 font-display text-sm font-medium text-primary-foreground"
-            >
+            <button onClick={backToList} className="w-full rounded-2xl bg-primary py-3 font-display text-sm font-medium text-primary-foreground">
               Volver a tests
             </button>
             {(result.score > 9) && (
-              <button
-                onClick={() => navigate("/perfil")}
-                className="w-full rounded-2xl border border-accent/30 bg-accent/5 py-3 font-display text-sm font-medium"
-              >
+              <button onClick={() => navigate("/tratamiento")} className="w-full rounded-2xl border border-accent/30 bg-accent/5 py-3 font-display text-sm font-medium">
                 Solicitar tratamiento
               </button>
             )}
@@ -172,16 +272,13 @@ export default function Tests() {
     );
   }
 
-  // Question view
+  // Question
   return (
     <div className="flex min-h-screen flex-col px-5 pt-14 pb-4 safe-area-top">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={backToList} className="font-display text-sm text-muted-foreground">
-          Cancelar
-        </button>
+        <button onClick={backToList} className="font-display text-sm text-muted-foreground">Cancelar</button>
       </div>
 
-      {/* Progress */}
       <div className="mb-2 flex gap-1">
         {activeTest.questions.map((_, i) => (
           <div key={i} className={cn("h-1 flex-1 rounded-full transition-colors", i <= questionIdx ? "bg-accent" : "bg-border")} />
@@ -201,7 +298,7 @@ export default function Tests() {
           className="flex-1"
         >
           <p className="mb-2 font-display text-xs uppercase tracking-wider text-muted-foreground">
-            En las últimas 2 semanas, ¿con qué frecuencia te ha molestado...
+            {activeTest.preamble}
           </p>
           <h2 className="mb-8 font-display text-lg font-medium leading-snug">
             {activeTest.questions[questionIdx]}
