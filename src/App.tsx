@@ -22,6 +22,13 @@ import ResetPassword from "@/pages/ResetPassword";
 import TreatmentRequest from "@/pages/TreatmentRequest";
 import LinkProfessional from "@/pages/LinkProfessional";
 import NotFound from "@/pages/NotFound";
+import { AdminRoute } from "@/components/admin/AdminRoute";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import ContentManager from "@/pages/admin/ContentManager";
+import TreatmentRequests from "@/pages/admin/TreatmentRequests";
+import PatientList from "@/pages/admin/PatientList";
+import PatientDetail from "@/pages/admin/PatientDetail";
 
 const queryClient = new QueryClient();
 
