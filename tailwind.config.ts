@@ -72,6 +72,7 @@ export default {
           4: "hsl(var(--mood-4))",
           5: "hsl(var(--mood-5))",
         },
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
