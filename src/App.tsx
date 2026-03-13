@@ -25,6 +25,7 @@ import DreamLog from "@/pages/DreamLog";
 import Grounding from "@/pages/Grounding";
 import Mindfulness from "@/pages/Mindfulness";
 import ContentLibrary from "@/pages/ContentLibrary";
+import PsicoFactos from "@/pages/PsicoFactos";
 import Tests from "@/pages/Tests";
 import Progress from "@/pages/Progress";
 import SessionNotes from "@/pages/SessionNotes";
