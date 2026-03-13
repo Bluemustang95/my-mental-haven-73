@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Video, Headphones, FileText, ArrowRight, BookOpen, Heart } from "@phosphor-icons/react";
+import { ArrowLeft, Video, Headphones, FileText, ArrowRight, BookOpen, Heart, Lightning } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
