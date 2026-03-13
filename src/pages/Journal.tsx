@@ -24,7 +24,7 @@ const sections = [
     group: "Análisis y perspectiva",
     items: [
       { path: "/herramientas/journal/dialogo", label: "Diálogo interno", desc: "Yo crítico vs yo compasivo", icon: ChatCircleDots, color: "bg-secondary text-secondary-foreground" },
-      { path: "/herramientas/journal/linea-temporal", label: "Línea temporal", desc: "Tu proceso en perspectiva", icon: Timeline, color: "bg-primary/10 text-foreground" },
+      { path: "/herramientas/journal/linea-temporal", label: "Línea temporal", desc: "Tu proceso en perspectiva", icon: Path, color: "bg-primary/10 text-foreground" },
     ],
   },
 ];
