@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Video, Headphones, FileText, ArrowRight, BookOpen, Heart } from "@phosphor-icons/react";
+import { ArrowLeft, Video, Headphones, FileText, ArrowRight, BookOpen, Heart, Lightning } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -80,6 +80,21 @@ export default function ContentLibrary() {
         <h1 className="font-display text-lg font-semibold">Psicoeducación</h1>
       </div>
       <p className="mb-4 text-sm text-muted-foreground">Material para aprender sobre tu salud mental.</p>
+
+      {/* Psico-Factos CTA */}
+      <button
+        onClick={() => navigate("/herramientas/contenido/psico-factos")}
+        className="mb-5 flex w-full items-center gap-3 rounded-2xl border border-accent/30 bg-accent/5 p-4 text-left transition-colors active:bg-accent/10"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/15">
+          <Lightning size={18} weight="duotone" className="text-accent-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-display text-sm font-medium">Psico-Factos</p>
+          <p className="text-xs text-muted-foreground">Conceptos clínicos en tarjetas</p>
+        </div>
+        <ArrowRight size={14} className="text-muted-foreground" />
+      </button>
 
       {/* Type filter */}
       <div className="mb-4 flex gap-2 overflow-x-auto no-scrollbar">

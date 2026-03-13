@@ -25,6 +25,7 @@ import DreamLog from "@/pages/DreamLog";
 import Grounding from "@/pages/Grounding";
 import Mindfulness from "@/pages/Mindfulness";
 import ContentLibrary from "@/pages/ContentLibrary";
+import PsicoFactos from "@/pages/PsicoFactos";
 import Tests from "@/pages/Tests";
 import Progress from "@/pages/Progress";
 import SessionNotes from "@/pages/SessionNotes";
@@ -85,6 +86,7 @@ const App = () => (
               <Route path="/herramientas/grounding" element={<Grounding />} />
               <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
+              <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/sesiones" element={<SessionNotes />} />
               <Route path="/tests" element={<Tests />} />
               <Route path="/progreso" element={<Progress />} />
