@@ -1,132 +1,81 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Tag } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft, Heart, PencilSimple, Clock, UsersThree, EnvelopeSimple, Notepad, Trophy, ChatCircleDots, Timeline, Microphone } from "@phosphor-icons/react";
+import { motion } from "framer-motion";
 
-const prompts = [
-  "¿Qué fue lo mejor de tu día?",
-  "¿Hay algo que te preocupe hoy?",
-  "¿Qué aprendiste sobre vos hoy?",
-  "Describí un momento en que te sentiste en paz.",
-  "¿Qué necesitás soltar?",
-  "¿Qué te agradecés hoy?",
-];
-
-const emotionOptions = [
-  "Calma", "Alegría", "Tristeza", "Ansiedad", "Enojo",
-  "Gratitud", "Confusión", "Esperanza", "Culpa", "Alivio",
+const sections = [
+  {
+    group: "Registro diario",
+    items: [
+      { path: "/herramientas/journal/checkin", label: "Check-in rápido", desc: "¿Cómo te sentís hoy? Cuerpo y mente", icon: Heart, color: "bg-destructive/10 text-destructive" },
+      { path: "/herramientas/journal/escribir", label: "Escritura libre", desc: "Escribí lo que necesites soltar", icon: PencilSimple, color: "bg-accent/15 text-accent-foreground" },
+      { path: "/herramientas/journal/dia", label: "Línea del día", desc: "Mañana, tarde y noche", icon: Clock, color: "bg-secondary text-secondary-foreground" },
+      { path: "/herramientas/journal/vinculos", label: "Vínculos", desc: "Registrá interacciones importantes", icon: UsersThree, color: "bg-primary/10 text-foreground" },
+    ],
+  },
+  {
+    group: "Herramientas simbólicas",
+    items: [
+      { path: "/herramientas/journal/cartas", label: "Cartas que no voy a enviar", desc: "Escribí, soltá o guardá", icon: EnvelopeSimple, color: "bg-accent/10 text-accent-foreground" },
+      { path: "/herramientas/journal/terapia", label: "Notas para terapia", desc: "Temas para tu próxima sesión", icon: Notepad, color: "bg-success/10 text-foreground" },
+      { path: "/herramientas/journal/logros", label: "Micro-logros", desc: "Pequeñas victorias del día", icon: Trophy, color: "bg-accent/15 text-accent-foreground" },
+    ],
+  },
+  {
+    group: "Análisis y perspectiva",
+    items: [
+      { path: "/herramientas/journal/dialogo", label: "Diálogo interno", desc: "Yo crítico vs yo compasivo", icon: ChatCircleDots, color: "bg-secondary text-secondary-foreground" },
+      { path: "/herramientas/journal/linea-temporal", label: "Línea temporal", desc: "Tu proceso en perspectiva", icon: Timeline, color: "bg-primary/10 text-foreground" },
+    ],
+  },
 ];
 
 export default function Journal() {
   const navigate = useNavigate();
-  const [content, setContent] = useState("");
-  const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [currentPrompt, setCurrentPrompt] = useState("");
-  const [saved, setSaved] = useState(false);
-
-  const toggleEmotion = (e: string) => {
-    setSelectedEmotions((prev) =>
-      prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]
-    );
-  };
-
-  const pickPrompt = () => {
-    const p = prompts[Math.floor(Math.random() * prompts.length)];
-    setCurrentPrompt(p);
-    setShowPrompt(true);
-  };
-
-  const save = () => {
-    if (!content.trim()) return;
-    // TODO: save to Supabase journal_entries
-    setSaved(true);
-    setTimeout(() => navigate("/herramientas"), 1500);
-  };
 
   return (
-    <div className="flex min-h-screen flex-col px-5 pt-14 pb-4 safe-area-top">
+    <div className="px-5 pt-14 pb-4 safe-area-top">
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-2 flex items-center gap-3">
         <button onClick={() => navigate("/herramientas")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold">Diario</h1>
+        <h1 className="font-display text-xl font-semibold">Diario</h1>
       </div>
+      <p className="mb-6 text-sm text-muted-foreground">Tu espacio seguro de introspección.</p>
 
-      {saved ? (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <p className="font-display text-sm font-medium text-success">Entrada guardada ✓</p>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Prompt suggestion */}
-          {!showPrompt ? (
-            <button
-              onClick={pickPrompt}
-              className="mb-4 rounded-xl border border-dashed border-border bg-card p-3 text-center font-display text-xs text-muted-foreground transition-colors active:bg-muted"
-            >
-              ¿Necesitás inspiración? Tocá para un prompt
-            </button>
-          ) : (
-            <div className="mb-4 rounded-xl border border-accent/30 bg-accent/5 p-3">
-              <p className="text-sm italic text-muted-foreground">{currentPrompt}</p>
-              <button onClick={pickPrompt} className="mt-1 font-display text-[10px] text-accent-foreground underline">
-                Otro prompt
-              </button>
-            </div>
-          )}
-
-          {/* Text editor */}
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Escribí lo que necesites..."
-            className="mb-4 min-h-[200px] flex-1 resize-none rounded-2xl border border-border bg-card p-4 text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-body"
-            autoFocus
-          />
-
-          {/* Emotion tags */}
-          <div className="mb-4">
-            <div className="mb-2 flex items-center gap-2">
-              <Tag size={14} className="text-muted-foreground" />
-              <span className="font-display text-xs text-muted-foreground uppercase tracking-wider">Emociones</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {emotionOptions.map((e) => (
+      {sections.map((section, si) => (
+        <motion.div
+          key={section.group}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: si * 0.1 }}
+          className="mb-6"
+        >
+          <h2 className="mb-3 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {section.group}
+          </h2>
+          <div className="space-y-2">
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              return (
                 <button
-                  key={e}
-                  onClick={() => toggleEmotion(e)}
-                  className={cn(
-                    "rounded-full border px-3 py-1 font-display text-[11px] transition-all",
-                    selectedEmotions.includes(e)
-                      ? "border-accent bg-accent/10 text-accent-foreground"
-                      : "border-border text-muted-foreground"
-                  )}
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className="flex w-full items-center gap-3.5 rounded-2xl border border-border bg-card p-3.5 text-left transition-colors active:bg-muted"
                 >
-                  {e}
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.color}`}>
+                    <Icon size={20} weight="duotone" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-display text-sm font-medium">{item.label}</p>
+                    <p className="text-xs text-muted-foreground truncate">{item.desc}</p>
+                  </div>
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-
-          {/* Save */}
-          <button
-            onClick={save}
-            disabled={!content.trim()}
-            className={cn(
-              "w-full rounded-2xl py-3 font-display text-sm font-medium transition-all",
-              content.trim()
-                ? "bg-primary text-primary-foreground active:scale-[0.98]"
-                : "bg-muted text-muted-foreground"
-            )}
-          >
-            Guardar entrada
-          </button>
-        </>
-      )}
+        </motion.div>
+      ))}
     </div>
   );
 }
