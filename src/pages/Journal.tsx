@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Heart, PencilSimple, Clock, UsersThree, EnvelopeSimple, Notepad, Trophy, ChatCircleDots, Timeline, Microphone } from "@phosphor-icons/react";
+import { ArrowLeft, Heart, PencilSimple, Clock, UsersThree, EnvelopeSimple, Notepad, Trophy, ChatCircleDots, Path } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 
 const sections = [
