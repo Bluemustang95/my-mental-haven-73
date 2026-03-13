@@ -11,6 +11,15 @@ import Profile from "@/pages/Profile";
 import Onboarding from "@/pages/Onboarding";
 import Tools from "@/pages/Tools";
 import Journal from "@/pages/Journal";
+import JournalCheckin from "@/components/journal/JournalCheckin";
+import JournalEntry from "@/components/journal/JournalEntry";
+import DayTimeline from "@/components/journal/DayTimeline";
+import RelationshipLog from "@/components/journal/RelationshipLog";
+import UnsentLetters from "@/components/journal/UnsentLetters";
+import TherapyNotes from "@/components/journal/TherapyNotes";
+import MicroAchievements from "@/components/journal/MicroAchievements";
+import InternalDialogue from "@/components/journal/InternalDialogue";
+import JournalTimeline from "@/components/journal/JournalTimeline";
 import ThoughtRecord from "@/pages/ThoughtRecord";
 import DreamLog from "@/pages/DreamLog";
 import Grounding from "@/pages/Grounding";
@@ -62,6 +71,15 @@ const App = () => (
               <Route path="/herramientas" element={<Tools />} />
               <Route path="/herramientas/respiracion" element={<Breathing />} />
               <Route path="/herramientas/journal" element={<Journal />} />
+              <Route path="/herramientas/journal/checkin" element={<JournalCheckin />} />
+              <Route path="/herramientas/journal/escribir" element={<JournalEntry />} />
+              <Route path="/herramientas/journal/dia" element={<DayTimeline />} />
+              <Route path="/herramientas/journal/vinculos" element={<RelationshipLog />} />
+              <Route path="/herramientas/journal/cartas" element={<UnsentLetters />} />
+              <Route path="/herramientas/journal/terapia" element={<TherapyNotes />} />
+              <Route path="/herramientas/journal/logros" element={<MicroAchievements />} />
+              <Route path="/herramientas/journal/dialogo" element={<InternalDialogue />} />
+              <Route path="/herramientas/journal/linea-temporal" element={<JournalTimeline />} />
               <Route path="/herramientas/pensamientos" element={<ThoughtRecord />} />
               <Route path="/herramientas/suenos" element={<DreamLog />} />
               <Route path="/herramientas/grounding" element={<Grounding />} />

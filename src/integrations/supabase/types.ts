@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      body_map_entries: {
+        Row: {
+          body_part: string
+          created_at: string | null
+          id: string
+          intensity: number | null
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          body_part: string
+          created_at?: string | null
+          id?: string
+          intensity?: number | null
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          body_part?: string
+          created_at?: string | null
+          id?: string
+          intensity?: number | null
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       content_favorites: {
         Row: {
           content_id: string
@@ -105,6 +132,36 @@ export type Database = {
         }
         Relationships: []
       }
+      day_timeline_entries: {
+        Row: {
+          created_at: string | null
+          entry_date: string | null
+          id: string
+          mood_score: number | null
+          note: string | null
+          period: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entry_date?: string | null
+          id?: string
+          mood_score?: number | null
+          note?: string | null
+          period: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entry_date?: string | null
+          id?: string
+          mood_score?: number | null
+          note?: string | null
+          period?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dream_log: {
         Row: {
           created_at: string | null
@@ -177,6 +234,33 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_dialogues: {
+        Row: {
+          compassionate_voice: string
+          created_at: string | null
+          critical_voice: string
+          id: string
+          situation: string | null
+          user_id: string
+        }
+        Insert: {
+          compassionate_voice: string
+          created_at?: string | null
+          critical_voice: string
+          id?: string
+          situation?: string | null
+          user_id: string
+        }
+        Update: {
+          compassionate_voice?: string
+          created_at?: string | null
+          critical_voice?: string
+          id?: string
+          situation?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       journal_entries: {
         Row: {
           content: string
@@ -206,6 +290,30 @@ export type Database = {
           id?: string
           prompt?: string | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      micro_achievements: {
+        Row: {
+          achievement_date: string | null
+          achievement_text: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_date?: string | null
+          achievement_text: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_date?: string | null
+          achievement_text?: string
+          created_at?: string | null
+          id?: string
           user_id?: string
         }
         Relationships: []
@@ -348,6 +456,36 @@ export type Database = {
         }
         Relationships: []
       }
+      relationship_logs: {
+        Row: {
+          created_at: string | null
+          emotion: string | null
+          id: string
+          person: string
+          user_id: string
+          what_happened: string | null
+          what_i_wished: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          emotion?: string | null
+          id?: string
+          person: string
+          user_id: string
+          what_happened?: string | null
+          what_i_wished?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          emotion?: string | null
+          id?: string
+          person?: string
+          user_id?: string
+          what_happened?: string | null
+          what_i_wished?: string | null
+        }
+        Relationships: []
+      }
       session_notes: {
         Row: {
           created_at: string | null
@@ -405,6 +543,30 @@ export type Database = {
         }
         Relationships: []
       }
+      therapy_prep_notes: {
+        Row: {
+          created_at: string | null
+          id: string
+          note: string
+          resolved: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          note: string
+          resolved?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          note?: string
+          resolved?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       thought_records: {
         Row: {
           alternative_thought: string | null
@@ -446,6 +608,33 @@ export type Database = {
           new_emotion?: string | null
           new_emotion_intensity?: number | null
           situation?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      unsent_letters: {
+        Row: {
+          action: string | null
+          content: string
+          created_at: string | null
+          id: string
+          recipient: string | null
+          user_id: string
+        }
+        Insert: {
+          action?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          recipient?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          recipient?: string | null
           user_id?: string
         }
         Relationships: []
