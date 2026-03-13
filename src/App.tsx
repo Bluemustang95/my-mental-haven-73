@@ -86,6 +86,7 @@ const App = () => (
               <Route path="/herramientas/grounding" element={<Grounding />} />
               <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
+              <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/sesiones" element={<SessionNotes />} />
               <Route path="/tests" element={<Tests />} />
               <Route path="/progreso" element={<Progress />} />
