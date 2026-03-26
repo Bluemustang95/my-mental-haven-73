@@ -50,8 +50,8 @@ function pickAffirmation(recentScores: number[]): string {
 /* ── Greeting ─────────────────────────────── */
 function getGreeting(): { text: string; icon: typeof Sun } {
   const h = new Date().getHours();
-  if (h < 12) return { text: "Buen día", icon: Sun };
-  if (h < 19) return { text: "Buenas tardes", icon: CloudSun };
+  if (h >= 6 && h < 13) return { text: "Buen día", icon: Sun };
+  if (h >= 13 && h < 20) return { text: "Buenas tardes", icon: CloudSun };
   return { text: "Buenas noches", icon: Moon };
 }
 
@@ -73,8 +73,21 @@ export default function Dashboard() {
   const { user } = useAuth();
   const greeting = useMemo(() => getGreeting(), []);
   const GreetingIcon = greeting.icon;
-  const displayName = user?.user_metadata?.display_name || user?.email?.split("@")[0] || "";
-  const firstName = displayName.split(" ")[0];
+
+  /* ── Preferred name from DB ──────── */
+  const [firstName, setFirstName] = useState("");
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("patient_app_profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const name = data?.display_name || user.user_metadata?.display_name || user.email?.split("@")[0] || "";
+        setFirstName(name.split(" ")[0]);
+      });
+  }, [user]);
 
   const today = new Date();
   const todayStr = localDateStr(today);
