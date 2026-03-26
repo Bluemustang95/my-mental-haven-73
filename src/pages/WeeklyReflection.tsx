@@ -4,13 +4,10 @@ import { ArrowLeft, SpinnerGap, MagicWand } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
+import { localWeekStart } from "@/lib/utils";
 
 function getWeekStart(): string {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const ws = new Date(d.setDate(diff));
-  return ws.toISOString().split("T")[0];
+  return localWeekStart();
 }
 
 export default function WeeklyReflection() {

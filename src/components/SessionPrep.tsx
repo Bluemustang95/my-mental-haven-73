@@ -4,12 +4,10 @@ import { Clock, Notebook, Heartbeat } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
+import { localWeekStart, localDateStr } from "@/lib/utils";
 
 function getWeekStart(): string {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.setDate(diff)).toISOString().split("T")[0];
+  return localWeekStart();
 }
 
 export function SessionPrep() {
