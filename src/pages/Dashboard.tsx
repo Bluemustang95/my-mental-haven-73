@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight, TrendUp, Stethoscope, CalendarBlank } from "@phosphor-icons/react";
+import { Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight, TrendUp, Stethoscope, CalendarBlank, Sparkle } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { WeeklyGoalsWidget } from "@/components/WeeklyGoalsWidget";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
+import { SessionPrep } from "@/components/SessionPrep";
 /* ── Mood config ─────────────────────────── */
 const moodLevels = [
   { value: 1, label: "Muy bajo", tw: "bg-mood-1" },
@@ -170,6 +170,9 @@ export default function Dashboard() {
           {firstName ? firstName[0] : "?"}
         </button>
       </div>
+
+      {/* ── Session Prep (15min before) ── */}
+      <SessionPrep />
 
       {/* ── Emotional Calendar ────────── */}
       <section className="mb-6">
