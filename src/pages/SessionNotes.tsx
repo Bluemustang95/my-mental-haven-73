@@ -24,7 +24,7 @@ export default function SessionNotes() {
   const [showForm, setShowForm] = useState(false);
   const [note, setNote] = useState("");
   const [mood, setMood] = useState<number | null>(null);
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(localDateStr());
 
   const fetchNotes = async () => {
     if (!user) return;

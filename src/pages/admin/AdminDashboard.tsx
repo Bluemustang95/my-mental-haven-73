@@ -14,7 +14,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function fetchStats() {
-      const today = new Date().toISOString().split("T")[0];
+      const today = localDateStr();
 
       const [users, checkins, requests, tests] = await Promise.all([
         supabase.from("patient_app_profiles").select("id", { count: "exact", head: true }),

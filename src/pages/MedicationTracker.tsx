@@ -21,7 +21,7 @@ export default function MedicationTracker() {
   const [newDosage, setNewDosage] = useState("");
   const [newTime, setNewTime] = useState("");
   const [logSideEffects, setLogSideEffects] = useState<Record<string, string[]>>({});
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = localDateStr();
 
   useEffect(() => {
     if (!user) return;

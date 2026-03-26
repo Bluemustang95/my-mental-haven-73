@@ -25,7 +25,7 @@ export default function SelfCare() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState("");
   const [loading, setLoading] = useState(true);
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = localDateStr();
 
   useEffect(() => {
     if (!user) return;

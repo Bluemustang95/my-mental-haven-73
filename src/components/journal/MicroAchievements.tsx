@@ -30,7 +30,7 @@ export default function MicroAchievements() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [newText, setNewText] = useState("");
   const [loading, setLoading] = useState(true);
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateStr();
 
   useEffect(() => {
     if (!user) return;

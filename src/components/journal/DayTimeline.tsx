@@ -23,7 +23,7 @@ export default function DayTimeline() {
     night: { mood: 0, note: "" },
   });
   const [saving, setSaving] = useState(false);
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateStr();
 
   useEffect(() => {
     if (!user) return;

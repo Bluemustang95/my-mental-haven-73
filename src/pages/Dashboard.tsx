@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight, TrendUp, Stethoscope, CalendarBlank, Sparkle } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
+import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { WeeklyGoalsWidget } from "@/components/WeeklyGoalsWidget";
@@ -78,7 +78,7 @@ export default function Dashboard() {
   const firstName = displayName.split(" ")[0];
 
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = localDateStr(today);
 
   /* ── State ──────────────────────────── */
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
