@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ChartLineUp, ListChecks, Path, ArrowRight } from "@phosphor-icons/react";
+import { ChartLineUp, ListChecks, Path, Pill, MagicWand, ArrowRight } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 
 const items = [
@@ -23,6 +23,20 @@ const items = [
     desc: "Estadísticas y evolución",
     icon: ChartLineUp,
     color: "bg-primary/10 text-foreground",
+  },
+  {
+    path: "/mi-proceso/medicacion",
+    label: "Medicación",
+    desc: "Registro de tomas y efectos",
+    icon: Pill,
+    color: "bg-mood-3/20 text-foreground",
+  },
+  {
+    path: "/mi-proceso/espejo",
+    label: "El Espejo",
+    desc: "Reflexión semanal con IA",
+    icon: MagicWand,
+    color: "bg-accent/10 text-foreground",
   },
 ];
 

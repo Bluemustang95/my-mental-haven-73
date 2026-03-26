@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight, TrendUp, Stethoscope, CalendarBlank } from "@phosphor-icons/react";
+import { Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight, TrendUp, Stethoscope, CalendarBlank, Sparkle } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { WeeklyGoalsWidget } from "@/components/WeeklyGoalsWidget";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
+import { SessionPrep } from "@/components/SessionPrep";
 /* ── Mood config ─────────────────────────── */
 const moodLevels = [
   { value: 1, label: "Muy bajo", tw: "bg-mood-1" },
@@ -89,6 +89,7 @@ export default function Dashboard() {
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [consecutiveLow, setConsecutiveLow] = useState(false);
   const [affirmation, setAffirmation] = useState("");
+  const [selfcareDates, setSelfcareDates] = useState<Set<string>>(new Set());
 
   /* ── Fetch checkins ────────────────── */
   const fetchCheckins = useCallback(async () => {
@@ -118,6 +119,21 @@ export default function Dashboard() {
   }, [user, todayStr]);
 
   useEffect(() => { fetchCheckins(); }, [fetchCheckins]);
+
+  /* ── Fetch selfcare completed dates ── */
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("selfcare_tasks")
+      .select("completed_date")
+      .eq("user_id", user.id)
+      .eq("completed", true)
+      .not("completed_date", "is", null)
+      .then(({ data }) => {
+        const dates = new Set((data ?? []).map((d: any) => d.completed_date as string));
+        setSelfcareDates(dates);
+      });
+  }, [user]);
 
   /* ── Handle check-in ───────────────── */
   const handleCheckin = async () => {
@@ -171,6 +187,9 @@ export default function Dashboard() {
         </button>
       </div>
 
+      {/* ── Session Prep (15min before) ── */}
+      <SessionPrep />
+
       {/* ── Emotional Calendar ────────── */}
       <section className="mb-6">
         <div className="flex items-center justify-between mb-3">
@@ -197,6 +216,7 @@ export default function Dashboard() {
               const checkin = checkinMap[ds];
               const mood = checkin?.mood_score;
               const isTodayDay = isToday(day);
+              const hasSelfcare = selfcareDates.has(ds);
 
               return (
                 <Popover key={day}>
@@ -211,6 +231,9 @@ export default function Dashboard() {
                       )}
                     >
                       {day}
+                      {hasSelfcare && (
+                        <Sparkle size={8} weight="fill" className="absolute top-0.5 right-0.5 text-accent" />
+                      )}
                     </button>
                   </PopoverTrigger>
                   {checkin && checkin.mood_score && (

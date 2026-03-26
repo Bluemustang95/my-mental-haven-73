@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import { Wind, HandFist, Flower, BookOpen, ArrowRight } from "@phosphor-icons/react";
+import { Wind, HandFist, Flower, BookOpen, Star, Leaf, ArrowRight } from "@phosphor-icons/react";
 
 const tools = [
   { path: "/herramientas/respiracion", label: "Respiración Guiada", desc: "Patrones para regular tu cuerpo", icon: Wind, color: "bg-success/10 text-foreground" },
   { path: "/herramientas/grounding", label: "Grounding 5-4-3-2-1", desc: "Anclaje con los 5 sentidos", icon: HandFist, color: "bg-destructive/10 text-foreground" },
   { path: "/herramientas/mindfulness", label: "Mindfulness", desc: "Timer de meditación", icon: Flower, color: "bg-accent/10 text-foreground" },
   { path: "/herramientas/contenido", label: "Psicoeducación", desc: "Videos, audios, lecturas y Psico-Factos", icon: BookOpen, color: "bg-primary/5 text-foreground" },
+  { path: "/herramientas/autocuidado", label: "Autocuidado Offline", desc: "Tareas para el mundo real", icon: Leaf, color: "bg-mood-5/15 text-foreground" },
+  { path: "/herramientas/favoritos", label: "Mi Botiquín", desc: "Tus contenidos favoritos", icon: Star, color: "bg-accent/15 text-foreground" },
 ];
 
 export default function Tools() {
