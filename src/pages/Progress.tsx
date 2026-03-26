@@ -68,7 +68,7 @@ export default function Progress() {
   return (
     <div className="px-5 pt-14 pb-4 safe-area-top">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={() => navigate("/")} className="text-muted-foreground">
+        <button onClick={() => navigate("/mi-proceso")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
         <h1 className="font-display text-lg font-semibold">Mi Progreso</h1>
