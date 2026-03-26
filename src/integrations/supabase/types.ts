@@ -294,6 +294,80 @@ export type Database = {
         }
         Relationships: []
       }
+      medication_logs: {
+        Row: {
+          id: string
+          log_date: string | null
+          medication_id: string
+          note: string | null
+          side_effects: string[] | null
+          taken: boolean | null
+          taken_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          log_date?: string | null
+          medication_id: string
+          note?: string | null
+          side_effects?: string[] | null
+          taken?: boolean | null
+          taken_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          log_date?: string | null
+          medication_id?: string
+          note?: string | null
+          side_effects?: string[] | null
+          taken?: boolean | null
+          taken_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_logs_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          dosage: string | null
+          frequency: string | null
+          id: string
+          name: string
+          reminder_time: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          dosage?: string | null
+          frequency?: string | null
+          id?: string
+          name: string
+          reminder_time?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          dosage?: string | null
+          frequency?: string | null
+          id?: string
+          name?: string
+          reminder_time?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       micro_achievements: {
         Row: {
           achievement_date: string | null
@@ -483,6 +557,36 @@ export type Database = {
           user_id?: string
           what_happened?: string | null
           what_i_wished?: string | null
+        }
+        Relationships: []
+      }
+      selfcare_tasks: {
+        Row: {
+          completed: boolean | null
+          completed_date: string | null
+          created_at: string | null
+          id: string
+          is_suggested: boolean | null
+          task_text: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_date?: string | null
+          created_at?: string | null
+          id?: string
+          is_suggested?: boolean | null
+          task_text: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_date?: string | null
+          created_at?: string | null
+          id?: string
+          is_suggested?: boolean | null
+          task_text?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -679,6 +783,30 @@ export type Database = {
           created_at?: string | null
           goal_text?: string
           id?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
+      weekly_reflections: {
+        Row: {
+          created_at: string | null
+          id: string
+          reflection_text: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reflection_text: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reflection_text?: string
           user_id?: string
           week_start?: string
         }
