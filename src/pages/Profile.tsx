@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Moon, Sun, SignOut, Stethoscope, Gear, Bell, Link as LinkIcon, UserCircle, Lifebuoy, Phone, X } from "@phosphor-icons/react";
+import { Moon, Sun, SignOut, Stethoscope, Gear, Bell, Link as LinkIcon, UserCircle, Lifebuoy, Phone, X, PencilSimple, Check } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const emergencyLines = [
   { label: "Centro de Asistencia al Suicida", number: "135" },
@@ -14,6 +15,35 @@ export default function Profile() {
   const { user, signOut } = useAuth();
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
   const [crisisOpen, setCrisisOpen] = useState(false);
+  const [preferredName, setPreferredName] = useState("");
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+
+  /* Fetch preferred name from profile */
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("patient_app_profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const name = data?.display_name || user.user_metadata?.display_name || user.email?.split("@")[0] || "";
+        setPreferredName(name);
+        setNameInput(name);
+      });
+  }, [user]);
+
+  const saveName = async () => {
+    if (!user) return;
+    const trimmed = nameInput.trim();
+    await supabase
+      .from("patient_app_profiles")
+      .update({ display_name: trimmed || null })
+      .eq("user_id", user.id);
+    setPreferredName(trimmed || user.user_metadata?.display_name || user.email?.split("@")[0] || "");
+    setEditingName(false);
+  };
 
   const toggleDark = () => {
     document.documentElement.classList.toggle("dark");
@@ -32,12 +62,42 @@ export default function Profile() {
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/20">
           <UserCircle size={32} weight="duotone" className="text-accent-foreground" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="font-display text-lg font-semibold">
-            {user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Mi Perfil"}
+            {preferredName || "Mi Perfil"}
           </h1>
           <p className="text-xs text-muted-foreground">{user?.email}</p>
         </div>
+      </div>
+
+      {/* Preferred name field */}
+      <div className="mb-6 rounded-2xl border border-border bg-card p-4">
+        <label className="mb-2 block font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          ¿Cómo querés que te llamemos?
+        </label>
+        {editingName ? (
+          <div className="flex gap-2">
+            <input
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder="Tu nombre de preferencia"
+              className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && saveName()}
+            />
+            <button onClick={saveName} className="rounded-xl bg-primary px-3 py-2 text-primary-foreground">
+              <Check size={16} weight="bold" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => { setNameInput(preferredName); setEditingName(true); }}
+            className="flex w-full items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-left text-sm transition-colors active:bg-muted"
+          >
+            <span className="flex-1">{preferredName || "Definir nombre..."}</span>
+            <PencilSimple size={14} className="text-muted-foreground" />
+          </button>
+        )}
       </div>
 
       <div className="mb-6 h-px bg-border" />
