@@ -1,37 +1,24 @@
 import { useNavigate } from "react-router-dom";
 import {
   Heart, PencilSimple, Clock, UsersThree, EnvelopeSimple,
-  Notepad, Trophy, ChatCircleDots, Brain, Moon,
+  Notepad, Trophy, ChatCircleDots, Brain, Moon, Flag,
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
-import { WeeklyGoalsWidget } from "@/components/WeeklyGoalsWidget";
 
-const sections = [
-  {
-    group: "Registro diario",
-    items: [
-      { path: "/diario/checkin", label: "Check-in rápido", desc: "¿Cómo te sentís hoy? Cuerpo y mente", icon: Heart, color: "bg-destructive/10 text-destructive" },
-      { path: "/diario/escribir", label: "Escritura libre", desc: "Escribí lo que necesites soltar", icon: PencilSimple, color: "bg-accent/15 text-accent-foreground" },
-      { path: "/diario/dia", label: "Línea del día", desc: "Mañana, tarde y noche", icon: Clock, color: "bg-secondary text-secondary-foreground" },
-      { path: "/diario/vinculos", label: "Vínculos", desc: "Registrá interacciones importantes", icon: UsersThree, color: "bg-primary/10 text-foreground" },
-    ],
-  },
-  {
-    group: "Herramientas simbólicas",
-    items: [
-      { path: "/diario/cartas", label: "Cartas que no voy a enviar", desc: "Escribí, soltá o guardá", icon: EnvelopeSimple, color: "bg-accent/10 text-accent-foreground" },
-      { path: "/diario/terapia", label: "Notas para terapia", desc: "Temas para tu próxima sesión", icon: Notepad, color: "bg-success/10 text-foreground" },
-      { path: "/diario/logros", label: "Micro-logros", desc: "Pequeñas victorias del día", icon: Trophy, color: "bg-accent/15 text-accent-foreground" },
-    ],
-  },
-  {
-    group: "Análisis y reflexión",
-    items: [
-      { path: "/diario/dialogo", label: "Diálogo interno", desc: "Yo crítico vs yo compasivo", icon: ChatCircleDots, color: "bg-secondary text-secondary-foreground" },
-      { path: "/diario/pensamientos", label: "Registro de pensamientos", desc: "Técnica TCC paso a paso", icon: Brain, color: "bg-primary/10 text-foreground" },
-      { path: "/diario/suenos", label: "Registro de sueños", desc: "Anotá y explorá tus sueños", icon: Moon, color: "bg-accent/10 text-accent-foreground" },
-    ],
-  },
+const quickAccess = [
+  { path: "/diario/checkin", label: "Check-in rápido", icon: Heart, color: "bg-[hsl(0,60%,94%)] text-destructive" },
+  { path: "/diario/dia", label: "Línea del día", icon: Clock, color: "bg-secondary text-secondary-foreground" },
+  { path: "/diario/vinculos", label: "Vínculos", icon: UsersThree, color: "bg-primary/10 text-foreground" },
+  { path: "/diario/objetivos", label: "Mis objetivos", icon: Flag, color: "bg-accent/15 text-accent-foreground" },
+];
+
+const explorationTools = [
+  { path: "/diario/cartas", label: "Cartas que no voy a enviar", icon: EnvelopeSimple, color: "text-destructive" },
+  { path: "/diario/terapia", label: "Notas para terapia", icon: Notepad, color: "text-accent-foreground" },
+  { path: "/diario/logros", label: "Micro-logros", icon: Trophy, color: "text-accent-foreground" },
+  { path: "/diario/dialogo", label: "Diálogo interno", icon: ChatCircleDots, color: "text-secondary-foreground" },
+  { path: "/diario/suenos", label: "Registro de sueños", icon: Moon, color: "text-primary" },
+  { path: "/diario/pensamientos", label: "Registro de pensamientos", icon: Brain, color: "text-foreground" },
 ];
 
 export default function Diario() {
@@ -39,45 +26,77 @@ export default function Diario() {
 
   return (
     <div className="px-5 pt-14 pb-4 safe-area-top">
-      <h1 className="mb-2 font-display text-xl font-semibold">Diario</h1>
+      {/* ── Header ── */}
+      <h1 className="mb-1 font-display text-xl font-semibold">Diario</h1>
       <p className="mb-6 text-sm text-muted-foreground">Tu espacio seguro de introspección.</p>
 
-      {/* ── Mis Objetivos ────────────── */}
-      <WeeklyGoalsWidget title="Mis Objetivos" />
+      {/* ── Primary: Escritura Libre ── */}
+      <motion.button
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => navigate("/diario/escribir")}
+        className="mb-6 flex w-full flex-col items-start rounded-3xl bg-accent/10 p-5 text-left shadow-[0_2px_12px_-4px_hsl(var(--accent)/0.15)] transition-shadow active:shadow-none"
+      >
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/20">
+          <PencilSimple size={22} weight="duotone" className="text-accent-foreground" />
+        </div>
+        <p className="font-display text-base font-semibold">Escritura libre</p>
+        <p className="mt-1 text-sm text-muted-foreground">Escribí lo que necesites soltar...</p>
+      </motion.button>
 
-      {sections.map((section, si) => (
-        <motion.div
-          key={section.group}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: si * 0.1 }}
-          className="mb-6"
-        >
-          <h2 className="mb-3 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {section.group}
-          </h2>
-          <div className="space-y-2">
-            {section.items.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className="flex w-full items-center gap-3.5 rounded-2xl border border-border bg-card p-3.5 text-left transition-colors active:bg-muted"
-                >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.color}`}>
-                    <Icon size={20} weight="duotone" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-display text-sm font-medium">{item.label}</p>
-                    <p className="text-xs text-muted-foreground truncate">{item.desc}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </motion.div>
-      ))}
+      {/* ── Quick Access 2×2 Grid ── */}
+      <div className="mb-6 grid grid-cols-2 gap-3">
+        {quickAccess.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <motion.button
+              key={item.path}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 + i * 0.04 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => navigate(item.path)}
+              className="flex flex-col items-start rounded-3xl bg-card p-4 text-left shadow-[0_1px_8px_-3px_hsl(var(--foreground)/0.06)] transition-shadow active:shadow-none"
+            >
+              <div className={`mb-2.5 flex h-9 w-9 items-center justify-center rounded-xl ${item.color}`}>
+                <Icon size={20} weight="duotone" />
+              </div>
+              <p className="font-display text-[13px] font-medium leading-tight">{item.label}</p>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* ── Exploration Tools ── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.25 }}
+      >
+        <h2 className="mb-3 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Herramientas de Exploración
+        </h2>
+        <div className="grid grid-cols-2 gap-2.5">
+          {explorationTools.map((item, i) => {
+            const Icon = item.icon;
+            return (
+              <motion.button
+                key={item.path}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + i * 0.035 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => navigate(item.path)}
+                className="flex items-center gap-2.5 rounded-2xl bg-card p-3 text-left shadow-[0_1px_6px_-2px_hsl(var(--foreground)/0.05)] transition-shadow active:shadow-none"
+              >
+                <Icon size={18} weight="duotone" className={item.color} />
+                <p className="font-display text-[12px] font-medium leading-tight">{item.label}</p>
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.div>
     </div>
   );
 }
