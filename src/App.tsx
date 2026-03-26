@@ -21,6 +21,7 @@ import TherapyNotes from "@/components/journal/TherapyNotes";
 import MicroAchievements from "@/components/journal/MicroAchievements";
 import InternalDialogue from "@/components/journal/InternalDialogue";
 import JournalTimeline from "@/components/journal/JournalTimeline";
+import DiarioHuellas from "@/pages/DiarioHuellas";
 import ThoughtRecord from "@/pages/ThoughtRecord";
 import DreamLog from "@/pages/DreamLog";
 import Grounding from "@/pages/Grounding";

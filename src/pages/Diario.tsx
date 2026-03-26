@@ -46,6 +46,9 @@ export default function Diario() {
         <p className="mt-1 text-sm text-muted-foreground">Escribí lo que necesites soltar...</p>
       </motion.button>
 
+      {/* ── Tus Huellas ── */}
+      <TusHuellas />
+
       {/* ── Quick Access 2×2 Grid ── */}
       <div className="mb-6 grid grid-cols-2 gap-3">
         {quickAccess.map((item, i) => {
