@@ -105,7 +105,7 @@ export default function JournalEntry() {
       });
 
       toast.success("Entrada guardada");
-      navigate("/herramientas/journal");
+      navigate("/diario");
     } catch {
       toast.error("Error al guardar");
     } finally {
@@ -116,7 +116,7 @@ export default function JournalEntry() {
   return (
     <div className="flex min-h-screen flex-col px-5 pt-14 pb-4 safe-area-top">
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => navigate("/herramientas/journal")} className="text-muted-foreground">
+        <button onClick={() => navigate("/diario")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
         <h1 className="font-display text-lg font-semibold">Escritura libre</h1>
