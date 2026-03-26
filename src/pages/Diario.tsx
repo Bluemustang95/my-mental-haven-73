@@ -4,6 +4,7 @@ import {
   Notepad, Trophy, ChatCircleDots, Brain, Moon, Flag,
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
+import TusHuellas from "@/components/journal/TusHuellas";
 
 const quickAccess = [
   { path: "/diario/checkin", label: "Check-in rápido", icon: Heart, color: "bg-[hsl(0,60%,94%)] text-destructive" },
