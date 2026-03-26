@@ -4,6 +4,7 @@ import {
   Notepad, Trophy, ChatCircleDots, Brain, Moon,
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
+import { WeeklyGoalsWidget } from "@/components/WeeklyGoalsWidget";
 
 const sections = [
   {
@@ -40,6 +41,9 @@ export default function Diario() {
     <div className="px-5 pt-14 pb-4 safe-area-top">
       <h1 className="mb-2 font-display text-xl font-semibold">Diario</h1>
       <p className="mb-6 text-sm text-muted-foreground">Tu espacio seguro de introspección.</p>
+
+      {/* ── Mis Objetivos ────────────── */}
+      <WeeklyGoalsWidget title="Mis Objetivos" />
 
       {sections.map((section, si) => (
         <motion.div

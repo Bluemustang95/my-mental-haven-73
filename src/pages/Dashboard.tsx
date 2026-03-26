@@ -1,11 +1,10 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight, TrendUp, Stethoscope, CalendarBlank, Sparkle } from "@phosphor-icons/react";
+import { Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight, Stethoscope, CalendarBlank, Sparkle } from "@phosphor-icons/react";
 import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { WeeklyGoalsWidget } from "@/components/WeeklyGoalsWidget";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SessionPrep } from "@/components/SessionPrep";
 /* ── Mood config ─────────────────────────── */
@@ -393,41 +392,20 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* ── Contextual Affirmation ───── */}
+      {/* ── Frase del día ────────────── */}
       {affirmation && (
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="mb-6 rounded-2xl border border-border bg-card p-5"
+          className="mb-6 rounded-2xl border border-border bg-card p-6"
         >
-          <h2 className="mb-2 font-display text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Para vos
-          </h2>
-          <p className="text-sm italic text-foreground leading-relaxed">"{affirmation}"</p>
+          <p className="text-sm italic text-foreground leading-relaxed text-center">"{affirmation}"</p>
         </motion.section>
       )}
 
-      <div className="mb-6 h-px bg-border" />
-
-      {/* ── Weekly goals ─────────────── */}
-      <WeeklyGoalsWidget />
-
-      <div className="mb-6 h-px bg-border" />
-
-      {/* ── Bottom links ─────────────── */}
-      <section className="space-y-3">
-        <button
-          onClick={() => navigate("/mi-proceso/progreso")}
-          className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
-        >
-          <TrendUp size={20} weight="duotone" className="text-accent" />
-          <div className="flex-1">
-            <p className="font-display text-sm font-medium">Mi progreso</p>
-            <p className="text-xs text-muted-foreground">Mirá tu evolución</p>
-          </div>
-          <ArrowRight size={16} className="text-muted-foreground" />
-        </button>
+      {/* ── Solicitar tratamiento ───── */}
+      <section className="mb-4">
         <button
           onClick={() => navigate("/tratamiento")}
           className="flex w-full items-center gap-4 rounded-2xl border border-accent/30 bg-accent/5 p-4 text-left"
