@@ -4,6 +4,7 @@ import {
   Notepad, Trophy, ChatCircleDots, Brain, Moon, Flag,
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
+import TusHuellas from "@/components/journal/TusHuellas";
 
 const quickAccess = [
   { path: "/diario/checkin", label: "Check-in rápido", icon: Heart, color: "bg-[hsl(0,60%,94%)] text-destructive" },
@@ -44,6 +45,9 @@ export default function Diario() {
         <p className="font-display text-base font-semibold">Escritura libre</p>
         <p className="mt-1 text-sm text-muted-foreground">Escribí lo que necesites soltar...</p>
       </motion.button>
+
+      {/* ── Tus Huellas ── */}
+      <TusHuellas />
 
       {/* ── Quick Access 2×2 Grid ── */}
       <div className="mb-6 grid grid-cols-2 gap-3">

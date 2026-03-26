@@ -21,6 +21,7 @@ import TherapyNotes from "@/components/journal/TherapyNotes";
 import MicroAchievements from "@/components/journal/MicroAchievements";
 import InternalDialogue from "@/components/journal/InternalDialogue";
 import JournalTimeline from "@/components/journal/JournalTimeline";
+import DiarioHuellas from "@/pages/DiarioHuellas";
 import ThoughtRecord from "@/pages/ThoughtRecord";
 import DreamLog from "@/pages/DreamLog";
 import Grounding from "@/pages/Grounding";
@@ -87,6 +88,7 @@ const App = () => (
               <Route path="/diario/dialogo" element={<InternalDialogue />} />
               <Route path="/diario/pensamientos" element={<ThoughtRecord />} />
               <Route path="/diario/suenos" element={<DreamLog />} />
+              <Route path="/diario/huellas" element={<DiarioHuellas />} />
               <Route path="/diario/sesiones" element={<SessionNotes />} />
 
               {/* Herramientas (tab 4) — only techniques */}
