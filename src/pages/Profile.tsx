@@ -39,8 +39,7 @@ export default function Profile() {
     const trimmed = nameInput.trim();
     await supabase
       .from("patient_app_profiles")
-      .update({ display_name: trimmed || null })
-      .eq("user_id", user.id);
+      .upsert({ user_id: user.id, display_name: trimmed || null }, { onConflict: "user_id" });
     setPreferredName(trimmed || user.user_metadata?.display_name || user.email?.split("@")[0] || "");
     setEditingName(false);
   };
