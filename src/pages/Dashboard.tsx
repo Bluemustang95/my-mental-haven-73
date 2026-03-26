@@ -231,6 +231,9 @@ export default function Dashboard() {
                       )}
                     >
                       {day}
+                      {hasSelfcare && (
+                        <Sparkle size={8} weight="fill" className="absolute top-0.5 right-0.5 text-accent" />
+                      )}
                     </button>
                   </PopoverTrigger>
                   {checkin && checkin.mood_score && (
