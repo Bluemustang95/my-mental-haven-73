@@ -29,7 +29,7 @@ export function SessionPrep() {
         .from("session_notes")
         .select("session_date")
         .eq("user_id", user.id)
-        .gte("session_date", now.toISOString().split("T")[0])
+        .gte("session_date", localDateStr())
         .order("session_date")
         .limit(1);
 
