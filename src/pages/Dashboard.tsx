@@ -216,6 +216,7 @@ export default function Dashboard() {
               const checkin = checkinMap[ds];
               const mood = checkin?.mood_score;
               const isTodayDay = isToday(day);
+              const hasSelfcare = selfcareDates.has(ds);
 
               return (
                 <Popover key={day}>
