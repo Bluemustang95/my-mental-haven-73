@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, Check, X, Target } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { cn } from "@/lib/utils";
+import { cn, localWeekStart } from "@/lib/utils";
 
 type Goal = {
   id: string;
@@ -11,11 +11,7 @@ type Goal = {
 };
 
 function getWeekStart(): string {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d.setDate(diff));
-  return monday.toISOString().split("T")[0];
+  return localWeekStart();
 }
 
 export function WeeklyGoalsWidget() {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Star, Trophy } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
+import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ export default function MicroAchievements() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [newText, setNewText] = useState("");
   const [loading, setLoading] = useState(true);
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateStr();
 
   useEffect(() => {
     if (!user) return;

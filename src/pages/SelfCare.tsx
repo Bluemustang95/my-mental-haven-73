@@ -4,7 +4,7 @@ import { ArrowLeft, Leaf, Plus, Check, Trash } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, localDateStr } from "@/lib/utils";
 
 const SUGGESTED_TASKS = [
   "Caminar 15 min sin celular",
@@ -25,7 +25,7 @@ export default function SelfCare() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState("");
   const [loading, setLoading] = useState(true);
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = localDateStr();
 
   useEffect(() => {
     if (!user) return;

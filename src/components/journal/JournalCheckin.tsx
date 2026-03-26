@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
+import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { BodyMapSvg } from "./BodyMapSvg";
@@ -40,7 +40,7 @@ export default function JournalCheckin() {
         user_id: user.id,
         mood_score: mood,
         note: note || null,
-        checkin_date: new Date().toISOString().split("T")[0],
+        checkin_date: localDateStr(),
       }, { onConflict: "user_id,checkin_date" });
 
       // Save body map entries

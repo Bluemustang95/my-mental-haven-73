@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Pill, Plus, Check, Clock, Warning, Trash } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { localDateStr } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +22,7 @@ export default function MedicationTracker() {
   const [newDosage, setNewDosage] = useState("");
   const [newTime, setNewTime] = useState("");
   const [logSideEffects, setLogSideEffects] = useState<Record<string, string[]>>({});
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = localDateStr();
 
   useEffect(() => {
     if (!user) return;
