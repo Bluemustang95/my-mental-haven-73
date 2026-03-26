@@ -1,13 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { House, Toolbox, ChartBar, User, ChatCircle } from "@phosphor-icons/react";
+import { House, Notebook, Toolbox, ChartLineUp, ChatCircle } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { path: "/", label: "Inicio", icon: House },
+  { path: "/diario", label: "Diario", icon: Notebook },
+  { path: "__resmita__", label: "", icon: ChatCircle },
   { path: "/herramientas", label: "Herramientas", icon: Toolbox },
-  { path: "__resmita__", label: "", icon: ChatCircle }, // placeholder for center FAB
-  { path: "/tests", label: "Tests", icon: ChartBar },
-  { path: "/perfil", label: "Perfil", icon: User },
+  { path: "/mi-proceso", label: "Mi Proceso", icon: ChartLineUp },
 ];
 
 export function BottomNav() {
