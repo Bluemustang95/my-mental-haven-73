@@ -34,6 +34,10 @@ import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import TreatmentRequest from "@/pages/TreatmentRequest";
 import LinkProfessional from "@/pages/LinkProfessional";
+import Favorites from "@/pages/Favorites";
+import SelfCare from "@/pages/SelfCare";
+import MedicationTracker from "@/pages/MedicationTracker";
+import WeeklyReflection from "@/pages/WeeklyReflection";
 import NotFound from "@/pages/NotFound";
 import { AdminRoute } from "@/components/admin/AdminRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -92,12 +96,16 @@ const App = () => (
               <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
+              <Route path="/herramientas/favoritos" element={<Favorites />} />
+              <Route path="/herramientas/autocuidado" element={<SelfCare />} />
 
               {/* Mi Proceso (tab 5) */}
               <Route path="/mi-proceso" element={<MiProceso />} />
               <Route path="/mi-proceso/tests" element={<Tests />} />
               <Route path="/mi-proceso/linea-temporal" element={<JournalTimeline />} />
               <Route path="/mi-proceso/progreso" element={<Progress />} />
+              <Route path="/mi-proceso/medicacion" element={<MedicationTracker />} />
+              <Route path="/mi-proceso/espejo" element={<WeeklyReflection />} />
 
               {/* Resmita (center tab) */}
               <Route path="/resmita" element={<Resmita />} />
