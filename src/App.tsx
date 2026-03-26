@@ -10,7 +10,8 @@ import Resmita from "@/pages/Resmita";
 import Profile from "@/pages/Profile";
 import Onboarding from "@/pages/Onboarding";
 import Tools from "@/pages/Tools";
-import Journal from "@/pages/Journal";
+import Diario from "@/pages/Diario";
+import MiProceso from "@/pages/MiProceso";
 import JournalCheckin from "@/components/journal/JournalCheckin";
 import JournalEntry from "@/components/journal/JournalEntry";
 import DayTimeline from "@/components/journal/DayTimeline";
@@ -69,28 +70,39 @@ const App = () => (
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />
+
+              {/* Diario (tab 2) */}
+              <Route path="/diario" element={<Diario />} />
+              <Route path="/diario/checkin" element={<JournalCheckin />} />
+              <Route path="/diario/escribir" element={<JournalEntry />} />
+              <Route path="/diario/dia" element={<DayTimeline />} />
+              <Route path="/diario/vinculos" element={<RelationshipLog />} />
+              <Route path="/diario/cartas" element={<UnsentLetters />} />
+              <Route path="/diario/terapia" element={<TherapyNotes />} />
+              <Route path="/diario/logros" element={<MicroAchievements />} />
+              <Route path="/diario/dialogo" element={<InternalDialogue />} />
+              <Route path="/diario/pensamientos" element={<ThoughtRecord />} />
+              <Route path="/diario/suenos" element={<DreamLog />} />
+              <Route path="/diario/sesiones" element={<SessionNotes />} />
+
+              {/* Herramientas (tab 4) — only techniques */}
               <Route path="/herramientas" element={<Tools />} />
               <Route path="/herramientas/respiracion" element={<Breathing />} />
-              <Route path="/herramientas/journal" element={<Journal />} />
-              <Route path="/herramientas/journal/checkin" element={<JournalCheckin />} />
-              <Route path="/herramientas/journal/escribir" element={<JournalEntry />} />
-              <Route path="/herramientas/journal/dia" element={<DayTimeline />} />
-              <Route path="/herramientas/journal/vinculos" element={<RelationshipLog />} />
-              <Route path="/herramientas/journal/cartas" element={<UnsentLetters />} />
-              <Route path="/herramientas/journal/terapia" element={<TherapyNotes />} />
-              <Route path="/herramientas/journal/logros" element={<MicroAchievements />} />
-              <Route path="/herramientas/journal/dialogo" element={<InternalDialogue />} />
-              <Route path="/herramientas/journal/linea-temporal" element={<JournalTimeline />} />
-              <Route path="/herramientas/pensamientos" element={<ThoughtRecord />} />
-              <Route path="/herramientas/suenos" element={<DreamLog />} />
               <Route path="/herramientas/grounding" element={<Grounding />} />
               <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
-              <Route path="/herramientas/sesiones" element={<SessionNotes />} />
-              <Route path="/tests" element={<Tests />} />
-              <Route path="/progreso" element={<Progress />} />
+
+              {/* Mi Proceso (tab 5) */}
+              <Route path="/mi-proceso" element={<MiProceso />} />
+              <Route path="/mi-proceso/tests" element={<Tests />} />
+              <Route path="/mi-proceso/linea-temporal" element={<JournalTimeline />} />
+              <Route path="/mi-proceso/progreso" element={<Progress />} />
+
+              {/* Resmita (center tab) */}
               <Route path="/resmita" element={<Resmita />} />
+
+              {/* Profile (header icon, no tab) */}
               <Route path="/perfil" element={<Profile />} />
               <Route path="/tratamiento" element={<TreatmentRequest />} />
               <Route path="/vincular" element={<LinkProfessional />} />

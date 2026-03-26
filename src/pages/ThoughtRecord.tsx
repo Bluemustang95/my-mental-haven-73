@@ -37,7 +37,7 @@ export default function ThoughtRecord() {
   const save = () => {
     // TODO: save to Supabase thought_records
     setSaved(true);
-    setTimeout(() => navigate("/herramientas"), 1500);
+    setTimeout(() => navigate("/diario"), 1500);
   };
 
   if (saved) {
@@ -55,7 +55,7 @@ export default function ThoughtRecord() {
     <div className="flex min-h-screen flex-col px-5 pt-14 pb-4 safe-area-top">
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={() => step > 0 ? setStep(step - 1) : navigate("/herramientas")} className="text-muted-foreground">
+        <button onClick={() => step > 0 ? setStep(step - 1) : navigate("/diario")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
         <h1 className="font-display text-lg font-semibold">Registro de Pensamientos</h1>
@@ -116,7 +116,7 @@ export default function ThoughtRecord() {
       {/* Navigation */}
       <div className="mt-6 flex justify-between">
         <button
-          onClick={() => step > 0 ? setStep(step - 1) : navigate("/herramientas")}
+          onClick={() => step > 0 ? setStep(step - 1) : navigate("/diario")}
           className="font-display text-sm text-muted-foreground"
         >
           Atrás

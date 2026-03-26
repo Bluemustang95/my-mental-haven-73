@@ -1,15 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { Wind, Notebook, Brain, Moon, HandFist, Flower, BookOpen, ArrowRight } from "@phosphor-icons/react";
+import { Wind, HandFist, Flower, BookOpen, ArrowRight } from "@phosphor-icons/react";
 
 const tools = [
-  { path: "/herramientas/journal", label: "Diario", desc: "Escribí lo que sentís", icon: Notebook, color: "bg-accent/15 text-accent-foreground" },
-  { path: "/herramientas/pensamientos", label: "Registro de Pensamientos", desc: "Técnica TCC paso a paso", icon: Brain, color: "bg-secondary text-secondary-foreground" },
-  { path: "/herramientas/suenos", label: "Registro de Sueños", desc: "Anotá y explorá tus sueños", icon: Moon, color: "bg-primary/10 text-foreground" },
   { path: "/herramientas/respiracion", label: "Respiración Guiada", desc: "Patrones para regular tu cuerpo", icon: Wind, color: "bg-success/10 text-foreground" },
   { path: "/herramientas/grounding", label: "Grounding 5-4-3-2-1", desc: "Anclaje con los 5 sentidos", icon: HandFist, color: "bg-destructive/10 text-foreground" },
   { path: "/herramientas/mindfulness", label: "Mindfulness", desc: "Timer de meditación", icon: Flower, color: "bg-accent/10 text-foreground" },
-  { path: "/herramientas/contenido", label: "Psicoeducación", desc: "Videos, audios y lecturas", icon: BookOpen, color: "bg-primary/5 text-foreground" },
-  { path: "/herramientas/sesiones", label: "Notas de Sesión", desc: "Reflexiones post-terapia", icon: Notebook, color: "bg-secondary text-secondary-foreground" },
+  { path: "/herramientas/contenido", label: "Psicoeducación", desc: "Videos, audios, lecturas y Psico-Factos", icon: BookOpen, color: "bg-primary/5 text-foreground" },
 ];
 
 export default function Tools() {
@@ -18,7 +14,7 @@ export default function Tools() {
   return (
     <div className="px-5 pt-14 pb-4 safe-area-top">
       <h1 className="mb-2 font-display text-xl font-semibold">Herramientas</h1>
-      <p className="mb-6 text-sm text-muted-foreground">Recursos para tu bienestar diario.</p>
+      <p className="mb-6 text-sm text-muted-foreground">Técnicas para tu bienestar.</p>
 
       <div className="space-y-3">
         {tools.map((tool) => {

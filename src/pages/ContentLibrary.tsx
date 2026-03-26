@@ -74,7 +74,7 @@ export default function ContentLibrary() {
   return (
     <div className="px-5 pt-14 pb-4 safe-area-top">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={() => navigate("/herramientas")} className="text-muted-foreground">
+        <button onClick={() => navigate(-1)} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
         <h1 className="font-display text-lg font-semibold">Psicoeducación</h1>

@@ -62,7 +62,7 @@ function getDaysInMonth(year: number, month: number) {
 }
 function getFirstDayOfWeek(year: number, month: number) {
   const d = new Date(year, month, 1).getDay();
-  return d === 0 ? 6 : d - 1; // Monday = 0
+  return d === 0 ? 6 : d - 1;
 }
 const dayLabels = ["L", "M", "X", "J", "V", "S", "D"];
 const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -102,17 +102,14 @@ export default function Dashboard() {
     const list = (data ?? []) as Checkin[];
     setCheckins(list);
 
-    // Check consecutive low
     const recent2 = list.slice(0, 2);
     if (recent2.length === 2 && recent2.every(c => (c.mood_score ?? 3) <= 2)) {
       setConsecutiveLow(true);
     }
 
-    // Affirmation
     const recentScores = list.slice(0, 5).map(c => c.mood_score ?? 3);
     setAffirmation(pickAffirmation(recentScores));
 
-    // If today already checked in, show submitted
     const todayCheckin = list.find(c => c.checkin_date === todayStr);
     if (todayCheckin && todayCheckin.mood_score) {
       setSelectedMood(todayCheckin.mood_score);
@@ -156,15 +153,22 @@ export default function Dashboard() {
 
   return (
     <div className="px-5 pt-14 pb-4 safe-area-top">
-      {/* ── Greeting ─────────────────── */}
+      {/* ── Greeting + Profile Avatar ─── */}
       <div className="mb-6 flex items-center gap-3">
         <GreetingIcon size={28} weight="duotone" className="text-accent" />
-        <div>
+        <div className="flex-1">
           <h1 className="font-display text-xl font-semibold">
             {greeting.text}{firstName ? `, ${firstName}` : ""}
           </h1>
           <p className="text-xs text-muted-foreground">¿Cómo te sentís hoy?</p>
         </div>
+        <button
+          onClick={() => navigate("/perfil")}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 font-display text-sm font-semibold text-accent-foreground uppercase transition-transform active:scale-95"
+          aria-label="Perfil"
+        >
+          {firstName ? firstName[0] : "?"}
+        </button>
       </div>
 
       {/* ── Emotional Calendar ────────── */}
@@ -181,13 +185,11 @@ export default function Dashboard() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-4">
-          {/* Day labels */}
           <div className="grid grid-cols-7 gap-1 mb-1">
             {dayLabels.map(d => (
               <div key={d} className="text-center font-display text-[10px] text-muted-foreground">{d}</div>
             ))}
           </div>
-          {/* Days */}
           <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: firstDay }).map((_, i) => <div key={`e-${i}`} />)}
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
@@ -229,7 +231,6 @@ export default function Dashboard() {
             })}
           </div>
 
-          {/* Legend */}
           <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
             {moodLevels.map(m => (
               <div key={m.value} className="flex items-center gap-1">
@@ -330,7 +331,7 @@ export default function Dashboard() {
           >
             <p className="text-sm text-foreground">
               Venís pasando días difíciles, ¿te gustaría{" "}
-              <button onClick={() => navigate("/herramientas/sesiones")} className="underline font-medium text-accent">
+              <button onClick={() => navigate("/diario/terapia")} className="underline font-medium text-accent">
                 anotar esto para charlarlo en tu sesión
               </button>
               ?
@@ -353,7 +354,7 @@ export default function Dashboard() {
             <span className="font-display text-xs font-medium">Respirar</span>
           </button>
           <button
-            onClick={() => navigate("/herramientas/journal/escribir")}
+            onClick={() => navigate("/diario/escribir")}
             className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 transition-colors active:bg-muted"
           >
             <PencilSimple size={24} weight="duotone" className="text-accent" />
@@ -394,7 +395,7 @@ export default function Dashboard() {
       {/* ── Bottom links ─────────────── */}
       <section className="space-y-3">
         <button
-          onClick={() => navigate("/progreso")}
+          onClick={() => navigate("/mi-proceso/progreso")}
           className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
         >
           <TrendUp size={20} weight="duotone" className="text-accent" />

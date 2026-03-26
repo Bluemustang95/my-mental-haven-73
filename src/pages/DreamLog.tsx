@@ -23,7 +23,7 @@ export default function DreamLog() {
     if (!description.trim()) return;
     // TODO: save to Supabase dream_log
     setSaved(true);
-    setTimeout(() => navigate("/herramientas"), 1500);
+    setTimeout(() => navigate("/diario"), 1500);
   };
 
   if (saved) {
@@ -37,7 +37,7 @@ export default function DreamLog() {
   return (
     <div className="flex min-h-screen flex-col px-5 pt-14 pb-4 safe-area-top">
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => navigate("/herramientas")} className="text-muted-foreground">
+        <button onClick={() => navigate("/diario")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
         <h1 className="font-display text-lg font-semibold">Registro de Sueños</h1>
