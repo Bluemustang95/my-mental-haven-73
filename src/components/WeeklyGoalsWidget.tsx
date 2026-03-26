@@ -14,7 +14,7 @@ function getWeekStart(): string {
   return localWeekStart();
 }
 
-export function WeeklyGoalsWidget() {
+export function WeeklyGoalsWidget({ title = "Metas de la semana" }: { title?: string }) {
   const { user } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [newGoal, setNewGoal] = useState("");
@@ -59,7 +59,7 @@ export function WeeklyGoalsWidget() {
   return (
     <section className="mb-6">
       <h2 className="mb-4 flex items-center gap-2 font-display text-sm font-medium uppercase tracking-wider text-muted-foreground">
-        <Target size={16} /> Metas de la semana
+        <Target size={16} /> {title}
       </h2>
       <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
         {goals.map((g) => (
