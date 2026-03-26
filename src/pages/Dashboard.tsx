@@ -89,6 +89,7 @@ export default function Dashboard() {
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [consecutiveLow, setConsecutiveLow] = useState(false);
   const [affirmation, setAffirmation] = useState("");
+  const [selfcareDates, setSelfcareDates] = useState<Set<string>>(new Set());
 
   /* ── Fetch checkins ────────────────── */
   const fetchCheckins = useCallback(async () => {
@@ -118,6 +119,21 @@ export default function Dashboard() {
   }, [user, todayStr]);
 
   useEffect(() => { fetchCheckins(); }, [fetchCheckins]);
+
+  /* ── Fetch selfcare completed dates ── */
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("selfcare_tasks")
+      .select("completed_date")
+      .eq("user_id", user.id)
+      .eq("completed", true)
+      .not("completed_date", "is", null)
+      .then(({ data }) => {
+        const dates = new Set((data ?? []).map((d: any) => d.completed_date as string));
+        setSelfcareDates(dates);
+      });
+  }, [user]);
 
   /* ── Handle check-in ───────────────── */
   const handleCheckin = async () => {
