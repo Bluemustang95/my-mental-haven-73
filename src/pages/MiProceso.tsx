@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  TrendUp, Path, Pill, MagicWand, Brain, HeartHalf, Moon, Lightning, Sparkle,
+  TrendUp, Path, Pill, MagicWand, Brain, HeartHalf, Moon, Lightning, Sparkle, FileText,
 } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -186,6 +186,22 @@ export default function MiProceso() {
                 <p className="font-display text-xs font-medium text-accent-foreground/80">Nuevo test</p>
               </motion.button>
             </div>
+          </section>
+
+          {/* ── Resumen para mi Psico CTA ───── */}
+          <section className="px-5 mb-6">
+            <button
+              onClick={() => navigate("/mi-proceso/resumen")}
+              className="flex w-full items-center gap-3 rounded-3xl bg-accent/15 p-4 shadow-[0_2px_12px_hsl(var(--accent)/0.1)] transition-all active:scale-[0.98]"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/25">
+                <FileText size={22} weight="duotone" className="text-accent-foreground" />
+              </div>
+              <div className="text-left">
+                <p className="font-display text-sm font-semibold text-foreground">Resumen para mi Psico</p>
+                <p className="text-[11px] text-muted-foreground">Generá un reporte semanal en PDF</p>
+              </div>
+            </button>
           </section>
 
           {/* ── Quick links — horizontal row ─────── */}

@@ -12,6 +12,7 @@ import Onboarding from "@/pages/Onboarding";
 import Tools from "@/pages/Tools";
 import Diario from "@/pages/Diario";
 import MiProceso from "@/pages/MiProceso";
+import ResumenPsico from "@/pages/ResumenPsico";
 import JournalCheckin from "@/components/journal/JournalCheckin";
 import JournalEntry from "@/components/journal/JournalEntry";
 import DayTimeline from "@/components/journal/DayTimeline";
@@ -110,6 +111,7 @@ const App = () => (
               <Route path="/mi-proceso/progreso" element={<Progress />} />
               <Route path="/mi-proceso/medicacion" element={<MedicationTracker />} />
               <Route path="/mi-proceso/espejo" element={<WeeklyReflection />} />
+              <Route path="/mi-proceso/resumen" element={<ResumenPsico />} />
 
               {/* Resmita (center tab) */}
               <Route path="/resmita" element={<Resmita />} />

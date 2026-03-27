@@ -108,6 +108,24 @@ export default function DiarioHuellas() {
                 {/* Spine shadow */}
                 <div className="pointer-events-none absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-[hsl(30,20%,78%)]/40" />
 
+                {/* Highlight toggle */}
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const newVal = !entry.highlighted;
+                    await supabase.from("journal_entries").update({ highlighted: newVal }).eq("id", entry.id);
+                    setEntries(prev => prev.map(en => en.id === entry.id ? { ...en, highlighted: newVal } : en));
+                  }}
+                  className="absolute top-4 right-4 rounded-full p-1.5 active:bg-foreground/5"
+                  aria-label={entry.highlighted ? "Quitar destacado" : "Destacar para mi sesión"}
+                >
+                  <Star
+                    size={20}
+                    weight={entry.highlighted ? "fill" : "regular"}
+                    className={entry.highlighted ? "text-accent" : "text-muted-foreground/40"}
+                  />
+                </button>
+
                 {/* Date */}
                 <p className="mb-1 text-[11px] font-medium uppercase tracking-widest text-[hsl(30,15%,55%)]">
                   {formatDate(entry.entry_date || entry.created_at)}
