@@ -38,7 +38,7 @@ export default function HistoryPanel<T extends { id: string; created_at?: string
       .order(orderColumn, { ascending: false })
       .limit(50)
       .then(({ data }) => {
-        setEntries((data as T[]) || []);
+        setEntries((data as unknown as T[]) || []);
         setLoading(false);
       });
   }, [open, user, tableName, orderColumn]);
