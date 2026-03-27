@@ -1,0 +1,1 @@
+ALTER TABLE public.journal_entries ADD COLUMN highlighted boolean DEFAULT false;
