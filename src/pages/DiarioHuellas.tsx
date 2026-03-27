@@ -49,8 +49,9 @@ export default function DiarioHuellas() {
   };
 
   /* swipe handlers */
-  const goPrev = () => setCurrent((c) => Math.max(0, c - 1));
-  const goNext = () => setCurrent((c) => Math.min(entries.length - 1, c + 1));
+  /* "Anterior" → hacia el pasado (índice mayor), "Siguiente" → hacia lo reciente (índice menor) */
+  const goPrev = () => setCurrent((c) => Math.min(entries.length - 1, c + 1));
+  const goNext = () => setCurrent((c) => Math.max(0, c - 1));
 
   return (
     <motion.div
