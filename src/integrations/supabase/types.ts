@@ -267,6 +267,7 @@ export type Database = {
           created_at: string | null
           emotion_tags: string[] | null
           entry_date: string | null
+          highlighted: boolean | null
           id: string
           prompt: string | null
           updated_at: string | null
@@ -277,6 +278,7 @@ export type Database = {
           created_at?: string | null
           emotion_tags?: string[] | null
           entry_date?: string | null
+          highlighted?: boolean | null
           id?: string
           prompt?: string | null
           updated_at?: string | null
@@ -287,6 +289,7 @@ export type Database = {
           created_at?: string | null
           emotion_tags?: string[] | null
           entry_date?: string | null
+          highlighted?: boolean | null
           id?: string
           prompt?: string | null
           updated_at?: string | null
