@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, PencilSimple } from "@phosphor-icons/react";
+import { ArrowLeft, PencilSimple, Star } from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -14,6 +14,7 @@ interface Entry {
   emotion_tags: string[] | null;
   entry_date: string | null;
   created_at: string | null;
+  highlighted: boolean | null;
 }
 
 export default function DiarioHuellas() {
