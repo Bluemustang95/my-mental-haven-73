@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import HistoryPanel from "@/components/journal/HistoryPanel";
 
 const steps = [
   { key: "situation", label: "Situación", placeholder: "¿Qué pasó? Describí el contexto brevemente.", field: "textarea" },
@@ -58,7 +59,60 @@ export default function ThoughtRecord() {
         <button onClick={() => step > 0 ? setStep(step - 1) : navigate("/diario")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold">Registro de Pensamientos</h1>
+        <h1 className="flex-1 font-display text-lg font-semibold">Registro de Pensamientos</h1>
+        <HistoryPanel<{ id: string; created_at: string | null; situation: string; automatic_thought: string | null; emotion: string | null; emotion_intensity: number | null; evidence_for: string | null; evidence_against: string | null; alternative_thought: string | null; new_emotion: string | null; new_emotion_intensity: number | null }>
+          tableName="thought_records"
+          renderItem={(item) => (
+            <div>
+              <p className="text-xs font-medium text-foreground truncate">{item.situation.slice(0, 50)}</p>
+              {item.emotion && <p className="text-[11px] text-muted-foreground">{item.emotion}</p>}
+            </div>
+          )}
+          renderDetail={(item) => (
+            <div className="space-y-3">
+              <div>
+                <p className="font-display text-xs text-muted-foreground mb-1">Situación</p>
+                <p className="text-sm font-body">{item.situation}</p>
+              </div>
+              {item.automatic_thought && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Pensamiento automático</p>
+                  <p className="text-sm font-body">{item.automatic_thought}</p>
+                </div>
+              )}
+              {item.emotion && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Emoción ({item.emotion_intensity}/10)</p>
+                  <p className="text-sm font-body">{item.emotion}</p>
+                </div>
+              )}
+              {item.evidence_for && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Evidencia a favor</p>
+                  <p className="text-sm font-body">{item.evidence_for}</p>
+                </div>
+              )}
+              {item.evidence_against && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Evidencia en contra</p>
+                  <p className="text-sm font-body">{item.evidence_against}</p>
+                </div>
+              )}
+              {item.alternative_thought && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Pensamiento alternativo</p>
+                  <p className="text-sm font-body">{item.alternative_thought}</p>
+                </div>
+              )}
+              {item.new_emotion && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Nueva emoción ({item.new_emotion_intensity}/10)</p>
+                  <p className="text-sm font-body">{item.new_emotion}</p>
+                </div>
+              )}
+            </div>
+          )}
+        />
       </div>
 
       {/* Progress */}

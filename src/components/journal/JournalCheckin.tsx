@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BodyMapSvg } from "./BodyMapSvg";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import HistoryPanel from "./HistoryPanel";
 
 const moodOptions = [
   { value: 1, label: "Muy mal", emoji: "😞" },
@@ -67,7 +68,30 @@ export default function JournalCheckin() {
         <button onClick={() => navigate("/diario")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold">Check-in rápido</h1>
+        <h1 className="flex-1 font-display text-lg font-semibold">Check-in rápido</h1>
+        <HistoryPanel<{ id: string; created_at: string | null; mood_score: number | null; note: string | null; checkin_date: string }>
+          tableName="daily_checkins"
+          renderItem={(item) => (
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{["","😞","😔","😐","🙂","😊"][item.mood_score || 0]}</span>
+              <span className="text-xs text-foreground truncate">{item.note || "Sin nota"}</span>
+            </div>
+          )}
+          renderDetail={(item) => (
+            <div className="space-y-3">
+              <div>
+                <p className="font-display text-xs text-muted-foreground mb-1">Estado de ánimo</p>
+                <p className="text-2xl">{["","😞 Muy mal","😔 Mal","😐 Regular","🙂 Bien","😊 Muy bien"][item.mood_score || 0]}</p>
+              </div>
+              {item.note && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Nota</p>
+                  <p className="text-sm font-body">{item.note}</p>
+                </div>
+              )}
+            </div>
+          )}
+        />
       </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

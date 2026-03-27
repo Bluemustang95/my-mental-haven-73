@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import HistoryPanel from "./HistoryPanel";
 
 export default function InternalDialogue() {
   const navigate = useNavigate();
@@ -41,7 +42,31 @@ export default function InternalDialogue() {
         <button onClick={() => navigate("/diario")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold">Diálogo interno</h1>
+        <h1 className="flex-1 font-display text-lg font-semibold">Diálogo interno</h1>
+        <HistoryPanel<{ id: string; created_at: string | null; situation: string | null; critical_voice: string; compassionate_voice: string }>
+          tableName="internal_dialogues"
+          renderItem={(item) => (
+            <p className="text-xs text-foreground truncate">{item.situation || item.critical_voice.slice(0, 50)}</p>
+          )}
+          renderDetail={(item) => (
+            <div className="space-y-3">
+              {item.situation && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Situación</p>
+                  <p className="text-sm font-body">{item.situation}</p>
+                </div>
+              )}
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3">
+                <p className="font-display text-xs text-destructive mb-1">Yo crítico</p>
+                <p className="text-sm font-body whitespace-pre-wrap">{item.critical_voice}</p>
+              </div>
+              <div className="rounded-xl border border-success/20 bg-success/5 p-3">
+                <p className="font-display text-xs text-success mb-1">Yo compasivo</p>
+                <p className="text-sm font-body whitespace-pre-wrap">{item.compassionate_voice}</p>
+              </div>
+            </div>
+          )}
+        />
       </div>
 
       <p className="mb-5 text-xs text-muted-foreground">

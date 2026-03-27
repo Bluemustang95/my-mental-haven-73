@@ -5,6 +5,7 @@ import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import HistoryPanel from "./HistoryPanel";
 
 const periods = [
   { key: "morning", label: "Mañana", icon: Sun, color: "bg-accent/15 text-accent-foreground" },
@@ -84,7 +85,42 @@ export default function DayTimeline() {
         <button onClick={() => navigate("/diario")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold">Línea del día</h1>
+        <h1 className="flex-1 font-display text-lg font-semibold">Línea del día</h1>
+        <HistoryPanel<{ id: string; created_at: string | null; period: string; mood_score: number | null; note: string | null; entry_date: string | null }>
+          tableName="day_timeline_entries"
+          renderItem={(item) => {
+            const periodLabel = item.period === "morning" ? "Mañana" : item.period === "afternoon" ? "Tarde" : "Noche";
+            const moodLabels = ["", "Muy mal", "Mal", "Regular", "Bien", "Muy bien"];
+            return (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-medium text-foreground">{periodLabel}</span>
+                <span className="text-[10px] text-muted-foreground">· {moodLabels[item.mood_score || 0]}</span>
+              </div>
+            );
+          }}
+          renderDetail={(item) => {
+            const periodLabel = item.period === "morning" ? "Mañana" : item.period === "afternoon" ? "Tarde" : "Noche";
+            const moodLabels = ["", "Muy mal", "Mal", "Regular", "Bien", "Muy bien"];
+            return (
+              <div className="space-y-3">
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Momento</p>
+                  <p className="text-sm font-body font-medium">{periodLabel}</p>
+                </div>
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Estado</p>
+                  <p className="text-sm font-body">{moodLabels[item.mood_score || 0]}</p>
+                </div>
+                {item.note && (
+                  <div>
+                    <p className="font-display text-xs text-muted-foreground mb-1">Nota</p>
+                    <p className="text-sm font-body whitespace-pre-wrap">{item.note}</p>
+                  </div>
+                )}
+              </div>
+            );
+          }}
+        />
       </div>
 
       <p className="mb-6 text-sm text-muted-foreground">Registrá cómo fue cada momento de tu día.</p>
