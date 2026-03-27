@@ -39,6 +39,7 @@ import Favorites from "@/pages/Favorites";
 import SelfCare from "@/pages/SelfCare";
 import MedicationTracker from "@/pages/MedicationTracker";
 import WeeklyReflection from "@/pages/WeeklyReflection";
+import WeeklyGoalsPage from "@/pages/WeeklyGoalsPage";
 import NotFound from "@/pages/NotFound";
 import { AdminRoute } from "@/components/admin/AdminRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -82,6 +83,7 @@ const App = () => (
               <Route path="/diario/escribir" element={<JournalEntry />} />
               <Route path="/diario/dia" element={<DayTimeline />} />
               <Route path="/diario/vinculos" element={<RelationshipLog />} />
+              <Route path="/diario/objetivos" element={<WeeklyGoalsPage />} />
               <Route path="/diario/cartas" element={<UnsentLetters />} />
               <Route path="/diario/terapia" element={<TherapyNotes />} />
               <Route path="/diario/logros" element={<MicroAchievements />} />
