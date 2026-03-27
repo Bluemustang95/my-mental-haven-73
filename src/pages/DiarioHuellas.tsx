@@ -49,8 +49,9 @@ export default function DiarioHuellas() {
   };
 
   /* swipe handlers */
-  const goPrev = () => setCurrent((c) => Math.max(0, c - 1));
-  const goNext = () => setCurrent((c) => Math.min(entries.length - 1, c + 1));
+  /* "Anterior" → hacia el pasado (índice mayor), "Siguiente" → hacia lo reciente (índice menor) */
+  const goPrev = () => setCurrent((c) => Math.min(entries.length - 1, c + 1));
+  const goNext = () => setCurrent((c) => Math.max(0, c - 1));
 
   return (
     <motion.div
@@ -149,14 +150,14 @@ export default function DiarioHuellas() {
           <div className="mt-5 flex items-center gap-6">
             <button
               onClick={goPrev}
-              disabled={current === 0}
+              disabled={current === entries.length - 1}
               className="rounded-xl px-4 py-2 text-sm font-medium text-foreground/70 active:bg-foreground/5 disabled:opacity-30"
             >
               ← Anterior
             </button>
             <button
               onClick={goNext}
-              disabled={current === entries.length - 1}
+              disabled={current === 0}
               className="rounded-xl px-4 py-2 text-sm font-medium text-foreground/70 active:bg-foreground/5 disabled:opacity-30"
             >
               Siguiente →
