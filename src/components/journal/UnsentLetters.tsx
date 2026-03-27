@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import HistoryPanel from "./HistoryPanel";
 
 export default function UnsentLetters() {
   const navigate = useNavigate();
@@ -54,7 +55,36 @@ export default function UnsentLetters() {
         <button onClick={() => navigate("/diario")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold">Cartas que no voy a enviar</h1>
+        <h1 className="flex-1 font-display text-lg font-semibold">Cartas que no voy a enviar</h1>
+        <HistoryPanel<{ id: string; created_at: string | null; recipient: string | null; content: string; action: string | null }>
+          tableName="unsent_letters"
+          renderItem={(item) => (
+            <div>
+              <p className="text-xs font-medium text-foreground">{item.recipient || "Sin destinatario"}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{item.content.slice(0, 60)}...</p>
+            </div>
+          )}
+          renderDetail={(item) => (
+            <div className="space-y-3">
+              {item.recipient && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Para</p>
+                  <p className="text-sm font-body font-medium">{item.recipient}</p>
+                </div>
+              )}
+              <div>
+                <p className="font-display text-xs text-muted-foreground mb-1">Carta</p>
+                <p className="text-sm font-body whitespace-pre-wrap leading-relaxed">{item.content}</p>
+              </div>
+              <div>
+                <p className="font-display text-xs text-muted-foreground mb-1">Acción</p>
+                <span className="rounded-full border border-border px-2.5 py-0.5 font-display text-[11px] text-muted-foreground">
+                  {item.action === "released" ? "Soltada" : "Guardada"}
+                </span>
+              </div>
+            </div>
+          )}
+        />
       </div>
 
       <p className="mb-4 text-xs text-muted-foreground italic">

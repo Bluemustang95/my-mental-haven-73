@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import HistoryPanel from "./HistoryPanel";
 
 const emotionOptions = [
   "Frustración", "Tristeza", "Enojo", "Soledad",
@@ -48,7 +49,42 @@ export default function RelationshipLog() {
         <button onClick={() => navigate("/diario")} className="text-muted-foreground">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold">Vínculos</h1>
+        <h1 className="flex-1 font-display text-lg font-semibold">Vínculos</h1>
+        <HistoryPanel<{ id: string; created_at: string | null; person: string; what_happened: string | null; what_i_wished: string | null; emotion: string | null }>
+          tableName="relationship_logs"
+          renderItem={(item) => (
+            <div>
+              <p className="text-xs font-medium text-foreground">{item.person}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{item.what_happened || ""}</p>
+            </div>
+          )}
+          renderDetail={(item) => (
+            <div className="space-y-3">
+              <div>
+                <p className="font-display text-xs text-muted-foreground mb-1">Persona</p>
+                <p className="text-sm font-body font-medium">{item.person}</p>
+              </div>
+              {item.what_happened && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">¿Qué pasó?</p>
+                  <p className="text-sm font-body whitespace-pre-wrap">{item.what_happened}</p>
+                </div>
+              )}
+              {item.what_i_wished && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">¿Qué me hubiera gustado decir?</p>
+                  <p className="text-sm font-body whitespace-pre-wrap">{item.what_i_wished}</p>
+                </div>
+              )}
+              {item.emotion && (
+                <div>
+                  <p className="font-display text-xs text-muted-foreground mb-1">Emoción</p>
+                  <span className="rounded-full border border-accent bg-accent/10 px-2.5 py-0.5 font-display text-[11px] text-accent-foreground">{item.emotion}</span>
+                </div>
+              )}
+            </div>
+          )}
+        />
       </div>
 
       <div className="flex-1 space-y-5">
