@@ -1,12 +1,17 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight, Stethoscope, CalendarBlank, Sparkle } from "@phosphor-icons/react";
+import {
+  Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight,
+  Stethoscope, Sparkle, X, Brain, Notebook, Barbell, Flower,
+} from "@phosphor-icons/react";
 import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SessionPrep } from "@/components/SessionPrep";
+import { format, startOfWeek, addDays, subWeeks, addWeeks, isSameDay } from "date-fns";
+import { es } from "date-fns/locale";
+
 /* ── Mood config ─────────────────────────── */
 const moodLevels = [
   { value: 1, label: "Muy bajo", tw: "bg-mood-1" },
@@ -55,18 +60,24 @@ function getGreeting(): { text: string; icon: typeof Sun } {
   return { text: "Buenas noches", icon: Moon };
 }
 
-/* ── Calendar helpers ─────────────────────── */
-function getDaysInMonth(year: number, month: number) {
-  return new Date(year, month + 1, 0).getDate();
-}
-function getFirstDayOfWeek(year: number, month: number) {
-  const d = new Date(year, month, 1).getDay();
-  return d === 0 ? 6 : d - 1;
-}
-const dayLabels = ["L", "M", "X", "J", "V", "S", "D"];
-const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const dayInitials = ["L", "M", "X", "J", "V", "S", "D"];
 
 type Checkin = { checkin_date: string; mood_score: number | null; note: string | null };
+
+interface DayActivity {
+  type: "journal" | "thought" | "test" | "exercise" | "dream";
+  label: string;
+  detail: string;
+  time: string;
+}
+
+const activityConfig: Record<DayActivity["type"], { icon: typeof Brain; color: string }> = {
+  journal:  { icon: Notebook, color: "text-accent" },
+  thought:  { icon: Brain,    color: "text-[hsl(193_50%_50%)]" },
+  test:     { icon: Heartbeat, color: "text-[hsl(250_50%_60%)]" },
+  exercise: { icon: Flower,   color: "text-[hsl(var(--mood-5))]" },
+  dream:    { icon: Barbell,  color: "text-[hsl(var(--mood-4))]" },
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -74,7 +85,6 @@ export default function Dashboard() {
   const greeting = useMemo(() => getGreeting(), []);
   const GreetingIcon = greeting.icon;
 
-  /* ── Preferred name from DB ──────── */
   const [firstName, setFirstName] = useState("");
   useEffect(() => {
     if (!user) return;
@@ -93,15 +103,18 @@ export default function Dashboard() {
   const todayStr = localDateStr(today);
 
   /* ── State ──────────────────────────── */
-  const [selectedMood, setSelectedMood] = useState<number | null>(null);
-  const [note, setNote] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [checkins, setCheckins] = useState<Checkin[]>([]);
-  const [calMonth, setCalMonth] = useState(today.getMonth());
-  const [calYear, setCalYear] = useState(today.getFullYear());
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(today, { weekStartsOn: 1 }));
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [consecutiveLow, setConsecutiveLow] = useState(false);
   const [affirmation, setAffirmation] = useState("");
-  const [selfcareDates, setSelfcareDates] = useState<Set<string>>(new Set());
+
+  // Modal state
+  const [modalMood, setModalMood] = useState<number | null>(null);
+  const [modalNote, setModalNote] = useState("");
+  const [modalSubmitted, setModalSubmitted] = useState(false);
+  const [dayActivities, setDayActivities] = useState<DayActivity[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);
 
   /* ── Fetch checkins ────────────────── */
   const fetchCheckins = useCallback(async () => {
@@ -122,44 +135,9 @@ export default function Dashboard() {
 
     const recentScores = list.slice(0, 5).map(c => c.mood_score ?? 3);
     setAffirmation(pickAffirmation(recentScores));
-
-    const todayCheckin = list.find(c => c.checkin_date === todayStr);
-    if (todayCheckin && todayCheckin.mood_score) {
-      setSelectedMood(todayCheckin.mood_score);
-      setSubmitted(true);
-    }
-  }, [user, todayStr]);
-
-  useEffect(() => { fetchCheckins(); }, [fetchCheckins]);
-
-  /* ── Fetch selfcare completed dates ── */
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("selfcare_tasks")
-      .select("completed_date")
-      .eq("user_id", user.id)
-      .eq("completed", true)
-      .not("completed_date", "is", null)
-      .then(({ data }) => {
-        const dates = new Set((data ?? []).map((d: any) => d.completed_date as string));
-        setSelfcareDates(dates);
-      });
   }, [user]);
 
-  /* ── Handle check-in ───────────────── */
-  const handleCheckin = async () => {
-    if (!selectedMood || !user) return;
-    await supabase.from("daily_checkins").upsert({
-      user_id: user.id,
-      mood_score: selectedMood,
-      note: note || null,
-      checkin_date: todayStr,
-    }, { onConflict: "user_id,checkin_date" });
-    setSubmitted(true);
-    setNote("");
-    fetchCheckins();
-  };
+  useEffect(() => { fetchCheckins(); }, [fetchCheckins]);
 
   /* ── Calendar data ─────────────────── */
   const checkinMap = useMemo(() => {
@@ -168,201 +146,158 @@ export default function Dashboard() {
     return m;
   }, [checkins]);
 
-  const daysInMonth = getDaysInMonth(calYear, calMonth);
-  const firstDay = getFirstDayOfWeek(calYear, calMonth);
+  const weekDays = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  }, [weekStart]);
 
-  const isToday = (day: number) =>
-    calYear === today.getFullYear() && calMonth === today.getMonth() && day === today.getDate();
+  /* ── Open day detail ───────────────── */
+  const openDayDetail = async (day: Date) => {
+    setSelectedDay(day);
+    const ds = localDateStr(day);
+    const existing = checkinMap[ds];
+    setModalMood(existing?.mood_score ?? null);
+    setModalNote(existing?.note ?? "");
+    setModalSubmitted(!!existing?.mood_score);
+    setLoadingActivities(true);
+    setDayActivities([]);
 
-  const dateStr = (day: number) =>
-    `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    if (!user) return;
 
-  const empathicMsg = selectedMood ? getEmpathicMsg(selectedMood) : null;
+    const nextDay = localDateStr(addDays(day, 1));
+    const activities: DayActivity[] = [];
+
+    const [journals, thoughts, tests, exercises, dreams] = await Promise.all([
+      supabase.from("journal_entries").select("id, created_at, content").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
+      supabase.from("thought_records").select("id, created_at, situation").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
+      supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
+      supabase.from("exercise_sessions").select("id, created_at, exercise_type, exercise_name, duration_seconds").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
+      supabase.from("dream_log").select("id, created_at, description").eq("user_id", user.id).eq("dream_date", ds).order("created_at"),
+    ]);
+
+    journals.data?.forEach((j: any) => activities.push({ type: "journal", label: "Entrada de diario", detail: j.content?.slice(0, 80) || "", time: format(new Date(j.created_at), "HH:mm") }));
+    thoughts.data?.forEach((t: any) => activities.push({ type: "thought", label: "Registro de pensamiento", detail: t.situation?.slice(0, 80) || "", time: format(new Date(t.created_at), "HH:mm") }));
+    tests.data?.forEach((t: any) => activities.push({ type: "test", label: `Test ${t.test_type}`, detail: `Puntaje: ${t.score}${t.severity ? ` · ${t.severity}` : ""}`, time: format(new Date(t.created_at), "HH:mm") }));
+    exercises.data?.forEach((e: any) => activities.push({ type: "exercise", label: e.exercise_name || e.exercise_type, detail: e.duration_seconds ? `${Math.round(e.duration_seconds / 60)} min` : "Completado", time: format(new Date(e.created_at), "HH:mm") }));
+    dreams.data?.forEach((d: any) => activities.push({ type: "dream", label: "Registro de sueño", detail: d.description?.slice(0, 80) || "", time: format(new Date(d.created_at), "HH:mm") }));
+
+    activities.sort((a, b) => a.time.localeCompare(b.time));
+    setDayActivities(activities);
+    setLoadingActivities(false);
+  };
+
+  /* ── Handle check-in from modal ──── */
+  const handleCheckin = async () => {
+    if (!modalMood || !user || !selectedDay) return;
+    const ds = localDateStr(selectedDay);
+    await supabase.from("daily_checkins").upsert({
+      user_id: user.id,
+      mood_score: modalMood,
+      note: modalNote || null,
+      checkin_date: ds,
+    }, { onConflict: "user_id,checkin_date" });
+    setModalSubmitted(true);
+    fetchCheckins();
+  };
+
+  const empathicMsg = modalMood ? getEmpathicMsg(modalMood) : null;
+  const selectedDayStr = selectedDay ? localDateStr(selectedDay) : "";
+  const isSelectedToday = selectedDay ? isSameDay(selectedDay, today) : false;
 
   return (
-    <div className="px-5 pt-14 pb-4 safe-area-top">
-      {/* ── Greeting + Profile Avatar ─── */}
-      <div className="mb-6 flex items-center gap-3">
-        <GreetingIcon size={28} weight="duotone" className="text-accent" />
-        <div className="flex-1">
-          <h1 className="font-display text-xl font-semibold">
-            {greeting.text}{firstName ? `, ${firstName}` : ""}
-          </h1>
-          <p className="text-xs text-muted-foreground">¿Cómo te sentís hoy?</p>
+    <div className="min-h-screen bg-[#FDFCFB] dark:bg-background safe-area-top">
+      {/* ── Greeting ─── */}
+      <div className="px-6 pt-14 pb-2">
+        <div className="flex items-center gap-3">
+          <GreetingIcon size={26} weight="duotone" className="text-accent" />
+          <div className="flex-1">
+            <h1 className="font-display text-xl font-semibold text-foreground">
+              {greeting.text}{firstName ? `, ${firstName}` : ""}
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">¿Cómo te sentís hoy?</p>
+          </div>
+          <button
+            onClick={() => navigate("/perfil")}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 font-display text-sm font-semibold text-accent-foreground uppercase transition-transform active:scale-95"
+            aria-label="Perfil"
+          >
+            {firstName ? firstName[0] : "?"}
+          </button>
         </div>
-        <button
-          onClick={() => navigate("/perfil")}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 font-display text-sm font-semibold text-accent-foreground uppercase transition-transform active:scale-95"
-          aria-label="Perfil"
-        >
-          {firstName ? firstName[0] : "?"}
-        </button>
       </div>
 
-      {/* ── Session Prep (15min before) ── */}
       <SessionPrep />
 
-      {/* ── Emotional Calendar ────────── */}
-      <section className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-sm font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <CalendarBlank size={16} /> Calendario emocional
-          </h2>
-          <div className="flex items-center gap-2">
-            <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); } else setCalMonth(m => m - 1); }} className="text-muted-foreground active:text-foreground p-1">‹</button>
-            <span className="font-display text-xs font-medium min-w-[100px] text-center">{monthNames[calMonth]} {calYear}</span>
-            <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); } else setCalMonth(m => m + 1); }} className="text-muted-foreground active:text-foreground p-1">›</button>
-          </div>
+      {/* ── Weekly Calendar ─── */}
+      <section className="px-4 pt-6 pb-2">
+        <div className="flex items-center justify-between mb-5 px-2">
+          <button
+            onClick={() => setWeekStart(w => subWeeks(w, 1))}
+            className="text-muted-foreground active:text-foreground p-1 text-lg"
+          >
+            ‹
+          </button>
+          <span className="font-display text-xs font-medium text-muted-foreground tracking-wide uppercase">
+            {format(weekStart, "d MMM", { locale: es })} — {format(addDays(weekStart, 6), "d MMM yyyy", { locale: es })}
+          </span>
+          <button
+            onClick={() => setWeekStart(w => addWeeks(w, 1))}
+            className="text-muted-foreground active:text-foreground p-1 text-lg"
+          >
+            ›
+          </button>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="grid grid-cols-7 gap-1 mb-1">
-            {dayLabels.map(d => (
-              <div key={d} className="text-center font-display text-[10px] text-muted-foreground">{d}</div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: firstDay }).map((_, i) => <div key={`e-${i}`} />)}
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
-              const ds = dateStr(day);
-              const checkin = checkinMap[ds];
-              const mood = checkin?.mood_score;
-              const isTodayDay = isToday(day);
-              const hasSelfcare = selfcareDates.has(ds);
+        <div className="flex justify-between px-1">
+          {weekDays.map((day, i) => {
+            const ds = localDateStr(day);
+            const checkin = checkinMap[ds];
+            const mood = checkin?.mood_score;
+            const isToday = isSameDay(day, today);
+            const isSelected = selectedDay ? isSameDay(day, selectedDay) : false;
 
-              return (
-                <Popover key={day}>
-                  <PopoverTrigger asChild>
-                    <button
-                      className={cn(
-                        "relative flex h-9 w-full items-center justify-center rounded-lg text-xs font-display transition-all",
-                        mood ? moodBg[mood] : "bg-transparent",
-                        mood ? "text-foreground font-medium" : "text-muted-foreground",
-                        isTodayDay && "ring-2 ring-accent ring-offset-1 ring-offset-background",
-                        !mood && !isTodayDay && "hover:bg-muted/50"
-                      )}
-                    >
-                      {day}
-                      {hasSelfcare && (
-                        <Sparkle size={8} weight="fill" className="absolute top-0.5 right-0.5 text-accent" />
-                      )}
-                    </button>
-                  </PopoverTrigger>
-                  {checkin && checkin.mood_score && (
-                    <PopoverContent className="w-52 p-3" side="top">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className={cn("h-3 w-3 rounded-full", moodBg[checkin.mood_score!])} />
-                          <span className="font-display text-xs font-medium">
-                            {moodLevels.find(m => m.value === checkin.mood_score)?.label}
-                          </span>
-                        </div>
-                        {checkin.note && <p className="text-xs text-muted-foreground">{checkin.note}</p>}
-                      </div>
-                    </PopoverContent>
-                  )}
-                </Popover>
-              );
-            })}
-          </div>
-
-          <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
-            {moodLevels.map(m => (
-              <div key={m.value} className="flex items-center gap-1">
-                <div className={cn("h-2.5 w-2.5 rounded-full", m.tw)} />
-                <span className="text-[9px] text-muted-foreground">{m.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Mood Thermometer ─────────── */}
-      <section className="mb-6">
-        <h2 className="mb-3 font-display text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          Termómetro emocional
-        </h2>
-        <div className="rounded-2xl border border-border bg-card p-5">
-          {submitted ? (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-2">
-              <div className={cn("mx-auto h-12 w-12 rounded-full flex items-center justify-center", selectedMood ? moodBg[selectedMood] : "")}>
-                <span className="font-display text-lg font-semibold">✓</span>
-              </div>
-              <p className="font-display text-sm font-medium">Registrado</p>
-              <AnimatePresence>
-                {empathicMsg && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-xs text-muted-foreground italic">
-                    {empathicMsg}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ) : (
-            <>
-              <div className="mb-4 flex justify-between">
-                {moodLevels.map((mood) => (
-                  <button
-                    key={mood.value}
-                    onClick={() => setSelectedMood(mood.value)}
-                    className="flex flex-col items-center gap-1.5"
-                  >
-                    <motion.div
-                      animate={selectedMood === mood.value ? { scale: 1.15 } : { scale: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                      className={cn(
-                        "h-11 w-11 rounded-full border-2 transition-colors",
-                        mood.tw,
-                        selectedMood === mood.value
-                          ? "border-accent shadow-md"
-                          : "border-transparent opacity-60"
-                      )}
-                    />
-                    <span className="font-display text-[9px] text-muted-foreground">{mood.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              <AnimatePresence>
-                {selectedMood && (
-                  <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mb-3 text-center text-xs italic text-muted-foreground">
-                    {getEmpathicMsg(selectedMood)}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="¿Querés agregar algo? (opcional)"
-                className="mb-3 w-full resize-none rounded-xl border border-border bg-background p-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                rows={2}
-              />
-
+            return (
               <button
-                onClick={handleCheckin}
-                disabled={!selectedMood}
-                className={cn(
-                  "w-full rounded-xl py-2.5 font-display text-sm font-medium transition-all",
-                  selectedMood
-                    ? "bg-primary text-primary-foreground active:scale-[0.98]"
-                    : "bg-muted text-muted-foreground"
-                )}
+                key={i}
+                onClick={() => openDayDetail(day)}
+                className="flex flex-col items-center gap-1 py-1 px-1 rounded-2xl transition-all"
               >
-                Registrar
+                <span className="text-[10px] font-display text-muted-foreground tracking-wide">
+                  {dayInitials[i]}
+                </span>
+                <motion.div
+                  animate={isSelected ? { scale: 1.15 } : { scale: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-full font-display text-sm transition-all",
+                    isSelected
+                      ? "bg-accent text-accent-foreground shadow-md font-semibold"
+                      : isToday
+                        ? "bg-accent/20 text-foreground font-medium"
+                        : "text-muted-foreground",
+                  )}
+                >
+                  {day.getDate()}
+                </motion.div>
+                {/* Mood dot */}
+                {mood ? (
+                  <div className={cn("h-1.5 w-1.5 rounded-full", moodBg[mood])} />
+                ) : (
+                  <div className="h-1.5 w-1.5" />
+                )}
               </button>
-            </>
-          )}
+            );
+          })}
         </div>
       </section>
 
       {/* ── Consecutive low alert ───── */}
       <AnimatePresence>
-        {consecutiveLow && !submitted && (
+        {consecutiveLow && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-6 rounded-2xl border border-mood-2 bg-mood-2/10 p-4"
+            className="mx-6 mb-4 rounded-2xl border border-mood-2 bg-mood-2/10 p-4"
           >
             <p className="text-sm text-foreground">
               Venís pasando días difíciles, ¿te gustaría{" "}
@@ -375,62 +310,235 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* ── Crisis: ¿Qué necesitás ahora? ── */}
-      <section className="mb-6">
-        <h2 className="mb-3 font-display text-sm font-medium uppercase tracking-wider text-muted-foreground">
+      {/* ── Quick actions ───── */}
+      <section className="px-6 pt-4 pb-2">
+        <h2 className="mb-3 font-display text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
           ¿Qué necesitás ahora?
         </h2>
         <div className="grid grid-cols-3 gap-3">
-          <button
-            onClick={() => navigate("/herramientas/respiracion")}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 transition-colors active:bg-muted"
-          >
-            <Wind size={24} weight="duotone" className="text-accent" />
-            <span className="font-display text-xs font-medium">Respirar</span>
-          </button>
-          <button
-            onClick={() => navigate("/diario/escribir")}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 transition-colors active:bg-muted"
-          >
-            <PencilSimple size={24} weight="duotone" className="text-accent" />
-            <span className="font-display text-xs font-medium">Escribir</span>
-          </button>
-          <button
-            onClick={() => navigate("/herramientas/grounding")}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 transition-colors active:bg-muted"
-          >
-            <Heartbeat size={24} weight="duotone" className="text-accent" />
-            <span className="font-display text-xs font-medium">Calmar</span>
-          </button>
+          {[
+            { icon: Wind, label: "Respirar", route: "/herramientas/respiracion" },
+            { icon: PencilSimple, label: "Escribir", route: "/diario/escribir" },
+            { icon: Heartbeat, label: "Calmar", route: "/herramientas/grounding" },
+          ].map(({ icon: Icon, label, route }) => (
+            <button
+              key={label}
+              onClick={() => navigate(route)}
+              className="flex flex-col items-center gap-2.5 rounded-2xl bg-card/60 border border-border/50 p-4 transition-colors active:bg-muted/60"
+            >
+              <Icon size={22} weight="duotone" className="text-accent" />
+              <span className="font-display text-[11px] font-medium text-foreground">{label}</span>
+            </button>
+          ))}
         </div>
       </section>
 
-      {/* ── Frase del día ────────────── */}
+      {/* ── Affirmation ────────────── */}
       {affirmation && (
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="mb-6 rounded-2xl border border-border bg-card p-6"
+          className="mx-6 mt-5 mb-4 rounded-2xl bg-accent/8 border border-accent/15 p-6"
         >
-          <p className="text-sm italic text-foreground leading-relaxed text-center">"{affirmation}"</p>
+          <p className="text-sm italic text-foreground/80 leading-relaxed text-center font-body">
+            "{affirmation}"
+          </p>
         </motion.section>
       )}
 
-      {/* ── Solicitar tratamiento ───── */}
-      <section className="mb-4">
+      {/* ── Treatment CTA ───── */}
+      <section className="px-6 pb-6">
         <button
           onClick={() => navigate("/tratamiento")}
-          className="flex w-full items-center gap-4 rounded-2xl border border-accent/30 bg-accent/5 p-4 text-left"
+          className="flex w-full items-center gap-4 rounded-2xl border border-accent/20 bg-card/60 p-4 text-left transition-colors active:bg-muted/40"
         >
           <Stethoscope size={20} className="text-accent" weight="duotone" />
           <div className="flex-1">
-            <p className="font-display text-sm font-medium">Solicitar tratamiento</p>
-            <p className="text-xs text-muted-foreground">Conectá con un profesional RESMA</p>
+            <p className="font-display text-sm font-medium text-foreground">Solicitar tratamiento</p>
+            <p className="text-[11px] text-muted-foreground">Conectá con un profesional RESMA</p>
           </div>
           <ArrowRight size={16} className="text-muted-foreground" />
         </button>
       </section>
+
+      {/* ═══════════════════════════════════════════
+          DAY DETAIL MODAL
+      ═══════════════════════════════════════════ */}
+      <AnimatePresence>
+        {selectedDay && (
+          <motion.div
+            key="day-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+            onClick={() => setSelectedDay(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedDay && (
+          <motion.div
+            key="day-modal"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-[#FDFCFB] dark:bg-card shadow-2xl"
+          >
+            {/* Modal header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between px-6 pt-5 pb-3 bg-[#FDFCFB] dark:bg-card">
+              <div>
+                <h2 className="font-display text-lg font-semibold text-foreground capitalize">
+                  {format(selectedDay, "EEEE d", { locale: es })}
+                </h2>
+                <p className="text-[11px] text-muted-foreground">
+                  {format(selectedDay, "MMMM yyyy", { locale: es })}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedDay(null)}
+                className="rounded-full p-2 text-muted-foreground active:bg-muted"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-6 pb-8 space-y-6">
+              {/* ── Mood Thermometer ──── */}
+              <section>
+                <h3 className="font-display text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-3">
+                  Termómetro emocional
+                </h3>
+
+                {modalSubmitted ? (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-2 py-3">
+                    <div className={cn("mx-auto h-12 w-12 rounded-full flex items-center justify-center", modalMood ? moodBg[modalMood] : "")}>
+                      <span className="font-display text-lg font-semibold">✓</span>
+                    </div>
+                    <p className="font-display text-sm font-medium text-foreground">
+                      {moodLevels.find(m => m.value === modalMood)?.label}
+                    </p>
+                    {empathicMsg && (
+                      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-xs text-muted-foreground italic">
+                        {empathicMsg}
+                      </motion.p>
+                    )}
+                    {checkinMap[selectedDayStr]?.note && (
+                      <p className="text-xs text-muted-foreground mt-1 bg-muted/30 rounded-xl px-3 py-2">
+                        {checkinMap[selectedDayStr].note}
+                      </p>
+                    )}
+                  </motion.div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      {moodLevels.map((mood) => (
+                        <button
+                          key={mood.value}
+                          onClick={() => setModalMood(mood.value)}
+                          className="flex flex-col items-center gap-1.5"
+                        >
+                          <motion.div
+                            animate={modalMood === mood.value ? { scale: 1.15 } : { scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                            className={cn(
+                              "h-11 w-11 rounded-full border-2 transition-colors",
+                              mood.tw,
+                              modalMood === mood.value
+                                ? "border-accent shadow-md"
+                                : "border-transparent opacity-60"
+                            )}
+                          />
+                          <span className="font-display text-[9px] text-muted-foreground">{mood.label}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <AnimatePresence>
+                      {modalMood && (
+                        <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-center text-xs italic text-muted-foreground">
+                          {getEmpathicMsg(modalMood)}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+
+                    <textarea
+                      value={modalNote}
+                      onChange={(e) => setModalNote(e.target.value)}
+                      placeholder="¿Querés agregar algo? (opcional)"
+                      className="w-full resize-none rounded-xl border border-border bg-background p-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      rows={2}
+                    />
+
+                    <button
+                      onClick={handleCheckin}
+                      disabled={!modalMood}
+                      className={cn(
+                        "w-full rounded-xl py-2.5 font-display text-sm font-medium transition-all",
+                        modalMood
+                          ? "bg-primary text-primary-foreground active:scale-[0.98]"
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      Registrar
+                    </button>
+                  </div>
+                )}
+              </section>
+
+              {/* ── Separator ──── */}
+              <div className="h-px bg-border/60" />
+
+              {/* ── Day Bitácora ──── */}
+              <section>
+                <h3 className="font-display text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-3">
+                  Bitácora del día
+                </h3>
+
+                {loadingActivities ? (
+                  <div className="flex justify-center py-6">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                  </div>
+                ) : dayActivities.length === 0 ? (
+                  <div className="text-center py-6">
+                    <p className="text-xs text-muted-foreground italic">
+                      {isSelectedToday ? "Aún no registraste actividad hoy." : "No hubo actividad registrada este día."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {dayActivities.map((act, i) => {
+                      const cfg = activityConfig[act.type];
+                      const Icon = cfg.icon;
+                      return (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="flex items-start gap-3 rounded-xl bg-card/80 border border-border/40 p-3"
+                        >
+                          <div className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted/40", cfg.color)}>
+                            <Icon size={14} weight="duotone" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-display text-[12px] font-medium text-foreground leading-snug">{act.label}</p>
+                            <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{act.detail}</p>
+                          </div>
+                          <span className="shrink-0 text-[9px] text-muted-foreground/60 mt-0.5">{act.time}</span>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
