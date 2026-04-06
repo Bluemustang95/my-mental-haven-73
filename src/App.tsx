@@ -115,6 +115,9 @@ const App = () => (
               <Route path="/mi-proceso/linea-temporal" element={<JournalTimeline />} />
               <Route path="/mi-proceso/progreso" element={<Progress />} />
               <Route path="/mi-proceso/medicacion" element={<MedicationTracker />} />
+              <Route path="/mi-proceso/medicacion/biblioteca" element={<MedLibrary />} />
+              <Route path="/mi-proceso/medicacion/biblioteca/:categoryId" element={<MedCategoryList />} />
+              <Route path="/mi-proceso/medicacion/biblioteca/:categoryId/:drugId" element={<MedDrugDetail />} />
               <Route path="/mi-proceso/espejo" element={<WeeklyReflection />} />
               <Route path="/mi-proceso/resumen" element={<ResumenPsico />} />
 
