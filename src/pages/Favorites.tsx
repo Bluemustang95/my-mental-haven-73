@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, ArrowLeft, BookOpen } from "@phosphor-icons/react";
+import { Heart, ArrowLeft, BookOpen } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,7 +48,7 @@ export default function Favorites() {
   return (
     <div className="px-5 pt-14 pb-4 safe-area-top">
       <button onClick={() => navigate("/herramientas")} className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
-        <ArrowLeft size={16} /> Herramientas
+        <ArrowLeft size={16} /> Recursos
       </button>
       <h1 className="mb-2 font-display text-xl font-semibold">Mi Botiquín</h1>
       <p className="mb-6 text-sm text-muted-foreground">Tus contenidos favoritos para acceso rápido.</p>
@@ -59,10 +59,10 @@ export default function Favorites() {
         </div>
       ) : favorites.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center">
-          <Star size={32} weight="duotone" className="mx-auto mb-3 text-accent" />
+          <Heart size={32} weight="fill" className="mx-auto mb-3 text-destructive" />
           <p className="font-display text-sm font-medium">Aún no tenés favoritos</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Marcá contenidos con ★ desde Psicoeducación para verlos acá.
+            Marcá contenidos con ❤️ desde Psicoeducación para verlos acá.
           </p>
         </div>
       ) : (
@@ -82,8 +82,8 @@ export default function Favorites() {
                   <p className="font-display text-sm font-medium truncate">{fav.title}</p>
                   <p className="text-xs text-muted-foreground capitalize">{fav.category} · {fav.content_type}</p>
                 </div>
-                <button onClick={() => removeFav(fav.id)} className="p-1 text-accent active:scale-90 transition-transform">
-                  <Star size={20} weight="fill" />
+                <button onClick={() => removeFav(fav.id)} className="p-1 text-destructive active:scale-90 transition-transform">
+                  <Heart size={20} weight="fill" />
                 </button>
               </motion.div>
             ))}

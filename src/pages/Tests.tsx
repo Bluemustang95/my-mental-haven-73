@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, ChartLineUp } from "@phosphor-icons/react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, ChartLineUp, ArrowRight } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 type TestDef = {
   id: string;
   name: string;
+  humanLabel: string;
   description: string;
   questions: string[];
   options: { label: string; value: number }[];
@@ -41,7 +42,8 @@ const agree4Options = [
 const tests: TestDef[] = [
   {
     id: "PHQ-9",
-    name: "PHQ-9 · Depresión",
+    name: "Depresión",
+    humanLabel: "¿Cómo viene tu ánimo?",
     description: "Estado de ánimo en las últimas 2 semanas.",
     preamble: "En las últimas 2 semanas, ¿con qué frecuencia te ha molestado...",
     questions: [
@@ -57,16 +59,17 @@ const tests: TestDef[] = [
     ],
     options: freq4Options,
     interpret: (score) => {
-      if (score <= 4) return { severity: "Mínima", color: "text-success", message: "Tu puntaje sugiere síntomas mínimos de depresión." };
-      if (score <= 9) return { severity: "Leve", color: "text-accent", message: "Tu puntaje sugiere síntomas leves. Las herramientas de la app pueden ayudarte." };
-      if (score <= 14) return { severity: "Moderada", color: "text-accent-foreground", message: "Tu puntaje sugiere síntomas moderados. Te recomendamos hablar con un profesional." };
-      if (score <= 19) return { severity: "Moderadamente severa", color: "text-destructive", message: "Tu puntaje sugiere síntomas significativos. Es importante buscar ayuda profesional." };
-      return { severity: "Severa", color: "text-destructive", message: "Tu puntaje sugiere síntomas severos. Te recomendamos contactar a un profesional lo antes posible." };
+      if (score <= 4) return { severity: "Mínima", color: "text-success", message: "Tu puntaje sugiere síntomas mínimos." };
+      if (score <= 9) return { severity: "Leve", color: "text-accent", message: "Hay algo que podríamos trabajar juntos." };
+      if (score <= 14) return { severity: "Moderada", color: "text-accent-foreground", message: "Te recomendamos hablar con un profesional." };
+      if (score <= 19) return { severity: "Significativa", color: "text-destructive", message: "Es importante buscar ayuda profesional." };
+      return { severity: "Severa", color: "text-destructive", message: "Te recomendamos contactar a un profesional lo antes posible." };
     },
   },
   {
     id: "GAD-7",
-    name: "GAD-7 · Ansiedad",
+    name: "Ansiedad",
+    humanLabel: "¿Cómo estás con la ansiedad?",
     description: "Ansiedad generalizada en las últimas 2 semanas.",
     preamble: "En las últimas 2 semanas, ¿con qué frecuencia te ha molestado...",
     questions: [
@@ -80,15 +83,16 @@ const tests: TestDef[] = [
     ],
     options: freq4Options,
     interpret: (score) => {
-      if (score <= 4) return { severity: "Mínima", color: "text-success", message: "Tu puntaje sugiere ansiedad mínima." };
-      if (score <= 9) return { severity: "Leve", color: "text-accent", message: "Tu puntaje sugiere ansiedad leve. Respiración y mindfulness pueden ayudarte." };
-      if (score <= 14) return { severity: "Moderada", color: "text-accent-foreground", message: "Tu puntaje sugiere ansiedad moderada. Te recomendamos hablar con un profesional." };
-      return { severity: "Severa", color: "text-destructive", message: "Tu puntaje sugiere ansiedad severa. Es importante buscar ayuda profesional." };
+      if (score <= 4) return { severity: "Mínima", color: "text-success", message: "Tu ansiedad está en niveles bajos." };
+      if (score <= 9) return { severity: "Leve", color: "text-accent", message: "Respiración y mindfulness pueden ayudarte." };
+      if (score <= 14) return { severity: "Moderada", color: "text-accent-foreground", message: "Te recomendamos hablar con un profesional." };
+      return { severity: "Severa", color: "text-destructive", message: "Es importante buscar ayuda profesional." };
     },
   },
   {
     id: "PSS-10",
-    name: "PSS-10 · Estrés",
+    name: "Estrés",
+    humanLabel: "¿Cómo manejás el estrés?",
     description: "Nivel de estrés percibido en el último mes.",
     preamble: "En el último mes, ¿con qué frecuencia...",
     questions: [
@@ -106,13 +110,14 @@ const tests: TestDef[] = [
     options: freq5Options,
     interpret: (score) => {
       if (score <= 13) return { severity: "Bajo", color: "text-success", message: "Tu nivel de estrés percibido es bajo." };
-      if (score <= 26) return { severity: "Moderado", color: "text-accent", message: "Tu nivel de estrés es moderado. Las herramientas de la app pueden ayudarte." };
-      return { severity: "Alto", color: "text-destructive", message: "Tu nivel de estrés es alto. Te recomendamos hablar con un profesional." };
+      if (score <= 26) return { severity: "Moderado", color: "text-accent", message: "Las herramientas de la app pueden ayudarte." };
+      return { severity: "Alto", color: "text-destructive", message: "Te recomendamos hablar con un profesional." };
     },
   },
   {
     id: "ISI",
-    name: "ISI · Insomnio",
+    name: "Insomnio",
+    humanLabel: "¿Cómo estás descansando?",
     description: "Severidad del insomnio en las últimas 2 semanas.",
     preamble: "En las últimas 2 semanas...",
     questions: [
@@ -132,15 +137,16 @@ const tests: TestDef[] = [
       { label: "Muy severo", value: 4 },
     ],
     interpret: (score) => {
-      if (score <= 7) return { severity: "Sin insomnio clínico", color: "text-success", message: "Tu sueño parece estar dentro de rangos normales." };
-      if (score <= 14) return { severity: "Insomnio leve", color: "text-accent", message: "Podrías beneficiarte de mejorar tu higiene del sueño." };
-      if (score <= 21) return { severity: "Insomnio moderado", color: "text-accent-foreground", message: "Te recomendamos consultar con un profesional sobre tu sueño." };
-      return { severity: "Insomnio severo", color: "text-destructive", message: "Es importante buscar ayuda profesional para tu problema de sueño." };
+      if (score <= 7) return { severity: "Buen descanso", color: "text-success", message: "Tu sueño parece estar dentro de rangos normales." };
+      if (score <= 14) return { severity: "Podría mejorar", color: "text-accent", message: "Podrías beneficiarte de mejorar tu higiene del sueño." };
+      if (score <= 21) return { severity: "Moderado", color: "text-accent-foreground", message: "Te recomendamos consultar con un profesional sobre tu sueño." };
+      return { severity: "Necesita atención", color: "text-destructive", message: "Es importante buscar ayuda profesional para tu problema de sueño." };
     },
   },
   {
     id: "Rosenberg",
-    name: "Rosenberg · Autoestima",
+    name: "Autoestima",
+    humanLabel: "¿Cómo te sentís con vos?",
     description: "Escala de autoestima global.",
     preamble: "¿Qué tan de acuerdo estás con las siguientes afirmaciones?",
     questions: [
@@ -157,17 +163,23 @@ const tests: TestDef[] = [
     ],
     options: agree4Options,
     interpret: (score) => {
-      if (score >= 25) return { severity: "Alta", color: "text-success", message: "Tu autoestima parece saludable." };
-      if (score >= 15) return { severity: "Normal", color: "text-accent", message: "Tu autoestima está en un rango normal. Siempre podés trabajar en fortalecerla." };
-      return { severity: "Baja", color: "text-destructive", message: "Tu autoestima podría beneficiarse de trabajo terapéutico. Considerá hablar con un profesional." };
+      if (score >= 25) return { severity: "Saludable", color: "text-success", message: "Tu autoestima parece saludable." };
+      if (score >= 15) return { severity: "Normal", color: "text-accent", message: "Siempre podés trabajar en fortalecerla." };
+      return { severity: "Necesita atención", color: "text-destructive", message: "Tu autoestima podría beneficiarse de trabajo terapéutico." };
     },
   },
 ];
 
 export default function Tests() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const [activeTest, setActiveTest] = useState<TestDef | null>(null);
+
+  // If a testId is passed via query param, start that test directly
+  const initialTestId = searchParams.get("test");
+  const initialTest = initialTestId ? tests.find((t) => t.id === initialTestId) ?? null : null;
+
+  const [activeTest, setActiveTest] = useState<TestDef | null>(initialTest);
   const [questionIdx, setQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [result, setResult] = useState<{ score: number; severity: string; color: string; message: string } | null>(null);
@@ -211,21 +223,24 @@ export default function Tests() {
   if (!activeTest) {
     return (
       <div className="px-5 pt-14 pb-4 safe-area-top">
-        <h1 className="mb-2 font-display text-xl font-semibold">Tests</h1>
-        <p className="mb-6 text-sm text-muted-foreground">Cuestionarios clínicos validados para conocerte mejor.</p>
+        <button onClick={() => navigate("/mi-proceso")} className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
+          <ArrowLeft size={16} /> Mi Proceso
+        </button>
+        <h1 className="mb-2 font-display text-xl font-semibold">Indicadores de bienestar</h1>
+        <p className="mb-6 text-sm text-muted-foreground">Elegí el indicador que querés evaluar.</p>
 
         <div className="space-y-3">
           {tests.map((test) => (
             <button
               key={test.id}
               onClick={() => startTest(test)}
-              className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
+              className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 text-left shadow-[0_2px_12px_hsl(var(--foreground)/0.04)] active:bg-muted transition-colors"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary">
-                <ChartLineUp size={22} weight="duotone" className="text-secondary-foreground" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[hsl(var(--accent))]/10">
+                <ChartLineUp size={22} weight="duotone" className="text-foreground" />
               </div>
               <div className="flex-1">
-                <p className="font-display text-sm font-medium">{test.name}</p>
+                <p className="font-display text-sm font-medium">{test.humanLabel}</p>
                 <p className="text-xs text-muted-foreground">{test.description}</p>
               </div>
               <ArrowRight size={14} className="text-muted-foreground" />
@@ -235,7 +250,7 @@ export default function Tests() {
 
         <div className="mt-6 h-px bg-border" />
         <p className="mt-4 text-center text-[10px] text-muted-foreground">
-          Estos tests son orientativos y no constituyen un diagnóstico clínico.
+          Estos indicadores son orientativos y no constituyen un diagnóstico clínico.
         </p>
       </div>
     );
@@ -246,7 +261,7 @@ export default function Tests() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-5 safe-area-top">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-sm text-center">
-          <p className="mb-2 font-display text-xs uppercase tracking-wider text-muted-foreground">{activeTest.id}</p>
+          <p className="mb-2 font-display text-xs uppercase tracking-wider text-muted-foreground">{activeTest.humanLabel}</p>
           <div className="mb-4 font-display text-5xl font-light">{result.score}</div>
           <div className={cn("mb-2 inline-block rounded-full border px-4 py-1 font-display text-sm font-medium", result.color)}>
             {result.severity}
@@ -255,7 +270,7 @@ export default function Tests() {
 
           <div className="space-y-3">
             <button onClick={backToList} className="w-full rounded-2xl bg-primary py-3 font-display text-sm font-medium text-primary-foreground">
-              Volver a tests
+              Volver a indicadores
             </button>
             {(result.score > 9) && (
               <button onClick={() => navigate("/tratamiento")} className="w-full rounded-2xl border border-accent/30 bg-accent/5 py-3 font-display text-sm font-medium">
@@ -276,7 +291,9 @@ export default function Tests() {
   return (
     <div className="flex min-h-screen flex-col px-5 pt-14 pb-4 safe-area-top">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={backToList} className="font-display text-sm text-muted-foreground">Cancelar</button>
+        <button onClick={backToList} className="flex items-center gap-1.5 font-display text-sm text-muted-foreground">
+          <ArrowLeft size={16} /> Cancelar
+        </button>
       </div>
 
       <div className="mb-2 flex gap-1">
@@ -309,7 +326,7 @@ export default function Tests() {
               <button
                 key={opt.value}
                 onClick={() => answer(opt.value)}
-                className="w-full rounded-2xl border border-border bg-card p-4 text-left font-display text-sm transition-all active:bg-muted active:border-accent"
+                className="w-full rounded-2xl bg-card p-4 text-left font-display text-sm shadow-[0_2px_12px_hsl(var(--foreground)/0.04)] transition-all active:bg-muted active:ring-1 active:ring-accent"
               >
                 {opt.label}
               </button>

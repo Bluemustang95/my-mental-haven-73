@@ -40,6 +40,9 @@ import LinkProfessional from "@/pages/LinkProfessional";
 import Favorites from "@/pages/Favorites";
 import SelfCare from "@/pages/SelfCare";
 import MedicationTracker from "@/pages/MedicationTracker";
+import MedLibrary from "@/pages/MedLibrary";
+import MedCategoryList from "@/pages/MedCategoryList";
+import MedDrugDetail from "@/pages/MedDrugDetail";
 import WeeklyReflection from "@/pages/WeeklyReflection";
 import WeeklyGoalsPage from "@/pages/WeeklyGoalsPage";
 import NotFound from "@/pages/NotFound";
@@ -112,6 +115,9 @@ const App = () => (
               <Route path="/mi-proceso/linea-temporal" element={<JournalTimeline />} />
               <Route path="/mi-proceso/progreso" element={<Progress />} />
               <Route path="/mi-proceso/medicacion" element={<MedicationTracker />} />
+              <Route path="/mi-proceso/medicacion/biblioteca" element={<MedLibrary />} />
+              <Route path="/mi-proceso/medicacion/biblioteca/:categoryId" element={<MedCategoryList />} />
+              <Route path="/mi-proceso/medicacion/biblioteca/:categoryId/:drugId" element={<MedDrugDetail />} />
               <Route path="/mi-proceso/espejo" element={<WeeklyReflection />} />
               <Route path="/mi-proceso/resumen" element={<ResumenPsico />} />
 
