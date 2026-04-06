@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import {
   Heart, PencilSimple, Clock, UsersThree, EnvelopeSimple,
-  Notepad, Trophy, ChatCircleDots, Brain, Moon, Flag,
+  Trophy, ChatCircleDots, Brain, Moon, Flag,
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import TusHuellas from "@/components/journal/TusHuellas";
@@ -15,7 +15,6 @@ const quickAccess = [
 
 const explorationTools = [
   { path: "/diario/cartas", label: "Cartas que no voy a enviar", icon: EnvelopeSimple, color: "text-destructive" },
-  { path: "/diario/terapia", label: "Notas para terapia", icon: Notepad, color: "text-accent-foreground" },
   { path: "/diario/logros", label: "Micro-logros", icon: Trophy, color: "text-accent-foreground" },
   { path: "/diario/dialogo", label: "Diálogo interno", icon: ChatCircleDots, color: "text-secondary-foreground" },
   { path: "/diario/suenos", label: "Registro de sueños", icon: Moon, color: "text-primary" },

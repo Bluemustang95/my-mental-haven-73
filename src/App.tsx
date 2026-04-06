@@ -13,6 +13,7 @@ import Tools from "@/pages/Tools";
 import Diario from "@/pages/Diario";
 import MiProceso from "@/pages/MiProceso";
 import ResumenPsico from "@/pages/ResumenPsico";
+import AllTests from "@/pages/AllTests";
 import JournalCheckin from "@/components/journal/JournalCheckin";
 import JournalEntry from "@/components/journal/JournalEntry";
 import DayTimeline from "@/components/journal/DayTimeline";
@@ -86,7 +87,6 @@ const App = () => (
               <Route path="/diario/vinculos" element={<RelationshipLog />} />
               <Route path="/diario/objetivos" element={<WeeklyGoalsPage />} />
               <Route path="/diario/cartas" element={<UnsentLetters />} />
-              <Route path="/diario/terapia" element={<TherapyNotes />} />
               <Route path="/diario/logros" element={<MicroAchievements />} />
               <Route path="/diario/dialogo" element={<InternalDialogue />} />
               <Route path="/diario/pensamientos" element={<ThoughtRecord />} />
@@ -107,6 +107,8 @@ const App = () => (
               {/* Mi Proceso (tab 5) */}
               <Route path="/mi-proceso" element={<MiProceso />} />
               <Route path="/mi-proceso/tests" element={<Tests />} />
+              <Route path="/mi-proceso/todos-tests" element={<AllTests />} />
+              <Route path="/mi-proceso/terapia" element={<TherapyNotes />} />
               <Route path="/mi-proceso/linea-temporal" element={<JournalTimeline />} />
               <Route path="/mi-proceso/progreso" element={<Progress />} />
               <Route path="/mi-proceso/medicacion" element={<MedicationTracker />} />
