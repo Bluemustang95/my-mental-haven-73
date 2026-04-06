@@ -123,7 +123,7 @@ export default function AllTests() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate("/mi-proceso/tests")}
+                onClick={() => navigate(`/mi-proceso/tests?test=${type}`)}
                 className="flex w-full items-center gap-4 rounded-3xl bg-card p-4 text-left shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]"
                 style={{ borderLeft: `3px solid ${meta.color}` }}
               >
