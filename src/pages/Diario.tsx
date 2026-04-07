@@ -1,105 +1,290 @@
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Heart, PencilSimple, Clock, UsersThree, EnvelopeSimple,
-  Trophy, ChatCircleDots, Brain, Moon, Flag,
-} from "@phosphor-icons/react";
-import { motion } from "framer-motion";
-import TusHuellas from "@/components/journal/TusHuellas";
+import { motion, AnimatePresence } from "framer-motion";
+import { ClockCounterClockwise, Users, CalendarBlank, ChatCircleDots, Brain, EnvelopeSimple, Trophy, Moon, Microphone, Stop, Play, Trash } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const quickAccess = [
-  { path: "/diario/checkin", label: "Check-in rápido", icon: Heart, color: "bg-[hsl(0,60%,94%)] text-destructive" },
-  { path: "/diario/dia", label: "Línea del día", icon: Clock, color: "bg-secondary text-secondary-foreground" },
-  { path: "/diario/vinculos", label: "Vínculos", icon: UsersThree, color: "bg-primary/10 text-foreground" },
-  { path: "/diario/objetivos", label: "Mis objetivos", icon: Flag, color: "bg-accent/15 text-accent-foreground" },
-];
+/* ── Keyword triggers for dynamic recommendations ── */
+const relationshipWords = ["mamá", "papá", "madre", "padre", "amigo", "amiga", "pareja", "novio", "novia", "hermano", "hermana", "familia", "hijo", "hija", "compañero", "compañera", "jefe", "colega"];
+const temporalWords = ["hoy", "ayer", "mañana", "esta mañana", "esta tarde", "esta noche", "anoche", "día", "semana"];
+const introspectionWords = ["siento", "creo", "pienso", "me doy cuenta", "me cuesta", "necesito", "quiero", "debería", "culpa", "miedo", "vergüenza", "enojo", "tristeza", "ansiedad", "angustia", "soledad"];
+const dreamWords = ["soñé", "sueño", "pesadilla", "dormí", "desperté", "insomnio"];
+const achievementWords = ["logré", "pude", "avancé", "conseguí", "superé", "orgulloso", "orgullosa", "celebro"];
 
-const explorationTools = [
-  { path: "/diario/cartas", label: "Cartas que no voy a enviar", icon: EnvelopeSimple, color: "text-destructive" },
-  { path: "/diario/logros", label: "Micro-logros", icon: Trophy, color: "text-accent-foreground" },
-  { path: "/diario/dialogo", label: "Diálogo interno", icon: ChatCircleDots, color: "text-secondary-foreground" },
-  { path: "/diario/suenos", label: "Registro de sueños", icon: Moon, color: "text-primary" },
-  { path: "/diario/pensamientos", label: "Registro de pensamientos", icon: Brain, color: "text-foreground" },
+interface Recommendation {
+  id: string;
+  label: string;
+  icon: typeof Users;
+  path: string;
+}
+
+const allRecommendations: Record<string, Recommendation> = {
+  vinculos:    { id: "vinculos",    label: "Vínculos",            icon: Users,           path: "/diario/vinculos" },
+  timeline:    { id: "timeline",    label: "Línea del día",       icon: CalendarBlank,   path: "/diario/dia" },
+  dialogo:     { id: "dialogo",     label: "Diálogo interno",     icon: ChatCircleDots,  path: "/diario/dialogo" },
+  pensamientos:{ id: "pensamientos",label: "Registro de pensamientos", icon: Brain,      path: "/diario/pensamientos" },
+  cartas:      { id: "cartas",      label: "Cartas sin enviar",   icon: EnvelopeSimple,  path: "/diario/cartas" },
+  suenos:      { id: "suenos",      label: "Registro de sueños",  icon: Moon,            path: "/diario/suenos" },
+  logros:      { id: "logros",      label: "Micro-logros",        icon: Trophy,          path: "/diario/logros" },
+};
+
+function detectRecommendations(text: string): Recommendation[] {
+  const lower = text.toLowerCase();
+  const results: Recommendation[] = [];
+
+  if (relationshipWords.some(w => lower.includes(w))) results.push(allRecommendations.vinculos);
+  if (temporalWords.some(w => lower.includes(w))) results.push(allRecommendations.timeline);
+  if (dreamWords.some(w => lower.includes(w))) results.push(allRecommendations.suenos);
+  if (achievementWords.some(w => lower.includes(w))) results.push(allRecommendations.logros);
+  if (introspectionWords.some(w => lower.includes(w))) {
+    results.push(allRecommendations.dialogo);
+    if (lower.length > 200) results.push(allRecommendations.pensamientos);
+  }
+  if (lower.length > 300 && !results.find(r => r.id === "cartas")) {
+    results.push(allRecommendations.cartas);
+  }
+
+  return results;
+}
+
+/* ── Emotion tags ── */
+const emotionOptions = [
+  "Calma", "Alegría", "Tristeza", "Ansiedad", "Enojo",
+  "Gratitud", "Confusión", "Esperanza", "Culpa", "Alivio",
 ];
 
 export default function Diario() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [content, setContent] = useState("");
+  const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftKey = user ? `diario_draft_${user.id}` : "diario_draft";
+
+  // Voice
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  // Load draft
+  useEffect(() => {
+    const draft = localStorage.getItem(draftKey);
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        setContent(parsed.content || "");
+        setSelectedEmotions(parsed.emotions || []);
+      } catch { /* ignore */ }
+    }
+  }, [draftKey]);
+
+  // Autosave to localStorage
+  useEffect(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      if (content.trim()) {
+        localStorage.setItem(draftKey, JSON.stringify({ content, emotions: selectedEmotions }));
+        setLastSaved(new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }));
+      }
+    }, 1500);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [content, selectedEmotions, draftKey]);
+
+  // Dynamic recommendations
+  const recommendations = useMemo(() => detectRecommendations(content), [content]);
+
+  const toggleEmotion = (e: string) => {
+    setSelectedEmotions(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e]);
+  };
+
+  // Voice recording
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        setAudioBlob(blob);
+        setAudioUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch { toast.error("No se pudo acceder al micrófono"); }
+  };
+  const stopRecording = () => { mediaRecorderRef.current?.stop(); setIsRecording(false); };
+  const removeAudio = () => { if (audioUrl) URL.revokeObjectURL(audioUrl); setAudioUrl(null); setAudioBlob(null); };
+
+  // Save entry
+  const save = async () => {
+    if (!content.trim() || !user) return;
+    setSaving(true);
+    try {
+      let voicePath: string | null = null;
+      if (audioBlob) {
+        const fileName = `${user.id}/${Date.now()}.webm`;
+        const { error } = await supabase.storage.from("voice-notes").upload(fileName, audioBlob);
+        if (!error) voicePath = fileName;
+      }
+      await supabase.from("journal_entries").insert({
+        user_id: user.id,
+        content: content.trim(),
+        emotion_tags: selectedEmotions.length > 0 ? selectedEmotions : null,
+      });
+      localStorage.removeItem(draftKey);
+      setContent("");
+      setSelectedEmotions([]);
+      removeAudio();
+      toast.success("Entrada guardada ✓");
+    } catch { toast.error("Error al guardar"); }
+    finally { setSaving(false); }
+  };
 
   return (
-    <div className="px-5 pt-14 pb-4 safe-area-top">
+    <div className="flex min-h-screen flex-col bg-[#FDFCFB] dark:bg-background safe-area-top">
       {/* ── Header ── */}
-      <h1 className="mb-1 font-display text-xl font-semibold">Diario</h1>
-      <p className="mb-6 text-sm text-muted-foreground">Tu espacio seguro de introspección.</p>
-
-      {/* ── Primary: Escritura Libre ── */}
-      <motion.button
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => navigate("/diario/escribir")}
-        className="mb-6 flex w-full flex-col items-start rounded-3xl bg-accent/10 p-5 text-left shadow-[0_2px_12px_-4px_hsl(var(--accent)/0.15)] transition-shadow active:shadow-none"
-      >
-        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/20">
-          <PencilSimple size={22} weight="duotone" className="text-accent-foreground" />
+      <div className="flex items-center justify-between px-6 pt-14 pb-2">
+        <div>
+          <h1 className="font-display text-xl font-semibold text-foreground">Diario</h1>
+          <p className="text-xs text-muted-foreground">Tu espacio seguro para escribir.</p>
         </div>
-        <p className="font-display text-base font-semibold">Escritura libre</p>
-        <p className="mt-1 text-sm text-muted-foreground">Escribí lo que necesites soltar...</p>
-      </motion.button>
-
-      {/* ── Tus Huellas ── */}
-      <TusHuellas />
-
-      {/* ── Quick Access 2×2 Grid ── */}
-      <div className="mb-6 grid grid-cols-2 gap-3">
-        {quickAccess.map((item, i) => {
-          const Icon = item.icon;
-          return (
-            <motion.button
-              key={item.path}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 + i * 0.04 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate(item.path)}
-              className="flex flex-col items-start rounded-3xl bg-card p-4 text-left shadow-[0_1px_8px_-3px_hsl(var(--foreground)/0.06)] transition-shadow active:shadow-none"
-            >
-              <div className={`mb-2.5 flex h-9 w-9 items-center justify-center rounded-xl ${item.color}`}>
-                <Icon size={20} weight="duotone" />
-              </div>
-              <p className="font-display text-[13px] font-medium leading-tight">{item.label}</p>
-            </motion.button>
-          );
-        })}
+        <button
+          onClick={() => navigate("/diario/historial")}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border/50 shadow-sm transition-all active:scale-95"
+          aria-label="Historial"
+        >
+          <ClockCounterClockwise size={18} className="text-muted-foreground" />
+        </button>
       </div>
 
-      {/* ── Exploration Tools ── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.25 }}
-      >
-        <h2 className="mb-3 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Herramientas de Exploración
-        </h2>
-        <div className="grid grid-cols-2 gap-2.5">
-          {explorationTools.map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <motion.button
-                key={item.path}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.035 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => navigate(item.path)}
-                className="flex items-center gap-2.5 rounded-2xl bg-card p-3 text-left shadow-[0_1px_6px_-2px_hsl(var(--foreground)/0.05)] transition-shadow active:shadow-none"
-              >
-                <Icon size={18} weight="duotone" className={item.color} />
-                <p className="font-display text-[12px] font-medium leading-tight">{item.label}</p>
-              </motion.button>
-            );
-          })}
+      {/* ── Autosave indicator ── */}
+      <AnimatePresence>
+        {lastSaved && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="px-6 text-[10px] text-muted-foreground/60"
+          >
+            Borrador guardado · {lastSaved}
+          </motion.p>
+        )}
+      </AnimatePresence>
+
+      {/* ── Writing area ── */}
+      <div className="flex-1 px-6 pt-4">
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Escribí lo que necesites soltar..."
+          className="w-full flex-1 min-h-[220px] resize-none bg-transparent text-foreground text-[15px] leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none"
+          autoFocus
+        />
+      </div>
+
+      {/* ── Voice recording ── */}
+      <div className="px-6 pb-2 flex items-center gap-3">
+        {!isRecording && !audioUrl && (
+          <button onClick={startRecording} className="flex items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-2 text-xs text-muted-foreground transition active:bg-muted">
+            <Microphone size={14} />
+            Nota de voz
+          </button>
+        )}
+        {isRecording && (
+          <button onClick={stopRecording} className="flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            <Stop size={14} />
+            <span className="animate-pulse">Grabando...</span>
+          </button>
+        )}
+        {audioUrl && (
+          <div className="flex items-center gap-2">
+            <button onClick={() => new Audio(audioUrl).play()} className="flex items-center gap-1.5 rounded-xl border border-border/50 bg-card px-3 py-2 text-xs text-muted-foreground">
+              <Play size={12} />
+              Reproducir
+            </button>
+            <button onClick={removeAudio} className="rounded-lg p-1.5 text-destructive hover:bg-destructive/10">
+              <Trash size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Emotion tags ── */}
+      <div className="px-6 pb-3">
+        <div className="flex flex-wrap gap-1.5">
+          {emotionOptions.map((e) => (
+            <button
+              key={e}
+              onClick={() => toggleEmotion(e)}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-all ${
+                selectedEmotions.includes(e)
+                  ? "border-accent bg-accent/10 text-accent-foreground"
+                  : "border-border/60 text-muted-foreground"
+              }`}
+            >
+              {e}
+            </button>
+          ))}
         </div>
-      </motion.div>
+      </div>
+
+      {/* ── Dynamic recommendations ── */}
+      <AnimatePresence>
+        {recommendations.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="px-6 pb-3"
+          >
+            <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
+              Herramientas sugeridas
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {recommendations.map((rec) => {
+                const Icon = rec.icon;
+                return (
+                  <motion.button
+                    key={rec.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    onClick={() => navigate(rec.path)}
+                    className="flex items-center gap-2 rounded-2xl border border-accent/20 bg-accent/5 px-3 py-2 text-[11px] font-medium text-accent-foreground transition-all active:scale-95"
+                  >
+                    <Icon size={14} className="text-accent" />
+                    {rec.label}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Save button ── */}
+      <div className="px-6 pb-6 pt-2">
+        <button
+          onClick={save}
+          disabled={!content.trim() || saving}
+          className={`w-full rounded-2xl py-3.5 font-display text-sm font-medium transition-all ${
+            content.trim()
+              ? "bg-primary text-primary-foreground active:scale-[0.98] shadow-sm"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {saving ? "Guardando..." : "Guardar entrada"}
+        </button>
+      </div>
     </div>
   );
 }
