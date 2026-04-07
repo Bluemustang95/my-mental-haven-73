@@ -33,7 +33,6 @@ const allRecommendations: Record<string, Recommendation> = {
 function detectRecommendations(text: string): Recommendation[] {
   const lower = text.toLowerCase();
   const results: Recommendation[] = [];
-
   if (relationshipWords.some(w => lower.includes(w))) results.push(allRecommendations.vinculos);
   if (temporalWords.some(w => lower.includes(w))) results.push(allRecommendations.timeline);
   if (dreamWords.some(w => lower.includes(w))) results.push(allRecommendations.suenos);
@@ -45,15 +44,14 @@ function detectRecommendations(text: string): Recommendation[] {
   if (lower.length > 300 && !results.find(r => r.id === "cartas")) {
     results.push(allRecommendations.cartas);
   }
-
   return results;
 }
 
-/* ── Emotion config ── */
+/* ── Emotion config (text-only, no emojis) ── */
 const primaryEmotions = [
-  { label: "Calma", emoji: "😌" },
-  { label: "Alegría", emoji: "😊" },
-  { label: "Tristeza", emoji: "😢" },
+  { label: "Calma" },
+  { label: "Alegría" },
+  { label: "Tristeza" },
 ];
 
 const allEmotions = [
@@ -160,7 +158,7 @@ export default function Diario() {
   const hasContent = content.trim().length > 0;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#FDFCFB] dark:bg-background safe-area-top relative">
+    <div className="flex min-h-screen flex-col bg-[#FDFCFB] dark:bg-background safe-area-top">
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-6 pt-14 pb-2">
         <div>
@@ -190,19 +188,44 @@ export default function Diario() {
         )}
       </AnimatePresence>
 
-      {/* ── Writing area ── */}
-      <div className="flex-1 px-6 pt-3">
+      {/* ── Writing area (compact — no flex-1, auto height) ── */}
+      <div className="px-6 pt-3">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Escribí lo que necesites soltar..."
-          className="w-full flex-1 min-h-[180px] resize-none bg-transparent text-foreground text-[15px] leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none"
+          className="w-full min-h-[120px] resize-none bg-transparent text-foreground text-[15px] leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none"
           autoFocus
         />
       </div>
 
-      {/* ── Voice recording (compact) ── */}
-      <div className="px-6 pb-1 flex items-center gap-3">
+      {/* ── Inline save button (ghost, compact) ── */}
+      <AnimatePresence>
+        {hasContent && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-6 pb-1"
+          >
+            <button
+              onClick={save}
+              disabled={saving}
+              className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-all active:bg-muted/40 disabled:opacity-50"
+            >
+              {saving ? (
+                <div className="h-3 w-3 animate-spin rounded-full border border-muted-foreground border-t-transparent" />
+              ) : (
+                <Send size={12} />
+              )}
+              Guardar entrada
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Voice recording (compact, right after save) ── */}
+      <div className="px-6 py-1 flex items-center gap-3">
         {!isRecording && !audioUrl && (
           <button onClick={startRecording} className="flex items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-muted-foreground transition active:bg-muted">
             <Mic size={14} />
@@ -228,20 +251,19 @@ export default function Diario() {
         )}
       </div>
 
-      {/* ── Emotion selector (3 + Otro) ── */}
+      {/* ── Emotion selector (text-only, no emojis) ── */}
       <div className="px-6 py-2">
         <div className="flex items-center gap-2">
           {primaryEmotions.map((em) => (
             <button
               key={em.label}
               onClick={() => toggleEmotion(em.label)}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all ${
+              className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all ${
                 selectedEmotions.includes(em.label)
                   ? "border-accent bg-accent/10 text-accent-foreground"
                   : "border-border/60 text-muted-foreground"
               }`}
             >
-              <span>{em.emoji}</span>
               {em.label}
             </button>
           ))}
@@ -349,33 +371,8 @@ export default function Diario() {
         )}
       </AnimatePresence>
 
-      {/* spacer so FAB doesn't overlap content */}
-      <div className="h-20" />
-
-      {/* ── Floating Save Button (conditional) ── */}
-      <AnimatePresence>
-        {hasContent && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="fixed bottom-24 right-6 z-40"
-          >
-            <button
-              onClick={save}
-              disabled={saving}
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-transform active:scale-90"
-            >
-              {saving ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <Send size={20} />
-              )}
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Bottom padding for nav */}
+      <div className="h-24" />
     </div>
   );
 }
