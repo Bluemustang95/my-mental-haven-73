@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Users, Calendar, MessageCircle, Brain, Mail, Trophy, Moon, Mic, Square, Play, Trash } from "lucide-react";
+import { Clock, Users, Calendar, MessageCircle, Brain, Mail, Trophy, Moon, Mic, Square, Play, Trash, Send, MoreHorizontal, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -49,10 +49,17 @@ function detectRecommendations(text: string): Recommendation[] {
   return results;
 }
 
-/* ── Emotion tags ── */
-const emotionOptions = [
+/* ── Emotion config ── */
+const primaryEmotions = [
+  { label: "Calma", emoji: "😌" },
+  { label: "Alegría", emoji: "😊" },
+  { label: "Tristeza", emoji: "😢" },
+];
+
+const allEmotions = [
   "Calma", "Alegría", "Tristeza", "Ansiedad", "Enojo",
   "Gratitud", "Confusión", "Esperanza", "Culpa", "Alivio",
+  "Vergüenza", "Orgullo", "Frustración", "Amor", "Nostalgia",
 ];
 
 export default function Diario() {
@@ -62,6 +69,7 @@ export default function Diario() {
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [showEmotionPicker, setShowEmotionPicker] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftKey = user ? `diario_draft_${user.id}` : "diario_draft";
 
@@ -149,8 +157,10 @@ export default function Diario() {
     finally { setSaving(false); }
   };
 
+  const hasContent = content.trim().length > 0;
+
   return (
-    <div className="flex min-h-screen flex-col bg-[#FDFCFB] dark:bg-background safe-area-top">
+    <div className="flex min-h-screen flex-col bg-[#FDFCFB] dark:bg-background safe-area-top relative">
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-6 pt-14 pb-2">
         <div>
@@ -181,33 +191,33 @@ export default function Diario() {
       </AnimatePresence>
 
       {/* ── Writing area ── */}
-      <div className="flex-1 px-6 pt-4">
+      <div className="flex-1 px-6 pt-3">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Escribí lo que necesites soltar..."
-          className="w-full flex-1 min-h-[220px] resize-none bg-transparent text-foreground text-[15px] leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none"
+          className="w-full flex-1 min-h-[180px] resize-none bg-transparent text-foreground text-[15px] leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none"
           autoFocus
         />
       </div>
 
-      {/* ── Voice recording ── */}
-      <div className="px-6 pb-2 flex items-center gap-3">
+      {/* ── Voice recording (compact) ── */}
+      <div className="px-6 pb-1 flex items-center gap-3">
         {!isRecording && !audioUrl && (
-          <button onClick={startRecording} className="flex items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-2 text-xs text-muted-foreground transition active:bg-muted">
+          <button onClick={startRecording} className="flex items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-muted-foreground transition active:bg-muted">
             <Mic size={14} />
             Nota de voz
           </button>
         )}
         {isRecording && (
-          <button onClick={stopRecording} className="flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          <button onClick={stopRecording} className="flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-1.5 text-xs text-destructive">
             <Square size={14} />
             <span className="animate-pulse">Grabando...</span>
           </button>
         )}
         {audioUrl && (
           <div className="flex items-center gap-2">
-            <button onClick={() => new Audio(audioUrl).play()} className="flex items-center gap-1.5 rounded-xl border border-border/50 bg-card px-3 py-2 text-xs text-muted-foreground">
+            <button onClick={() => new Audio(audioUrl).play()} className="flex items-center gap-1.5 rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-muted-foreground">
               <Play size={12} />
               Reproducir
             </button>
@@ -218,24 +228,92 @@ export default function Diario() {
         )}
       </div>
 
-      {/* ── Emotion tags ── */}
-      <div className="px-6 pb-3">
-        <div className="flex flex-wrap gap-1.5">
-          {emotionOptions.map((e) => (
+      {/* ── Emotion selector (3 + Otro) ── */}
+      <div className="px-6 py-2">
+        <div className="flex items-center gap-2">
+          {primaryEmotions.map((em) => (
             <button
-              key={e}
-              onClick={() => toggleEmotion(e)}
-              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-all ${
-                selectedEmotions.includes(e)
+              key={em.label}
+              onClick={() => toggleEmotion(em.label)}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all ${
+                selectedEmotions.includes(em.label)
                   ? "border-accent bg-accent/10 text-accent-foreground"
                   : "border-border/60 text-muted-foreground"
               }`}
             >
-              {e}
+              <span>{em.emoji}</span>
+              {em.label}
             </button>
           ))}
+          <button
+            onClick={() => setShowEmotionPicker(true)}
+            className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all ${
+              selectedEmotions.some(e => !primaryEmotions.find(p => p.label === e))
+                ? "border-accent bg-accent/10 text-accent-foreground"
+                : "border-border/60 text-muted-foreground"
+            }`}
+          >
+            <MoreHorizontal size={14} />
+            Otro
+          </button>
         </div>
+
+        {/* Selected non-primary emotions as chips */}
+        {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).map(e => (
+              <span key={e} className="rounded-full bg-accent/10 border border-accent/20 px-2 py-0.5 text-[10px] font-medium text-accent-foreground flex items-center gap-1">
+                {e}
+                <button onClick={() => toggleEmotion(e)} className="hover:text-destructive"><X size={10} /></button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* ── Emotion Picker Modal ── */}
+      <AnimatePresence>
+        {showEmotionPicker && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+              onClick={() => setShowEmotionPicker(false)}
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-[#FDFCFB] dark:bg-card shadow-2xl p-6 pb-10"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display text-base font-semibold text-foreground">¿Qué sentís?</h3>
+                <button onClick={() => setShowEmotionPicker(false)} className="rounded-full p-1.5 text-muted-foreground active:bg-muted">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {allEmotions.map((e) => (
+                  <button
+                    key={e}
+                    onClick={() => toggleEmotion(e)}
+                    className={`rounded-full border px-3.5 py-2 text-[12px] font-medium transition-all ${
+                      selectedEmotions.includes(e)
+                        ? "border-accent bg-accent/15 text-accent-foreground"
+                        : "border-border/60 text-muted-foreground"
+                    }`}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Dynamic recommendations ── */}
       <AnimatePresence>
@@ -244,7 +322,7 @@ export default function Diario() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
-            className="px-6 pb-3"
+            className="px-6 pb-2"
           >
             <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
               Herramientas sugeridas
@@ -271,20 +349,33 @@ export default function Diario() {
         )}
       </AnimatePresence>
 
-      {/* ── Save button ── */}
-      <div className="px-6 pb-6 pt-2">
-        <button
-          onClick={save}
-          disabled={!content.trim() || saving}
-          className={`w-full rounded-2xl py-3.5 font-display text-sm font-medium transition-all ${
-            content.trim()
-              ? "bg-primary text-primary-foreground active:scale-[0.98] shadow-sm"
-              : "bg-muted text-muted-foreground"
-          }`}
-        >
-          {saving ? "Guardando..." : "Guardar entrada"}
-        </button>
-      </div>
+      {/* spacer so FAB doesn't overlap content */}
+      <div className="h-20" />
+
+      {/* ── Floating Save Button (conditional) ── */}
+      <AnimatePresence>
+        {hasContent && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            className="fixed bottom-24 right-6 z-40"
+          >
+            <button
+              onClick={save}
+              disabled={saving}
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-transform active:scale-90"
+            >
+              {saving ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+              ) : (
+                <Send size={20} />
+              )}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
