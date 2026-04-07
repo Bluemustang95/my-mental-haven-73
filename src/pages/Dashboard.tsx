@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight,
-  Stethoscope, Sparkle, X, Brain, Notebook, Barbell, Flower,
+  Stethoscope, Sparkle, X, Brain, Notebook, Barbell, Flower, Heart, Flag,
 } from "@phosphor-icons/react";
 import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -488,6 +488,24 @@ export default function Dashboard() {
                   </div>
                 )}
               </section>
+
+              {/* ── Quick links from calendar ── */}
+              <div className="flex gap-2.5 mb-4">
+                <button
+                  onClick={() => { setSelectedDay(null); navigate("/diario/checkin"); }}
+                  className="flex-1 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/60 p-3 text-left transition active:bg-muted/60"
+                >
+                  <Heart size={16} weight="duotone" className="text-destructive" />
+                  <span className="font-display text-[11px] font-medium text-foreground">Check-in rápido</span>
+                </button>
+                <button
+                  onClick={() => { setSelectedDay(null); navigate("/diario/objetivos"); }}
+                  className="flex-1 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/60 p-3 text-left transition active:bg-muted/60"
+                >
+                  <Flag size={16} weight="duotone" className="text-accent" />
+                  <span className="font-display text-[11px] font-medium text-foreground">Mis objetivos</span>
+                </button>
+              </div>
 
               {/* ── Separator ──── */}
               <div className="h-px bg-border/60" />
