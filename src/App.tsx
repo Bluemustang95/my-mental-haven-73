@@ -12,6 +12,7 @@ import Onboarding from "@/pages/Onboarding";
 import Tools from "@/pages/Tools";
 import Diario from "@/pages/Diario";
 import MiProceso from "@/pages/MiProceso";
+import DiarioHistory from "@/pages/DiarioHistory";
 import ResumenPsico from "@/pages/ResumenPsico";
 import AllTests from "@/pages/AllTests";
 import JournalCheckin from "@/components/journal/JournalCheckin";
@@ -84,6 +85,7 @@ const App = () => (
 
               {/* Diario (tab 2) */}
               <Route path="/diario" element={<Diario />} />
+              <Route path="/diario/historial" element={<DiarioHistory />} />
               <Route path="/diario/checkin" element={<JournalCheckin />} />
               <Route path="/diario/escribir" element={<JournalEntry />} />
               <Route path="/diario/dia" element={<DayTimeline />} />
