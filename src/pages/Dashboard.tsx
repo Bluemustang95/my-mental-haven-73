@@ -4,13 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight,
   Stethoscope, Sparkle, X, Brain, Notebook, Barbell, Flower, Heart, Flag,
+  Check, Target,
 } from "@phosphor-icons/react";
-import { cn, localDateStr } from "@/lib/utils";
+import { cn, localDateStr, localWeekStart } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionPrep } from "@/components/SessionPrep";
 import { format, startOfWeek, addDays, subWeeks, addWeeks, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
+import { toast } from "sonner";
 
 /* ── Mood config ─────────────────────────── */
 const moodLevels = [
@@ -65,7 +67,7 @@ const dayInitials = ["L", "M", "X", "J", "V", "S", "D"];
 type Checkin = { checkin_date: string; mood_score: number | null; note: string | null };
 
 interface DayActivity {
-  type: "journal" | "thought" | "test" | "exercise" | "dream";
+  type: "journal" | "thought" | "test" | "exercise" | "dream" | "goal";
   label: string;
   detail: string;
   time: string;
@@ -77,7 +79,10 @@ const activityConfig: Record<DayActivity["type"], { icon: typeof Brain; color: s
   test:     { icon: Heartbeat, color: "text-[hsl(250_50%_60%)]" },
   exercise: { icon: Flower,   color: "text-[hsl(var(--mood-5))]" },
   dream:    { icon: Barbell,  color: "text-[hsl(var(--mood-4))]" },
+  goal:     { icon: Target,   color: "text-accent" },
 };
+
+type Goal = { id: string; goal_text: string; completed: boolean | null };
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -116,6 +121,9 @@ export default function Dashboard() {
   const [dayActivities, setDayActivities] = useState<DayActivity[]>([]);
   const [loadingActivities, setLoadingActivities] = useState(false);
 
+  // Goals
+  const [pendingGoals, setPendingGoals] = useState<Goal[]>([]);
+
   /* ── Fetch checkins ────────────────── */
   const fetchCheckins = useCallback(async () => {
     if (!user) return;
@@ -138,6 +146,34 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => { fetchCheckins(); }, [fetchCheckins]);
+
+  /* ── Fetch pending goals ────────────── */
+  const fetchGoals = useCallback(async () => {
+    if (!user) return;
+    const ws = localWeekStart();
+    const { data } = await supabase
+      .from("weekly_goals")
+      .select("id, goal_text, completed")
+      .eq("user_id", user.id)
+      .eq("week_start", ws)
+      .eq("completed", false)
+      .order("created_at", { ascending: true });
+    setPendingGoals(data ?? []);
+  }, [user]);
+
+  useEffect(() => { fetchGoals(); }, [fetchGoals]);
+
+  const completeGoal = async (goal: Goal) => {
+    if (!user) return;
+    await supabase.from("weekly_goals").update({ completed: true }).eq("id", goal.id);
+    // Log as micro achievement for bitácora
+    await supabase.from("micro_achievements").insert({
+      user_id: user.id,
+      achievement_text: `Objetivo cumplido: ${goal.goal_text}`,
+    });
+    toast.success("¡Objetivo cumplido! 🎉");
+    fetchGoals();
+  };
 
   /* ── Calendar data ─────────────────── */
   const checkinMap = useMemo(() => {
@@ -166,12 +202,13 @@ export default function Dashboard() {
     const nextDay = localDateStr(addDays(day, 1));
     const activities: DayActivity[] = [];
 
-    const [journals, thoughts, tests, exercises, dreams] = await Promise.all([
+    const [journals, thoughts, tests, exercises, dreams, achievements] = await Promise.all([
       supabase.from("journal_entries").select("id, created_at, content").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
       supabase.from("thought_records").select("id, created_at, situation").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
       supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
       supabase.from("exercise_sessions").select("id, created_at, exercise_type, exercise_name, duration_seconds").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
       supabase.from("dream_log").select("id, created_at, description").eq("user_id", user.id).eq("dream_date", ds).order("created_at"),
+      supabase.from("micro_achievements").select("id, created_at, achievement_text").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
     ]);
 
     journals.data?.forEach((j: any) => activities.push({ type: "journal", label: "Entrada de diario", detail: j.content?.slice(0, 80) || "", time: format(new Date(j.created_at), "HH:mm") }));
@@ -179,6 +216,7 @@ export default function Dashboard() {
     tests.data?.forEach((t: any) => activities.push({ type: "test", label: `Test ${t.test_type}`, detail: `Puntaje: ${t.score}${t.severity ? ` · ${t.severity}` : ""}`, time: format(new Date(t.created_at), "HH:mm") }));
     exercises.data?.forEach((e: any) => activities.push({ type: "exercise", label: e.exercise_name || e.exercise_type, detail: e.duration_seconds ? `${Math.round(e.duration_seconds / 60)} min` : "Completado", time: format(new Date(e.created_at), "HH:mm") }));
     dreams.data?.forEach((d: any) => activities.push({ type: "dream", label: "Registro de sueño", detail: d.description?.slice(0, 80) || "", time: format(new Date(d.created_at), "HH:mm") }));
+    achievements.data?.forEach((a: any) => activities.push({ type: "goal", label: "Logro registrado", detail: a.achievement_text?.slice(0, 80) || "", time: format(new Date(a.created_at), "HH:mm") }));
 
     activities.sort((a, b) => a.time.localeCompare(b.time));
     setDayActivities(activities);
@@ -278,7 +316,6 @@ export default function Dashboard() {
                 >
                   {day.getDate()}
                 </motion.div>
-                {/* Mood dot */}
                 {mood ? (
                   <div className={cn("h-1.5 w-1.5 rounded-full", moodBg[mood])} />
                 ) : (
@@ -290,6 +327,50 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* ── Pending Goals ─── */}
+      <AnimatePresence>
+        {pendingGoals.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-6 pt-4"
+          >
+            <div className="flex items-center justify-between mb-2.5">
+              <h2 className="flex items-center gap-1.5 font-display text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+                <Flag size={13} weight="duotone" className="text-accent" />
+                Objetivos pendientes
+              </h2>
+              <button
+                onClick={() => navigate("/diario/objetivos")}
+                className="text-[10px] font-display font-medium text-accent"
+              >
+                Ver todos
+              </button>
+            </div>
+            <div className="space-y-2">
+              {pendingGoals.map((goal) => (
+                <motion.div
+                  key={goal.id}
+                  layout
+                  exit={{ opacity: 0, x: 40, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/80 p-3.5"
+                >
+                  <button
+                    onClick={() => completeGoal(goal)}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-accent/40 transition-all active:scale-90 active:bg-accent/20"
+                  >
+                    <Check size={12} weight="bold" className="text-accent opacity-0 group-active:opacity-100" />
+                  </button>
+                  <span className="flex-1 text-sm text-foreground font-body leading-snug">{goal.goal_text}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
       {/* ── Consecutive low alert ───── */}
       <AnimatePresence>
         {consecutiveLow && (
@@ -297,7 +378,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mx-6 mb-4 rounded-2xl border border-mood-2 bg-mood-2/10 p-4"
+            className="mx-6 mt-4 mb-4 rounded-2xl border border-mood-2 bg-mood-2/10 p-4"
           >
             <p className="text-sm text-foreground">
               Venís pasando días difíciles, ¿te gustaría{" "}
