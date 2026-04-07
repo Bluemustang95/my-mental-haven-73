@@ -43,8 +43,8 @@ export default function DiarioHistory() {
       });
   }, [user]);
 
-  const formatEntryDate = (dateStr: string | null) => {
-    if (!dateStr) return "";
+  const formatEntryDate = (dateStr: string | null): { dayName: string; date: string; time: string } => {
+    if (!dateStr) return { dayName: "", date: "", time: "" };
     try {
       const d = new Date(dateStr);
       return {

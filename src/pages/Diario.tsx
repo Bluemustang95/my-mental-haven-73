@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ClockCounterClockwise, Users, CalendarBlank, ChatCircleDots, Brain, EnvelopeSimple, Trophy, Moon, Microphone, Stop, Play, Trash } from "lucide-react";
+import { Clock, Users, Calendar, MessageCircle, Brain, Mail, Trophy, Moon, Mic, Square, Play, Trash } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,13 +21,13 @@ interface Recommendation {
 }
 
 const allRecommendations: Record<string, Recommendation> = {
-  vinculos:    { id: "vinculos",    label: "Vínculos",            icon: Users,           path: "/diario/vinculos" },
-  timeline:    { id: "timeline",    label: "Línea del día",       icon: CalendarBlank,   path: "/diario/dia" },
-  dialogo:     { id: "dialogo",     label: "Diálogo interno",     icon: ChatCircleDots,  path: "/diario/dialogo" },
-  pensamientos:{ id: "pensamientos",label: "Registro de pensamientos", icon: Brain,      path: "/diario/pensamientos" },
-  cartas:      { id: "cartas",      label: "Cartas sin enviar",   icon: EnvelopeSimple,  path: "/diario/cartas" },
-  suenos:      { id: "suenos",      label: "Registro de sueños",  icon: Moon,            path: "/diario/suenos" },
-  logros:      { id: "logros",      label: "Micro-logros",        icon: Trophy,          path: "/diario/logros" },
+  vinculos:    { id: "vinculos",    label: "Vínculos",            icon: Users,          path: "/diario/vinculos" },
+  timeline:    { id: "timeline",    label: "Línea del día",       icon: Calendar,       path: "/diario/dia" },
+  dialogo:     { id: "dialogo",     label: "Diálogo interno",     icon: MessageCircle,  path: "/diario/dialogo" },
+  pensamientos:{ id: "pensamientos",label: "Registro de pensamientos", icon: Brain,     path: "/diario/pensamientos" },
+  cartas:      { id: "cartas",      label: "Cartas sin enviar",   icon: Mail,           path: "/diario/cartas" },
+  suenos:      { id: "suenos",      label: "Registro de sueños",  icon: Moon,           path: "/diario/suenos" },
+  logros:      { id: "logros",      label: "Micro-logros",        icon: Trophy,         path: "/diario/logros" },
 };
 
 function detectRecommendations(text: string): Recommendation[] {
@@ -162,7 +162,7 @@ export default function Diario() {
           className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border/50 shadow-sm transition-all active:scale-95"
           aria-label="Historial"
         >
-          <ClockCounterClockwise size={18} className="text-muted-foreground" />
+          <Clock size={18} className="text-muted-foreground" />
         </button>
       </div>
 
@@ -195,13 +195,13 @@ export default function Diario() {
       <div className="px-6 pb-2 flex items-center gap-3">
         {!isRecording && !audioUrl && (
           <button onClick={startRecording} className="flex items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-2 text-xs text-muted-foreground transition active:bg-muted">
-            <Microphone size={14} />
+            <Mic size={14} />
             Nota de voz
           </button>
         )}
         {isRecording && (
           <button onClick={stopRecording} className="flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            <Stop size={14} />
+            <Square size={14} />
             <span className="animate-pulse">Grabando...</span>
           </button>
         )}
