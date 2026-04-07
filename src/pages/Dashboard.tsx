@@ -199,16 +199,21 @@ export default function Dashboard() {
 
     if (!user) return;
 
-    const nextDay = localDateStr(addDays(day, 1));
+    // Use ART-aware UTC boundaries: ART = UTC-3, so midnight ART = 03:00 UTC
+    const dayStart = `${ds}T03:00:00Z`;
+    const nextDayStr = localDateStr(addDays(day, 1));
+    const dayEnd = `${nextDayStr}T03:00:00Z`;
     const activities: DayActivity[] = [];
 
-    const [journals, thoughts, tests, exercises, dreams, achievements] = await Promise.all([
-      supabase.from("journal_entries").select("id, created_at, content").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
-      supabase.from("thought_records").select("id, created_at, situation").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
-      supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
-      supabase.from("exercise_sessions").select("id, created_at, exercise_type, exercise_name, duration_seconds").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
+    const [journals, thoughts, tests, exercises, dreams, achievements, checkins_day, completedGoals] = await Promise.all([
+      supabase.from("journal_entries").select("id, created_at, content").eq("user_id", user.id).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
+      supabase.from("thought_records").select("id, created_at, situation").eq("user_id", user.id).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
+      supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", user.id).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
+      supabase.from("exercise_sessions").select("id, created_at, exercise_type, exercise_name, duration_seconds").eq("user_id", user.id).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
       supabase.from("dream_log").select("id, created_at, description").eq("user_id", user.id).eq("dream_date", ds).order("created_at"),
-      supabase.from("micro_achievements").select("id, created_at, achievement_text").eq("user_id", user.id).gte("created_at", ds).lt("created_at", nextDay).order("created_at"),
+      supabase.from("micro_achievements").select("id, created_at, achievement_text").eq("user_id", user.id).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
+      supabase.from("daily_checkins").select("id, created_at, mood_score, note").eq("user_id", user.id).eq("checkin_date", ds),
+      supabase.from("weekly_goals").select("id, created_at, goal_text").eq("user_id", user.id).eq("completed", true).gte("created_at", dayStart).lt("created_at", dayEnd),
     ]);
 
     journals.data?.forEach((j: any) => activities.push({ type: "journal", label: "Entrada de diario", detail: j.content?.slice(0, 80) || "", time: format(new Date(j.created_at), "HH:mm") }));
@@ -217,6 +222,11 @@ export default function Dashboard() {
     exercises.data?.forEach((e: any) => activities.push({ type: "exercise", label: e.exercise_name || e.exercise_type, detail: e.duration_seconds ? `${Math.round(e.duration_seconds / 60)} min` : "Completado", time: format(new Date(e.created_at), "HH:mm") }));
     dreams.data?.forEach((d: any) => activities.push({ type: "dream", label: "Registro de sueño", detail: d.description?.slice(0, 80) || "", time: format(new Date(d.created_at), "HH:mm") }));
     achievements.data?.forEach((a: any) => activities.push({ type: "goal", label: "Logro registrado", detail: a.achievement_text?.slice(0, 80) || "", time: format(new Date(a.created_at), "HH:mm") }));
+    checkins_day.data?.forEach((c: any) => {
+      const moodLabel = moodLevels.find(m => m.value === c.mood_score)?.label || "";
+      activities.push({ type: "exercise", label: "Check-in emocional", detail: `${moodLabel}${c.note ? ` · ${c.note.slice(0, 60)}` : ""}`, time: format(new Date(c.created_at), "HH:mm") });
+    });
+    completedGoals.data?.forEach((g: any) => activities.push({ type: "goal", label: "Objetivo cumplido", detail: g.goal_text?.slice(0, 80) || "", time: format(new Date(g.created_at), "HH:mm") }));
 
     activities.sort((a, b) => a.time.localeCompare(b.time));
     setDayActivities(activities);
