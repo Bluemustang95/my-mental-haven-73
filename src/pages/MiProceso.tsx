@@ -404,8 +404,9 @@ export default function MiProceso() {
 
               <button
                 onClick={() => {
+                  const testId = selectedTest;
                   setSelectedTest(null);
-                  navigate("/mi-proceso/tests");
+                  navigate(`/mi-proceso/tests?test=${testId}`);
                 }}
                 className="mt-3 w-full rounded-2xl bg-accent/20 py-3 font-display text-sm font-medium text-accent-foreground transition-colors active:bg-accent/30"
               >
