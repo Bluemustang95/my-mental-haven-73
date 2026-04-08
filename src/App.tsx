@@ -16,6 +16,7 @@ import DiarioHistory from "@/pages/DiarioHistory";
 import ResumenPsico from "@/pages/ResumenPsico";
 import AllTests from "@/pages/AllTests";
 import JournalCheckin from "@/components/journal/JournalCheckin";
+import CheckinHistory from "@/pages/CheckinHistory";
 import JournalEntry from "@/components/journal/JournalEntry";
 import DayTimeline from "@/components/journal/DayTimeline";
 import RelationshipLog from "@/components/journal/RelationshipLog";

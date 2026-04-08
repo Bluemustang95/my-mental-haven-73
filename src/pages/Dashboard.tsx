@@ -226,6 +226,34 @@ export default function Dashboard() {
       const moodLabel = moodLevels.find(m => m.value === c.mood_score)?.label || "";
       activities.push({ type: "exercise", label: "Check-in emocional", detail: `${moodLabel}${c.note ? ` · ${c.note.slice(0, 60)}` : ""}`, time: format(new Date(c.created_at), "HH:mm") });
     });
+
+    // Body map entries for somatic check-ins
+    const bodyMapRes = await supabase.from("body_map_entries").select("id, created_at, body_part, note").eq("user_id", user.id).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at");
+    const bodyPartLabels: Record<string, string> = {
+      head: "Cabeza", neck: "Cuello", chest: "Pecho", stomach: "Estómago",
+      left_shoulder: "Hombro izq.", right_shoulder: "Hombro der.",
+      left_arm: "Brazo izq.", right_arm: "Brazo der.", pelvis: "Pelvis",
+      left_leg: "Pierna izq.", right_leg: "Pierna der.",
+      left_foot: "Pie izq.", right_foot: "Pie der.",
+    };
+    // Group body entries by timestamp batch
+    const bodyBatches: Record<string, { parts: string[]; note: string | null; time: string }> = {};
+    bodyMapRes.data?.forEach((b: any) => {
+      const batchKey = b.created_at?.slice(0, 16) || "unknown";
+      if (!bodyBatches[batchKey]) {
+        bodyBatches[batchKey] = { parts: [], note: b.note, time: format(new Date(b.created_at), "HH:mm") };
+      }
+      bodyBatches[batchKey].parts.push(bodyPartLabels[b.body_part] || b.body_part);
+    });
+    Object.values(bodyBatches).forEach((batch) => {
+      const zones = batch.parts.join(", ");
+      activities.push({
+        type: "exercise",
+        label: "Check-in somático",
+        detail: `Tensión en ${zones}${batch.note ? ` · ${batch.note.slice(0, 50)}` : ""}`,
+        time: batch.time,
+      });
+    });
     completedGoals.data?.forEach((g: any) => activities.push({ type: "goal", label: "Objetivo cumplido", detail: g.goal_text?.slice(0, 80) || "", time: format(new Date(g.created_at), "HH:mm") }));
 
     activities.sort((a, b) => a.time.localeCompare(b.time));
