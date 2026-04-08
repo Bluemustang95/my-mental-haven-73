@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, Lightning, Sparkle, Moon, HeartHalf, CaretRight } from "@phosphor-icons/react";
+import { ArrowLeft, Brain, Lightning, Sparkle, Moon, HeartHalf } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
+} from "recharts";
 
 const testMeta: Record<string, {
   humanLabel: string;
@@ -72,8 +78,9 @@ const toneColors = { positive: "text-success", moderate: "text-accent-foreground
 export default function AllTests() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [lastScores, setLastScores] = useState<Record<string, number>>({});
+  const [testsByType, setTestsByType] = useState<Record<string, { date: string; score: number }[]>>({});
   const [loading, setLoading] = useState(true);
+  const [selectedTest, setSelectedTest] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -81,17 +88,24 @@ export default function AllTests() {
       .from("test_results")
       .select("test_type, score, created_at")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100)
+      .order("created_at", { ascending: true })
+      .limit(200)
       .then(({ data }) => {
-        const last: Record<string, number> = {};
+        const grouped: Record<string, { date: string; score: number }[]> = {};
         for (const t of data ?? []) {
-          if (!last[t.test_type]) last[t.test_type] = t.score;
+          if (!grouped[t.test_type]) grouped[t.test_type] = [];
+          grouped[t.test_type].push({
+            date: format(new Date(t.created_at!), "dd/MM", { locale: es }),
+            score: t.score,
+          });
         }
-        setLastScores(last);
+        setTestsByType(grouped);
         setLoading(false);
       });
   }, [user]);
+
+  const selectedMeta = selectedTest ? testMeta[selectedTest] : null;
+  const selectedResults = selectedTest ? testsByType[selectedTest] ?? [] : [];
 
   return (
     <div className="px-5 pt-14 pb-28 safe-area-top">
@@ -112,8 +126,9 @@ export default function AllTests() {
       ) : (
         <div className="space-y-3">
           {Object.entries(testMeta).map(([type, meta], i) => {
-            const score = lastScores[type] ?? null;
-            const interp = score !== null ? meta.interpret(score) : null;
+            const results = testsByType[type] ?? [];
+            const lastScore = results.length > 0 ? results[results.length - 1].score : null;
+            const interp = lastScore !== null ? meta.interpret(lastScore) : null;
             const Icon = meta.icon;
 
             return (
@@ -123,7 +138,7 @@ export default function AllTests() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(`/mi-proceso/tests?test=${type}`)}
+                onClick={() => setSelectedTest(type)}
                 className="flex w-full items-center gap-4 rounded-3xl bg-card p-4 text-left shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]"
                 style={{ borderLeft: `3px solid ${meta.color}` }}
               >
@@ -143,24 +158,86 @@ export default function AllTests() {
                     <p className="mt-1 text-xs text-muted-foreground italic">Todavía no completaste este indicador</p>
                   )}
                 </div>
-                <CaretRight size={16} className="text-muted-foreground shrink-0" />
               </motion.button>
             );
           })}
-
-          {/* New test CTA */}
-          <button
-            onClick={() => navigate("/mi-proceso/tests")}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-accent/30 bg-accent/5 py-4 font-display text-sm font-medium text-accent-foreground/80 transition-colors active:bg-accent/10"
-          >
-            Realizar un nuevo test
-          </button>
         </div>
       )}
 
       <p className="mt-6 text-center text-[10px] text-muted-foreground">
         Estos indicadores son orientativos y no constituyen un diagnóstico clínico.
       </p>
+
+      {/* ── Detail modal ── */}
+      <Dialog open={!!selectedTest} onOpenChange={(o) => !o && setSelectedTest(null)}>
+        <DialogContent className="max-w-[92vw] rounded-3xl p-5">
+          {selectedMeta && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 font-display text-base">
+                  <selectedMeta.icon size={20} weight="duotone" />
+                  {selectedMeta.humanLabel}
+                </DialogTitle>
+              </DialogHeader>
+
+              {selectedResults.length > 0 && (() => {
+                const last = selectedResults[selectedResults.length - 1];
+                const interp = selectedMeta.interpret(last.score);
+                return (
+                  <div className={`mt-2 rounded-2xl p-4 ${toneBg[interp.tone]}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`font-display text-sm font-semibold ${toneColors[interp.tone]}`}>{interp.label}</span>
+                      <span className="text-xs text-muted-foreground">Último: {last.date}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{interp.message}</p>
+                  </div>
+                );
+              })()}
+
+              {selectedResults.length > 1 ? (
+                <div className="mt-3">
+                  <ResponsiveContainer width="100%" height={180}>
+                    <LineChart data={selectedResults}>
+                      <XAxis dataKey="date" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" width={25} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        contentStyle={{
+                          background: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "16px",
+                          fontSize: 12,
+                        }}
+                      />
+                      <Line
+                        type="natural"
+                        dataKey="score"
+                        stroke={selectedMeta.color}
+                        strokeWidth={2.5}
+                        dot={{ r: 4, fill: selectedMeta.color, strokeWidth: 0 }}
+                        activeDot={{ r: 6, strokeWidth: 0 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : selectedResults.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Aún no completaste este indicador.
+                </p>
+              ) : null}
+
+              <button
+                onClick={() => {
+                  setSelectedTest(null);
+                  navigate(`/mi-proceso/tests?test=${selectedTest}`);
+                }}
+                className="mt-3 w-full rounded-2xl bg-accent/20 py-3 font-display text-sm font-medium text-accent-foreground transition-colors active:bg-accent/30"
+              >
+                Realizar evaluación
+              </button>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
