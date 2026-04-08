@@ -88,6 +88,7 @@ const App = () => (
               <Route path="/diario" element={<Diario />} />
               <Route path="/diario/historial" element={<DiarioHistory />} />
               <Route path="/diario/checkin" element={<JournalCheckin />} />
+              <Route path="/diario/checkin/historial" element={<CheckinHistory />} />
               <Route path="/diario/escribir" element={<JournalEntry />} />
               <Route path="/diario/dia" element={<DayTimeline />} />
               <Route path="/diario/vinculos" element={<RelationshipLog />} />
