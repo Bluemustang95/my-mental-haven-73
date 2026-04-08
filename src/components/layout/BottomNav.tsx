@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { House, Notebook, Toolbox, ChartLineUp, ChatCircle } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { motion, useMotionValueEvent, useScroll, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 
 const leftTabs = [
   { path: "/", label: "Inicio", icon: House },
@@ -15,6 +17,12 @@ const rightTabs = [
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { scrollY } = useScroll();
+  const [shrunk, setShrunk] = useState(false);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setShrunk(latest > 30);
+  });
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -25,29 +33,50 @@ export function BottomNav() {
     const active = isActive(tab.path);
     const Icon = tab.icon;
     return (
-      <button
+      <motion.button
         key={tab.path}
         onClick={() => navigate(tab.path)}
+        whileTap={{ scale: 0.85, opacity: 0.7 }}
         className={cn(
           "flex flex-1 flex-col items-center gap-0.5 py-1 transition-colors font-display text-[9px] sm:text-[10px] tracking-wide uppercase min-w-0",
-          active ? "text-accent-foreground" : "text-muted-foreground"
+          active ? "text-foreground" : "text-muted-foreground"
         )}
       >
-        <Icon
-          size={20}
-          weight={active ? "fill" : "regular"}
-          className={cn(active && "text-accent")}
-        />
-        <span className="truncate max-w-full">{tab.label}</span>
-      </button>
+        <motion.div
+          animate={active ? { y: -2 } : { y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        >
+          <Icon
+            size={20}
+            weight={active ? "fill" : "regular"}
+            className={cn(active && "text-accent")}
+          />
+        </motion.div>
+        <AnimatePresence>
+          {!shrunk && (
+            <motion.span
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="truncate max-w-full"
+            >
+              {tab.label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
     );
   };
 
   const resmitaActive = location.pathname === "/resmita";
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-md safe-area-bottom">
-      <div className="flex h-16 items-center px-1">
+    <motion.nav
+      animate={shrunk ? { scale: 0.92, y: 4 } : { scale: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 28 }}
+      className="fixed bottom-4 left-4 right-4 z-40 mx-auto max-w-md"
+    >
+      <div className="flex items-center rounded-full border border-border/40 bg-card/70 backdrop-blur-xl shadow-lg px-2">
         {/* Left side */}
         <div className="flex flex-1 justify-around">
           {leftTabs.map(renderTab)}
@@ -55,24 +84,36 @@ export function BottomNav() {
 
         {/* Center – Resmita FAB */}
         <div className="flex w-16 shrink-0 items-center justify-center">
-          <button
+          <motion.button
             onClick={() => navigate("/resmita")}
-            className="relative -mt-6 flex flex-col items-center"
+            whileTap={{ scale: 0.9 }}
+            className="relative -mt-5 flex flex-col items-center"
           >
-            <div
+            <motion.div
+              animate={resmitaActive ? { scale: 1.08 } : { scale: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
               className={cn(
-                "flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95",
+                "flex h-13 w-13 items-center justify-center rounded-full shadow-md transition-colors",
                 resmitaActive
                   ? "bg-accent text-accent-foreground"
                   : "bg-accent/90 text-accent-foreground"
               )}
             >
-              <ChatCircle size={26} weight={resmitaActive ? "fill" : "bold"} />
-            </div>
-            <span className="mt-0.5 font-display text-[9px] sm:text-[10px] tracking-wide uppercase text-muted-foreground">
-              Resmita
-            </span>
-          </button>
+              <ChatCircle size={24} weight={resmitaActive ? "fill" : "bold"} />
+            </motion.div>
+            <AnimatePresence>
+              {!shrunk && (
+                <motion.span
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-0.5 font-display text-[9px] sm:text-[10px] tracking-wide uppercase text-muted-foreground"
+                >
+                  Resmita
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
         </div>
 
         {/* Right side */}
@@ -80,6 +121,6 @@ export function BottomNav() {
           {rightTabs.map(renderTab)}
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
