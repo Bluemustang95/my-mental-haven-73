@@ -188,13 +188,24 @@ export default function Diario() {
         )}
       </AnimatePresence>
 
-      {/* ── Writing area (compact — no flex-1, auto height) ── */}
+      {/* ── Writing area (auto-expanding, no internal scroll) ── */}
       <div className="px-6 pt-3">
         <textarea
+          ref={(el) => {
+            if (el) {
+              el.style.height = "auto";
+              el.style.height = el.scrollHeight + "px";
+            }
+          }}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value);
+            const el = e.target;
+            el.style.height = "auto";
+            el.style.height = el.scrollHeight + "px";
+          }}
           placeholder="Escribí lo que necesites soltar..."
-          className="w-full min-h-[120px] resize-none bg-transparent text-foreground text-[15px] leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none"
+          className="w-full min-h-[120px] resize-none overflow-hidden bg-transparent text-foreground text-[15px] leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none"
           autoFocus
         />
       </div>
