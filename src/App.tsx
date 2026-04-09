@@ -47,6 +47,11 @@ import MedCategoryList from "@/pages/MedCategoryList";
 import MedDrugDetail from "@/pages/MedDrugDetail";
 import WeeklyReflection from "@/pages/WeeklyReflection";
 import WeeklyGoalsPage from "@/pages/WeeklyGoalsPage";
+import InternalDialogueHistory from "@/pages/InternalDialogueHistory";
+import RelationshipLogHistory from "@/pages/RelationshipLogHistory";
+import UnsentLettersHistory from "@/pages/UnsentLettersHistory";
+import MicroAchievementsHistory from "@/pages/MicroAchievementsHistory";
+import WeeklyGoalsHistory from "@/pages/WeeklyGoalsHistory";
 import NotFound from "@/pages/NotFound";
 import { AdminRoute } from "@/components/admin/AdminRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -96,6 +101,11 @@ const App = () => (
               <Route path="/diario/cartas" element={<UnsentLetters />} />
               <Route path="/diario/logros" element={<MicroAchievements />} />
               <Route path="/diario/dialogo" element={<InternalDialogue />} />
+              <Route path="/diario/dialogo/historial" element={<InternalDialogueHistory />} />
+              <Route path="/diario/vinculos/historial" element={<RelationshipLogHistory />} />
+              <Route path="/diario/cartas/historial" element={<UnsentLettersHistory />} />
+              <Route path="/diario/logros/historial" element={<MicroAchievementsHistory />} />
+              <Route path="/diario/objetivos/historial" element={<WeeklyGoalsHistory />} />
               <Route path="/diario/pensamientos" element={<ThoughtRecord />} />
               <Route path="/diario/suenos" element={<DreamLog />} />
               <Route path="/diario/huellas" element={<DiarioHuellas />} />
