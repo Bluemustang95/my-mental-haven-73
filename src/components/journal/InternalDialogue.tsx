@@ -4,8 +4,6 @@ import { ArrowLeft } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useNavigate as useNav } from "react-router-dom";
 import { ClockCounterClockwise } from "@phosphor-icons/react";
 
 export default function InternalDialogue() {
