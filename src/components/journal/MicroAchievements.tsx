@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import HistoryPanel from "./HistoryPanel";
+import { ClockCounterClockwise } from "@phosphor-icons/react";
 
 const suggestions = [
   "Hoy puse un límite",
@@ -71,21 +71,13 @@ export default function MicroAchievements() {
           <ArrowLeft size={20} />
         </button>
         <h1 className="flex-1 font-display text-lg font-semibold">Micro-logros</h1>
-        <HistoryPanel<{ id: string; created_at: string | null; achievement_text: string; achievement_date: string | null }>
-          tableName="micro_achievements"
-          renderItem={(item) => (
-            <div className="flex items-center gap-2">
-              <Star size={13} weight="fill" className="text-accent shrink-0" />
-              <span className="text-xs text-foreground truncate">{item.achievement_text}</span>
-            </div>
-          )}
-          renderDetail={(item) => (
-            <div>
-              <p className="font-display text-xs text-muted-foreground mb-1">Logro</p>
-              <p className="text-sm font-body">{item.achievement_text}</p>
-            </div>
-          )}
-        />
+        <button
+          onClick={() => navigate("/diario/logros/historial")}
+          className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 font-display text-[11px] text-muted-foreground transition-all active:bg-muted"
+        >
+          <ClockCounterClockwise size={13} weight="duotone" />
+          Historial
+        </button>
       </div>
 
       <p className="mb-4 text-xs text-muted-foreground">
