@@ -28,6 +28,7 @@ import JournalTimeline from "@/components/journal/JournalTimeline";
 import DiarioHuellas from "@/pages/DiarioHuellas";
 import ThoughtRecord from "@/pages/ThoughtRecord";
 import DreamLog from "@/pages/DreamLog";
+import DiarioTools from "@/pages/DiarioTools";
 import Grounding from "@/pages/Grounding";
 import Mindfulness from "@/pages/Mindfulness";
 import ContentLibrary from "@/pages/ContentLibrary";
@@ -108,6 +109,7 @@ const App = () => (
               <Route path="/diario/objetivos/historial" element={<WeeklyGoalsHistory />} />
               <Route path="/diario/pensamientos" element={<ThoughtRecord />} />
               <Route path="/diario/suenos" element={<DreamLog />} />
+              <Route path="/diario/herramientas" element={<DiarioTools />} />
               <Route path="/diario/huellas" element={<DiarioHuellas />} />
               <Route path="/diario/sesiones" element={<SessionNotes />} />
 
