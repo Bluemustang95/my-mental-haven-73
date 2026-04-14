@@ -10,6 +10,7 @@ import { cn, localDateStr, localWeekStart } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionPrep } from "@/components/SessionPrep";
+import BlogCarousel from "@/components/BlogCarousel";
 import { format, startOfWeek, addDays, subWeeks, addWeeks, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
@@ -465,6 +466,9 @@ export default function Dashboard() {
           </p>
         </motion.section>
       )}
+
+      {/* ── Blog ───── */}
+      <BlogCarousel />
 
       {/* ── Treatment CTA ───── */}
       <section className="px-6 pb-6">
