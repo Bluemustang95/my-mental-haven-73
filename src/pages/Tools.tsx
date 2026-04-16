@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wind, Flower, BookOpen, Leaf, Heart, Sparkle, HandFist } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
+import {
+  Heart,
+  Sparkles,
+  BookOpen,
+  Flower2,
+  Leaf,
+  Hand,
+  Wind,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +17,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import CrisisPlan from "@/components/CrisisPlan";
 
 const feelingOptions = [
   { label: "Ansiedad o nervios", recommendation: { path: "/herramientas/respiracion", name: "Respiración Guiada" } },
@@ -38,9 +47,9 @@ export default function Tools() {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigate("/herramientas/favoritos")}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card shadow-sm"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-destructive/15 bg-destructive/5 shadow-sm"
         >
-          <Heart size={18} weight="fill" className="text-destructive" />
+          <Heart size={18} className="fill-destructive text-destructive" />
         </motion.button>
       </div>
 
@@ -48,10 +57,10 @@ export default function Tools() {
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={() => { setRecommendation(null); setGuideOpen(true); }}
-        className="mb-6 flex w-full items-center gap-4 rounded-[32px] border border-[hsl(var(--accent)/0.25)] bg-card p-5 text-left shadow-sm transition-colors"
+        className="mb-6 flex w-full items-center gap-4 rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
       >
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/15">
-          <Sparkle size={22} weight="duotone" className="text-accent-foreground" />
+          <Sparkles size={22} className="text-accent-foreground" />
         </div>
         <div className="flex-1">
           <p className="font-display text-sm font-semibold text-foreground">Te guiamos</p>
@@ -61,14 +70,14 @@ export default function Tools() {
 
       {/* Bento Grid */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Psicoeducación – tall card spanning 2 rows */}
+        {/* Psicoeducación – tall */}
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/contenido")}
-          className="row-span-2 flex flex-col items-start justify-between rounded-[32px] border border-border bg-card p-5 text-left shadow-sm"
+          className="row-span-2 flex flex-col items-start justify-between rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/5">
-            <BookOpen size={20} weight="duotone" className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted/60">
+            <BookOpen size={20} className="text-foreground" />
           </div>
           <div className="mt-auto pt-6">
             <p className="font-display text-sm font-semibold text-foreground">Psicoeducación</p>
@@ -80,10 +89,10 @@ export default function Tools() {
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/mindfulness")}
-          className="flex flex-col items-start rounded-[32px] border border-border bg-card p-5 text-left shadow-sm"
+          className="flex flex-col items-start rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ backgroundColor: "hsl(270 60% 95%)" }}>
-            <Flower size={20} weight="duotone" className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[hsl(var(--accent)/0.15)]">
+            <Flower2 size={20} className="text-foreground" />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold text-foreground">Mindfulness</p>
         </motion.button>
@@ -92,10 +101,10 @@ export default function Tools() {
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/autocuidado")}
-          className="flex flex-col items-start rounded-[32px] border border-border bg-card p-5 text-left shadow-sm"
+          className="flex flex-col items-start rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ backgroundColor: "hsl(160 45% 92%)" }}>
-            <Leaf size={20} weight="duotone" className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/60">
+            <Leaf size={20} className="text-foreground" />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold text-foreground">Autocuidado</p>
         </motion.button>
@@ -104,10 +113,10 @@ export default function Tools() {
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/grounding")}
-          className="flex flex-col items-start rounded-[32px] border border-border bg-card p-5 text-left shadow-sm"
+          className="flex flex-col items-start rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/60">
-            <HandFist size={20} weight="duotone" className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted/60">
+            <Hand size={20} className="text-foreground" />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold text-foreground">Grounding</p>
         </motion.button>
@@ -116,18 +125,21 @@ export default function Tools() {
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/respiracion")}
-          className="flex flex-col items-start rounded-[32px] border border-border bg-card p-5 text-left shadow-sm"
+          className="flex flex-col items-start rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl" style={{ backgroundColor: "hsl(25 80% 93%)" }}>
-            <Wind size={20} weight="duotone" className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/10">
+            <Wind size={20} className="text-foreground" />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold text-foreground">Respiración</p>
         </motion.button>
       </div>
 
+      {/* Plan de Crisis */}
+      <CrisisPlan />
+
       {/* Guide Dialog */}
       <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
-        <DialogContent className="rounded-[28px] border-border">
+        <DialogContent className="rounded-[2rem] border-border">
           <DialogHeader>
             <DialogTitle className="font-display">¿Cómo te sentís ahora?</DialogTitle>
             <DialogDescription>Elegí lo que más resuene y te recomendamos un recurso.</DialogDescription>
