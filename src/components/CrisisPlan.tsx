@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -15,11 +15,13 @@ import {
   Users,
   UserPlus,
   Lightbulb,
+  Download,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import jsPDF from "jspdf";
+import resmitaAvatar from "@/assets/resmita.png";
+
+const STORAGE_KEY = "resma:safety-plan:v1";
 
 const STEP_TITLES = [
   "Tus señales de advertencia",
@@ -46,27 +48,71 @@ interface ContactRow {
   phone: string;
 }
 
+interface SafetyPlanData {
+  signals: string;
+  strategies: string;
+  trustedContacts: ContactRow[];
+  proContacts: ContactRow[];
+  safeEnv: string;
+}
+
+const DEFAULT_DATA: SafetyPlanData = {
+  signals: "",
+  strategies: "",
+  trustedContacts: [{ name: "", phone: "" }],
+  proContacts: [{ name: "", phone: "" }],
+  safeEnv: "",
+};
+
+function loadPlan(): SafetyPlanData {
+  if (typeof window === "undefined") return DEFAULT_DATA;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_DATA;
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_DATA, ...parsed };
+  } catch {
+    return DEFAULT_DATA;
+  }
+}
+
 export default function CrisisPlan() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
+  const [data, setData] = useState<SafetyPlanData>(DEFAULT_DATA);
 
-  // Step data
-  const [signals, setSignals] = useState("");
-  const [strategies, setStrategies] = useState("");
-  const [trustedContacts, setTrustedContacts] = useState<ContactRow[]>([{ name: "", phone: "" }]);
-  const [proContacts, setProContacts] = useState<ContactRow[]>([{ name: "", phone: "" }]);
-  const [safeEnv, setSafeEnv] = useState("");
+  // Load from localStorage on mount
+  useEffect(() => {
+    setData(loadPlan());
+  }, []);
 
-  const addTrusted = () => setTrustedContacts((c) => [...c, { name: "", phone: "" }]);
-  const removeTrusted = (i: number) => setTrustedContacts((c) => c.filter((_, idx) => idx !== i));
-  const updateTrusted = (i: number, field: keyof ContactRow, val: string) =>
-    setTrustedContacts((c) => c.map((r, idx) => (idx === i ? { ...r, [field]: val } : r)));
+  // Persist on change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      /* ignore */
+    }
+  }, [data]);
 
-  const addPro = () => setProContacts((c) => [...c, { name: "", phone: "" }]);
-  const removePro = (i: number) => setProContacts((c) => c.filter((_, idx) => idx !== i));
-  const updatePro = (i: number, field: keyof ContactRow, val: string) =>
-    setProContacts((c) => c.map((r, idx) => (idx === i ? { ...r, [field]: val } : r)));
+  const update = <K extends keyof SafetyPlanData>(key: K, value: SafetyPlanData[K]) =>
+    setData((d) => ({ ...d, [key]: value }));
+
+  const addRow = (key: "trustedContacts" | "proContacts") =>
+    setData((d) => ({ ...d, [key]: [...d[key], { name: "", phone: "" }] }));
+  const removeRow = (key: "trustedContacts" | "proContacts", i: number) =>
+    setData((d) => ({ ...d, [key]: d[key].filter((_, idx) => idx !== i) }));
+  const updateRow = (
+    key: "trustedContacts" | "proContacts",
+    i: number,
+    field: keyof ContactRow,
+    val: string,
+  ) =>
+    setData((d) => ({
+      ...d,
+      [key]: d[key].map((r, idx) => (idx === i ? { ...r, [field]: val } : r)),
+    }));
 
   const handleSave = () => {
     setSaved(true);
@@ -75,6 +121,102 @@ export default function CrisisPlan() {
       setOpen(false);
       setStep(0);
     }, 1800);
+  };
+
+  const handleDownload = () => {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const margin = 48;
+    const width = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let y = margin;
+
+    const ensureSpace = (needed: number) => {
+      if (y + needed > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    };
+
+    const writeTitle = (text: string) => {
+      ensureSpace(28);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(20, 20, 30);
+      doc.text(text, margin, y);
+      y += 22;
+    };
+
+    const writeSection = (label: string) => {
+      ensureSpace(22);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(40, 40, 50);
+      doc.text(label, margin, y);
+      y += 16;
+    };
+
+    const writeBody = (text: string) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(60, 60, 70);
+      const lines = doc.splitTextToSize(text || "—", width - margin * 2);
+      lines.forEach((ln: string) => {
+        ensureSpace(14);
+        doc.text(ln, margin, y);
+        y += 14;
+      });
+      y += 6;
+    };
+
+    const writeContacts = (rows: ContactRow[]) => {
+      const filled = rows.filter((r) => r.name.trim() || r.phone.trim());
+      if (filled.length === 0) {
+        writeBody("—");
+        return;
+      }
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(60, 60, 70);
+      filled.forEach((r) => {
+        ensureSpace(14);
+        doc.text(`• ${r.name || "Sin nombre"} — ${r.phone || "Sin teléfono"}`, margin, y);
+        y += 14;
+      });
+      y += 6;
+    };
+
+    writeTitle("Mi Plan de Seguridad");
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(10);
+    doc.setTextColor(120, 120, 130);
+    doc.text(
+      `Generado el ${new Date().toLocaleDateString("es-AR")} • RESMA`,
+      margin,
+      y,
+    );
+    y += 24;
+
+    writeSection("1. Mis señales de advertencia");
+    writeBody(data.signals);
+
+    writeSection("2. Estrategias de afrontamiento");
+    writeBody(data.strategies);
+
+    writeSection("3. Personas de confianza");
+    writeContacts(data.trustedContacts);
+
+    writeSection("4. Profesionales de contacto");
+    writeContacts(data.proContacts);
+
+    writeSection("5. Ayuda profesional inmediata");
+    writeBody(
+      "• 911 — Emergencias\n• 0800 222 5462 — Salud Mental Responde (24 hs)\n• Hospital público más cercano: buscar guardia de salud mental",
+    );
+
+    writeSection("6. Mi ambiente seguro");
+    writeBody(data.safeEnv);
+
+    doc.save("plan-de-seguridad.pdf");
   };
 
   const StepIcon = STEP_ICONS[step];
@@ -94,7 +236,7 @@ export default function CrisisPlan() {
           <AlertTriangle size={22} className="text-destructive" />
         </div>
         <div className="flex-1">
-          <p className="font-display text-sm font-semibold text-foreground">Plan de Crisis</p>
+          <p className="font-display text-sm font-semibold text-foreground">Plan de Seguridad</p>
           <p className="text-[11px] text-muted-foreground">Protocolo de seguridad personalizado</p>
         </div>
       </motion.button>
@@ -147,8 +289,12 @@ export default function CrisisPlan() {
 
                 {/* Resmita guide */}
                 <div className="mt-4 flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100">
-                    <span className="text-lg">🤖</span>
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sky-50 ring-2 ring-sky-100">
+                    <img
+                      src={resmitaAvatar}
+                      alt="Resmita"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div className="rounded-2xl rounded-tl-md bg-muted/60 px-4 py-3">
                     <p className="text-[12px] leading-relaxed text-muted-foreground font-body">
@@ -161,8 +307,8 @@ export default function CrisisPlan() {
                 <div className="mt-5 space-y-3">
                   {step === 0 && (
                     <textarea
-                      value={signals}
-                      onChange={(e) => setSignals(e.target.value)}
+                      value={data.signals}
+                      onChange={(e) => update("signals", e.target.value)}
                       placeholder="Ej: Pensamientos negativos recurrentes, aislamiento, dificultad para dormir…"
                       rows={4}
                       className={inputClass + " min-h-[100px] resize-none"}
@@ -172,11 +318,11 @@ export default function CrisisPlan() {
                   {step === 1 && (
                     <>
                       <p className="text-[11px] text-muted-foreground">
-                        Sugerencias: Técnicas de respiración, agarrar hielos, ducharte con agua fría, escuchar música.
+                        Sugerencias: Respiración, agarrar hielos, ducha fría, escuchar música.
                       </p>
                       <textarea
-                        value={strategies}
-                        onChange={(e) => setStrategies(e.target.value)}
+                        value={data.strategies}
+                        onChange={(e) => update("strategies", e.target.value)}
                         placeholder="Escribí tus estrategias personales…"
                         rows={4}
                         className={inputClass + " min-h-[100px] resize-none"}
@@ -186,29 +332,32 @@ export default function CrisisPlan() {
 
                   {step === 2 && (
                     <>
-                      {trustedContacts.map((c, i) => (
+                      {data.trustedContacts.map((c, i) => (
                         <div key={i} className="flex items-center gap-2">
                           <input
                             placeholder="Nombre"
                             value={c.name}
-                            onChange={(e) => updateTrusted(i, "name", e.target.value)}
+                            onChange={(e) => updateRow("trustedContacts", i, "name", e.target.value)}
                             className={inputClass + " flex-1"}
                           />
                           <input
                             placeholder="Teléfono"
                             value={c.phone}
-                            onChange={(e) => updateTrusted(i, "phone", e.target.value)}
+                            onChange={(e) => updateRow("trustedContacts", i, "phone", e.target.value)}
                             className={inputClass + " w-[130px]"}
                           />
-                          {trustedContacts.length > 1 && (
-                            <button onClick={() => removeTrusted(i)} className="text-muted-foreground/60">
+                          {data.trustedContacts.length > 1 && (
+                            <button
+                              onClick={() => removeRow("trustedContacts", i)}
+                              className="text-muted-foreground/60"
+                            >
                               <Trash2 size={16} />
                             </button>
                           )}
                         </div>
                       ))}
                       <button
-                        onClick={addTrusted}
+                        onClick={() => addRow("trustedContacts")}
                         className="flex items-center gap-1.5 text-[12px] font-medium text-primary"
                       >
                         <Plus size={14} /> Agregar contacto
@@ -218,29 +367,32 @@ export default function CrisisPlan() {
 
                   {step === 3 && (
                     <>
-                      {proContacts.map((c, i) => (
+                      {data.proContacts.map((c, i) => (
                         <div key={i} className="flex items-center gap-2">
                           <input
                             placeholder="Nombre / Profesión"
                             value={c.name}
-                            onChange={(e) => updatePro(i, "name", e.target.value)}
+                            onChange={(e) => updateRow("proContacts", i, "name", e.target.value)}
                             className={inputClass + " flex-1"}
                           />
                           <input
                             placeholder="Teléfono"
                             value={c.phone}
-                            onChange={(e) => updatePro(i, "phone", e.target.value)}
+                            onChange={(e) => updateRow("proContacts", i, "phone", e.target.value)}
                             className={inputClass + " w-[130px]"}
                           />
-                          {proContacts.length > 1 && (
-                            <button onClick={() => removePro(i)} className="text-muted-foreground/60">
+                          {data.proContacts.length > 1 && (
+                            <button
+                              onClick={() => removeRow("proContacts", i)}
+                              className="text-muted-foreground/60"
+                            >
                               <Trash2 size={16} />
                             </button>
                           )}
                         </div>
                       ))}
                       <button
-                        onClick={addPro}
+                        onClick={() => addRow("proContacts")}
                         className="flex items-center gap-1.5 text-[12px] font-medium text-primary"
                       >
                         <Plus size={14} /> Agregar profesional
@@ -286,13 +438,21 @@ export default function CrisisPlan() {
                   )}
 
                   {step === 5 && (
-                    <textarea
-                      value={safeEnv}
-                      onChange={(e) => setSafeEnv(e.target.value)}
-                      placeholder="Ej: Guardar objetos peligrosos, ir a casa de alguien de confianza, alejarme de situaciones de riesgo…"
-                      rows={4}
-                      className={inputClass + " min-h-[100px] resize-none"}
-                    />
+                    <>
+                      <textarea
+                        value={data.safeEnv}
+                        onChange={(e) => update("safeEnv", e.target.value)}
+                        placeholder="Ej: Guardar objetos peligrosos, ir a casa de alguien de confianza, alejarme de situaciones de riesgo…"
+                        rows={4}
+                        className={inputClass + " min-h-[100px] resize-none"}
+                      />
+                      <button
+                        onClick={handleDownload}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 py-3 font-display text-sm text-foreground transition-colors active:bg-muted"
+                      >
+                        <Download size={16} /> Descargar mi Plan (PDF)
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -330,7 +490,7 @@ export default function CrisisPlan() {
                       onClick={handleSave}
                       className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-primary py-3 font-display text-sm text-primary-foreground active:opacity-90"
                     >
-                      <Check size={16} /> Guardar plan
+                      <Check size={16} /> Finalizar
                     </button>
                   )}
                 </div>
