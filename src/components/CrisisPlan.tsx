@@ -16,31 +16,41 @@ import {
   UserPlus,
   Lightbulb,
   Download,
+  Coffee,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
 import resmitaAvatar from "@/assets/resmita.png";
 
-const STORAGE_KEY = "resma:safety-plan:v1";
+const STORAGE_KEY = "resma:safety-plan:v2";
 
 const STEP_TITLES = [
-  "Tus señales de advertencia",
-  "Estrategias de afrontamiento",
-  "Personas de confianza",
-  "Profesionales de contacto",
-  "Ayuda profesional inmediata",
-  "Tu ambiente seguro",
+  "Señales de advertencia",
+  "Estrategias internas de afrontamiento",
+  "Personas y entornos sociales para distracción",
+  "Personas a quienes puedo pedir ayuda",
+  "Profesionales o agencias a contactar",
+  "Hacer el ambiente seguro",
 ];
 
-const STEP_ICONS = [Eye, Lightbulb, Users, UserPlus, Phone, Shield];
+const STEP_PLACEHOLDERS_HINT = [
+  "Pensamientos, imágenes, estados de ánimo o situaciones que indican que se acerca una crisis.",
+  "Cosas que podés hacer solo/a: respiración, hielos, ducha fría, caminar, música.",
+  "Lugares o personas que te ayudan a distraerte (sin necesariamente hablar de la crisis).",
+  "Familiares o amigos de confianza a los que podés pedirles ayuda directamente.",
+  "Servicios de salud mental, terapeuta, psiquiatra y emergencias.",
+  "Restringir el acceso a elementos peligrosos y crear un entorno más seguro.",
+];
+
+const STEP_ICONS = [Eye, Lightbulb, Coffee, Users, UserPlus, Shield];
 
 const RESMITA_MESSAGES = [
   "Este será tu plan de seguridad para seguir en un momento de crisis. Recordá confeccionarlo con tu terapeuta.",
-  "Pensá en cosas que te ayuden a distraerte o calmarte. Pueden ser actividades simples que podás hacer solo/a.",
-  "¿Quiénes son las personas en las que confiás? Pueden ayudarte a sentirte acompañado/a.",
-  "Un profesional puede brindarte apoyo especializado. Anotá los datos de tu terapeuta o psiquiatra.",
-  "Si sentís que estás en peligro, estas líneas están disponibles las 24 horas, los 7 días.",
-  "Pensá en qué cosas podrías cambiar en tu entorno para sentirte más seguro/a.",
+  "Pensá en cosas que podés hacer solo/a para calmarte antes de pedir ayuda.",
+  "Anotá lugares o gente con quien podés pasar el rato para despejarte.",
+  "¿Quiénes son las personas de confianza a las que podrías llamar si necesitás ayuda?",
+  "Tu terapeuta, psiquiatra o servicios de emergencia. Tenelos siempre a mano.",
+  "Pensá qué cosas podrías cambiar en tu entorno para sentirte más seguro/a.",
 ];
 
 interface ContactRow {
@@ -51,6 +61,7 @@ interface ContactRow {
 interface SafetyPlanData {
   signals: string;
   strategies: string;
+  socialDistraction: ContactRow[];
   trustedContacts: ContactRow[];
   proContacts: ContactRow[];
   safeEnv: string;
@@ -59,10 +70,13 @@ interface SafetyPlanData {
 const DEFAULT_DATA: SafetyPlanData = {
   signals: "",
   strategies: "",
+  socialDistraction: [{ name: "", phone: "" }],
   trustedContacts: [{ name: "", phone: "" }],
   proContacts: [{ name: "", phone: "" }],
   safeEnv: "",
 };
+
+type ContactKey = "socialDistraction" | "trustedContacts" | "proContacts";
 
 function loadPlan(): SafetyPlanData {
   if (typeof window === "undefined") return DEFAULT_DATA;
@@ -82,12 +96,10 @@ export default function CrisisPlan() {
   const [saved, setSaved] = useState(false);
   const [data, setData] = useState<SafetyPlanData>(DEFAULT_DATA);
 
-  // Load from localStorage on mount
   useEffect(() => {
     setData(loadPlan());
   }, []);
 
-  // Persist on change
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -99,16 +111,11 @@ export default function CrisisPlan() {
   const update = <K extends keyof SafetyPlanData>(key: K, value: SafetyPlanData[K]) =>
     setData((d) => ({ ...d, [key]: value }));
 
-  const addRow = (key: "trustedContacts" | "proContacts") =>
+  const addRow = (key: ContactKey) =>
     setData((d) => ({ ...d, [key]: [...d[key], { name: "", phone: "" }] }));
-  const removeRow = (key: "trustedContacts" | "proContacts", i: number) =>
+  const removeRow = (key: ContactKey, i: number) =>
     setData((d) => ({ ...d, [key]: d[key].filter((_, idx) => idx !== i) }));
-  const updateRow = (
-    key: "trustedContacts" | "proContacts",
-    i: number,
-    field: keyof ContactRow,
-    val: string,
-  ) =>
+  const updateRow = (key: ContactKey, i: number, field: keyof ContactRow, val: string) =>
     setData((d) => ({
       ...d,
       [key]: d[key].map((r, idx) => (idx === i ? { ...r, [field]: val } : r)),
@@ -121,6 +128,11 @@ export default function CrisisPlan() {
       setOpen(false);
       setStep(0);
     }, 1800);
+  };
+
+  const openHospitalMaps = () => {
+    const url = "https://www.google.com/maps/search/hospital+publico+guardia+salud+mental/";
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const handleDownload = () => {
@@ -140,10 +152,10 @@ export default function CrisisPlan() {
     const writeTitle = (text: string) => {
       ensureSpace(28);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
+      doc.setFontSize(18);
       doc.setTextColor(20, 20, 30);
       doc.text(text, margin, y);
-      y += 22;
+      y += 24;
     };
 
     const writeSection = (label: string) => {
@@ -159,7 +171,7 @@ export default function CrisisPlan() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(11);
       doc.setTextColor(60, 60, 70);
-      const lines = doc.splitTextToSize(text || "—", width - margin * 2);
+      const lines = doc.splitTextToSize(text?.trim() || "—", width - margin * 2);
       lines.forEach((ln: string) => {
         ensureSpace(14);
         doc.text(ln, margin, y);
@@ -168,7 +180,7 @@ export default function CrisisPlan() {
       y += 6;
     };
 
-    const writeContacts = (rows: ContactRow[]) => {
+    const writeContacts = (rows: ContactRow[], phoneLabel = "Teléfono") => {
       const filled = rows.filter((r) => r.name.trim() || r.phone.trim());
       if (filled.length === 0) {
         writeBody("—");
@@ -179,7 +191,9 @@ export default function CrisisPlan() {
       doc.setTextColor(60, 60, 70);
       filled.forEach((r) => {
         ensureSpace(14);
-        doc.text(`• ${r.name || "Sin nombre"} — ${r.phone || "Sin teléfono"}`, margin, y);
+        const name = r.name.trim() || "Sin nombre";
+        const phone = r.phone.trim() || `Sin ${phoneLabel.toLowerCase()}`;
+        doc.text(`• ${name} — ${phone}`, margin, y);
         y += 14;
       });
       y += 6;
@@ -189,31 +203,28 @@ export default function CrisisPlan() {
     doc.setFont("helvetica", "italic");
     doc.setFontSize(10);
     doc.setTextColor(120, 120, 130);
-    doc.text(
-      `Generado el ${new Date().toLocaleDateString("es-AR")} • RESMA`,
-      margin,
-      y,
-    );
+    doc.text(`Generado el ${new Date().toLocaleDateString("es-AR")} • RESMA`, margin, y);
     y += 24;
 
-    writeSection("1. Mis señales de advertencia");
+    writeSection("1. Señales de advertencia");
     writeBody(data.signals);
 
-    writeSection("2. Estrategias de afrontamiento");
+    writeSection("2. Estrategias internas de afrontamiento");
     writeBody(data.strategies);
 
-    writeSection("3. Personas de confianza");
+    writeSection("3. Personas y entornos sociales para distracción");
+    writeContacts(data.socialDistraction, "Lugar/Teléfono");
+
+    writeSection("4. Personas a quienes puedo pedir ayuda");
     writeContacts(data.trustedContacts);
 
-    writeSection("4. Profesionales de contacto");
+    writeSection("5. Profesionales o agencias a contactar");
     writeContacts(data.proContacts);
-
-    writeSection("5. Ayuda profesional inmediata");
     writeBody(
-      "• 911 — Emergencias\n• 0800 222 5462 — Salud Mental Responde (24 hs)\n• Hospital público más cercano: buscar guardia de salud mental",
+      "• 911 — Emergencias\n• 0800 222 5462 — Salud Mental Responde (24 hs)\n• Hospital público con guardia de salud mental más cercano",
     );
 
-    writeSection("6. Mi ambiente seguro");
+    writeSection("6. Hacer el ambiente seguro");
     writeBody(data.safeEnv);
 
     doc.save("plan-de-seguridad.pdf");
@@ -223,6 +234,50 @@ export default function CrisisPlan() {
 
   const inputClass =
     "w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 font-body";
+
+  const renderContactList = (
+    key: ContactKey,
+    namePlaceholder: string,
+    phonePlaceholder: string,
+    addLabel: string,
+  ) => (
+    <>
+      {data[key].map((c, i) => (
+        <div key={i} className="space-y-2 rounded-2xl border border-border/60 bg-muted/20 p-3">
+          <div className="flex items-center gap-2">
+            <input
+              placeholder={namePlaceholder}
+              value={c.name}
+              onChange={(e) => updateRow(key, i, "name", e.target.value)}
+              className={inputClass + " flex-1"}
+            />
+            {data[key].length > 1 && (
+              <button
+                onClick={() => removeRow(key, i)}
+                className="text-muted-foreground/60"
+                aria-label="Quitar"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+          <input
+            placeholder={phonePlaceholder}
+            value={c.phone}
+            inputMode="tel"
+            onChange={(e) => updateRow(key, i, "phone", e.target.value)}
+            className={inputClass}
+          />
+        </div>
+      ))}
+      <button
+        onClick={() => addRow(key)}
+        className="flex items-center gap-1.5 text-[12px] font-medium text-primary"
+      >
+        <Plus size={14} /> {addLabel}
+      </button>
+    </>
+  );
 
   return (
     <>
@@ -283,17 +338,20 @@ export default function CrisisPlan() {
                   </button>
                 </div>
 
-                <h3 className="mt-3 font-display text-lg font-semibold text-foreground">
+                <h3 className="mt-3 font-display text-lg font-semibold leading-tight text-foreground">
                   {STEP_TITLES[step]}
                 </h3>
+                <p className="mt-1 text-[12px] text-muted-foreground font-body">
+                  {STEP_PLACEHOLDERS_HINT[step]}
+                </p>
 
                 {/* Resmita guide */}
                 <div className="mt-4 flex items-start gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sky-50 ring-2 ring-sky-100">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sky-50 ring-1 ring-sky-100 p-1">
                     <img
                       src={resmitaAvatar}
                       alt="Resmita"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-contain"
                     />
                   </div>
                   <div className="rounded-2xl rounded-tl-md bg-muted/60 px-4 py-3">
@@ -309,131 +367,85 @@ export default function CrisisPlan() {
                     <textarea
                       value={data.signals}
                       onChange={(e) => update("signals", e.target.value)}
-                      placeholder="Ej: Pensamientos negativos recurrentes, aislamiento, dificultad para dormir…"
+                      placeholder="Ej: Pensamientos negativos recurrentes, imágenes intrusivas, irritabilidad, aislamiento, no poder dormir…"
                       rows={4}
-                      className={inputClass + " min-h-[100px] resize-none"}
+                      className={inputClass + " min-h-[110px] resize-none"}
                     />
                   )}
 
                   {step === 1 && (
                     <>
                       <p className="text-[11px] text-muted-foreground">
-                        Sugerencias: Respiración, agarrar hielos, ducha fría, escuchar música.
+                        Sugerencias: respiración, agarrar hielos, ducharte con agua fría, escuchar música, caminar.
                       </p>
                       <textarea
                         value={data.strategies}
                         onChange={(e) => update("strategies", e.target.value)}
-                        placeholder="Escribí tus estrategias personales…"
+                        placeholder="Escribí las estrategias que te funcionan a vos…"
                         rows={4}
-                        className={inputClass + " min-h-[100px] resize-none"}
+                        className={inputClass + " min-h-[110px] resize-none"}
                       />
                     </>
                   )}
 
-                  {step === 2 && (
-                    <>
-                      {data.trustedContacts.map((c, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <input
-                            placeholder="Nombre"
-                            value={c.name}
-                            onChange={(e) => updateRow("trustedContacts", i, "name", e.target.value)}
-                            className={inputClass + " flex-1"}
-                          />
-                          <input
-                            placeholder="Teléfono"
-                            value={c.phone}
-                            onChange={(e) => updateRow("trustedContacts", i, "phone", e.target.value)}
-                            className={inputClass + " w-[130px]"}
-                          />
-                          {data.trustedContacts.length > 1 && (
-                            <button
-                              onClick={() => removeRow("trustedContacts", i)}
-                              className="text-muted-foreground/60"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => addRow("trustedContacts")}
-                        className="flex items-center gap-1.5 text-[12px] font-medium text-primary"
-                      >
-                        <Plus size={14} /> Agregar contacto
-                      </button>
-                    </>
-                  )}
+                  {step === 2 &&
+                    renderContactList(
+                      "socialDistraction",
+                      "Lugar o persona (ej: plaza, café, mi hermano)",
+                      "Teléfono o dirección (opcional)",
+                      "Agregar lugar o persona",
+                    )}
 
-                  {step === 3 && (
-                    <>
-                      {data.proContacts.map((c, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <input
-                            placeholder="Nombre / Profesión"
-                            value={c.name}
-                            onChange={(e) => updateRow("proContacts", i, "name", e.target.value)}
-                            className={inputClass + " flex-1"}
-                          />
-                          <input
-                            placeholder="Teléfono"
-                            value={c.phone}
-                            onChange={(e) => updateRow("proContacts", i, "phone", e.target.value)}
-                            className={inputClass + " w-[130px]"}
-                          />
-                          {data.proContacts.length > 1 && (
-                            <button
-                              onClick={() => removeRow("proContacts", i)}
-                              className="text-muted-foreground/60"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => addRow("proContacts")}
-                        className="flex items-center gap-1.5 text-[12px] font-medium text-primary"
-                      >
-                        <Plus size={14} /> Agregar profesional
-                      </button>
-                    </>
-                  )}
+                  {step === 3 &&
+                    renderContactList(
+                      "trustedContacts",
+                      "Nombre del familiar o amigo/a",
+                      "Teléfono",
+                      "Agregar contacto",
+                    )}
 
                   {step === 4 && (
                     <div className="space-y-3">
-                      <a
-                        href="tel:911"
-                        className="flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 transition-colors active:bg-destructive/10"
-                      >
-                        <Phone size={20} className="text-destructive" />
-                        <div>
-                          <p className="font-display text-sm font-semibold">911</p>
-                          <p className="text-[11px] text-muted-foreground">Emergencias</p>
-                        </div>
-                      </a>
-                      <a
-                        href="tel:08002225462"
-                        className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 transition-colors active:bg-primary/10"
-                      >
-                        <Phone size={20} className="text-primary" />
-                        <div>
-                          <p className="font-display text-sm font-semibold">0800 222 5462</p>
-                          <p className="text-[11px] text-muted-foreground">Salud Mental Responde (24 hs)</p>
-                        </div>
-                      </a>
-                      <a
-                        href="https://www.google.com/maps/search/hospital+p%C3%BAblico+guardia+salud+mental"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors active:bg-muted"
-                      >
-                        <MapPin size={20} className="text-muted-foreground" />
-                        <div>
-                          <p className="font-display text-sm font-semibold">Hospital Público</p>
-                          <p className="text-[11px] text-muted-foreground">Buscar guardia de salud mental cercana</p>
-                        </div>
-                      </a>
+                      {renderContactList(
+                        "proContacts",
+                        "Profesional o clínica (ej: Dra. López)",
+                        "Teléfono",
+                        "Agregar profesional",
+                      )}
+
+                      <div className="pt-2 space-y-2">
+                        <a
+                          href="tel:911"
+                          className="flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 transition-colors active:bg-destructive/10"
+                        >
+                          <Phone size={20} className="text-destructive" />
+                          <div>
+                            <p className="font-display text-sm font-semibold">911</p>
+                            <p className="text-[11px] text-muted-foreground">Emergencias</p>
+                          </div>
+                        </a>
+                        <a
+                          href="tel:08002225462"
+                          className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 transition-colors active:bg-primary/10"
+                        >
+                          <Phone size={20} className="text-primary" />
+                          <div>
+                            <p className="font-display text-sm font-semibold">0800 222 5462</p>
+                            <p className="text-[11px] text-muted-foreground">Salud Mental Responde (24 hs)</p>
+                          </div>
+                        </a>
+                        <button
+                          type="button"
+                          onClick={openHospitalMaps}
+                          className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
+                        >
+                          <MapPin size={20} className="text-muted-foreground" />
+                          <div>
+                            <p className="font-display text-sm font-semibold">Hospital Público</p>
+                            <p className="text-[11px] text-muted-foreground">Buscar guardia de salud mental cercana</p>
+                          </div>
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -442,9 +454,9 @@ export default function CrisisPlan() {
                       <textarea
                         value={data.safeEnv}
                         onChange={(e) => update("safeEnv", e.target.value)}
-                        placeholder="Ej: Guardar objetos peligrosos, ir a casa de alguien de confianza, alejarme de situaciones de riesgo…"
+                        placeholder="Ej: Guardar medicamentos bajo llave, alejar objetos peligrosos, ir a casa de alguien de confianza…"
                         rows={4}
-                        className={inputClass + " min-h-[100px] resize-none"}
+                        className={inputClass + " min-h-[110px] resize-none"}
                       />
                       <button
                         onClick={handleDownload}
