@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Heart,
@@ -18,13 +19,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import CrisisPlan from "@/components/CrisisPlan";
+import { supabase } from "@/integrations/supabase/client";
 
-const feelingOptions = [
-  { label: "Ansiedad o nervios", recommendation: { path: "/herramientas/respiracion", name: "Respiración Guiada" } },
-  { label: "Tensión física", recommendation: { path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" } },
-  { label: "Mente acelerada", recommendation: { path: "/herramientas/mindfulness", name: "Mindfulness" } },
-  { label: "Desmotivación", recommendation: { path: "/herramientas/autocuidado", name: "Autocuidado Offline" } },
-  { label: "Quiero aprender", recommendation: { path: "/herramientas/contenido", name: "Psicoeducación" } },
+const FALLBACK_FEELINGS = [
+  { label: "Ansiedad o nervios", path: "/herramientas/respiracion", name: "Respiración Guiada" },
+  { label: "Tensión física", path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" },
+  { label: "Mente acelerada", path: "/herramientas/mindfulness", name: "Mindfulness" },
+  { label: "Desmotivación", path: "/herramientas/autocuidado", name: "Autocuidado Offline" },
+  { label: "Quiero aprender", path: "/herramientas/contenido", name: "Psicoeducación" },
 ];
 
 export default function Tools() {
@@ -32,8 +34,22 @@ export default function Tools() {
   const [guideOpen, setGuideOpen] = useState(false);
   const [recommendation, setRecommendation] = useState<{ path: string; name: string } | null>(null);
 
-  const handleFeeling = (opt: (typeof feelingOptions)[0]) => {
-    setRecommendation(opt.recommendation);
+  const { data: feelingOptions = FALLBACK_FEELINGS } = useQuery({
+    queryKey: ["te-guiamos-options"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("resource_tools")
+        .select("config, resource_categories!inner(slug)")
+        .eq("resource_categories.slug", "te-guiamos")
+        .eq("is_published", true)
+        .maybeSingle();
+      const opts = (data?.config as any)?.options;
+      return Array.isArray(opts) && opts.length ? opts : FALLBACK_FEELINGS;
+    },
+  });
+
+  const handleFeeling = (opt: { path: string; name: string }) => {
+    setRecommendation({ path: opt.path, name: opt.name });
   };
 
   return (
@@ -147,7 +163,7 @@ export default function Tools() {
 
           {!recommendation ? (
             <div className="space-y-2 pt-2">
-              {feelingOptions.map((opt) => (
+              {feelingOptions.map((opt: any) => (
                 <button
                   key={opt.label}
                   onClick={() => handleFeeling(opt)}
