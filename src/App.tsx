@@ -125,6 +125,7 @@ const App = () => (
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/favoritos" element={<Favorites />} />
               <Route path="/herramientas/autocuidado" element={<SelfCare />} />
+              <Route path="/recursos/:slug" element={<ResourceTools />} />
 
               {/* Mi Proceso (tab 5) */}
               <Route path="/mi-proceso" element={<MiProceso />} />
