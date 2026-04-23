@@ -61,6 +61,9 @@ import ContentManager from "@/pages/admin/ContentManager";
 import TreatmentRequests from "@/pages/admin/TreatmentRequests";
 import PatientList from "@/pages/admin/PatientList";
 import PatientDetail from "@/pages/admin/PatientDetail";
+import ResourcesManager from "@/pages/admin/ResourcesManager";
+import ResourceDetail from "@/pages/admin/ResourceDetail";
+import ResourceTools from "@/pages/ResourceTools";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +125,7 @@ const App = () => (
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/favoritos" element={<Favorites />} />
               <Route path="/herramientas/autocuidado" element={<SelfCare />} />
+              <Route path="/recursos/:slug" element={<ResourceTools />} />
 
               {/* Mi Proceso (tab 5) */}
               <Route path="/mi-proceso" element={<MiProceso />} />
@@ -148,6 +152,8 @@ const App = () => (
             <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/contenido" element={<ContentManager />} />
+              <Route path="/admin/recursos" element={<ResourcesManager />} />
+              <Route path="/admin/recursos/:slug" element={<ResourceDetail />} />
               <Route path="/admin/solicitudes" element={<TreatmentRequests />} />
               <Route path="/admin/pacientes" element={<PatientList />} />
               <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
