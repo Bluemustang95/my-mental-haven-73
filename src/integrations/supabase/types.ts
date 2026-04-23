@@ -563,6 +563,95 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_categories: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          is_published: boolean
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_published?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_published?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      resource_tools: {
+        Row: {
+          category_id: string
+          config: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_published: boolean
+          name: string
+          slug: string
+          sort_order: number
+          tool_type: Database["public"]["Enums"]["tool_type"]
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          tool_type?: Database["public"]["Enums"]["tool_type"]
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          tool_type?: Database["public"]["Enums"]["tool_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_tools_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "resource_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       selfcare_tasks: {
         Row: {
           completed: boolean | null
@@ -830,6 +919,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      tool_type:
+        | "breathing"
+        | "grounding"
+        | "mindfulness_timer"
+        | "selfcare_list"
+        | "content_link"
+        | "custom"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -958,6 +1054,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      tool_type: [
+        "breathing",
+        "grounding",
+        "mindfulness_timer",
+        "selfcare_list",
+        "content_link",
+        "custom",
+      ],
     },
   },
 } as const
