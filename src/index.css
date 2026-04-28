@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Montserrat:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -38,6 +38,12 @@
     --mood-3: 48 65% 82%;
     --mood-4: 140 45% 80%;
     --mood-5: 142 50% 72%;
+
+    --mindful-cream: 40 31% 97%;
+    --mindful-yellow: 42 100% 65%;
+    --mindful-orange: 16 100% 68%;
+    --mindful-sky: 193 52% 93%;
+    --mindful-rose: 6 100% 95%;
 
     --border: 220 10% 85%;
     --input: 220 10% 85%;
