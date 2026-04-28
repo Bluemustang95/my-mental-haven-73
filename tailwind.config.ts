@@ -81,6 +81,13 @@ export default {
           sky: "hsl(var(--mindful-sky))",
           rose: "hsl(var(--mindful-rose))",
         },
+        resource: {
+          grounding: { bg: "hsl(var(--resource-grounding-bg))", accent: "hsl(var(--resource-grounding-accent))" },
+          mindfulness: { bg: "hsl(var(--resource-mindfulness-bg))", accent: "hsl(var(--resource-mindfulness-accent))" },
+          psycho: { bg: "hsl(var(--resource-psycho-bg))", accent: "hsl(var(--resource-psycho-accent))" },
+          selfcare: { bg: "hsl(var(--resource-selfcare-bg))", accent: "hsl(var(--resource-selfcare-accent))" },
+          breathing: { bg: "hsl(var(--resource-breathing-bg))", accent: "hsl(var(--resource-breathing-accent))" },
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
