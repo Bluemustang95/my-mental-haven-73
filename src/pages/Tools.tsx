@@ -21,6 +21,14 @@ import {
 import CrisisPlan from "@/components/CrisisPlan";
 import { supabase } from "@/integrations/supabase/client";
 
+const resourceThemes = {
+  psicoeducacion: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent",
+  mindfulness: "border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg text-resource-mindfulness-accent",
+  autocuidado: "border-resource-selfcare-accent/15 bg-resource-selfcare-bg text-resource-selfcare-accent",
+  grounding: "border-resource-grounding-accent/15 bg-resource-grounding-bg text-resource-grounding-accent",
+  respiracion: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent",
+};
+
 const FALLBACK_FEELINGS = [
   { label: "Ansiedad o nervios", path: "/herramientas/respiracion", name: "Respiración Guiada" },
   { label: "Tensión física", path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" },
@@ -90,14 +98,14 @@ export default function Tools() {
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/contenido")}
-          className="row-span-2 flex flex-col items-start justify-between rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
+          className={`row-span-2 flex flex-col items-start justify-between rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.psicoeducacion}`}
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted/60">
-            <BookOpen size={20} className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <BookOpen size={20} />
           </div>
           <div className="mt-auto pt-6">
-            <p className="font-display text-sm font-semibold text-foreground">Psicoeducación</p>
-            <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">Videos, audios, lecturas y Psico-Factos</p>
+            <p className="font-display text-sm font-semibold">Psicoeducación</p>
+            <p className="mt-0.5 text-[11px] leading-snug opacity-75">Videos, audios, lecturas y Psico-Factos</p>
           </div>
         </motion.button>
 
@@ -105,48 +113,48 @@ export default function Tools() {
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/mindfulness")}
-          className="flex flex-col items-start rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.mindfulness}`}
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[hsl(var(--accent)/0.15)]">
-            <Flower2 size={20} className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <Flower2 size={20} />
           </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold text-foreground">Mindfulness</p>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Mindfulness</p>
         </motion.button>
 
         {/* Autocuidado */}
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/autocuidado")}
-          className="flex flex-col items-start rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.autocuidado}`}
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/60">
-            <Leaf size={20} className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <Leaf size={20} />
           </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold text-foreground">Autocuidado</p>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Autocuidado</p>
         </motion.button>
 
         {/* Grounding */}
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/grounding")}
-          className="flex flex-col items-start rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.grounding}`}
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted/60">
-            <Hand size={20} className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <Hand size={20} />
           </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold text-foreground">Grounding</p>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Grounding</p>
         </motion.button>
 
         {/* Respiración */}
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate("/herramientas/respiracion")}
-          className="flex flex-col items-start rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.respiracion}`}
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent/10">
-            <Wind size={20} className="text-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <Wind size={20} />
           </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold text-foreground">Respiración</p>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Respiración</p>
         </motion.button>
       </div>
 
