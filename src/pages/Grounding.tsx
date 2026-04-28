@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, Check } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import resmitaAvatar from "@/assets/resmita-mindfulness.png";
@@ -45,22 +45,27 @@ export default function Grounding() {
 
   if (view === "intro") {
     return (
-      <div className="flex min-h-screen flex-col bg-resource-grounding-bg px-5 pt-14 pb-6 safe-area-top">
+      <div className="flex min-h-screen flex-col bg-resource-grounding-bg px-5 pt-12 pb-6 safe-area-top">
         <button onClick={() => navigate("/herramientas")} className="mb-8 flex h-11 w-11 items-center justify-center rounded-full bg-card/70 text-resource-grounding-accent shadow-sm">
           <ArrowLeft size={20} />
         </button>
 
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col items-center justify-center text-center">
-          <img src={resmitaAvatar} alt="Resmita" className="mb-6 h-24 w-24 object-contain drop-shadow-xl" />
-          <p className="mb-3 font-display text-sm font-semibold text-resource-grounding-accent">Grounding 5-4-3-2-1</p>
-          <h1 className="max-w-xs font-display text-3xl font-semibold leading-tight text-foreground">Hola, soy Resmita.</h1>
-          <p className="mt-5 max-w-sm text-base leading-7 text-foreground/75">
-            Grounding es una técnica para volver al presente. Te ayuda a bajar la ansiedad rápido conectando con tus 5 sentidos.
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col items-center justify-center pb-8 text-center">
+          <motion.div
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+            className="mb-14 flex h-28 w-28 items-center justify-center rounded-[2.5rem] bg-card shadow-2xl shadow-resource-grounding-accent/10"
+          >
+            <img src={resmitaAvatar} alt="Resmita" className="h-20 w-20 object-contain drop-shadow-md" />
+          </motion.div>
+          <h1 className="font-display text-4xl font-semibold leading-tight text-resource-grounding-accent">Grounding</h1>
+          <p className="mt-5 max-w-xs text-base font-semibold leading-8 text-resource-grounding-accent/70">
+            El Grounding es una técnica para enraizar y volver al presente. Te ayuda a bajar la ansiedad rápido conectando con tus 5 sentidos.
           </p>
         </motion.div>
 
-        <button onClick={() => setView("exercise")} className="w-full rounded-[2.5rem] bg-resource-grounding-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-grounding-accent/20 active:scale-[0.98]">
-          Comenzar
+        <button onClick={() => setView("exercise")} className="flex w-full items-center justify-center gap-3 rounded-[2.5rem] bg-resource-grounding-accent py-4 font-sans text-base font-bold text-primary-foreground shadow-lg shadow-resource-grounding-accent/20 transition-transform active:scale-[0.98]">
+          Comenzar <ArrowRight size={20} weight="bold" />
         </button>
       </div>
     );
