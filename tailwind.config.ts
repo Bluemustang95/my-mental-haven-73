@@ -14,9 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["DM Serif Display", "serif"],
+        display: ["Montserrat", "sans-serif"],
         body: ["Lora", "serif"],
         sans: ["Montserrat", "sans-serif"],
+        mindful: ["DM Serif Display", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",
