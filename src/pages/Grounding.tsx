@@ -13,7 +13,13 @@ const senses = [
   { count: 1, title: "Gusto", action: "Sentí", prompt: "Nombrá 1 sabor que podés saborear", placeholder: "Algo que saboreás" },
 ];
 
-const supportMessages = ["Tomate tu tiempo", "No hay apuro", "Si te distraés, volvé suavemente", "Lo estás haciendo bien", "Quedate con lo simple"];
+const supportMessages = [
+  "No hay apuro, tomate tu tiempo",
+  "No hay apuro, tomate tu tiempo",
+  "si te distraes no te juzgues, vuelve de a poco a conectar con el presente",
+  "si te distraes no te juzgues, vuelve de a poco a conectar con el presente",
+  "si te distraes no te juzgues, vuelve de a poco a conectar con el presente",
+];
 const stepBackgrounds = ["bg-resource-grounding-bg", "bg-resource-grounding-bg", "bg-emerald-50", "bg-green-50", "bg-resource-grounding-bg"];
 
 type View = "intro" | "exercise" | "done";
@@ -54,13 +60,13 @@ export default function Grounding() {
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-            className="mb-14 flex h-28 w-28 items-center justify-center rounded-[2.5rem] bg-card shadow-2xl shadow-resource-grounding-accent/10"
+            className="mb-12 flex h-24 w-24 items-center justify-center"
           >
             <img src={resmitaAvatar} alt="Resmita" className="h-20 w-20 object-contain drop-shadow-md" />
           </motion.div>
           <h1 className="font-display text-4xl font-semibold leading-tight text-resource-grounding-accent">Grounding</h1>
           <p className="mt-5 max-w-xs text-base font-semibold leading-8 text-resource-grounding-accent/70">
-            El Grounding es una técnica para enraizar y volver al presente. Te ayuda a bajar la ansiedad rápido conectando con tus 5 sentidos.
+            Es una técnica para volver al presente. Te ayuda a bajar la ansiedad rápido conectando con tus 5 sentidos.
           </p>
         </motion.div>
 
@@ -114,7 +120,6 @@ export default function Grounding() {
               <h1 className="mt-3 font-display text-2xl font-semibold text-foreground">{current.action} alrededor</h1>
               <p className="mt-2 text-sm leading-6 text-foreground/70">{current.prompt}.</p>
             </div>
-            <img src={resmitaAvatar} alt="Resmita" className="h-16 w-16 shrink-0 object-contain drop-shadow-lg" />
           </div>
 
           <div className="space-y-3">
@@ -134,8 +139,8 @@ export default function Grounding() {
       </AnimatePresence>
 
       <div className="mt-6 flex items-center gap-3 rounded-[2rem] bg-card/60 p-3 shadow-sm backdrop-blur">
-        <img src={resmitaAvatar} alt="Resmita" className="h-12 w-12 object-contain" />
-        <p className="font-display text-sm font-semibold text-resource-grounding-accent">{supportMessages[step]}</p>
+        <img src={resmitaAvatar} alt="Resmita" className="h-10 w-10 shrink-0 object-contain" />
+        <p className="font-display text-xs font-semibold leading-5 text-resource-grounding-accent sm:text-sm">{supportMessages[step]}</p>
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
