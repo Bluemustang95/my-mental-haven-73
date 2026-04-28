@@ -222,7 +222,7 @@ export default function Mindfulness() {
               </motion.div>
 
               <div className="rounded-[3rem] border border-border bg-card px-6 py-7 shadow-[0_18px_45px_hsl(var(--border)/0.55)]">
-                <h1 className="mb-3 font-display text-4xl leading-tight">Hola, soy Resmita</h1>
+                <h1 className="mb-3 font-mindful text-4xl leading-tight">Hola, soy Resmita</h1>
                 <p className="font-sans text-sm leading-7 text-muted-foreground">
                   Mindfulness es estar presente, aquí y ahora. Es notar lo que sentís sin juzgarlo, dejándolo pasar como nubes en el cielo. Practicarlo te va a ayudar a bajar la ansiedad, mejorar tu concentración y darle un respiro a tu mente para que puedas sentirte con más calma y claridad durante el día.
                 </p>
@@ -247,7 +247,7 @@ export default function Mindfulness() {
               className="flex flex-1 flex-col justify-center"
             >
               <div className="mb-8 text-center">
-                <h1 className="font-display text-5xl leading-tight">Tu Espacio</h1>
+                <h1 className="font-mindful text-5xl leading-tight">Tu Espacio</h1>
                 <p className="mt-2 font-sans text-sm text-muted-foreground">¿Cuánto tiempo necesitás hoy?</p>
               </div>
 
@@ -263,7 +263,7 @@ export default function Mindfulness() {
                         : "border-border bg-card shadow-[0_12px_28px_hsl(var(--border)/0.45)]"
                     )}
                   >
-                    <span className="block font-display text-5xl leading-none">{duration.minutes}</span>
+                    <span className="block font-mindful text-5xl leading-none">{duration.minutes}</span>
                     <span className="mt-2 block font-sans text-sm font-semibold text-muted-foreground">minutos</span>
                   </button>
                 ))}
@@ -295,7 +295,7 @@ export default function Mindfulness() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-                    className="font-display text-5xl leading-none"
+                    className="font-mindful text-5xl leading-none"
                   >
                     {breathPhases[phase].label}
                   </motion.h1>
@@ -346,20 +346,20 @@ export default function Mindfulness() {
             >
               <div className="rounded-[3rem] border border-border bg-card px-6 py-9 shadow-[0_20px_55px_hsl(var(--border)/0.5)]">
                 <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-mindful-yellow/50">
-                  <span className="font-display text-5xl">☁</span>
+                  <span className="font-mindful text-5xl">☁</span>
                 </div>
-                <h1 className="font-display text-5xl leading-tight">Presencia plena</h1>
+                <h1 className="font-mindful text-5xl leading-tight">Presencia plena</h1>
                 <p className="mt-3 font-sans text-base text-muted-foreground">Tu mente está un poco más clara</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-[2.5rem] border border-border bg-mindful-rose p-5 text-left shadow-sm">
                   <p className="font-sans text-xs font-semibold text-muted-foreground">Racha</p>
-                  <p className="mt-2 font-display text-3xl">5 días</p>
+                  <p className="mt-2 font-mindful text-3xl">5 días</p>
                 </div>
                 <div className="rounded-[2.5rem] border border-border bg-mindful-yellow/45 p-5 text-left shadow-sm">
                   <p className="font-sans text-xs font-semibold text-muted-foreground">Puntos Zen</p>
-                  <p className="mt-2 font-display text-3xl">+150</p>
+                  <p className="mt-2 font-mindful text-3xl">+150</p>
                 </div>
               </div>
 
