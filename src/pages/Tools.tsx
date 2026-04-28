@@ -21,6 +21,8 @@ import {
 import CrisisPlan from "@/components/CrisisPlan";
 import { supabase } from "@/integrations/supabase/client";
 
+type FeelingOption = { label: string; path: string; name: string };
+
 const resourceThemes = {
   psicoeducacion: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent",
   mindfulness: "border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg text-resource-mindfulness-accent",
@@ -29,7 +31,7 @@ const resourceThemes = {
   respiracion: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent",
 };
 
-const FALLBACK_FEELINGS = [
+const FALLBACK_FEELINGS: FeelingOption[] = [
   { label: "Ansiedad o nervios", path: "/herramientas/respiracion", name: "Respiración Guiada" },
   { label: "Tensión física", path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" },
   { label: "Mente acelerada", path: "/herramientas/mindfulness", name: "Mindfulness" },
@@ -42,7 +44,7 @@ export default function Tools() {
   const [guideOpen, setGuideOpen] = useState(false);
   const [recommendation, setRecommendation] = useState<{ path: string; name: string } | null>(null);
 
-  const { data: feelingOptions = FALLBACK_FEELINGS } = useQuery({
+  const { data: feelingOptions = FALLBACK_FEELINGS } = useQuery<FeelingOption[]>({
     queryKey: ["te-guiamos-options"],
     queryFn: async () => {
       const { data } = await supabase
@@ -51,7 +53,7 @@ export default function Tools() {
         .eq("resource_categories.slug", "te-guiamos")
         .eq("is_published", true)
         .maybeSingle();
-      const opts = (data?.config as any)?.options;
+      const opts = (data?.config as { options?: FeelingOption[] } | null)?.options;
       return Array.isArray(opts) && opts.length ? opts : FALLBACK_FEELINGS;
     },
   });
@@ -171,7 +173,7 @@ export default function Tools() {
 
           {!recommendation ? (
             <div className="space-y-2 pt-2">
-              {feelingOptions.map((opt: any) => (
+              {feelingOptions.map((opt) => (
                 <button
                   key={opt.label}
                   onClick={() => handleFeeling(opt)}
