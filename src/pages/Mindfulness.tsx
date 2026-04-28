@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowCounterClockwise, Pause, Play, SpeakerHigh, MusicNotes } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import resmitaAvatar from "@/assets/resmita.png";
+import resmitaAvatar from "@/assets/resmita-mindfulness.png";
 
 const durations = [
   { label: "3 min", minutes: 3, seconds: 180 },
