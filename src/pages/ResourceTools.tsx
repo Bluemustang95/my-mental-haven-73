@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { ArrowLeft, Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music } from "lucide-react";
 
-const iconMap: Record<string, any> = { Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music };
+type ResourceTool = { id: string; name: string; description: string | null; slug: string; tool_type: string; config: { url?: string } | null };
+
+const iconMap: Record<string, typeof Sparkles> = { Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music };
 
 const colorMap: Record<string, string> = {
   accent: "bg-accent/15 border-accent/30",
@@ -66,7 +68,7 @@ export default function ResourceTools() {
   const colorClass = slugThemeMap[category.slug] || colorMap[category.color] || colorMap.muted;
   const baseRoute = runnerRoute[category.slug] || `/herramientas/${category.slug}`;
 
-  const handleOpen = (tool: any) => {
+  const handleOpen = (tool: ResourceTool) => {
     if (tool.tool_type === "content_link" && tool.config?.url) {
       const url = tool.config.url as string;
       if (url.startsWith("http")) window.open(url, "_blank", "noopener,noreferrer");
@@ -91,7 +93,7 @@ export default function ResourceTools() {
       </div>
 
       <div className="space-y-3">
-        {tools.map((tool: any) => (
+        {(tools as ResourceTool[]).map((tool) => (
           <motion.button
             key={tool.id}
             whileTap={{ scale: 0.98 }}
