@@ -215,10 +215,9 @@ export default function Mindfulness() {
               <motion.div
                 animate={{ y: [-8, 8, -8], rotate: [-2, 2, -2] }}
                 transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
-                className="relative flex h-36 w-36 items-center justify-center rounded-[3rem] bg-mindful-sky/80 p-3 shadow-[0_22px_55px_hsl(var(--secondary)/0.55)] sm:h-44 sm:w-44 sm:p-4"
+                className="relative flex h-40 w-40 items-center justify-center overflow-visible sm:h-48 sm:w-48"
               >
-                <div className="absolute inset-5 rounded-full bg-mindful-yellow/30 blur-2xl" />
-                <img src={resmitaAvatar} alt="Resmita" className="relative h-full w-full object-contain" />
+                <img src={resmitaAvatar} alt="Resmita" className="relative h-full w-full object-contain drop-shadow-2xl" />
               </motion.div>
 
               <div className="rounded-[3rem] border border-border bg-card px-5 py-5 shadow-[0_18px_45px_hsl(var(--border)/0.55)] sm:px-6 sm:py-7">
