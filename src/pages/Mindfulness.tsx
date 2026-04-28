@@ -187,8 +187,8 @@ export default function Mindfulness() {
   };
 
   return (
-    <main className="min-h-screen bg-mindful-cream px-4 pb-6 pt-12 font-sans text-foreground safe-area-top">
-      <div className="mx-auto flex min-h-[calc(100vh-4.5rem)] w-full max-w-md flex-col">
+    <main className="min-h-screen bg-mindful-cream px-4 pb-28 pt-10 font-sans text-foreground safe-area-top">
+      <div className="mx-auto flex min-h-[calc(100vh-9.5rem)] w-full max-w-md flex-col">
         <header className="mb-4 flex items-center justify-between">
           <button
             onClick={view === "intro" ? close : () => setView(view === "session" ? "config" : "intro")}
@@ -210,27 +210,27 @@ export default function Mindfulness() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-              className="flex flex-1 flex-col items-center justify-center gap-5 text-center"
+              className="flex flex-1 flex-col items-center justify-center gap-4 text-center"
             >
               <motion.div
                 animate={{ y: [-8, 8, -8], rotate: [-2, 2, -2] }}
                 transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
-                className="relative flex h-44 w-44 items-center justify-center rounded-[3rem] bg-mindful-sky/80 p-4 shadow-[0_22px_55px_hsl(var(--secondary)/0.55)]"
+                className="relative flex h-36 w-36 items-center justify-center rounded-[3rem] bg-mindful-sky/80 p-3 shadow-[0_22px_55px_hsl(var(--secondary)/0.55)] sm:h-44 sm:w-44 sm:p-4"
               >
                 <div className="absolute inset-5 rounded-full bg-mindful-yellow/30 blur-2xl" />
                 <img src={resmitaAvatar} alt="Resmita" className="relative h-full w-full object-contain" />
               </motion.div>
 
-              <div className="rounded-[3rem] border border-border bg-card px-6 py-7 shadow-[0_18px_45px_hsl(var(--border)/0.55)]">
-                <h1 className="mb-3 font-mindful text-4xl leading-tight">Hola, soy Resmita</h1>
-                <p className="font-sans text-sm leading-7 text-muted-foreground">
+              <div className="rounded-[3rem] border border-border bg-card px-5 py-5 shadow-[0_18px_45px_hsl(var(--border)/0.55)] sm:px-6 sm:py-7">
+                <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Hola, soy Resmita</h1>
+                <p className="font-sans text-xs leading-6 text-muted-foreground sm:text-sm sm:leading-7">
                   Mindfulness es estar presente, aquí y ahora. Es notar lo que sentís sin juzgarlo, dejándolo pasar como nubes en el cielo. Practicarlo te va a ayudar a bajar la ansiedad, mejorar tu concentración y darle un respiro a tu mente para que puedas sentirte con más calma y claridad durante el día.
                 </p>
               </div>
 
               <button
                 onClick={() => setView("config")}
-                className="mt-auto w-full rounded-[3rem] bg-primary px-8 py-5 font-sans text-base font-bold text-primary-foreground shadow-[0_18px_35px_hsl(var(--primary)/0.22)] transition-transform active:scale-95"
+                className="w-full rounded-[3rem] bg-primary px-8 py-4 font-sans text-base font-bold text-primary-foreground shadow-[0_18px_35px_hsl(var(--primary)/0.22)] transition-transform active:scale-95 sm:py-5"
               >
                 ¿Empezamos?
               </button>
