@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Montserrat", "sans-serif"],
+        display: ["DM Serif Display", "serif"],
         body: ["Lora", "serif"],
+        sans: ["Montserrat", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -71,6 +72,13 @@ export default {
           3: "hsl(var(--mood-3))",
           4: "hsl(var(--mood-4))",
           5: "hsl(var(--mood-5))",
+        },
+        mindful: {
+          cream: "hsl(var(--mindful-cream))",
+          yellow: "hsl(var(--mindful-yellow))",
+          orange: "hsl(var(--mindful-orange))",
+          sky: "hsl(var(--mindful-sky))",
+          rose: "hsl(var(--mindful-rose))",
         },
       },
       borderRadius: {
