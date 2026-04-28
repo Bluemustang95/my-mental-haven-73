@@ -3,48 +3,80 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import resmitaAvatar from "@/assets/resmita-mindfulness.png";
 
 const senses = [
-  { count: 5, sense: "cosas que podés VER", placeholder: "Ej: la pared, una luz, mis manos, un cuadro, el techo" },
-  { count: 4, sense: "cosas que podés TOCAR", placeholder: "Ej: la silla, mi ropa, el piso, mi cara" },
-  { count: 3, sense: "cosas que podés ESCUCHAR", placeholder: "Ej: el viento, mi respiración, ruido de fondo" },
-  { count: 2, sense: "cosas que podés OLER", placeholder: "Ej: el aire, perfume" },
-  { count: 1, sense: "cosa que podés SABOREAR", placeholder: "Ej: el café que tomé" },
+  { count: 5, title: "Vista", action: "Mirá", prompt: "Nombrá 5 cosas que podés ver", placeholder: "Algo que ves" },
+  { count: 4, title: "Tacto", action: "Tocá", prompt: "Nombrá 4 cosas que podés tocar", placeholder: "Algo que tocás" },
+  { count: 3, title: "Oído", action: "Escuchá", prompt: "Nombrá 3 sonidos que podés escuchar", placeholder: "Algo que escuchás" },
+  { count: 2, title: "Olfato", action: "Sentí", prompt: "Nombrá 2 aromas que podés oler", placeholder: "Algo que olés" },
+  { count: 1, title: "Gusto", action: "Sentí", prompt: "Nombrá 1 sabor que podés saborear", placeholder: "Algo que saboreás" },
 ];
+
+const supportMessages = ["Tomate tu tiempo", "No hay apuro", "Si te distraés, volvé suavemente", "Lo estás haciendo bien", "Quedate con lo simple"];
+const stepBackgrounds = ["bg-resource-grounding-bg", "bg-resource-grounding-bg", "bg-emerald-50", "bg-green-50", "bg-resource-grounding-bg"];
+
+type View = "intro" | "exercise" | "done";
 
 export default function Grounding() {
   const navigate = useNavigate();
+  const [view, setView] = useState<View>("intro");
   const [step, setStep] = useState(0);
-  const [inputs, setInputs] = useState<string[]>(Array(5).fill(""));
-  const [completed, setCompleted] = useState(false);
+  const [answers, setAnswers] = useState<string[][]>(senses.map((sense) => Array(sense.count).fill("")));
 
   const current = senses[step];
+  const canNext = answers[step].some((value) => value.trim().length > 0);
 
-  const next = () => {
-    if (step < 4) {
-      setStep(step + 1);
-      setInputs(Array(senses[step + 1].count).fill(""));
-    } else {
-      setCompleted(true);
-    }
+  const updateAnswer = (index: number, value: string) => {
+    setAnswers((prev) => prev.map((group, groupIndex) => groupIndex === step ? group.map((item, itemIndex) => itemIndex === index ? value : item) : group));
   };
 
-  const canNext = inputs.slice(0, current.count).some((v) => v.trim().length > 0);
+  const goBack = () => {
+    if (view === "intro") navigate("/herramientas");
+    else if (view === "done") setView("exercise");
+    else if (step > 0) setStep(step - 1);
+    else setView("intro");
+  };
 
-  if (completed) {
+  const goNext = () => {
+    if (step < senses.length - 1) setStep(step + 1);
+    else setView("done");
+  };
+
+  if (view === "intro") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center px-5 safe-area-top">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
-            <Check size={28} className="text-success" weight="bold" />
+      <div className="flex min-h-screen flex-col bg-resource-grounding-bg px-5 pt-14 pb-6 safe-area-top">
+        <button onClick={() => navigate("/herramientas")} className="mb-8 flex h-11 w-11 items-center justify-center rounded-full bg-card/70 text-resource-grounding-accent shadow-sm">
+          <ArrowLeft size={20} />
+        </button>
+
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col items-center justify-center text-center">
+          <img src={resmitaAvatar} alt="Resmita" className="mb-6 h-24 w-24 object-contain drop-shadow-xl" />
+          <p className="mb-3 font-display text-sm font-semibold text-resource-grounding-accent">Grounding 5-4-3-2-1</p>
+          <h1 className="max-w-xs font-display text-3xl font-semibold leading-tight text-foreground">Hola, soy Resmita.</h1>
+          <p className="mt-5 max-w-sm text-base leading-7 text-foreground/75">
+            Grounding es una técnica para volver al presente. Te ayuda a bajar la ansiedad rápido conectando con tus 5 sentidos.
+          </p>
+        </motion.div>
+
+        <button onClick={() => setView("exercise")} className="w-full rounded-[2.5rem] bg-resource-grounding-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-grounding-accent/20 active:scale-[0.98]">
+          Comenzar
+        </button>
+      </div>
+    );
+  }
+
+  if (view === "done") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-resource-grounding-bg px-5 py-8 text-center safe-area-top">
+        <motion.div initial={{ scale: 0.86, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-sm">
+          <div className="mx-auto mb-7 flex h-24 w-24 items-center justify-center rounded-full bg-card/80 text-resource-grounding-accent shadow-xl shadow-resource-grounding-accent/10">
+            <Check size={48} weight="bold" />
           </div>
-          <h2 className="mb-2 font-display text-lg font-semibold">Ejercicio completado</h2>
-          <p className="mb-6 text-sm text-muted-foreground">Buen trabajo anclándote al presente.</p>
-          <button
-            onClick={() => navigate("/herramientas")}
-            className="rounded-2xl bg-primary px-6 py-2.5 font-display text-sm font-medium text-primary-foreground"
-          >
-            Volver a herramientas
+          <h1 className="font-display text-3xl font-semibold text-foreground">Aquí y ahora.</h1>
+          <p className="mt-4 text-base leading-7 text-foreground/75">Lograste reconectar con tu entorno. Tu cuerpo y tu mente te lo agradecen.</p>
+          <button onClick={() => navigate("/herramientas")} className="mt-9 w-full rounded-[2.5rem] bg-resource-grounding-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-grounding-accent/20 active:scale-[0.98]">
+            Cerrar
           </button>
         </motion.div>
       </div>
@@ -52,65 +84,63 @@ export default function Grounding() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col px-5 pt-14 pb-4 safe-area-top">
-      <div className="mb-4 flex items-center gap-3">
-        <button onClick={() => step > 0 ? setStep(step - 1) : navigate("/herramientas")} className="text-muted-foreground">
+    <div className={cn("flex min-h-screen flex-col overflow-x-hidden px-5 pt-14 pb-5 transition-colors safe-area-top", stepBackgrounds[step])}>
+      <div className="mb-5 flex items-center gap-3">
+        <button onClick={goBack} className="flex h-11 w-11 items-center justify-center rounded-full bg-card/70 text-resource-grounding-accent shadow-sm">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold">Grounding 5-4-3-2-1</h1>
+        <div>
+          <p className="font-display text-lg font-semibold text-foreground">Grounding</p>
+          <p className="text-xs font-medium text-resource-grounding-accent">Paso {step + 1} de 5 · {current.title}</p>
+        </div>
       </div>
 
-      {/* Progress */}
-      <div className="mb-6 flex gap-1">
-        {senses.map((_, i) => (
-          <div key={i} className={cn("h-1 flex-1 rounded-full transition-colors", i <= step ? "bg-accent" : "bg-border")} />
+      <div className="mb-7 flex gap-2">
+        {senses.map((sense, index) => (
+          <div key={sense.title} className={cn("h-2 flex-1 rounded-full transition-colors", index <= step ? "bg-resource-grounding-accent" : "bg-card/80")} />
         ))}
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ x: 60, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -60, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="flex-1"
-        >
-          <div className="mb-2 font-display text-5xl font-light text-accent">{current.count}</div>
-          <h2 className="mb-6 font-display text-base font-medium">
-            Nombrá {current.count} {current.sense}
-          </h2>
+        <motion.div key={step} initial={{ opacity: 0, x: 32 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -32 }} transition={{ duration: 0.24 }} className="flex-1">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <p className="font-display text-6xl font-semibold leading-none text-resource-grounding-accent">{current.count}</p>
+              <h1 className="mt-3 font-display text-2xl font-semibold text-foreground">{current.action} alrededor</h1>
+              <p className="mt-2 text-sm leading-6 text-foreground/70">{current.prompt}.</p>
+            </div>
+            <img src={resmitaAvatar} alt="Resmita" className="h-16 w-16 shrink-0 object-contain drop-shadow-lg" />
+          </div>
 
           <div className="space-y-3">
-            {Array.from({ length: current.count }).map((_, i) => (
+            {Array.from({ length: current.count }).map((_, index) => (
               <input
-                key={i}
+                key={`${current.title}-${index}`}
                 type="text"
-                value={inputs[i] || ""}
-                onChange={(e) => {
-                  const newInputs = [...inputs];
-                  newInputs[i] = e.target.value;
-                  setInputs(newInputs);
-                }}
-                placeholder={i === 0 ? current.placeholder : `${i + 1}.`}
-                className="w-full rounded-xl border border-border bg-card p-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                autoFocus={i === 0}
+                value={answers[step][index] || ""}
+                onChange={(event) => updateAnswer(index, event.target.value)}
+                placeholder={`${index + 1}. ${current.placeholder}`}
+                className="w-full rounded-2xl border border-card/70 bg-card/75 px-4 py-3.5 font-sans text-sm text-foreground shadow-sm shadow-resource-grounding-accent/5 outline-none backdrop-blur placeholder:text-foreground/35 focus:border-resource-grounding-accent/40 focus:ring-2 focus:ring-resource-grounding-accent/15"
+                autoFocus={index === 0}
               />
             ))}
           </div>
         </motion.div>
       </AnimatePresence>
 
-      <button
-        onClick={next}
-        disabled={!canNext}
-        className={cn(
-          "mt-6 w-full rounded-2xl py-3 font-display text-sm font-medium transition-all",
-          canNext ? "bg-primary text-primary-foreground active:scale-[0.98]" : "bg-muted text-muted-foreground"
-        )}
-      >
-        {step === 4 ? "Finalizar" : "Siguiente"}
-      </button>
+      <div className="mt-6 flex items-center gap-3 rounded-[2rem] bg-card/60 p-3 shadow-sm backdrop-blur">
+        <img src={resmitaAvatar} alt="Resmita" className="h-12 w-12 object-contain" />
+        <p className="font-display text-sm font-semibold text-resource-grounding-accent">{supportMessages[step]}</p>
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        <button onClick={goBack} className="rounded-[2.5rem] border border-resource-grounding-accent/20 bg-card/70 py-3.5 font-display text-sm font-semibold text-resource-grounding-accent shadow-sm active:scale-[0.98]">
+          Atrás
+        </button>
+        <button onClick={goNext} disabled={!canNext} className={cn("rounded-[2.5rem] py-3.5 font-display text-sm font-semibold shadow-lg transition-all active:scale-[0.98]", canNext ? "bg-resource-grounding-accent text-primary-foreground shadow-resource-grounding-accent/20" : "bg-card/70 text-foreground/35 shadow-none")}>
+          {step === senses.length - 1 ? "Finalizar" : "Siguiente"}
+        </button>
+      </div>
     </div>
   );
 }
