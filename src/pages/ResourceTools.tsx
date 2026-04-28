@@ -17,6 +17,14 @@ const colorMap: Record<string, string> = {
   purple: "bg-purple-50 border-purple-200",
 };
 
+const slugThemeMap: Record<string, string> = {
+  grounding: "border-resource-grounding-accent/15 bg-resource-grounding-bg text-resource-grounding-accent",
+  mindfulness: "border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg text-resource-mindfulness-accent",
+  psicoeducacion: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent",
+  autocuidado: "border-resource-selfcare-accent/15 bg-resource-selfcare-bg text-resource-selfcare-accent",
+  respiracion: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent",
+};
+
 // Map category slug → existing runner route (legacy compat)
 const runnerRoute: Record<string, string> = {
   respiracion: "/herramientas/respiracion",
@@ -55,7 +63,7 @@ export default function ResourceTools() {
   }
 
   const Icon = iconMap[category.icon] || Sparkles;
-  const colorClass = colorMap[category.color] || colorMap.muted;
+  const colorClass = slugThemeMap[category.slug] || colorMap[category.color] || colorMap.muted;
   const baseRoute = runnerRoute[category.slug] || `/herramientas/${category.slug}`;
 
   const handleOpen = (tool: any) => {
@@ -69,13 +77,13 @@ export default function ResourceTools() {
   };
 
   return (
-    <div className="px-5 pt-14 pb-20 safe-area-top">
+    <div className={`min-h-screen px-5 pt-14 pb-20 safe-area-top ${slugThemeMap[category.slug]?.split(" ").find((c) => c.startsWith("bg-")) || "bg-background"}`}>
       <button onClick={() => navigate("/herramientas")} className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
         <ArrowLeft className="h-4 w-4" /> Recursos
       </button>
 
       <div className={`mb-5 rounded-[2rem] border p-5 ${colorClass}`}>
-        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-background/60">
+        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-card/70">
           <Icon className="h-6 w-6" />
         </div>
         <h1 className="font-display text-xl font-semibold">{category.name}</h1>
@@ -88,7 +96,7 @@ export default function ResourceTools() {
             key={tool.id}
             whileTap={{ scale: 0.98 }}
             onClick={() => handleOpen(tool)}
-            className={`w-full rounded-3xl border p-4 text-left ${colorClass}`}
+            className={`w-full rounded-3xl border bg-card/65 p-4 text-left shadow-sm backdrop-blur ${colorClass}`}
           >
             <p className="font-display text-base font-semibold">{tool.name}</p>
             {tool.description && <p className="mt-0.5 text-xs opacity-75">{tool.description}</p>}
