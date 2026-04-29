@@ -892,6 +892,42 @@ export type Database = {
         }
         Relationships: []
       }
+      values_reflections: {
+        Row: {
+          coherence_score: number
+          created_at: string
+          entry_date: string
+          id: string
+          life_area: string
+          person_intention: string | null
+          updated_at: string
+          user_id: string
+          weekly_action: string | null
+        }
+        Insert: {
+          coherence_score?: number
+          created_at?: string
+          entry_date?: string
+          id?: string
+          life_area: string
+          person_intention?: string | null
+          updated_at?: string
+          user_id: string
+          weekly_action?: string | null
+        }
+        Update: {
+          coherence_score?: number
+          created_at?: string
+          entry_date?: string
+          id?: string
+          life_area?: string
+          person_intention?: string | null
+          updated_at?: string
+          user_id?: string
+          weekly_action?: string | null
+        }
+        Relationships: []
+      }
       weekly_goals: {
         Row: {
           completed: boolean | null
