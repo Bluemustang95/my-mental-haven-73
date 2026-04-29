@@ -38,6 +38,7 @@ export default function Recovery() {
   const [entries, setEntries] = useState<Record<string, RecoveryEntry>>({});
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
+  const [relapseDraftOpen, setRelapseDraftOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
@@ -114,11 +115,13 @@ export default function Recovery() {
     if (!date || date !== today) return;
     setSelectedDate(date);
     setSelectedTriggers(entries[date]?.triggers || []);
+    setRelapseDraftOpen(entries[date]?.status === "relapse");
     setView("day");
   };
 
   const markSuccess = () => {
     setEntries((prev) => ({ ...prev, [today]: { status: "success" } }));
+    setRelapseDraftOpen(false);
     setShowConfetti(true);
     setView("dashboard");
     window.setTimeout(() => setShowConfetti(false), 1800);
@@ -126,6 +129,7 @@ export default function Recovery() {
 
   const markRelapse = () => {
     setEntries((prev) => ({ ...prev, [today]: { status: "relapse", triggers: selectedTriggers } }));
+    setRelapseDraftOpen(false);
     setView("dashboard");
   };
 
