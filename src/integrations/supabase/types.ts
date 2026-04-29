@@ -395,6 +395,45 @@ export type Database = {
         }
         Relationships: []
       }
+      mindful_eating_entries: {
+        Row: {
+          created_at: string
+          emotions: string[]
+          entry_date: string
+          entry_time: string
+          hunger_level: number
+          id: string
+          meal_moment: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emotions?: string[]
+          entry_date?: string
+          entry_time?: string
+          hunger_level?: number
+          id?: string
+          meal_moment: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emotions?: string[]
+          entry_date?: string
+          entry_time?: string
+          hunger_level?: number
+          id?: string
+          meal_moment?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_app_profiles: {
         Row: {
           areas_of_interest: string[] | null
