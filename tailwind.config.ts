@@ -91,6 +91,7 @@ export default {
           rumination: { bg: "hsl(var(--resource-rumination-bg))", accent: "hsl(var(--resource-rumination-accent))" },
           recovery: { bg: "hsl(var(--resource-recovery-bg))", accent: "hsl(var(--resource-recovery-accent))", relapse: "hsl(var(--resource-recovery-relapse))" },
           regulation: { bg: "hsl(var(--resource-regulation-bg))", accent: "hsl(var(--resource-regulation-accent))" },
+          eating: { bg: "hsl(var(--resource-eating-bg))", accent: "hsl(var(--resource-eating-accent))" },
           safety: { bg: "hsl(var(--resource-safety-bg))", accent: "hsl(var(--resource-safety-accent))" },
         },
       },
