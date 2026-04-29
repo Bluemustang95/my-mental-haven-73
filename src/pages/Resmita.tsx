@@ -111,7 +111,7 @@ export default function Resmita() {
         {messages.length === 0 && (
           <div className="flex h-full items-center justify-center text-center">
             <div>
-              <p className="mb-2 font-display text-sm font-medium">Hola, soy Resmita</p>
+              <p className="mb-2 font-display text-sm font-medium">Estoy acá para acompañarte</p>
               <p className="text-xs text-muted-foreground max-w-[260px]">
                 Tu compañera de bienestar. Contame cómo te sentís o preguntame lo que necesites.
               </p>
