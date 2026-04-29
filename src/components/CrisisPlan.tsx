@@ -312,7 +312,7 @@ export default function CrisisPlan() {
                   <Check size={32} className="text-emerald-600" />
                 </div>
                 <p className="font-display text-lg font-semibold text-foreground">¡Plan guardado!</p>
-                <p className="text-sm text-muted-foreground">Podés editarlo cuando quieras.</p>
+                <p className="text-sm text-resource-safety-accent/65">Podés editarlo cuando quieras.</p>
               </motion.div>
             ) : (
               <motion.div
