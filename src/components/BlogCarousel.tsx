@@ -1,39 +1,38 @@
 import { motion } from "framer-motion";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight, BookOpen, Brain, ExternalLink, Scale, Users } from "lucide-react";
+
+const blogUrl = "https://www.redsaludmentalargentina.com/blog";
 
 const blogPosts = [
   {
-    title: "¿Qué es la psicoterapia y cómo puede ayudarte?",
-    category: "Psicoterapia",
-    date: "10 Abr 2026",
-    url: "https://www.redsaludmentalargentina.com/blog",
+    title: "Ley de Salud Mental en Argentina: qué establece la norma vigente y qué cambios propone el Gobierno",
+    category: "Actualidad legal",
+    reference: "Temas legales y actualidad en Argentina",
+    icon: Scale,
+    url: blogUrl,
   },
   {
-    title: "Ansiedad: señales que tu cuerpo te está dando",
-    category: "Bienestar",
-    date: "3 Abr 2026",
-    url: "https://www.redsaludmentalargentina.com/blog",
+    title: "¿Es pereza o es TDAH? La neurobiología de la voluntad y la Disfunción Ejecutiva en adultos",
+    category: "Neurociencias",
+    reference: "Neurociencias y diagnóstico",
+    icon: Brain,
+    url: blogUrl,
   },
   {
-    title: "Autocuidado en tiempos de crisis: guía práctica",
-    category: "Autocuidado",
-    date: "28 Mar 2026",
-    url: "https://www.redsaludmentalargentina.com/blog",
+    title: "NEUROBIOLOGÍA DE LOS VÍNCULOS Y SALUD MENTAL",
+    category: "Vínculos",
+    reference: "Relaciones interpersonales desde la ciencia",
+    icon: Users,
+    url: blogUrl,
   },
   {
-    title: "El vínculo terapéutico: por qué importa tanto",
-    category: "Psicoanálisis",
-    date: "20 Mar 2026",
-    url: "https://www.redsaludmentalargentina.com/blog",
+    title: "Salud Mental y Relaciones: Por qué tus vínculos son el espejo de tu cerebro (y cómo usar la 'Corregulación' para sanar)",
+    category: "Herramientas terapéuticas",
+    reference: "Herramientas terapéuticas y neurobiología social",
+    icon: BookOpen,
+    url: blogUrl,
   },
 ];
-
-const categoryColors: Record<string, string> = {
-  Psicoterapia: "bg-[hsl(250_40%_94%)] text-[hsl(250_40%_45%)]",
-  Bienestar: "bg-[hsl(150_30%_93%)] text-[hsl(150_30%_40%)]",
-  Autocuidado: "bg-[hsl(35_50%_93%)] text-[hsl(35_50%_40%)]",
-  Psicoanálisis: "bg-[hsl(200_35%_93%)] text-[hsl(200_35%_42%)]",
-};
 
 export default function BlogCarousel() {
   return (
@@ -43,7 +42,7 @@ export default function BlogCarousel() {
           Blog RESMA
         </h2>
         <a
-          href="https://www.redsaludmentalargentina.com/blog"
+          href={blogUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 text-[10px] font-display font-medium text-accent"
@@ -64,23 +63,26 @@ export default function BlogCarousel() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.06 }}
             whileTap={{ scale: 0.97 }}
-            className="flex w-[200px] shrink-0 flex-col justify-between rounded-3xl border border-border/50 bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+            className="flex w-[280px] shrink-0 flex-col justify-between rounded-3xl border border-border/50 bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
           >
             <div>
-              <span
-                className={`inline-block rounded-full px-2.5 py-0.5 text-[9px] font-display font-medium ${
-                  categoryColors[post.category] || "bg-muted text-muted-foreground"
-                }`}
-              >
+              <div className="mb-3 flex h-24 items-center justify-center rounded-[2rem] bg-secondary text-secondary-foreground">
+                <post.icon size={34} strokeWidth={1.8} aria-hidden="true" />
+              </div>
+              <span className="inline-block rounded-full bg-muted px-2.5 py-0.5 text-[9px] font-display font-medium text-muted-foreground">
                 {post.category}
               </span>
-              <p className="mt-2.5 font-display text-[13px] font-semibold leading-snug text-foreground line-clamp-3">
+              <p className="mt-2.5 font-display text-[13px] font-semibold leading-snug text-foreground">
                 {post.title}
               </p>
+              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{post.reference}</p>
             </div>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">{post.date}</span>
-              <ExternalLink size={12} className="text-muted-foreground/60" />
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/60 pt-3">
+              <span className="text-[10px] text-muted-foreground">Blog RESMA</span>
+              <span className="flex items-center gap-1 text-[10px] font-display font-semibold text-accent">
+                Leer más
+                <ExternalLink size={12} aria-hidden="true" />
+              </span>
             </div>
           </motion.a>
         ))}
