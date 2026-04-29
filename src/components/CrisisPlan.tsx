@@ -326,36 +326,36 @@ export default function CrisisPlan() {
                 {/* Header */}
                 <div className="mb-1 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-                      <StepIcon size={16} className="text-primary" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-resource-safety-accent/10">
+                      <StepIcon size={16} className="text-resource-safety-accent" />
                     </div>
-                    <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                    <span className="text-[10px] font-medium uppercase tracking-widest text-resource-safety-accent/65">
                       Paso {step + 1} de 6
                     </span>
                   </div>
-                  <button onClick={() => setOpen(false)} className="text-muted-foreground">
+                  <button onClick={() => setOpen(false)} className="text-resource-safety-accent/65">
                     <X size={18} />
                   </button>
                 </div>
 
-                <h3 className="mt-3 font-display text-lg font-semibold leading-tight text-foreground">
+                <h3 className="mt-3 font-display text-lg font-semibold leading-tight text-resource-safety-accent">
                   {STEP_TITLES[step]}
                 </h3>
-                <p className="mt-1 text-[12px] text-muted-foreground font-body">
+                <p className="mt-1 text-[12px] text-resource-safety-accent/65 font-body">
                   {STEP_PLACEHOLDERS_HINT[step]}
                 </p>
 
                 {/* Resmita guide */}
                 <div className="mt-4 flex items-start gap-3">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sky-50 ring-1 ring-sky-100 p-1">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-card/65 ring-1 ring-resource-safety-accent/10 p-1">
                     <img
                       src={resmitaAvatar}
                       alt="Resmita"
                       className="h-full w-full object-contain"
                     />
                   </div>
-                  <div className="rounded-2xl rounded-tl-md bg-muted/60 px-4 py-3">
-                    <p className="text-[12px] leading-relaxed text-muted-foreground font-body">
+                  <div className="rounded-2xl rounded-tl-md bg-card/65 px-4 py-3">
+                    <p className="text-[12px] leading-relaxed text-resource-safety-accent/70 font-body">
                       {RESMITA_MESSAGES[step]}
                     </p>
                   </div>
@@ -474,7 +474,7 @@ export default function CrisisPlan() {
                     <div
                       key={i}
                       className={`h-1.5 rounded-full transition-all ${
-                        i === step ? "w-6 bg-primary" : i < step ? "w-1.5 bg-primary/40" : "w-1.5 bg-muted"
+                        i === step ? "w-6 bg-resource-safety-accent" : i < step ? "w-1.5 bg-resource-safety-accent/40" : "w-1.5 bg-card/80"
                       }`}
                     />
                   ))}
@@ -485,7 +485,7 @@ export default function CrisisPlan() {
                   {step > 0 && (
                     <button
                       onClick={() => setStep(step - 1)}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl border border-border py-3 font-display text-sm text-muted-foreground active:bg-muted"
+                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl border border-resource-safety-accent/20 bg-card/60 py-3 font-display text-sm text-resource-safety-accent/70 active:bg-resource-safety-accent/10"
                     >
                       <ChevronLeft size={16} /> Anterior
                     </button>
@@ -493,14 +493,14 @@ export default function CrisisPlan() {
                   {step < 5 ? (
                     <button
                       onClick={() => setStep(step + 1)}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-primary py-3 font-display text-sm text-primary-foreground active:opacity-90"
+                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-resource-safety-accent py-3 font-display text-sm text-primary-foreground active:opacity-90"
                     >
                       Siguiente <ChevronRight size={16} />
                     </button>
                   ) : (
                     <button
                       onClick={handleSave}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-primary py-3 font-display text-sm text-primary-foreground active:opacity-90"
+                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-resource-safety-accent py-3 font-display text-sm text-primary-foreground active:opacity-90"
                     >
                       <Check size={16} /> Finalizar
                     </button>
