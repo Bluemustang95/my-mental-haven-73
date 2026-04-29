@@ -248,8 +248,8 @@ export default function Mindfulness() {
               className="flex flex-1 flex-col justify-center"
             >
               <div className="mb-8 text-center">
-                <h1 className="font-mindful text-5xl leading-tight">Tu Espacio</h1>
-                <p className="mt-2 font-sans text-sm text-muted-foreground">¿Cuánto tiempo necesitás hoy?</p>
+                <h1 className="font-mindful text-5xl leading-tight text-resource-mindfulness-accent">Tu Espacio</h1>
+                <p className="mt-2 font-sans text-sm text-resource-mindfulness-accent/65">¿Cuánto tiempo necesitás hoy?</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -260,19 +260,19 @@ export default function Mindfulness() {
                     className={cn(
                       "min-h-32 rounded-[3rem] border p-5 text-left transition-all duration-300 active:scale-95",
                       selectedDuration === index
-                        ? "scale-105 border-accent bg-mindful-yellow shadow-[0_22px_42px_hsl(var(--mindful-orange)/0.32)]"
-                        : "border-border bg-card shadow-[0_12px_28px_hsl(var(--border)/0.45)]"
+                        ? "scale-105 border-resource-mindfulness-accent bg-card text-resource-mindfulness-accent shadow-[0_22px_42px_hsl(var(--resource-mindfulness-accent)/0.22)]"
+                        : "border-resource-mindfulness-accent/15 bg-card/65 text-resource-mindfulness-accent/70 shadow-[0_12px_28px_hsl(var(--resource-mindfulness-accent)/0.08)]"
                     )}
                   >
                     <span className="block font-mindful text-5xl leading-none">{duration.minutes}</span>
-                    <span className="mt-2 block font-sans text-sm font-semibold text-muted-foreground">minutos</span>
+                    <span className="mt-2 block font-sans text-sm font-semibold opacity-70">minutos</span>
                   </button>
                 ))}
               </div>
 
               <button
                 onClick={startSession}
-                className="mt-8 w-full rounded-[3rem] bg-primary px-8 py-5 font-sans text-base font-bold text-primary-foreground shadow-[0_18px_35px_hsl(var(--primary)/0.22)] transition-transform active:scale-95"
+                className={cn("mt-8 w-full rounded-[3rem] bg-resource-mindfulness-accent px-8 py-5 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95", roseShadow)}
               >
                 Comenzar sesión
               </button>
@@ -286,7 +286,7 @@ export default function Mindfulness() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-              className="flex flex-1 flex-col items-center justify-between gap-4 overflow-hidden rounded-[3rem] border border-border bg-card/80 px-4 py-6 shadow-[0_20px_60px_hsl(var(--border)/0.42)]"
+              className="flex flex-1 flex-col items-center justify-between gap-4 overflow-hidden rounded-[3rem] border border-resource-mindfulness-accent/15 bg-card/75 px-4 py-6 shadow-[0_20px_60px_hsl(var(--resource-mindfulness-accent)/0.12)]"
             >
               <div className="text-center">
                 <AnimatePresence mode="wait">
@@ -296,12 +296,12 @@ export default function Mindfulness() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-                    className="font-mindful text-5xl leading-none"
+                    className="font-mindful text-5xl leading-none text-resource-mindfulness-accent"
                   >
                     {breathPhases[phase].label}
                   </motion.h1>
                 </AnimatePresence>
-                <p className="mt-2 font-sans text-sm text-muted-foreground tabular-nums">
+                <p className="mt-2 font-sans text-sm text-resource-mindfulness-accent/65 tabular-nums">
                   {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
                 </p>
               </div>
@@ -309,20 +309,20 @@ export default function Mindfulness() {
               <Mandala phase={phase} running={isRunning} />
 
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                <motion.div className="h-full rounded-full bg-mindful-orange" animate={{ width: `${progress * 100}%` }} />
+                <motion.div className="h-full rounded-full bg-resource-mindfulness-accent" animate={{ width: `${progress * 100}%` }} />
               </div>
 
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsRunning((current) => !current)}
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_16px_32px_hsl(var(--primary)/0.25)] transition-transform active:scale-95"
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-resource-mindfulness-accent text-primary-foreground shadow-[0_16px_32px_hsl(var(--resource-mindfulness-accent)/0.22)] transition-transform active:scale-95"
                   aria-label={isRunning ? "Pausar" : "Reproducir"}
                 >
                   {isRunning ? <Pause size={26} weight="fill" /> : <Play size={26} weight="fill" />}
                 </button>
                 <button
                   onClick={resetSession}
-                  className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-transform active:scale-95"
+                  className="flex h-16 w-16 items-center justify-center rounded-full border border-resource-mindfulness-accent/15 bg-card text-resource-mindfulness-accent/65 shadow-sm transition-transform active:scale-95"
                   aria-label="Reiniciar"
                 >
                   <ArrowCounterClockwise size={24} />
