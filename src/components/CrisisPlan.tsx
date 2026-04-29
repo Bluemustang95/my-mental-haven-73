@@ -375,7 +375,7 @@ export default function CrisisPlan() {
 
                   {step === 1 && (
                     <>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[11px] text-resource-safety-accent/65">
                         Sugerencias: respiración, agarrar hielos, ducharte con agua fría, escuchar música, caminar.
                       </p>
                       <textarea
@@ -416,33 +416,33 @@ export default function CrisisPlan() {
                       <div className="pt-2 space-y-2">
                         <a
                           href="tel:911"
-                          className="flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 transition-colors active:bg-destructive/10"
+                          className="flex items-center gap-3 rounded-2xl border border-resource-safety-accent/20 bg-card/60 p-4 text-resource-safety-accent transition-colors active:bg-resource-safety-accent/10"
                         >
-                          <Phone size={20} className="text-destructive" />
+                          <Phone size={20} />
                           <div>
                             <p className="font-display text-sm font-semibold">911</p>
-                            <p className="text-[11px] text-muted-foreground">Emergencias</p>
+                            <p className="text-[11px] opacity-65">Emergencias</p>
                           </div>
                         </a>
                         <a
                           href="tel:08002225462"
-                          className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 transition-colors active:bg-primary/10"
+                          className="flex items-center gap-3 rounded-2xl border border-resource-safety-accent/20 bg-card/60 p-4 text-resource-safety-accent transition-colors active:bg-resource-safety-accent/10"
                         >
-                          <Phone size={20} className="text-primary" />
+                          <Phone size={20} />
                           <div>
                             <p className="font-display text-sm font-semibold">0800 222 5462</p>
-                            <p className="text-[11px] text-muted-foreground">Salud Mental Responde (24 hs)</p>
+                            <p className="text-[11px] opacity-65">Salud Mental Responde (24 hs)</p>
                           </div>
                         </a>
                         <button
                           type="button"
                           onClick={openHospitalMaps}
-                          className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
+                          className="flex w-full items-center gap-3 rounded-2xl border border-resource-safety-accent/20 bg-card/60 p-4 text-left text-resource-safety-accent transition-colors active:bg-resource-safety-accent/10"
                         >
-                          <MapPin size={20} className="text-muted-foreground" />
+                          <MapPin size={20} />
                           <div>
                             <p className="font-display text-sm font-semibold">Hospital Público</p>
-                            <p className="text-[11px] text-muted-foreground">Buscar guardia de salud mental cercana</p>
+                            <p className="text-[11px] opacity-65">Buscar guardia de salud mental cercana</p>
                           </div>
                         </button>
                       </div>
@@ -460,7 +460,7 @@ export default function CrisisPlan() {
                       />
                       <button
                         onClick={handleDownload}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 py-3 font-display text-sm text-foreground transition-colors active:bg-muted"
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-resource-safety-accent/20 bg-card/60 py-3 font-display text-sm text-resource-safety-accent transition-colors active:bg-resource-safety-accent/10"
                       >
                         <Download size={16} /> Descargar mi Plan (PDF)
                       </button>
