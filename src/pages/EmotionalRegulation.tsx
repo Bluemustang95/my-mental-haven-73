@@ -155,8 +155,23 @@ export default function EmotionalRegulation() {
                 {stopSteps.map((step, index) => <span key={step.letter} className={cn("h-2 rounded-full", index <= stopIndex ? "bg-resource-regulation-accent" : "bg-resource-regulation-accent/15")} />)}
               </div>
 
-              <button onClick={() => stopIndex === stopSteps.length - 1 ? setView("finish") : setStopIndex((index) => index + 1)} className={cn("mt-6 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", coralShadow)}>
+              <button onClick={() => stopIndex === stopSteps.length - 1 ? setView("finish") : setStopIndex((index) => index + 1)} className={cn("mt-6 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", skyShadow)}>
                 {stopIndex === stopSteps.length - 1 ? "Terminar" : "Siguiente"}
+              </button>
+            </motion.section>
+          )}
+
+          {view === "tipPrecaution" && (
+            <motion.section key="tipPrecaution" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }} className="flex flex-1 flex-col justify-center text-center">
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[2.25rem] bg-card/85 shadow-sm shadow-resource-regulation-accent/10">
+                <AlertTriangle size={38} />
+              </div>
+              <h1 className="font-mindful text-3xl leading-tight text-resource-regulation-accent sm:text-4xl">Precaución TIP</h1>
+              <p className="mt-4 rounded-[3rem] border border-resource-regulation-accent/15 bg-card/85 p-6 font-sans text-xs font-normal leading-6 text-resource-regulation-accent/75 shadow-sm sm:text-sm sm:leading-7">
+                Consultá a tu médico antes de usar TIP si tenés afecciones cardíacas, trastornos alimentarios, cambios en la frecuencia cardíaca o tomás betabloqueantes.
+              </p>
+              <button onClick={() => setView("tip")} className={cn("mt-6 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", skyShadow)}>
+                Entiendo, iniciar TIP
               </button>
             </motion.section>
           )}
@@ -184,18 +199,7 @@ export default function EmotionalRegulation() {
                 })}
               </div>
 
-              <button onClick={() => setShowPrecaution((value) => !value)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-[3rem] border border-resource-regulation-accent/20 bg-card/85 px-5 py-3.5 font-sans text-xs font-bold shadow-sm active:scale-[0.98]">
-                <AlertTriangle size={17} /> Precaución TIP
-              </button>
-              <AnimatePresence>
-                {showPrecaution && (
-                  <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden px-4 pt-3 text-center font-sans text-xs font-semibold leading-6 text-resource-regulation-accent/70">
-                    Consultá a tu médico antes de usar TIP si tenés afecciones cardíacas, trastornos alimentarios o tomás betabloqueantes.
-                  </motion.p>
-                )}
-              </AnimatePresence>
-
-              <button onClick={() => setView("finish")} className={cn("mt-5 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", coralShadow)}>
+              <button onClick={() => setView("finish")} className={cn("mt-5 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", skyShadow)}>
                 Terminar
               </button>
             </motion.section>
