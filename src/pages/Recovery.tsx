@@ -256,7 +256,7 @@ export default function Recovery() {
   }
 
   if (view === "day") {
-    const relapseMode = entries[today]?.status === "relapse" || selectedTriggers.length > 0;
+    const relapseMode = relapseDraftOpen || entries[today]?.status === "relapse";
     return (
       <div className="flex min-h-screen flex-col bg-resource-recovery-bg px-5 pt-14 pb-6 text-resource-recovery-accent safe-area-top">
         <div className="mb-6 flex items-center gap-3">
@@ -268,7 +268,7 @@ export default function Recovery() {
             <Check size={20} weight="bold" /> Logré mi objetivo
           </button>
           <div className="rounded-[3rem] border border-resource-recovery-relapse/20 bg-card/85 p-5 shadow-sm">
-            <button onClick={() => setSelectedTriggers(selectedTriggers.length ? [] : ["Estrés"])} className="w-full rounded-[2.5rem] bg-resource-recovery-relapse/10 py-3.5 font-display text-sm font-semibold text-resource-recovery-relapse active:scale-[0.98]">Tuve una recaída</button>
+            <button onClick={() => setRelapseDraftOpen(true)} className="w-full rounded-[2.5rem] bg-resource-recovery-relapse/10 py-3.5 font-display text-sm font-semibold text-resource-recovery-relapse active:scale-[0.98]">Tuve una recaída</button>
             <AnimatePresence>
               {relapseMode && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
