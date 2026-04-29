@@ -120,9 +120,6 @@ export default function Rumination() {
           <p className="mt-4 max-w-sm text-base font-semibold leading-7 text-resource-rumination-accent/75">
             La rumiación es cuando tu mente da vueltas sobre el mismo tema una y otra vez. Estas herramientas te ayudan a ver tus pensamientos desde afuera para que dejen de pesarte tanto.
           </p>
-          <p className="mt-4 rounded-[2rem] bg-card/65 px-5 py-3 text-sm font-semibold leading-6 text-resource-rumination-accent/70">
-            No hay apuro, tomate tu tiempo
-          </p>
           <div className="mt-7 w-full space-y-3">
             <button onClick={() => { setRecordStep(0); setView("record"); }} className="flex w-full items-center gap-4 rounded-[2.5rem] border border-resource-rumination-accent/15 bg-card/85 p-5 text-left shadow-sm active:scale-[0.98]">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-resource-rumination-accent/10"><Notepad size={24} weight="duotone" /></span>
@@ -134,6 +131,29 @@ export default function Rumination() {
             </button>
           </div>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (view === "recordDone") {
+    return (
+      <div className="flex min-h-screen flex-col bg-resource-rumination-bg px-5 pt-14 pb-6 text-resource-rumination-accent safe-area-top">
+        <div className="mb-8 flex items-center gap-3">
+          <button onClick={() => setView("record")} className="flex h-11 w-11 items-center justify-center rounded-full bg-card/80 shadow-sm"><ArrowLeft size={20} /></button>
+          <div><p className="font-display text-lg font-semibold">Registro completo</p><p className="text-xs font-semibold text-resource-rumination-accent/65">Cuadro listo para compartir</p></div>
+        </div>
+        <div className="flex flex-1 flex-col justify-center">
+          <div className="rounded-[2.5rem] border border-resource-rumination-accent/15 bg-card/85 p-6 text-center shadow-sm">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-resource-rumination-accent/10"><Check size={32} weight="bold" /></div>
+            <h1 className="font-display text-3xl font-semibold leading-tight">Registro guardado</h1>
+            <p className="mt-3 text-sm font-semibold leading-6 text-resource-rumination-accent/70">Podés descargarlo en formato profesional para llevarlo a terapia.</p>
+          </div>
+          <button onClick={downloadThoughtRecord} className="mt-6 flex w-full items-center justify-center gap-2 rounded-[2.5rem] bg-resource-rumination-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-rumination-accent/20 active:scale-[0.98]">
+            <DownloadSimple size={20} weight="bold" />
+            Descargar para mi terapeuta
+          </button>
+          <button onClick={() => setView("intro")} className="mt-3 rounded-[2.5rem] border border-resource-rumination-accent/20 bg-card/80 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Volver</button>
+        </div>
       </div>
     );
   }
