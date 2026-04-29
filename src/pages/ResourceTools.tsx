@@ -2,11 +2,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon, PillBottle, Wine, Zap } from "lucide-react";
+import { ArrowLeft, Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon, PillBottle, Wine, Zap, Waves } from "lucide-react";
 
 type ResourceTool = { id: string; name: string; description: string | null; slug: string; tool_type: string; config: { url?: string } | null };
 
-const iconMap: Record<string, typeof Sparkles> = { Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon, PillBottle, Wine, Zap };
+const iconMap: Record<string, typeof Sparkles> = { Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon, PillBottle, Wine, Zap, Waves };
 
 const colorMap: Record<string, string> = {
   accent: "bg-accent/15 border-accent/30",
@@ -72,7 +72,7 @@ export default function ResourceTools() {
     return <div className="p-6 text-center text-sm text-muted-foreground">Cargando…</div>;
   }
 
-  const Icon = category.slug === "recuperacion" ? Wine : iconMap[category.icon] || Sparkles;
+  const Icon = category.slug === "recuperacion" ? Wine : category.slug === "regulacion-emocional" ? Waves : iconMap[category.icon] || Sparkles;
   const colorClass = slugThemeMap[category.slug] || colorMap[category.color] || colorMap.muted;
   const baseRoute = runnerRoute[category.slug] || `/herramientas/${category.slug}`;
 

@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, ArrowLeft, Brain, CheckCircle2, Dumbbell, Eye, Footprints, Hand, Shield, Thermometer, Wind, Zap } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Brain, CheckCircle2, Dumbbell, Eye, Footprints, Hand, Shield, Snowflake, Waves, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
 import resmitaAvatar from "@/assets/resmita-mindfulness.png";
 
-type View = "intro" | "stop" | "tip" | "finish";
+type View = "intro" | "stop" | "tipPrecaution" | "tip" | "finish";
 
-const coralShadow = "shadow-[0_18px_35px_hsl(var(--resource-regulation-accent)/0.18)]";
+const skyShadow = "shadow-[0_18px_35px_hsl(var(--resource-regulation-accent)/0.18)]";
 
 const stopSteps = [
   {
@@ -40,8 +40,8 @@ const tipSteps = [
   {
     letter: "T",
     title: "Temperatura",
-    text: "Sumergí la cara en agua fría o usá una compresa fría sobre ojos y mejillas por 30 segundos aguantando la respiración.",
-    icon: Thermometer,
+    text: "Sumergí la cara en agua fría o usá una compresa fría por 30 segundos.",
+    icon: Snowflake,
   },
   {
     letter: "I",
@@ -52,16 +52,25 @@ const tipSteps = [
   {
     letter: "P",
     title: "Respiración y Relajación",
-    text: "Respirá profundo desde el abdomen (5-6 veces por minuto). Exhalá más lento de lo que inhalás. Al exhalar, tensá y soltá tus músculos diciendo mentalmente: Relájate.",
+    text: "Inhalá profundo durante 5 segundos y exhalá lento durante 7 segundos. Sumá relajación muscular: tensá y soltá de a poco.",
     icon: Wind,
   },
 ];
 
 export default function EmotionalRegulation() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [view, setView] = useState<View>("intro");
   const [stopIndex, setStopIndex] = useState(0);
-  const [showPrecaution, setShowPrecaution] = useState(false);
+
+  useEffect(() => {
+    const tool = searchParams.get("tool");
+    if (tool === "stop") {
+      setStopIndex(0);
+      setView("stop");
+    }
+    if (tool === "tip") setView("tipPrecaution");
+  }, [searchParams]);
 
   const close = () => navigate("/herramientas");
   const goBack = () => {
@@ -73,7 +82,7 @@ export default function EmotionalRegulation() {
   const StopIcon = currentStop.icon;
 
   return (
-    <main className="min-h-screen bg-resource-regulation-bg px-4 pb-28 pt-10 font-sans text-resource-regulation-accent safe-area-top">
+    <main className="min-h-screen bg-resource-regulation-bg px-4 pb-28 pt-10 font-sans text-resource-regulation-accent transition-colors duration-500 safe-area-top">
       <div className="mx-auto flex min-h-[calc(100vh-9.5rem)] w-full max-w-md flex-col">
         <header className="mb-4 flex items-center justify-between">
           <button
@@ -103,7 +112,7 @@ export default function EmotionalRegulation() {
               </motion.div>
 
               <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-card/80 shadow-sm shadow-resource-regulation-accent/10">
-                <Zap size={38} strokeWidth={2.2} />
+                <Waves size={38} strokeWidth={2.2} />
               </div>
 
               <div className="px-5 py-5 sm:px-6 sm:py-7">
@@ -114,12 +123,12 @@ export default function EmotionalRegulation() {
               </div>
 
               <div className="w-full space-y-3">
-                <button onClick={() => { setStopIndex(0); setView("stop"); }} className={cn("flex w-full items-center gap-4 rounded-[3rem] bg-resource-regulation-accent px-6 py-5 text-left font-sans text-primary-foreground transition-transform active:scale-95", coralShadow)}>
+                <button onClick={() => { setStopIndex(0); setView("stop"); }} className={cn("flex w-full items-center gap-4 rounded-[3rem] bg-resource-regulation-accent px-6 py-5 text-left font-sans text-primary-foreground transition-transform active:scale-95", skyShadow)}>
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-card/20"><Shield size={24} /></span>
                   <span><span className="block text-base font-bold">Habilidad STOP</span><span className="text-xs font-semibold opacity-85">Para frenar impulsos</span></span>
                 </button>
-                <button onClick={() => setView("tip")} className="flex w-full items-center gap-4 rounded-[3rem] border border-resource-regulation-accent/15 bg-card/85 px-6 py-5 text-left font-sans text-resource-regulation-accent shadow-sm transition-transform active:scale-95">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-resource-regulation-bg"><Zap size={24} /></span>
+                <button onClick={() => setView("tipPrecaution")} className="flex w-full items-center gap-4 rounded-[3rem] border border-resource-regulation-accent/15 bg-card/85 px-6 py-5 text-left font-sans text-resource-regulation-accent shadow-sm transition-transform active:scale-95">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-resource-regulation-bg"><Waves size={24} /></span>
                   <span><span className="block text-base font-bold">Habilidad TIP</span><span className="text-xs font-semibold opacity-70">Para cambiar la química corporal</span></span>
                 </button>
               </div>
@@ -146,8 +155,23 @@ export default function EmotionalRegulation() {
                 {stopSteps.map((step, index) => <span key={step.letter} className={cn("h-2 rounded-full", index <= stopIndex ? "bg-resource-regulation-accent" : "bg-resource-regulation-accent/15")} />)}
               </div>
 
-              <button onClick={() => stopIndex === stopSteps.length - 1 ? setView("finish") : setStopIndex((index) => index + 1)} className={cn("mt-6 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", coralShadow)}>
+              <button onClick={() => stopIndex === stopSteps.length - 1 ? setView("finish") : setStopIndex((index) => index + 1)} className={cn("mt-6 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", skyShadow)}>
                 {stopIndex === stopSteps.length - 1 ? "Terminar" : "Siguiente"}
+              </button>
+            </motion.section>
+          )}
+
+          {view === "tipPrecaution" && (
+            <motion.section key="tipPrecaution" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }} className="flex flex-1 flex-col justify-center text-center">
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[2.25rem] bg-card/85 shadow-sm shadow-resource-regulation-accent/10">
+                <AlertTriangle size={38} />
+              </div>
+              <h1 className="font-mindful text-3xl leading-tight text-resource-regulation-accent sm:text-4xl">Precaución TIP</h1>
+              <p className="mt-4 rounded-[3rem] border border-resource-regulation-accent/15 bg-card/85 p-6 font-sans text-xs font-normal leading-6 text-resource-regulation-accent/75 shadow-sm sm:text-sm sm:leading-7">
+                Consultá a tu médico antes de usar TIP si tenés afecciones cardíacas, trastornos alimentarios, cambios en la frecuencia cardíaca o tomás betabloqueantes.
+              </p>
+              <button onClick={() => setView("tip")} className={cn("mt-6 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", skyShadow)}>
+                Entiendo, iniciar TIP
               </button>
             </motion.section>
           )}
@@ -175,18 +199,7 @@ export default function EmotionalRegulation() {
                 })}
               </div>
 
-              <button onClick={() => setShowPrecaution((value) => !value)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-[3rem] border border-resource-regulation-accent/20 bg-card/85 px-5 py-3.5 font-sans text-xs font-bold shadow-sm active:scale-[0.98]">
-                <AlertTriangle size={17} /> Precaución TIP
-              </button>
-              <AnimatePresence>
-                {showPrecaution && (
-                  <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden px-4 pt-3 text-center font-sans text-xs font-semibold leading-6 text-resource-regulation-accent/70">
-                    Consultá a tu médico antes de usar TIP si tenés afecciones cardíacas, trastornos alimentarios o tomás betabloqueantes.
-                  </motion.p>
-                )}
-              </AnimatePresence>
-
-              <button onClick={() => setView("finish")} className={cn("mt-5 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", coralShadow)}>
+              <button onClick={() => setView("finish")} className={cn("mt-5 w-full rounded-[3rem] bg-resource-regulation-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", skyShadow)}>
                 Terminar
               </button>
             </motion.section>

@@ -237,7 +237,7 @@ export default function Recovery() {
 
   if (view === "urge") {
     return (
-      <div className="flex min-h-screen flex-col bg-resource-recovery-bg px-5 pt-14 pb-6 text-resource-recovery-accent safe-area-top">
+      <div className="flex min-h-screen flex-col bg-resource-recovery-bg px-5 pt-14 pb-6 text-resource-recovery-accent transition-colors duration-500 safe-area-top">
         <div className="mb-6 flex items-center gap-3">
           <button onClick={() => setView("dashboard")} className="flex h-11 w-11 items-center justify-center rounded-full bg-card/80 shadow-sm"><ArrowLeft size={20} /></button>
           <div><p className="font-mindful text-2xl leading-tight">Tengo ganas de consumir</p><p className="font-sans text-xs font-normal leading-5 text-resource-recovery-accent/65">Elegí una herramienta rápida</p></div>
@@ -248,8 +248,9 @@ export default function Recovery() {
             <h1 className="font-mindful text-3xl leading-tight">No te rindas</h1>
             <p className="mt-3 font-sans text-xs font-normal leading-6 text-resource-recovery-accent/70 sm:text-sm">Un impulso sube y baja. Elegí algo concreto para atravesar este momento.</p>
           </div>
-          <button onClick={() => navigate("/herramientas/grounding")} className="rounded-[3rem] bg-resource-recovery-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/20 active:scale-[0.98]">Ir a Grounding</button>
-          <button onClick={() => navigate("/herramientas/rumiacion")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Ir a La Nube</button>
+          <button onClick={() => navigate("/herramientas/regulacion-emocional?tool=stop")} className="rounded-[3rem] bg-resource-recovery-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/20 active:scale-[0.98]">Necesito frenar ahora (STOP)</button>
+          <button onClick={() => navigate("/herramientas/regulacion-emocional?tool=tip")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Necesito un cambio químico (TIP)</button>
+          <button onClick={() => navigate("/herramientas/rumiacion")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Hacer un registro de rumiación</button>
         </div>
       </div>
     );
@@ -308,7 +309,7 @@ export default function Recovery() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-resource-recovery-bg px-5 pt-12 pb-6 text-resource-recovery-accent safe-area-top">
+    <div className="relative min-h-screen overflow-hidden bg-resource-recovery-bg px-5 pt-12 pb-6 text-resource-recovery-accent transition-colors duration-500 safe-area-top">
       <AnimatePresence>
         {showConfetti && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none fixed inset-0 z-20 overflow-hidden">
