@@ -346,27 +346,27 @@ export default function Mindfulness() {
               className="flex flex-1 flex-col justify-center gap-5 text-center"
             >
               <div className="rounded-[3rem] border border-border bg-card px-6 py-9 shadow-[0_20px_55px_hsl(var(--border)/0.5)]">
-                <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-mindful-yellow/50">
+                <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-resource-mindfulness-bg text-resource-mindfulness-accent">
                   <span className="font-mindful text-5xl">☁</span>
                 </div>
-                <h1 className="font-mindful text-5xl leading-tight">Presencia plena</h1>
-                <p className="mt-3 font-sans text-base text-muted-foreground">Tu mente está un poco más clara</p>
+                <h1 className="font-mindful text-5xl leading-tight text-resource-mindfulness-accent">Presencia plena</h1>
+                <p className="mt-3 font-sans text-base text-resource-mindfulness-accent/65">Tu mente está un poco más clara</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-[2.5rem] border border-border bg-mindful-rose p-5 text-left shadow-sm">
-                  <p className="font-sans text-xs font-semibold text-muted-foreground">Racha</p>
+                <div className="rounded-[2.5rem] border border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg p-5 text-left text-resource-mindfulness-accent shadow-sm">
+                  <p className="font-sans text-xs font-semibold opacity-65">Racha</p>
                   <p className="mt-2 font-mindful text-3xl">5 días</p>
                 </div>
-                <div className="rounded-[2.5rem] border border-border bg-mindful-yellow/45 p-5 text-left shadow-sm">
-                  <p className="font-sans text-xs font-semibold text-muted-foreground">Puntos Zen</p>
+                <div className="rounded-[2.5rem] border border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg p-5 text-left text-resource-mindfulness-accent shadow-sm">
+                  <p className="font-sans text-xs font-semibold opacity-65">Puntos Zen</p>
                   <p className="mt-2 font-mindful text-3xl">+150</p>
                 </div>
               </div>
 
               <button
                 onClick={close}
-                className="mt-4 w-full rounded-[3rem] bg-primary px-8 py-5 font-sans text-base font-bold text-primary-foreground shadow-[0_18px_35px_hsl(var(--primary)/0.22)] transition-transform active:scale-95"
+                className={cn("mt-4 w-full rounded-[3rem] bg-resource-mindfulness-accent px-8 py-5 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95", roseShadow)}
               >
                 Cerrar
               </button>
