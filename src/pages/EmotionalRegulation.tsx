@@ -82,7 +82,7 @@ export default function EmotionalRegulation() {
   const StopIcon = currentStop.icon;
 
   return (
-    <main className="min-h-screen bg-resource-regulation-bg px-4 pb-28 pt-10 font-sans text-resource-regulation-accent safe-area-top">
+    <main className="min-h-screen bg-resource-regulation-bg px-4 pb-28 pt-10 font-sans text-resource-regulation-accent transition-colors duration-500 safe-area-top">
       <div className="mx-auto flex min-h-[calc(100vh-9.5rem)] w-full max-w-md flex-col">
         <header className="mb-4 flex items-center justify-between">
           <button
