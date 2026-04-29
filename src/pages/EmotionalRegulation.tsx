@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, ArrowLeft, Brain, CheckCircle2, Dumbbell, Eye, Footprints, Hand, Shield, Sparkles, Thermometer, Wind, Zap } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Brain, CheckCircle2, Dumbbell, Eye, Footprints, Hand, Shield, Thermometer, Wind, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import resmitaAvatar from "@/assets/resmita-mindfulness.png";
 
