@@ -30,12 +30,12 @@ function Mandala({ phase, running }: { phase: number; running: boolean }) {
   return (
     <div className="relative flex h-[min(72vw,18rem)] w-[min(72vw,18rem)] items-center justify-center">
       <motion.div
-        className="absolute h-[92%] w-[92%] rounded-full bg-mindful-yellow/25 blur-3xl"
+        className="absolute h-[92%] w-[92%] rounded-full bg-resource-mindfulness-accent/15 blur-3xl"
         animate={{ scale: running ? [0.82, 1.12, 0.9] : 0.9, opacity: running ? [0.35, 0.68, 0.38] : 0.35 }}
         transition={{ duration: 4.5, repeat: running ? Infinity : 0, ease: [0.4, 0, 0.2, 1] }}
       />
       <motion.div
-        className="absolute h-[72%] w-[72%] rounded-full bg-mindful-orange/20 blur-2xl"
+        className="absolute h-[72%] w-[72%] rounded-full bg-resource-mindfulness-accent/10 blur-2xl"
         animate={{ scale: running ? [0.9, 1.18, 0.86] : 0.95, opacity: running ? [0.2, 0.5, 0.22] : 0.22 }}
         transition={{ duration: 4.5, repeat: running ? Infinity : 0, ease: [0.4, 0, 0.2, 1], delay: 0.25 }}
       />
@@ -48,9 +48,9 @@ function Mandala({ phase, running }: { phase: number; running: boolean }) {
       >
         <defs>
           <radialGradient id="mandalaCore" cx="50%" cy="50%" r="55%">
-            <stop offset="0%" stopColor="hsl(var(--mindful-yellow))" stopOpacity="0.95" />
-            <stop offset="58%" stopColor="hsl(var(--mindful-orange))" stopOpacity="0.58" />
-            <stop offset="100%" stopColor="hsl(var(--secondary))" stopOpacity="0.18" />
+            <stop offset="0%" stopColor="hsl(var(--resource-mindfulness-accent))" stopOpacity="0.95" />
+            <stop offset="58%" stopColor="hsl(var(--resource-mindfulness-accent))" stopOpacity="0.42" />
+            <stop offset="100%" stopColor="hsl(var(--resource-mindfulness-bg))" stopOpacity="0.28" />
           </radialGradient>
         </defs>
         <circle cx="120" cy="120" r="98" fill="hsl(var(--card))" opacity="0.92" />
@@ -61,7 +61,7 @@ function Mandala({ phase, running }: { phase: number; running: boolean }) {
             cy="44"
             rx="13"
             ry="34"
-            fill={index % 2 === 0 ? "hsl(var(--mindful-yellow))" : "hsl(var(--mindful-orange))"}
+            fill="hsl(var(--resource-mindfulness-accent))"
             fillOpacity="0.38"
             stroke="hsl(var(--card))"
             strokeWidth="1.5"
@@ -79,9 +79,9 @@ function Mandala({ phase, running }: { phase: number; running: boolean }) {
             transform={`rotate(${index * 30} 120 120)`}
           />
         ))}
-        <circle cx="120" cy="120" r="45" fill="hsl(var(--mindful-sky))" opacity="0.86" />
-        <circle cx="120" cy="120" r="28" fill="hsl(var(--mindful-yellow))" opacity="0.96" />
-        <circle cx="120" cy="120" r="10" fill="hsl(var(--mindful-orange))" opacity="0.9" />
+        <circle cx="120" cy="120" r="45" fill="hsl(var(--resource-mindfulness-bg))" opacity="0.92" />
+        <circle cx="120" cy="120" r="28" fill="hsl(var(--resource-mindfulness-accent))" opacity="0.82" />
+        <circle cx="120" cy="120" r="10" fill="hsl(var(--resource-mindfulness-accent))" opacity="0.95" />
       </motion.svg>
     </div>
   );
