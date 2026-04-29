@@ -79,14 +79,14 @@ export default function SelfCare() {
   const unusedSuggestions = SUGGESTED_TASKS.filter((s) => !tasks.some((t) => t.task_text === s));
 
   return (
-    <div className="px-5 pt-14 pb-4 safe-area-top">
-      <button onClick={() => navigate("/herramientas")} className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
+    <div className="min-h-screen bg-resource-selfcare-bg px-5 pt-14 pb-4 safe-area-top">
+      <button onClick={() => navigate("/herramientas")} className="mb-4 flex items-center gap-1 text-sm text-resource-selfcare-accent/65">
         <ArrowLeft size={16} /> Herramientas
       </button>
-      <h1 className="mb-2 font-display text-xl font-semibold flex items-center gap-2">
-        <Leaf size={24} weight="duotone" className="text-accent" /> Autocuidado
+      <h1 className="mb-2 font-display text-xl font-semibold flex items-center gap-2 text-resource-selfcare-accent">
+        <Leaf size={24} weight="duotone" /> Autocuidado
       </h1>
-      <p className="mb-6 text-sm text-muted-foreground">Pequeñas acciones para el mundo real.</p>
+      <p className="mb-6 text-sm text-resource-selfcare-accent/65">Pequeñas acciones para el mundo real.</p>
 
       {/* Add custom */}
       <div className="mb-4 flex gap-2">
@@ -95,9 +95,9 @@ export default function SelfCare() {
           onChange={(e) => setNewTask(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addCustom()}
           placeholder="Agregar actividad..."
-          className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          className="flex-1 rounded-xl border border-resource-selfcare-accent/20 bg-card/75 px-3 py-2.5 text-sm text-foreground placeholder:text-resource-selfcare-accent/35 focus:outline-none focus:ring-1 focus:ring-resource-selfcare-accent/30"
         />
-        <button onClick={addCustom} disabled={!newTask.trim()} className="rounded-xl bg-accent px-3 text-accent-foreground active:scale-95 transition-transform disabled:opacity-40">
+        <button onClick={addCustom} disabled={!newTask.trim()} className="rounded-xl bg-resource-selfcare-accent px-3 text-primary-foreground active:scale-95 transition-transform disabled:opacity-40">
           <Plus size={18} />
         </button>
       </div>
@@ -105,7 +105,7 @@ export default function SelfCare() {
       {/* Task list */}
       {loading ? (
         <div className="flex justify-center py-8">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-resource-selfcare-accent border-t-transparent" />
         </div>
       ) : (
         <div className="space-y-2 mb-6">
@@ -116,17 +116,17 @@ export default function SelfCare() {
                 layout
                 exit={{ opacity: 0, x: -30 }}
                 className={cn(
-                  "flex items-center gap-3 rounded-2xl border bg-card p-3.5 transition-colors",
-                  task.completed ? "border-mood-5/30 bg-mood-5/5" : "border-border"
+                  "flex items-center gap-3 rounded-2xl border bg-card/75 p-3.5 transition-colors",
+                  task.completed ? "border-resource-selfcare-accent/30 bg-resource-selfcare-accent/10" : "border-resource-selfcare-accent/15"
                 )}
               >
                 <button onClick={() => toggleComplete(task)} className={cn(
                   "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
-                  task.completed ? "border-mood-5 bg-mood-5 text-foreground" : "border-muted-foreground/30"
+                  task.completed ? "border-resource-selfcare-accent bg-resource-selfcare-accent text-primary-foreground" : "border-resource-selfcare-accent/30"
                 )}>
                   {task.completed && <Check size={14} weight="bold" />}
                 </button>
-                <span className={cn("flex-1 text-sm", task.completed && "line-through text-muted-foreground")}>{task.task_text}</span>
+                <span className={cn("flex-1 text-sm", task.completed && "line-through text-resource-selfcare-accent/55")}>{task.task_text}</span>
                 <button onClick={() => deleteTask(task.id)} className="text-muted-foreground/50 active:text-destructive p-1">
                   <Trash size={14} />
                 </button>
@@ -139,13 +139,13 @@ export default function SelfCare() {
       {/* Suggestions */}
       {unusedSuggestions.length > 0 && (
         <section>
-          <h2 className="mb-3 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">Sugerencias</h2>
+          <h2 className="mb-3 font-display text-xs font-medium uppercase tracking-wider text-resource-selfcare-accent/65">Sugerencias</h2>
           <div className="flex flex-wrap gap-2">
             {unusedSuggestions.slice(0, 4).map((s) => (
               <button
                 key={s}
                 onClick={() => addSuggested(s)}
-                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors active:bg-muted"
+                className="rounded-full border border-resource-selfcare-accent/15 bg-card/75 px-3 py-1.5 text-xs text-resource-selfcare-accent/75 transition-colors active:bg-resource-selfcare-accent/10"
               >
                 + {s}
               </button>
