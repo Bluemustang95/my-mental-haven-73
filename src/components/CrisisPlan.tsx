@@ -243,7 +243,7 @@ export default function CrisisPlan() {
   ) => (
     <>
       {data[key].map((c, i) => (
-        <div key={i} className="space-y-2 rounded-2xl border border-border/60 bg-muted/20 p-3">
+        <div key={i} className="space-y-2 rounded-2xl border border-resource-safety-accent/15 bg-card/45 p-3">
           <div className="flex items-center gap-2">
             <input
               placeholder={namePlaceholder}
@@ -254,7 +254,7 @@ export default function CrisisPlan() {
             {data[key].length > 1 && (
               <button
                 onClick={() => removeRow(key, i)}
-                className="text-muted-foreground/60"
+                className="text-resource-safety-accent/60"
                 aria-label="Quitar"
               >
                 <Trash2 size={16} />
@@ -272,7 +272,7 @@ export default function CrisisPlan() {
       ))}
       <button
         onClick={() => addRow(key)}
-        className="flex items-center gap-1.5 text-[12px] font-medium text-primary"
+        className="flex items-center gap-1.5 text-[12px] font-medium text-resource-safety-accent"
       >
         <Plus size={14} /> {addLabel}
       </button>
