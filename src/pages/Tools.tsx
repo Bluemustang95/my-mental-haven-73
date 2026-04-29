@@ -11,6 +11,7 @@ import {
   Hand,
   Wind,
   Moon,
+  Brain,
 } from "lucide-react";
 import {
   Dialog,
@@ -31,6 +32,7 @@ const resourceThemes = {
   grounding: "border-resource-grounding-accent/15 bg-resource-grounding-bg text-resource-grounding-accent",
   respiracion: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent",
   sueno: "border-resource-sleep-accent/15 bg-resource-sleep-bg text-resource-sleep-accent",
+  rumiacion: "border-resource-rumination-accent/15 bg-resource-rumination-bg text-resource-rumination-accent",
 };
 
 const FALLBACK_FEELINGS: FeelingOption[] = [
@@ -171,6 +173,18 @@ export default function Tools() {
             <Moon size={20} />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold">Sueño</p>
+        </motion.button>
+
+        {/* Rumiación */}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate("/herramientas/rumiacion")}
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.rumiacion}`}
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <Brain size={20} />
+          </div>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Rumiación</p>
         </motion.button>
       </div>
 
