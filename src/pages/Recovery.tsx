@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CalendarBlank, Check, Confetti, DownloadSimple, Fire, JarLabel, WarningCircle } from "@phosphor-icons/react";
+import { ArrowLeft, CalendarBlank, Check, Confetti, DownloadSimple, JarLabel, WarningCircle } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { PillBottle } from "lucide-react";
+import { Wine } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { cn, localDateStr } from "@/lib/utils";
 import resmitaAvatar from "@/assets/resmita-mindfulness.png";
@@ -211,10 +211,10 @@ export default function Recovery() {
             <img src={resmitaAvatar} alt="Resmita" className="h-16 w-16 object-contain drop-shadow-md" />
           </motion.div>
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-card/80 shadow-sm shadow-resource-recovery-accent/10">
-            <PillBottle size={34} strokeWidth={2.2} />
+            <Wine size={34} strokeWidth={2.2} />
           </div>
-          <h1 className="font-display text-4xl font-semibold leading-tight">Recuperación</h1>
-          <p className="mt-4 max-w-sm text-base font-semibold leading-7 text-resource-recovery-accent/75">
+          <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Recuperación</h1>
+          <p className="max-w-sm font-sans text-xs font-normal leading-6 text-resource-recovery-accent/75 sm:text-sm sm:leading-7">
             Tomar consciencia de tus hábitos es el primer paso para el cambio. Mirá cuánto venís ganando en salud y tiempo.
           </p>
           <div className="mt-8 w-full space-y-4 text-left">
@@ -240,13 +240,13 @@ export default function Recovery() {
       <div className="flex min-h-screen flex-col bg-resource-recovery-bg px-5 pt-14 pb-6 text-resource-recovery-accent safe-area-top">
         <div className="mb-6 flex items-center gap-3">
           <button onClick={() => setView("dashboard")} className="flex h-11 w-11 items-center justify-center rounded-full bg-card/80 shadow-sm"><ArrowLeft size={20} /></button>
-          <div><p className="font-display text-lg font-semibold">Urge</p><p className="text-xs font-semibold text-resource-recovery-accent/65">Elegí una herramienta rápida</p></div>
+          <div><p className="font-mindful text-2xl leading-tight">Tengo ganas de consumir</p><p className="font-sans text-xs font-normal leading-5 text-resource-recovery-accent/65">Elegí una herramienta rápida</p></div>
         </div>
         <div className="flex flex-1 flex-col justify-center space-y-4">
           <div className="rounded-[3rem] border border-resource-recovery-accent/15 bg-card/85 p-6 text-center shadow-sm">
             <WarningCircle className="mx-auto mb-4" size={42} weight="duotone" />
-            <h1 className="font-display text-3xl font-semibold leading-tight">No te rindas</h1>
-            <p className="mt-3 text-sm font-semibold leading-6 text-resource-recovery-accent/70">Un impulso sube y baja. Elegí algo concreto para atravesar este momento.</p>
+            <h1 className="font-mindful text-3xl leading-tight">No te rindas</h1>
+            <p className="mt-3 font-sans text-xs font-normal leading-6 text-resource-recovery-accent/70 sm:text-sm">Un impulso sube y baja. Elegí algo concreto para atravesar este momento.</p>
           </div>
           <button onClick={() => navigate("/herramientas/grounding")} className="rounded-[3rem] bg-resource-recovery-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/20 active:scale-[0.98]">Ir a Grounding</button>
           <button onClick={() => navigate("/herramientas/rumiacion")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Ir a La Nube</button>
@@ -299,8 +299,8 @@ export default function Recovery() {
           <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/85 shadow-xl shadow-resource-recovery-accent/10">
             <Confetti size={40} weight="duotone" />
           </div>
-          <h1 className="font-display text-3xl font-semibold leading-tight">Seguís caminando</h1>
-          <p className="mt-4 text-base font-semibold leading-7 text-resource-recovery-accent/75">Cada registro suma claridad. No te rindas.</p>
+          <h1 className="font-mindful text-3xl leading-tight">Seguís caminando</h1>
+          <p className="mt-4 font-sans text-xs font-normal leading-6 text-resource-recovery-accent/75 sm:text-sm sm:leading-7">Cada registro suma claridad. No te rindas.</p>
           <button onClick={() => navigate("/herramientas")} className="mt-9 w-full rounded-[3rem] bg-resource-recovery-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/20 active:scale-[0.98]">Cerrar</button>
         </motion.div>
       </div>
@@ -324,20 +324,20 @@ export default function Recovery() {
       </div>
 
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-[1.6rem] bg-card/85 shadow-sm shadow-resource-recovery-accent/10"><PillBottle size={28} /></div>
+        <div className="flex h-14 w-14 items-center justify-center rounded-[1.6rem] bg-card/85 shadow-sm shadow-resource-recovery-accent/10"><Wine size={28} /></div>
         <div>
-          <h1 className="font-display text-3xl font-semibold leading-tight">Recuperación</h1>
-          <p className="text-xs font-semibold text-resource-recovery-accent/65">Día {elapsedDays} de tu proceso</p>
+          <h1 className="font-mindful text-3xl leading-tight">Recuperación</h1>
+          <p className="font-sans text-xs font-normal leading-5 text-resource-recovery-accent/65">Día {elapsedDays} de tu proceso</p>
         </div>
       </div>
 
-      <button onClick={() => setView("urge")} className="mb-4 flex w-full items-center justify-center gap-2 rounded-[3rem] bg-resource-recovery-relapse py-3.5 font-display text-sm font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-relapse/20 active:scale-[0.98]">
-        <WarningCircle size={19} weight="bold" /> Tengo ganas de consumir (Urge)
+      <button onClick={() => setView("urge")} className="mb-4 flex w-full items-center justify-center gap-2 rounded-[3rem] bg-resource-recovery-relapse py-3.5 font-sans text-sm font-bold text-primary-foreground shadow-xl shadow-resource-recovery-relapse/30 ring-2 ring-resource-recovery-relapse/15 active:scale-[0.98]">
+        <WarningCircle size={19} weight="bold" /> Tengo ganas de consumir
       </button>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-[3rem] border border-resource-recovery-accent/15 bg-card/85 p-5 shadow-sm">
-          <Fire size={28} weight="duotone" />
+          <span className="text-3xl" aria-hidden="true">🔥</span>
           <p className="mt-4 font-display text-3xl font-semibold">{stats.streak}</p>
           <p className="text-xs font-semibold leading-5 text-resource-recovery-accent/65">Llevás {stats.streak} días de racha</p>
         </div>
@@ -377,7 +377,7 @@ export default function Recovery() {
       </div>
 
       <button onClick={downloadReport} className="mt-4 flex w-full items-center justify-center gap-2 rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-sm font-semibold shadow-sm active:scale-[0.98]">
-        <DownloadSimple size={19} weight="bold" /> Descargar reporte para mi terapeuta
+        <DownloadSimple size={19} weight="bold" /> Descargar progreso para mi terapeuta
       </button>
     </div>
   );
