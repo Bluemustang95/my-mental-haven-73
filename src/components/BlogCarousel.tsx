@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Brain, ExternalLink, Scale, Users } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 
 const blogUrl = "https://www.redsaludmentalargentina.com/blog";
 
@@ -8,28 +8,24 @@ const blogPosts = [
     title: "Ley de Salud Mental en Argentina: qué establece la norma vigente y qué cambios propone el Gobierno",
     category: "Actualidad legal",
     reference: "Temas legales y actualidad en Argentina",
-    icon: Scale,
     url: blogUrl,
   },
   {
     title: "¿Es pereza o es TDAH? La neurobiología de la voluntad y la Disfunción Ejecutiva en adultos",
     category: "Neurociencias",
     reference: "Neurociencias y diagnóstico",
-    icon: Brain,
     url: blogUrl,
   },
   {
     title: "NEUROBIOLOGÍA DE LOS VÍNCULOS Y SALUD MENTAL",
     category: "Vínculos",
     reference: "Relaciones interpersonales desde la ciencia",
-    icon: Users,
     url: blogUrl,
   },
   {
     title: "Salud Mental y Relaciones: Por qué tus vínculos son el espejo de tu cerebro (y cómo usar la 'Corregulación' para sanar)",
     category: "Herramientas terapéuticas",
     reference: "Herramientas terapéuticas y neurobiología social",
-    icon: BookOpen,
     url: blogUrl,
   },
 ];
@@ -66,9 +62,6 @@ export default function BlogCarousel() {
             className="flex w-[280px] shrink-0 flex-col justify-between rounded-3xl border border-border/50 bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
           >
             <div>
-              <div className="mb-3 flex h-24 items-center justify-center rounded-[2rem] bg-secondary text-secondary-foreground">
-                <post.icon size={34} strokeWidth={1.8} aria-hidden="true" />
-              </div>
               <span className="inline-block rounded-full bg-muted px-2.5 py-0.5 text-[9px] font-display font-medium text-muted-foreground">
                 {post.category}
               </span>
@@ -77,7 +70,7 @@ export default function BlogCarousel() {
               </p>
               <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{post.reference}</p>
             </div>
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/60 pt-3">
+            <div className="mt-2.5 flex items-center justify-between gap-3 border-t border-border/60 pt-2.5">
               <span className="text-[10px] text-muted-foreground">Blog RESMA</span>
               <span className="flex items-center gap-1 text-[10px] font-display font-semibold text-accent">
                 Leer más
