@@ -310,14 +310,14 @@ export default function Dashboard() {
 
       {/* ── Weekly Calendar ─── */}
       <section className="px-4 pt-6 pb-2">
-        <div className="rounded-[1.75rem] border border-border/45 bg-card/75 px-4 py-4 shadow-[0_8px_28px_hsl(var(--foreground)/0.035)]">
+        <div className="px-2 py-2">
           <div className="relative mb-4 flex items-center justify-center">
-            <h2 className="font-display text-[15px] font-semibold text-foreground">
+            <h2 className="font-display text-[15px] font-semibold text-muted-foreground">
               {capitalizeFirst(format(today, "MMMM d", { locale: es }))}
             </h2>
             <button
-              onClick={() => setShowMonthView(true)}
-              className="absolute right-0 flex h-9 w-9 items-center justify-center rounded-full bg-muted/45 text-muted-foreground transition-colors active:bg-muted"
+              onClick={() => navigate("/calendario")}
+              className="absolute right-0 flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-muted/45"
               aria-label="Abrir calendario mensual"
             >
               <CalendarBlank size={18} weight="duotone" />
@@ -485,63 +485,6 @@ export default function Dashboard() {
           <ArrowRight size={16} className="text-muted-foreground" />
         </button>
       </section>
-
-      <AnimatePresence>
-        {showMonthView && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end bg-black/35 px-4 pb-4 backdrop-blur-sm"
-            onClick={() => setShowMonthView(false)}
-          >
-            <motion.div
-              initial={{ y: 32, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 32, opacity: 0 }}
-              transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="w-full rounded-[1.75rem] bg-[#FDFCFB] p-5 shadow-2xl dark:bg-card"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-display text-base font-semibold text-foreground">
-                  {capitalizeFirst(format(today, "MMMM yyyy", { locale: es }))}
-                </h2>
-                <button
-                  onClick={() => setShowMonthView(false)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 text-muted-foreground active:bg-muted"
-                  aria-label="Cerrar calendario mensual"
-                >
-                  <X size={17} />
-                </button>
-              </div>
-
-              <div className="mb-2 grid grid-cols-7 text-center font-display text-[10px] font-semibold text-muted-foreground">
-                {dayInitials.map((day, index) => <span key={`${day}-${index}`}>{day}</span>)}
-              </div>
-              <div className="grid grid-cols-7 gap-1.5">
-                {monthDays.map((day) => {
-                  const isToday = isSameDay(day, today);
-                  const isCurrentMonth = isSameMonth(day, today);
-                  return (
-                    <button
-                      key={localDateStr(day)}
-                      onClick={() => { setShowMonthView(false); openDayDetail(day); }}
-                      className={cn(
-                        "flex aspect-square items-center justify-center rounded-full font-display text-sm font-medium transition-colors active:bg-muted",
-                        isCurrentMonth ? "text-foreground" : "text-muted-foreground/35",
-                        isToday && "bg-accent/20 text-foreground shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.14)]",
-                      )}
-                    >
-                      {day.getDate()}
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ═══════════════════════════════════════════
           DAY DETAIL MODAL
