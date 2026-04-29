@@ -18,6 +18,8 @@ const breathPhases = [
   { label: "Exhalá", scale: 0.92, speech: "Exhalá lento. Dejá pasar los pensamientos como nubes." },
 ];
 
+const roseShadow = "shadow-[0_18px_35px_hsl(var(--resource-mindfulness-accent)/0.18)]";
+
 type View = "intro" | "config" | "session" | "summary";
 
 function Mandala({ phase, running }: { phase: number; running: boolean }) {
@@ -91,7 +93,7 @@ function TogglePill({ active, onClick, icon: Icon, label }: { active: boolean; o
       onClick={onClick}
       className={cn(
         "flex items-center gap-2 rounded-full border px-4 py-3 font-sans text-xs font-semibold shadow-sm transition-all active:scale-95",
-        active ? "border-accent bg-mindful-yellow/40 text-foreground" : "border-border bg-card/80 text-muted-foreground"
+        active ? "border-resource-mindfulness-accent bg-resource-mindfulness-bg text-resource-mindfulness-accent" : "border-resource-mindfulness-accent/15 bg-card/80 text-resource-mindfulness-accent/55"
       )}
     >
       <Icon size={16} weight={active ? "fill" : "regular"} />
@@ -187,17 +189,17 @@ export default function Mindfulness() {
   };
 
   return (
-    <main className="min-h-screen bg-mindful-cream px-4 pb-28 pt-10 font-sans text-foreground safe-area-top">
+    <main className="min-h-screen bg-resource-mindfulness-bg px-4 pb-28 pt-10 font-sans text-foreground safe-area-top">
       <div className="mx-auto flex min-h-[calc(100vh-9.5rem)] w-full max-w-md flex-col">
         <header className="mb-4 flex items-center justify-between">
           <button
             onClick={view === "intro" ? close : () => setView(view === "session" ? "config" : "intro")}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground shadow-sm transition-transform active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-resource-mindfulness-accent/15 bg-card/75 text-resource-mindfulness-accent shadow-sm transition-transform active:scale-95"
             aria-label="Volver"
           >
             <ArrowLeft size={20} />
           </button>
-          <span className="rounded-full bg-card/80 px-4 py-2 font-sans text-xs font-semibold text-muted-foreground shadow-sm">
+          <span className="rounded-full bg-card/75 px-4 py-2 font-sans text-xs font-semibold text-resource-mindfulness-accent shadow-sm">
             Mindfulness
           </span>
         </header>
@@ -220,16 +222,16 @@ export default function Mindfulness() {
                 <img src={resmitaAvatar} alt="Resmita" className="relative h-full w-full object-contain drop-shadow-2xl" />
               </motion.div>
 
-              <div className="rounded-[3rem] border border-border bg-card px-5 py-5 shadow-[0_18px_45px_hsl(var(--border)/0.55)] sm:px-6 sm:py-7">
-                <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Hola, soy Resmita</h1>
-                <p className="font-sans text-xs leading-6 text-muted-foreground sm:text-sm sm:leading-7">
-                  Mindfulness es estar presente, aquí y ahora. Es notar lo que sentís sin juzgarlo, dejándolo pasar como nubes en el cielo. Practicarlo te va a ayudar a bajar la ansiedad, mejorar tu concentración y darle un respiro a tu mente para que puedas sentirte con más calma y claridad durante el día.
+              <div className="px-5 py-5 sm:px-6 sm:py-7">
+                <h1 className="mb-3 font-mindful text-3xl leading-tight text-resource-mindfulness-accent sm:text-4xl">Mindfulness</h1>
+                <p className="font-sans text-xs leading-6 text-resource-mindfulness-accent/75 sm:text-sm sm:leading-7">
+                  El Mindfulness es notar lo que sentís sin juzgarlo, dejándolo pasar como nubes en el cielo. Practicarlo te va a ayudar a bajar la ansiedad, mejorar tu concentración y darle un respiro a tu mente para que puedas sentirte con más calma y claridad durante el día.
                 </p>
               </div>
 
               <button
                 onClick={() => setView("config")}
-                className="w-full rounded-[3rem] bg-primary px-8 py-4 font-sans text-base font-bold text-primary-foreground shadow-[0_18px_35px_hsl(var(--primary)/0.22)] transition-transform active:scale-95 sm:py-5"
+                className={cn("w-full rounded-[3rem] bg-resource-mindfulness-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", roseShadow)}
               >
                 ¿Empezamos?
               </button>
