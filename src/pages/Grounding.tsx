@@ -20,7 +20,7 @@ const supportMessages = [
   "si te distraes no te juzgues, vuelve de a poco a conectar con el presente",
   "si te distraes no te juzgues, vuelve de a poco a conectar con el presente",
 ];
-const stepBackgrounds = ["bg-resource-grounding-bg", "bg-resource-grounding-bg", "bg-emerald-50", "bg-green-50", "bg-resource-grounding-bg"];
+const stepBackgrounds = ["bg-resource-grounding-bg", "bg-resource-grounding-bg", "bg-resource-grounding-bg", "bg-resource-grounding-bg", "bg-resource-grounding-bg"];
 
 type View = "intro" | "exercise" | "done";
 
