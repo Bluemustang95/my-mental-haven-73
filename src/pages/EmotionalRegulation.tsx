@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, ArrowLeft, Brain, CheckCircle2, Dumbbell, Eye, Footprints, Hand, Shield, Snowflake, Waves, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -59,9 +59,18 @@ const tipSteps = [
 
 export default function EmotionalRegulation() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [view, setView] = useState<View>("intro");
   const [stopIndex, setStopIndex] = useState(0);
-  const [showPrecaution, setShowPrecaution] = useState(false);
+
+  useEffect(() => {
+    const tool = searchParams.get("tool");
+    if (tool === "stop") {
+      setStopIndex(0);
+      setView("stop");
+    }
+    if (tool === "tip") setView("tipPrecaution");
+  }, [searchParams]);
 
   const close = () => navigate("/herramientas");
   const goBack = () => {
@@ -103,7 +112,7 @@ export default function EmotionalRegulation() {
               </motion.div>
 
               <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-card/80 shadow-sm shadow-resource-regulation-accent/10">
-                <Zap size={38} strokeWidth={2.2} />
+                <Waves size={38} strokeWidth={2.2} />
               </div>
 
               <div className="px-5 py-5 sm:px-6 sm:py-7">
@@ -114,12 +123,12 @@ export default function EmotionalRegulation() {
               </div>
 
               <div className="w-full space-y-3">
-                <button onClick={() => { setStopIndex(0); setView("stop"); }} className={cn("flex w-full items-center gap-4 rounded-[3rem] bg-resource-regulation-accent px-6 py-5 text-left font-sans text-primary-foreground transition-transform active:scale-95", coralShadow)}>
+                <button onClick={() => { setStopIndex(0); setView("stop"); }} className={cn("flex w-full items-center gap-4 rounded-[3rem] bg-resource-regulation-accent px-6 py-5 text-left font-sans text-primary-foreground transition-transform active:scale-95", skyShadow)}>
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-card/20"><Shield size={24} /></span>
                   <span><span className="block text-base font-bold">Habilidad STOP</span><span className="text-xs font-semibold opacity-85">Para frenar impulsos</span></span>
                 </button>
-                <button onClick={() => setView("tip")} className="flex w-full items-center gap-4 rounded-[3rem] border border-resource-regulation-accent/15 bg-card/85 px-6 py-5 text-left font-sans text-resource-regulation-accent shadow-sm transition-transform active:scale-95">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-resource-regulation-bg"><Zap size={24} /></span>
+                <button onClick={() => setView("tipPrecaution")} className="flex w-full items-center gap-4 rounded-[3rem] border border-resource-regulation-accent/15 bg-card/85 px-6 py-5 text-left font-sans text-resource-regulation-accent shadow-sm transition-transform active:scale-95">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-resource-regulation-bg"><Waves size={24} /></span>
                   <span><span className="block text-base font-bold">Habilidad TIP</span><span className="text-xs font-semibold opacity-70">Para cambiar la química corporal</span></span>
                 </button>
               </div>
