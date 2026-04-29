@@ -323,25 +323,21 @@ export default function Dashboard() {
 
       {/* ── Weekly Calendar ─── */}
       <section className="px-4 pt-6 pb-2">
-        <div className="flex items-center justify-between mb-5 px-2">
-          <button
-            onClick={() => setWeekStart(w => subWeeks(w, 1))}
-            className="text-muted-foreground active:text-foreground p-1 text-lg"
-          >
-            ‹
-          </button>
-          <span className="font-display text-xs font-medium text-muted-foreground tracking-wide uppercase">
-            {format(weekStart, "d MMM", { locale: es })} — {format(addDays(weekStart, 6), "d MMM yyyy", { locale: es })}
-          </span>
-          <button
-            onClick={() => setWeekStart(w => addWeeks(w, 1))}
-            className="text-muted-foreground active:text-foreground p-1 text-lg"
-          >
-            ›
-          </button>
-        </div>
+        <div className="rounded-[1.75rem] border border-border/45 bg-card/75 px-4 py-4 shadow-[0_8px_28px_hsl(var(--foreground)/0.035)]">
+          <div className="relative mb-4 flex items-center justify-center">
+            <h2 className="font-display text-[15px] font-semibold text-foreground">
+              {capitalizeFirst(format(today, "MMMM d", { locale: es }))}
+            </h2>
+            <button
+              onClick={() => setShowMonthView(true)}
+              className="absolute right-0 flex h-9 w-9 items-center justify-center rounded-full bg-muted/45 text-muted-foreground transition-colors active:bg-muted"
+              aria-label="Abrir calendario mensual"
+            >
+              <CalendarBlank size={18} weight="duotone" />
+            </button>
+          </div>
 
-        <div className="flex justify-between px-1">
+          <div className="grid grid-cols-7 gap-1">
           {weekDays.map((day, i) => {
             const ds = localDateStr(day);
             const checkin = checkinMap[ds];
@@ -353,21 +349,21 @@ export default function Dashboard() {
               <button
                 key={i}
                 onClick={() => openDayDetail(day)}
-                className="flex flex-col items-center gap-1 py-1 px-1 rounded-2xl transition-all"
+                className="flex min-h-[72px] flex-col items-center justify-start gap-1 rounded-2xl px-1 py-1.5 transition-all active:bg-muted/35"
               >
-                <span className="text-[10px] font-display text-muted-foreground tracking-wide">
-                  {dayInitials[i]}
+                <span className={cn(
+                  "h-4 font-display text-[9px] font-semibold leading-4 tracking-wide text-muted-foreground",
+                  isToday && "text-foreground"
+                )}>
+                  {isToday ? "HOY" : dayInitials[i]}
                 </span>
                 <motion.div
-                  animate={isSelected ? { scale: 1.15 } : { scale: 1 }}
+                  animate={isSelected ? { scale: 1.08 } : { scale: 1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full font-display text-sm transition-all",
-                    isSelected
-                      ? "bg-accent text-accent-foreground shadow-md font-semibold"
-                      : isToday
-                        ? "bg-accent/20 text-foreground font-medium"
-                        : "text-muted-foreground",
+                    "flex h-10 w-10 items-center justify-center rounded-full font-display text-sm font-medium text-foreground transition-all",
+                    isToday && "bg-accent/20 shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.14)]",
+                    isSelected && !isToday && "bg-muted/60 shadow-[inset_0_0_0_1px_hsl(var(--border))]",
                   )}
                 >
                   {day.getDate()}
@@ -380,6 +376,7 @@ export default function Dashboard() {
               </button>
             );
           })}
+          </div>
         </div>
       </section>
 
