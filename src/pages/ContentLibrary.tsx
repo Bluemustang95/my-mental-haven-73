@@ -156,8 +156,8 @@ export default function ContentLibrary() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-display text-sm font-medium truncate">{item.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{item.description}</p>
-                    <p className="mt-1 font-display text-[10px] text-muted-foreground">{item.duration}</p>
+                    <p className="text-xs text-resource-psycho-accent/60 truncate">{item.description}</p>
+                    <p className="mt-1 font-display text-[10px] text-resource-psycho-accent/60">{item.duration}</p>
                   </div>
                 </a>
                 <button
@@ -167,14 +167,14 @@ export default function ContentLibrary() {
                   <Heart
                     size={18}
                     weight={isFav ? "fill" : "regular"}
-                    className={isFav ? "text-destructive" : "text-muted-foreground"}
+                    className={isFav ? "text-resource-psycho-accent" : "text-resource-psycho-accent/50"}
                   />
                 </button>
               </div>
             );
           })}
           {filtered.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p className="py-8 text-center text-sm text-resource-psycho-accent/65">
               {filter === "favorites" ? "No tenés contenido guardado aún." : "No hay contenido en esta categoría."}
             </p>
           )}
