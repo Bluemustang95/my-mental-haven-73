@@ -13,6 +13,7 @@ import {
   Moon,
   Brain,
   Wine,
+  Zap,
 } from "lucide-react";
 import {
   Dialog,
@@ -35,6 +36,7 @@ const resourceThemes = {
   sueno: "border-resource-sleep-accent/15 bg-resource-sleep-bg text-resource-sleep-accent",
   rumiacion: "border-resource-rumination-accent/15 bg-resource-rumination-bg text-resource-rumination-accent",
   recuperacion: "border-resource-recovery-accent/15 bg-resource-recovery-bg text-resource-recovery-accent",
+  regulacion: "border-resource-regulation-accent/15 bg-resource-regulation-bg text-resource-regulation-accent",
 };
 
 const FALLBACK_FEELINGS: FeelingOption[] = [
@@ -199,6 +201,18 @@ export default function Tools() {
             <Wine size={20} />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold">Recuperación</p>
+        </motion.button>
+
+        {/* Regulación Emocional */}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate("/herramientas/regulacion-emocional")}
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.regulacion}`}
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <Zap size={20} />
+          </div>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Regulación Emocional</p>
         </motion.button>
       </div>
 
