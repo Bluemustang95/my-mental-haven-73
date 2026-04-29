@@ -15,6 +15,7 @@ import {
   Wine,
   Waves,
   Apple,
+  Compass,
 } from "lucide-react";
 import {
   Dialog,
@@ -39,6 +40,7 @@ const resourceThemes = {
   recuperacion: "border-resource-recovery-accent/15 bg-resource-recovery-bg text-resource-recovery-accent",
   regulacion: "border-resource-regulation-accent/15 bg-resource-regulation-bg text-resource-regulation-accent",
   alimentacion: "border-resource-eating-accent/15 bg-resource-eating-bg text-resource-eating-accent",
+  valores: "border-resource-values-accent/15 bg-resource-values-bg text-resource-values-accent",
 };
 
 const FALLBACK_FEELINGS: FeelingOption[] = [
@@ -227,6 +229,18 @@ export default function Tools() {
             <Apple size={20} />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold">Alimentación Consciente</p>
+        </motion.button>
+
+        {/* Mis Valores */}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate("/herramientas/mis-valores")}
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.valores}`}
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <Compass size={20} />
+          </div>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Mis Valores</p>
         </motion.button>
       </div>
 
