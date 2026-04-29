@@ -127,7 +127,7 @@ export default function SelfCare() {
                   {task.completed && <Check size={14} weight="bold" />}
                 </button>
                 <span className={cn("flex-1 text-sm", task.completed && "line-through text-resource-selfcare-accent/55")}>{task.task_text}</span>
-                <button onClick={() => deleteTask(task.id)} className="text-muted-foreground/50 active:text-destructive p-1">
+                <button onClick={() => deleteTask(task.id)} className="p-1 text-resource-selfcare-accent/45 active:text-resource-selfcare-accent">
                   <Trash size={14} />
                 </button>
               </motion.div>
