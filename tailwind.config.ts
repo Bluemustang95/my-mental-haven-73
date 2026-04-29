@@ -92,6 +92,7 @@ export default {
           recovery: { bg: "hsl(var(--resource-recovery-bg))", accent: "hsl(var(--resource-recovery-accent))", relapse: "hsl(var(--resource-recovery-relapse))" },
           regulation: { bg: "hsl(var(--resource-regulation-bg))", accent: "hsl(var(--resource-regulation-accent))" },
           eating: { bg: "hsl(var(--resource-eating-bg))", accent: "hsl(var(--resource-eating-accent))" },
+          values: { bg: "hsl(var(--resource-values-bg))", accent: "hsl(var(--resource-values-accent))" },
           safety: { bg: "hsl(var(--resource-safety-bg))", accent: "hsl(var(--resource-safety-accent))" },
         },
       },
