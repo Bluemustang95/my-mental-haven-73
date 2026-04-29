@@ -74,7 +74,7 @@ export default function Sleep() {
           </div>
           <h1 className="font-display text-4xl font-semibold leading-tight">Sueño</h1>
           <p className="mt-5 max-w-xs text-base font-semibold leading-8 text-resource-sleep-accent/70">
-            La higiene del sueño te ayuda a enraizar el descanso en hábitos simples, preparando el cuerpo y la mente para dormir mejor.
+            La higiene del sueño te ayuda a preparar el descanso con hábitos simples, acompañando al cuerpo y la mente para dormir mejor.
           </p>
         </motion.div>
         <button onClick={() => setView("content")} className="flex w-full items-center justify-center gap-3 rounded-[2.5rem] bg-resource-sleep-accent py-4 font-sans text-base font-bold text-primary-foreground shadow-lg shadow-resource-sleep-accent/20 transition-transform active:scale-[0.98]">
