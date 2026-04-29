@@ -55,6 +55,54 @@ export default function Rumination() {
     }, 2600);
   };
 
+  const downloadThoughtRecord = () => {
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const date = localDateStr();
+    const rows = [
+      ["1. Situación", String(recordData.situation || "—")],
+      ["2. Emoción (0-100)", `${String(recordData.emotion || "—")}\nIntensidad: ${recordData.intensity ?? 0}/100`],
+      ["3. Pensamiento Automático (0-100)", `${String(recordData.thought || "—")}\nCreencia: ${recordData.belief ?? 0}/100`],
+      ["4. Respuesta Alternativa", String(recordData.alternative || "—")],
+      ["5. Resultado/Reevaluación", `${String(recordData.result || "—")}\nCreencia final: ${recordData.finalBelief ?? 0}/100`],
+    ];
+
+    doc.setFillColor(254, 252, 232);
+    doc.rect(0, 0, 210, 297, "F");
+    doc.setTextColor(91, 33, 182);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Registro de Pensamientos Automáticos - RESMA", 15, 20);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${date}`, 15, 28);
+
+    let y = 40;
+    rows.forEach(([label, value]) => {
+      const lines = doc.splitTextToSize(value, 120);
+      const height = Math.max(24, lines.length * 5 + 12);
+      if (y + height > 282) {
+        doc.addPage();
+        doc.setFillColor(254, 252, 232);
+        doc.rect(0, 0, 210, 297, "F");
+        y = 18;
+      }
+      doc.setDrawColor(217, 119, 6);
+      doc.setFillColor(255, 251, 235);
+      doc.roundedRect(15, y, 180, height, 3, 3, "FD");
+      doc.setTextColor(217, 119, 6);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text(label, 21, y + 8);
+      doc.setTextColor(38, 38, 38);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(lines, 67, y + 8);
+      y += height + 6;
+    });
+
+    doc.save(`registro-pensamientos-resma-${date}.pdf`);
+  };
+
   if (view === "intro") {
     return (
       <div className="flex min-h-screen flex-col bg-resource-rumination-bg px-5 pt-12 pb-6 text-resource-rumination-accent safe-area-top">
