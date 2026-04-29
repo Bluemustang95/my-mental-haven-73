@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight,
   Stethoscope, Sparkle, X, Brain, Notebook, Barbell, Flower, Heart, Flag,
-  Check, Target,
+  Check, Target, CalendarBlank,
 } from "@phosphor-icons/react";
 import { cn, localDateStr, localWeekStart } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionPrep } from "@/components/SessionPrep";
 import BlogCarousel from "@/components/BlogCarousel";
-import { format, startOfWeek, addDays, subWeeks, addWeeks, isSameDay } from "date-fns";
+import { format, startOfWeek, addDays, isSameDay, startOfMonth, endOfMonth, isSameMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 
@@ -65,6 +65,10 @@ function getGreeting(): { text: string; icon: typeof Sun } {
 
 const dayInitials = ["L", "M", "X", "J", "V", "S", "D"];
 
+function capitalizeFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 type Checkin = { checkin_date: string; mood_score: number | null; note: string | null };
 
 interface DayActivity {
@@ -110,8 +114,9 @@ export default function Dashboard() {
 
   /* ── State ──────────────────────────── */
   const [checkins, setCheckins] = useState<Checkin[]>([]);
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(today, { weekStartsOn: 1 }));
+  const weekStart = useMemo(() => startOfWeek(today, { weekStartsOn: 1 }), [todayStr]);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [showMonthView, setShowMonthView] = useState(false);
   const [consecutiveLow, setConsecutiveLow] = useState(false);
   const [affirmation, setAffirmation] = useState("");
 
@@ -186,6 +191,18 @@ export default function Dashboard() {
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [weekStart]);
+
+  const monthDays = useMemo(() => {
+    const monthStart = startOfMonth(today);
+    const monthEnd = endOfMonth(today);
+    const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const gridEnd = addDays(startOfWeek(monthEnd, { weekStartsOn: 1 }), 6);
+    const days: Date[] = [];
+    for (let day = gridStart; day <= gridEnd; day = addDays(day, 1)) {
+      days.push(day);
+    }
+    return days;
+  }, [todayStr]);
 
   /* ── Open day detail ───────────────── */
   const openDayDetail = async (day: Date) => {
@@ -306,25 +323,21 @@ export default function Dashboard() {
 
       {/* ── Weekly Calendar ─── */}
       <section className="px-4 pt-6 pb-2">
-        <div className="flex items-center justify-between mb-5 px-2">
-          <button
-            onClick={() => setWeekStart(w => subWeeks(w, 1))}
-            className="text-muted-foreground active:text-foreground p-1 text-lg"
-          >
-            ‹
-          </button>
-          <span className="font-display text-xs font-medium text-muted-foreground tracking-wide uppercase">
-            {format(weekStart, "d MMM", { locale: es })} — {format(addDays(weekStart, 6), "d MMM yyyy", { locale: es })}
-          </span>
-          <button
-            onClick={() => setWeekStart(w => addWeeks(w, 1))}
-            className="text-muted-foreground active:text-foreground p-1 text-lg"
-          >
-            ›
-          </button>
-        </div>
+        <div className="rounded-[1.75rem] border border-border/45 bg-card/75 px-4 py-4 shadow-[0_8px_28px_hsl(var(--foreground)/0.035)]">
+          <div className="relative mb-4 flex items-center justify-center">
+            <h2 className="font-display text-[15px] font-semibold text-foreground">
+              {capitalizeFirst(format(today, "MMMM d", { locale: es }))}
+            </h2>
+            <button
+              onClick={() => setShowMonthView(true)}
+              className="absolute right-0 flex h-9 w-9 items-center justify-center rounded-full bg-muted/45 text-muted-foreground transition-colors active:bg-muted"
+              aria-label="Abrir calendario mensual"
+            >
+              <CalendarBlank size={18} weight="duotone" />
+            </button>
+          </div>
 
-        <div className="flex justify-between px-1">
+          <div className="grid grid-cols-7 gap-1">
           {weekDays.map((day, i) => {
             const ds = localDateStr(day);
             const checkin = checkinMap[ds];
@@ -336,21 +349,21 @@ export default function Dashboard() {
               <button
                 key={i}
                 onClick={() => openDayDetail(day)}
-                className="flex flex-col items-center gap-1 py-1 px-1 rounded-2xl transition-all"
+                className="flex min-h-[72px] flex-col items-center justify-start gap-1 rounded-2xl px-1 py-1.5 transition-all active:bg-muted/35"
               >
-                <span className="text-[10px] font-display text-muted-foreground tracking-wide">
-                  {dayInitials[i]}
+                <span className={cn(
+                  "h-4 font-display text-[9px] font-semibold leading-4 tracking-wide text-muted-foreground",
+                  isToday && "text-foreground"
+                )}>
+                  {isToday ? "HOY" : dayInitials[i]}
                 </span>
                 <motion.div
-                  animate={isSelected ? { scale: 1.15 } : { scale: 1 }}
+                  animate={isSelected ? { scale: 1.08 } : { scale: 1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full font-display text-sm transition-all",
-                    isSelected
-                      ? "bg-accent text-accent-foreground shadow-md font-semibold"
-                      : isToday
-                        ? "bg-accent/20 text-foreground font-medium"
-                        : "text-muted-foreground",
+                    "flex h-10 w-10 items-center justify-center rounded-full font-display text-sm font-medium text-foreground transition-all",
+                    isToday && "bg-accent/20 shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.14)]",
+                    isSelected && !isToday && "bg-muted/60 shadow-[inset_0_0_0_1px_hsl(var(--border))]",
                   )}
                 >
                   {day.getDate()}
@@ -363,6 +376,7 @@ export default function Dashboard() {
               </button>
             );
           })}
+          </div>
         </div>
       </section>
 
@@ -484,6 +498,63 @@ export default function Dashboard() {
           <ArrowRight size={16} className="text-muted-foreground" />
         </button>
       </section>
+
+      <AnimatePresence>
+        {showMonthView && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end bg-black/35 px-4 pb-4 backdrop-blur-sm"
+            onClick={() => setShowMonthView(false)}
+          >
+            <motion.div
+              initial={{ y: 32, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 32, opacity: 0 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="w-full rounded-[1.75rem] bg-[#FDFCFB] p-5 shadow-2xl dark:bg-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-base font-semibold text-foreground">
+                  {capitalizeFirst(format(today, "MMMM yyyy", { locale: es }))}
+                </h2>
+                <button
+                  onClick={() => setShowMonthView(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 text-muted-foreground active:bg-muted"
+                  aria-label="Cerrar calendario mensual"
+                >
+                  <X size={17} />
+                </button>
+              </div>
+
+              <div className="mb-2 grid grid-cols-7 text-center font-display text-[10px] font-semibold text-muted-foreground">
+                {dayInitials.map((day, index) => <span key={`${day}-${index}`}>{day}</span>)}
+              </div>
+              <div className="grid grid-cols-7 gap-1.5">
+                {monthDays.map((day) => {
+                  const isToday = isSameDay(day, today);
+                  const isCurrentMonth = isSameMonth(day, today);
+                  return (
+                    <button
+                      key={localDateStr(day)}
+                      onClick={() => { setShowMonthView(false); openDayDetail(day); }}
+                      className={cn(
+                        "flex aspect-square items-center justify-center rounded-full font-display text-sm font-medium transition-colors active:bg-muted",
+                        isCurrentMonth ? "text-foreground" : "text-muted-foreground/35",
+                        isToday && "bg-accent/20 text-foreground shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.14)]",
+                      )}
+                    >
+                      {day.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════════════════════════════════════════
           DAY DETAIL MODAL
