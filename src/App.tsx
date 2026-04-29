@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
+import CalendarMonth from "@/pages/CalendarMonth";
+import CalendarDay from "@/pages/CalendarDay";
 import Breathing from "@/pages/Breathing";
 import Resmita from "@/pages/Resmita";
 import Profile from "@/pages/Profile";
@@ -94,6 +96,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+            <Route path="/calendario" element={<ProtectedRoute><CalendarMonth /></ProtectedRoute>} />
+            <Route path="/calendario/:date" element={<ProtectedRoute><CalendarDay /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />
 
