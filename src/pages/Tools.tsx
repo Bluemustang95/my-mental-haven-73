@@ -14,6 +14,7 @@ import {
   Brain,
   Wine,
   Waves,
+  Apple,
 } from "lucide-react";
 import {
   Dialog,
@@ -37,6 +38,7 @@ const resourceThemes = {
   rumiacion: "border-resource-rumination-accent/15 bg-resource-rumination-bg text-resource-rumination-accent",
   recuperacion: "border-resource-recovery-accent/15 bg-resource-recovery-bg text-resource-recovery-accent",
   regulacion: "border-resource-regulation-accent/15 bg-resource-regulation-bg text-resource-regulation-accent",
+  alimentacion: "border-resource-eating-accent/15 bg-resource-eating-bg text-resource-eating-accent",
 };
 
 const FALLBACK_FEELINGS: FeelingOption[] = [
@@ -213,6 +215,18 @@ export default function Tools() {
             <Waves size={20} />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold">Regulación Emocional</p>
+        </motion.button>
+
+        {/* Alimentación Consciente */}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate("/herramientas/alimentacion-consciente")}
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.alimentacion}`}
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <Apple size={20} />
+          </div>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Alimentación Consciente</p>
         </motion.button>
       </div>
 
