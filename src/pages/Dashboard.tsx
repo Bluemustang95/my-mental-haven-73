@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionPrep } from "@/components/SessionPrep";
 import BlogCarousel from "@/components/BlogCarousel";
-import { format, startOfWeek, addDays, isSameDay, startOfMonth, endOfMonth, isSameMonth } from "date-fns";
+import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 
@@ -116,7 +116,6 @@ export default function Dashboard() {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const weekStart = useMemo(() => startOfWeek(today, { weekStartsOn: 1 }), [todayStr]);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const [showMonthView, setShowMonthView] = useState(false);
   const [consecutiveLow, setConsecutiveLow] = useState(false);
   const [affirmation, setAffirmation] = useState("");
 
@@ -191,18 +190,6 @@ export default function Dashboard() {
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [weekStart]);
-
-  const monthDays = useMemo(() => {
-    const monthStart = startOfMonth(today);
-    const monthEnd = endOfMonth(today);
-    const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const gridEnd = addDays(startOfWeek(monthEnd, { weekStartsOn: 1 }), 6);
-    const days: Date[] = [];
-    for (let day = gridStart; day <= gridEnd; day = addDays(day, 1)) {
-      days.push(day);
-    }
-    return days;
-  }, [todayStr]);
 
   /* ── Open day detail ───────────────── */
   const openDayDetail = async (day: Date) => {
