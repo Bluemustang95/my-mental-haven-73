@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, ArrowLeft, Brain, CheckCircle2, Dumbbell, Eye, Footprints, Hand, Shield, Thermometer, Wind, Zap } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Brain, CheckCircle2, Dumbbell, Eye, Footprints, Hand, Shield, Snowflake, Waves, Wind } from "lucide-react";
 import { cn } from "@/lib/utils";
 import resmitaAvatar from "@/assets/resmita-mindfulness.png";
 
-type View = "intro" | "stop" | "tip" | "finish";
+type View = "intro" | "stop" | "tipPrecaution" | "tip" | "finish";
 
-const coralShadow = "shadow-[0_18px_35px_hsl(var(--resource-regulation-accent)/0.18)]";
+const skyShadow = "shadow-[0_18px_35px_hsl(var(--resource-regulation-accent)/0.18)]";
 
 const stopSteps = [
   {
@@ -40,8 +40,8 @@ const tipSteps = [
   {
     letter: "T",
     title: "Temperatura",
-    text: "Sumergí la cara en agua fría o usá una compresa fría sobre ojos y mejillas por 30 segundos aguantando la respiración.",
-    icon: Thermometer,
+    text: "Sumergí la cara en agua fría o usá una compresa fría por 30 segundos.",
+    icon: Snowflake,
   },
   {
     letter: "I",
@@ -52,7 +52,7 @@ const tipSteps = [
   {
     letter: "P",
     title: "Respiración y Relajación",
-    text: "Respirá profundo desde el abdomen (5-6 veces por minuto). Exhalá más lento de lo que inhalás. Al exhalar, tensá y soltá tus músculos diciendo mentalmente: Relájate.",
+    text: "Inhalá profundo durante 5 segundos y exhalá lento durante 7 segundos. Sumá relajación muscular: tensá y soltá de a poco.",
     icon: Wind,
   },
 ];
