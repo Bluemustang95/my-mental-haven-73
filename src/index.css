@@ -64,6 +64,8 @@
     --resource-recovery-relapse: 24 95% 53%;
     --resource-regulation-bg: 204 100% 97%;
     --resource-regulation-accent: 199 89% 48%;
+    --resource-eating-bg: 18 100% 97%;
+    --resource-eating-accent: 151 46% 32%;
     --resource-safety-bg: 355 100% 97%;
     --resource-safety-accent: 0 72% 51%;
 
