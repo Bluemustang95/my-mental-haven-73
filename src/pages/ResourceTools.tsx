@@ -2,11 +2,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music } from "lucide-react";
+import { ArrowLeft, Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon } from "lucide-react";
 
 type ResourceTool = { id: string; name: string; description: string | null; slug: string; tool_type: string; config: { url?: string } | null };
 
-const iconMap: Record<string, typeof Sparkles> = { Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music };
+const iconMap: Record<string, typeof Sparkles> = { Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon };
 
 const colorMap: Record<string, string> = {
   accent: "bg-accent/15 border-accent/30",
@@ -25,6 +25,7 @@ const slugThemeMap: Record<string, string> = {
   psicoeducacion: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent",
   autocuidado: "border-resource-selfcare-accent/15 bg-resource-selfcare-bg text-resource-selfcare-accent",
   respiracion: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent",
+  sueno: "border-resource-sleep-accent/15 bg-resource-sleep-bg text-resource-sleep-accent",
 };
 
 // Map category slug → existing runner route (legacy compat)
@@ -34,6 +35,7 @@ const runnerRoute: Record<string, string> = {
   grounding: "/herramientas/grounding",
   autocuidado: "/herramientas/autocuidado",
   psicoeducacion: "/herramientas/contenido",
+  sueno: "/herramientas/sueno",
 };
 
 export default function ResourceTools() {

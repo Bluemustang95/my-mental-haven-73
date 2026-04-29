@@ -10,6 +10,7 @@ import {
   Leaf,
   Hand,
   Wind,
+  Moon,
 } from "lucide-react";
 import {
   Dialog,
@@ -29,6 +30,7 @@ const resourceThemes = {
   autocuidado: "border-resource-selfcare-accent/15 bg-resource-selfcare-bg text-resource-selfcare-accent",
   grounding: "border-resource-grounding-accent/15 bg-resource-grounding-bg text-resource-grounding-accent",
   respiracion: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent",
+  sueno: "border-resource-sleep-accent/15 bg-resource-sleep-bg text-resource-sleep-accent",
 };
 
 const FALLBACK_FEELINGS: FeelingOption[] = [
@@ -157,6 +159,18 @@ export default function Tools() {
             <Wind size={20} />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold">Respiración</p>
+        </motion.button>
+
+        {/* Sueño */}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate("/herramientas/sueno")}
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.sueno}`}
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <Moon size={20} />
+          </div>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Sueño</p>
         </motion.button>
       </div>
 

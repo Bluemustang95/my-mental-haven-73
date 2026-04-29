@@ -42,6 +42,7 @@ import TreatmentRequest from "@/pages/TreatmentRequest";
 import LinkProfessional from "@/pages/LinkProfessional";
 import Favorites from "@/pages/Favorites";
 import SelfCare from "@/pages/SelfCare";
+import Sleep from "@/pages/Sleep";
 import MedicationTracker from "@/pages/MedicationTracker";
 import MedLibrary from "@/pages/MedLibrary";
 import MedCategoryList from "@/pages/MedCategoryList";
@@ -125,6 +126,7 @@ const App = () => (
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/favoritos" element={<Favorites />} />
               <Route path="/herramientas/autocuidado" element={<SelfCare />} />
+              <Route path="/herramientas/sueno" element={<Sleep />} />
               <Route path="/recursos/:slug" element={<ResourceTools />} />
 
               {/* Mi Proceso (tab 5) */}
