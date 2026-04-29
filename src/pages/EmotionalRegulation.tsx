@@ -179,6 +179,9 @@ export default function EmotionalRegulation() {
           {view === "tip" && (
             <motion.section key="tip" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }} className="flex flex-1 flex-col justify-center">
               <div className="mb-5 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-card/85 shadow-sm shadow-resource-regulation-accent/10">
+                  <Waves size={32} strokeWidth={2.2} />
+                </div>
                 <h1 className="font-mindful text-3xl leading-tight text-resource-regulation-accent sm:text-4xl">Habilidad TIP</h1>
                 <p className="mt-2 font-sans text-xs font-normal leading-6 text-resource-regulation-accent/65 sm:text-sm sm:leading-7">Técnicas de choque biológico para bajar la intensidad emocional.</p>
               </div>
