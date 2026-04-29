@@ -9,7 +9,7 @@ const sections = [
   {
     title: "Antes de dormir",
     icon: Sparkle,
-    message: "No hay apuro, tomate tu tiempo",
+    decoration: ["✨", "🌙", "😴"],
     items: [
       "Hacé ejercicio regularmente, pero evitalo justo antes de acostarte.",
       "Evitá el alcohol, la cafeína y la nicotina por la tarde y noche.",
@@ -19,7 +19,7 @@ const sections = [
   {
     title: "En la habitación",
     icon: Moon,
-    message: "No hay apuro, tomate tu tiempo",
+    decoration: ["🌙", "😴", "✨", "🌙"],
     items: [
       "Mantené el cuarto fresco, oscuro y en silencio.",
       "Usá la cama solo para dormir; evitá trabajar, leer o ver TV ahí.",
@@ -30,7 +30,7 @@ const sections = [
   {
     title: "Cuando cuesta dormir",
     icon: PencilSimple,
-    message: "si te distraes no te juzgues, vuelve de a poco a conectar con el presente",
+    decoration: ["😴", "✨"],
     items: [
       "Si estás abrumado, escribí tus preocupaciones para dejarlas de lado.",
       "Si no podés dormir, levantate y hacé algo relajante fuera del cuarto hasta que vuelva el sueño.",
@@ -74,7 +74,7 @@ export default function Sleep() {
           </div>
           <h1 className="font-display text-4xl font-semibold leading-tight">Sueño</h1>
           <p className="mt-5 max-w-xs text-base font-semibold leading-8 text-resource-sleep-accent/70">
-            Es una técnica para adoptar hábitos que promueven un descanso saludable, mejorando la calidad y duración de tu sueño.
+            La higiene del sueño te ayuda a enraizar el descanso en hábitos simples, preparando el cuerpo y la mente para dormir mejor.
           </p>
         </motion.div>
         <button onClick={() => setView("content")} className="flex w-full items-center justify-center gap-3 rounded-[2.5rem] bg-resource-sleep-accent py-4 font-sans text-base font-bold text-primary-foreground shadow-lg shadow-resource-sleep-accent/20 transition-transform active:scale-[0.98]">
@@ -88,10 +88,13 @@ export default function Sleep() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-resource-sleep-bg px-5 py-8 text-center text-resource-sleep-accent safe-area-top">
         <motion.div initial={{ scale: 0.86, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-sm">
-          <div className="mx-auto mb-7 flex h-24 w-24 items-center justify-center rounded-full bg-card/80 shadow-xl shadow-resource-sleep-accent/10">
-            <Check size={48} weight="bold" />
+          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }} className="mx-auto mb-7 flex h-24 w-24 items-center justify-center">
+            <img src={resmitaAvatar} alt="Resmita" className="h-20 w-20 object-contain drop-shadow-md" />
+          </motion.div>
+          <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/80 shadow-xl shadow-resource-sleep-accent/10">
+            <Check size={40} weight="bold" />
           </div>
-          <h1 className="font-display text-3xl font-semibold">Descanso posible.</h1>
+          <h1 className="font-display text-3xl font-semibold">¡Dulces sueños!</h1>
           <p className="mt-4 text-base leading-7 text-resource-sleep-accent/75">Si los problemas de sueño son crónicos, la Terapia Cognitivo-Conductual es el enfoque más efectivo para abordarlos de manera profunda.</p>
           <button onClick={() => navigate("/herramientas")} className="mt-9 w-full rounded-[2.5rem] bg-resource-sleep-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-sleep-accent/20 active:scale-[0.98]">
             Cerrar
@@ -126,19 +129,23 @@ export default function Sleep() {
           </div>
           <h1 className="font-display text-3xl font-semibold leading-tight">{current.title}</h1>
           <div className="mt-6 space-y-3">
-            {current.items.map((item) => (
-              <div key={item} className="rounded-[2rem] border border-resource-sleep-accent/15 bg-card/70 p-4 shadow-sm backdrop-blur">
-                <p className="text-sm font-semibold leading-6 text-resource-sleep-accent/80">{item}</p>
+            {current.items.map((item, index) => (
+              <div key={item}>
+                {index > 0 && (
+                  <div className="my-3 flex items-center justify-center gap-3 text-lg text-resource-sleep-accent/45" aria-hidden="true">
+                    <span className="h-px w-12 bg-resource-sleep-accent/10" />
+                    <span>{current.decoration[index % current.decoration.length]}</span>
+                    <span className="h-px w-12 bg-resource-sleep-accent/10" />
+                  </div>
+                )}
+                <div className="rounded-[2rem] border border-resource-sleep-accent/15 bg-card/70 p-4 shadow-sm backdrop-blur">
+                  <p className="text-sm font-semibold leading-6 text-resource-sleep-accent/80">{item}</p>
+                </div>
               </div>
             ))}
           </div>
         </motion.div>
       </AnimatePresence>
-
-      <div className="mt-6 flex items-center gap-3 rounded-[2rem] bg-card/60 p-3 shadow-sm backdrop-blur">
-        <img src={resmitaAvatar} alt="Resmita" className="h-10 w-10 shrink-0 object-contain" />
-        <p className="font-display text-xs font-semibold leading-5 sm:text-sm">{current.message}</p>
-      </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         <button onClick={goBack} className="rounded-[2.5rem] border border-resource-sleep-accent/20 bg-card/70 py-3.5 font-display text-sm font-semibold shadow-sm active:scale-[0.98]">
