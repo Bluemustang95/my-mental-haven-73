@@ -48,6 +48,7 @@ import Sleep from "@/pages/Sleep";
 import Rumination from "@/pages/Rumination";
 import Recovery from "@/pages/Recovery";
 import EmotionalRegulation from "@/pages/EmotionalRegulation";
+import MindfulEating from "@/pages/MindfulEating";
 import MedicationTracker from "@/pages/MedicationTracker";
 import MedLibrary from "@/pages/MedLibrary";
 import MedCategoryList from "@/pages/MedCategoryList";
@@ -137,6 +138,7 @@ const App = () => (
               <Route path="/herramientas/rumiacion" element={<Rumination />} />
               <Route path="/herramientas/recuperacion" element={<Recovery />} />
               <Route path="/herramientas/regulacion-emocional" element={<EmotionalRegulation />} />
+              <Route path="/herramientas/alimentacion-consciente" element={<MindfulEating />} />
               <Route path="/recursos/:slug" element={<ResourceTools />} />
 
               {/* Mi Proceso (tab 5) */}
