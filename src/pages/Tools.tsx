@@ -12,6 +12,7 @@ import {
   Wind,
   Moon,
   Brain,
+  PillBottle,
 } from "lucide-react";
 import {
   Dialog,
@@ -33,6 +34,7 @@ const resourceThemes = {
   respiracion: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent",
   sueno: "border-resource-sleep-accent/15 bg-resource-sleep-bg text-resource-sleep-accent",
   rumiacion: "border-resource-rumination-accent/15 bg-resource-rumination-bg text-resource-rumination-accent",
+  recuperacion: "border-resource-recovery-accent/15 bg-resource-recovery-bg text-resource-recovery-accent",
 };
 
 const FALLBACK_FEELINGS: FeelingOption[] = [
@@ -185,6 +187,18 @@ export default function Tools() {
             <Brain size={20} />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold">Rumiación</p>
+        </motion.button>
+
+        {/* Recuperación */}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate("/herramientas/recuperacion")}
+          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.recuperacion}`}
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+            <PillBottle size={20} />
+          </div>
+          <p className="mt-auto pt-4 font-display text-sm font-semibold">Recuperación</p>
         </motion.button>
       </div>
 
