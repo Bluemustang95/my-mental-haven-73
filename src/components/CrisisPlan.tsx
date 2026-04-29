@@ -233,7 +233,7 @@ export default function CrisisPlan() {
   const StepIcon = STEP_ICONS[step];
 
   const inputClass =
-    "w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 font-body";
+    "w-full rounded-2xl border border-resource-safety-accent/20 bg-card/75 px-4 py-3 text-sm placeholder:text-resource-safety-accent/35 focus:outline-none focus:ring-2 focus:ring-resource-safety-accent/20 font-body";
 
   const renderContactList = (
     key: ContactKey,
@@ -285,20 +285,20 @@ export default function CrisisPlan() {
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={() => setOpen(true)}
-        className="mt-4 flex w-full items-center gap-4 rounded-[2.5rem] border border-destructive/15 bg-destructive/5 p-5 text-left shadow-sm"
+        className="mt-4 flex w-full items-center gap-4 rounded-[2.5rem] border border-resource-safety-accent/15 bg-resource-safety-bg p-5 text-left text-resource-safety-accent shadow-sm"
       >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-destructive/10">
-          <AlertTriangle size={22} className="text-destructive" />
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-resource-safety-accent/10">
+          <AlertTriangle size={22} />
         </div>
         <div className="flex-1">
-          <p className="font-display text-sm font-semibold text-foreground">Plan de Seguridad</p>
-          <p className="text-[11px] text-muted-foreground">Protocolo de seguridad personalizado</p>
+          <p className="font-display text-sm font-semibold">Plan de Seguridad</p>
+          <p className="text-[11px] opacity-70">Protocolo de seguridad personalizado</p>
         </div>
       </motion.button>
 
       {/* Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[2rem] border-border p-0 sm:max-w-md">
+        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[2rem] border-resource-safety-accent/15 bg-resource-safety-bg p-0 sm:max-w-md">
           <AnimatePresence mode="wait">
             {saved ? (
               <motion.div
