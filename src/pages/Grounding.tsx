@@ -64,8 +64,8 @@ export default function Grounding() {
           >
             <img src={resmitaAvatar} alt="Resmita" className="h-20 w-20 object-contain drop-shadow-md" />
           </motion.div>
-          <h1 className="font-display text-4xl font-semibold leading-tight text-resource-grounding-accent">Grounding</h1>
-          <p className="mt-5 max-w-xs text-base font-semibold leading-8 text-resource-grounding-accent/70">
+          <h1 className="mb-3 font-mindful text-3xl leading-tight text-resource-grounding-accent sm:text-4xl">Grounding</h1>
+          <p className="max-w-xs font-sans text-xs font-normal leading-6 text-resource-grounding-accent/70 sm:text-sm sm:leading-7">
             Es una técnica para volver al presente. Te ayuda a bajar la ansiedad rápido conectando con tus 5 sentidos.
           </p>
         </motion.div>
@@ -84,8 +84,8 @@ export default function Grounding() {
           <div className="mx-auto mb-7 flex h-24 w-24 items-center justify-center rounded-full bg-card/80 text-resource-grounding-accent shadow-xl shadow-resource-grounding-accent/10">
             <Check size={48} weight="bold" />
           </div>
-          <h1 className="font-display text-3xl font-semibold text-foreground">Aquí y ahora.</h1>
-          <p className="mt-4 text-base leading-7 text-foreground/75">Lograste reconectar con tu entorno. Tu cuerpo y tu mente te lo agradecen.</p>
+          <h1 className="font-mindful text-3xl leading-tight text-foreground">Aquí y ahora.</h1>
+          <p className="mt-4 font-sans text-xs font-normal leading-6 text-foreground/75 sm:text-sm sm:leading-7">Lograste reconectar con tu entorno. Tu cuerpo y tu mente te lo agradecen.</p>
           <button onClick={() => navigate("/herramientas")} className="mt-9 w-full rounded-[2.5rem] bg-resource-grounding-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-grounding-accent/20 active:scale-[0.98]">
             Cerrar
           </button>
@@ -117,8 +117,8 @@ export default function Grounding() {
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
               <p className="font-display text-6xl font-semibold leading-none text-resource-grounding-accent">{current.count}</p>
-              <h1 className="mt-3 font-display text-2xl font-semibold text-foreground">{current.action} alrededor</h1>
-              <p className="mt-2 text-sm leading-6 text-foreground/70">{current.prompt}.</p>
+              <h1 className="mt-3 font-mindful text-3xl leading-tight text-foreground">{current.action} alrededor</h1>
+              <p className="mt-2 font-sans text-xs font-normal leading-6 text-foreground/70 sm:text-sm sm:leading-7">{current.prompt}.</p>
             </div>
           </div>
 
