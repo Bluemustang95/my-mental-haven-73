@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Brain, Check, Cloud, Notepad, Sparkle } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, Brain, Check, Cloud, DownloadSimple, Notepad, Sparkle } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { jsPDF } from "jspdf";
+import { cn, localDateStr } from "@/lib/utils";
 import resmitaAvatar from "@/assets/resmita-mindfulness.png";
 
-type View = "intro" | "record" | "observer" | "done";
+type View = "intro" | "record" | "recordDone" | "observer" | "done";
 
 const recordSteps = [
   { key: "situation", title: "Situación", prompt: "¿Qué pasó? Describí el acontecimiento.", type: "textarea" },
-  { key: "emotion", title: "Emociones", prompt: "¿Qué sentís?", type: "emotion" },
-  { key: "thought", title: "Pensamientos automáticos", prompt: "¿Qué te dijiste?", type: "belief" },
+  { key: "emotion", title: "Emoción", prompt: "¿Qué sentís y con qué intensidad?", type: "emotion" },
+  { key: "thought", title: "Pensamiento Automático", prompt: "¿Qué te dijiste y cuánto lo creés?", type: "belief" },
   { key: "alternative", title: "Respuesta alternativa", prompt: "¿Qué otra explicación más equilibrada existe?", type: "textarea" },
-  { key: "result", title: "Resultado", prompt: "Reevaluá cuánto creés ahora en el primer pensamiento y cómo te sentís.", type: "result" },
+  { key: "result", title: "Resultado/Reevaluación", prompt: "Reevaluá cuánto creés ahora en el primer pensamiento y cómo te sentís.", type: "result" },
 ];
 
 export default function Rumination() {
