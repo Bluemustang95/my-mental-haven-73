@@ -72,28 +72,28 @@ export default function ContentLibrary() {
   });
 
   return (
-    <div className="px-5 pt-14 pb-4 safe-area-top">
+    <div className="min-h-screen bg-resource-psycho-bg px-5 pt-14 pb-4 safe-area-top">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="text-muted-foreground">
+        <button onClick={() => navigate(-1)} className="text-resource-psycho-accent/65">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold">Psicoeducación</h1>
+        <h1 className="font-display text-lg font-semibold text-resource-psycho-accent">Psicoeducación</h1>
       </div>
-      <p className="mb-4 text-sm text-muted-foreground">Material para aprender sobre tu salud mental.</p>
+      <p className="mb-4 text-sm text-resource-psycho-accent/65">Material para aprender sobre tu salud mental.</p>
 
       {/* Psico-Factos CTA */}
       <button
         onClick={() => navigate("/herramientas/contenido/psico-factos")}
-        className="mb-5 flex w-full items-center gap-3 rounded-2xl border border-accent/30 bg-accent/5 p-4 text-left transition-colors active:bg-accent/10"
+        className="mb-5 flex w-full items-center gap-3 rounded-2xl border border-resource-psycho-accent/20 bg-card/65 p-4 text-left text-resource-psycho-accent transition-colors active:bg-resource-psycho-accent/10"
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/15">
-          <Lightning size={18} weight="duotone" className="text-accent-foreground" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-resource-psycho-accent/10">
+          <Lightning size={18} weight="duotone" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-display text-sm font-medium">Psico-Factos</p>
-          <p className="text-xs text-muted-foreground">Conceptos clínicos en tarjetas</p>
+          <p className="text-xs opacity-65">Conceptos clínicos en tarjetas</p>
         </div>
-        <ArrowRight size={14} className="text-muted-foreground" />
+        <ArrowRight size={14} className="opacity-65" />
       </button>
 
       {/* Type filter */}
@@ -104,7 +104,7 @@ export default function ContentLibrary() {
             onClick={() => setFilter(t)}
             className={cn(
               "shrink-0 rounded-full border px-3 py-1.5 font-display text-[10px] font-medium uppercase tracking-wider transition-all",
-              filter === t ? "border-accent bg-accent/10" : "border-border text-muted-foreground"
+              filter === t ? "border-resource-psycho-accent bg-resource-psycho-accent/10 text-resource-psycho-accent" : "border-resource-psycho-accent/15 text-resource-psycho-accent/60"
             )}
           >
             {t === "all" ? "Todos" : t === "video" ? "Videos" : t === "audio" ? "Audios" : t === "pdf" ? "Lecturas" : "♥ Guardados"}
@@ -121,7 +121,7 @@ export default function ContentLibrary() {
               onClick={() => setActiveCategory(cat)}
               className={cn(
                 "whitespace-nowrap rounded-full border px-3 py-1 font-display text-[10px] font-medium transition-all shrink-0",
-                activeCategory === cat ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground"
+                activeCategory === cat ? "border-resource-psycho-accent bg-resource-psycho-accent/10 text-resource-psycho-accent" : "border-resource-psycho-accent/15 text-resource-psycho-accent/60"
               )}
             >
               {cat}
@@ -133,7 +133,7 @@ export default function ContentLibrary() {
       {/* Content list */}
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-resource-psycho-accent border-t-transparent" />
         </div>
       ) : (
         <div className="space-y-3">
@@ -143,7 +143,7 @@ export default function ContentLibrary() {
             return (
               <div
                 key={item.id}
-                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-colors"
+                className="flex w-full items-center gap-3 rounded-2xl border border-resource-psycho-accent/15 bg-card/75 p-4 text-left transition-colors"
               >
                 <a
                   href={item.content_url}
@@ -151,8 +151,8 @@ export default function ContentLibrary() {
                   rel="noopener noreferrer"
                   className="flex flex-1 items-center gap-3 min-w-0"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary">
-                    <Icon size={18} weight="duotone" className="text-secondary-foreground" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-resource-psycho-accent/10 text-resource-psycho-accent">
+                    <Icon size={18} weight="duotone" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-display text-sm font-medium truncate">{item.title}</p>
