@@ -83,10 +83,10 @@ export default function SelfCare() {
       <button onClick={() => navigate("/herramientas")} className="mb-4 flex items-center gap-1 text-sm text-resource-selfcare-accent/65">
         <ArrowLeft size={16} /> Herramientas
       </button>
-      <h1 className="mb-2 font-display text-xl font-semibold flex items-center gap-2 text-resource-selfcare-accent">
+      <h1 className="mb-3 flex items-center gap-2 font-mindful text-3xl leading-tight text-resource-selfcare-accent sm:text-4xl">
         <Leaf size={24} weight="duotone" /> Autocuidado
       </h1>
-      <p className="mb-6 text-sm text-resource-selfcare-accent/65">Pequeñas acciones para el mundo real.</p>
+      <p className="mb-6 font-sans text-xs font-normal leading-6 text-resource-selfcare-accent/65 sm:text-sm sm:leading-7">Pequeñas acciones para el mundo real.</p>
 
       {/* Add custom */}
       <div className="mb-4 flex gap-2">
