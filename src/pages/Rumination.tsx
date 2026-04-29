@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Brain, Check, Cloud, Notepad, Sparkle } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, Brain, Check, Cloud, DownloadSimple, Notepad, Sparkle } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { jsPDF } from "jspdf";
+import { cn, localDateStr } from "@/lib/utils";
 import resmitaAvatar from "@/assets/resmita-mindfulness.png";
 
-type View = "intro" | "record" | "observer" | "done";
+type View = "intro" | "record" | "recordDone" | "observer" | "done";
 
 const recordSteps = [
   { key: "situation", title: "Situación", prompt: "¿Qué pasó? Describí el acontecimiento.", type: "textarea" },
-  { key: "emotion", title: "Emociones", prompt: "¿Qué sentís?", type: "emotion" },
-  { key: "thought", title: "Pensamientos automáticos", prompt: "¿Qué te dijiste?", type: "belief" },
+  { key: "emotion", title: "Emoción", prompt: "¿Qué sentís y con qué intensidad?", type: "emotion" },
+  { key: "thought", title: "Pensamiento Automático", prompt: "¿Qué te dijiste y cuánto lo creés?", type: "belief" },
   { key: "alternative", title: "Respuesta alternativa", prompt: "¿Qué otra explicación más equilibrada existe?", type: "textarea" },
-  { key: "result", title: "Resultado", prompt: "Reevaluá cuánto creés ahora en el primer pensamiento y cómo te sentís.", type: "result" },
+  { key: "result", title: "Resultado/Reevaluación", prompt: "Reevaluá cuánto creés ahora en el primer pensamiento y cómo te sentís.", type: "result" },
 ];
 
 export default function Rumination() {
@@ -54,6 +55,54 @@ export default function Rumination() {
     }, 2600);
   };
 
+  const downloadThoughtRecord = () => {
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const date = localDateStr();
+    const rows = [
+      ["1. Situación", String(recordData.situation || "—")],
+      ["2. Emoción (0-100)", `${String(recordData.emotion || "—")}\nIntensidad: ${recordData.intensity ?? 0}/100`],
+      ["3. Pensamiento Automático (0-100)", `${String(recordData.thought || "—")}\nCreencia: ${recordData.belief ?? 0}/100`],
+      ["4. Respuesta Alternativa", String(recordData.alternative || "—")],
+      ["5. Resultado/Reevaluación", `${String(recordData.result || "—")}\nCreencia final: ${recordData.finalBelief ?? 0}/100`],
+    ];
+
+    doc.setFillColor(254, 252, 232);
+    doc.rect(0, 0, 210, 297, "F");
+    doc.setTextColor(91, 33, 182);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Registro de Pensamientos Automáticos - RESMA", 15, 20);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${date}`, 15, 28);
+
+    let y = 40;
+    rows.forEach(([label, value]) => {
+      const lines = doc.splitTextToSize(value, 120);
+      const height = Math.max(24, lines.length * 5 + 12);
+      if (y + height > 282) {
+        doc.addPage();
+        doc.setFillColor(254, 252, 232);
+        doc.rect(0, 0, 210, 297, "F");
+        y = 18;
+      }
+      doc.setDrawColor(217, 119, 6);
+      doc.setFillColor(255, 251, 235);
+      doc.roundedRect(15, y, 180, height, 3, 3, "FD");
+      doc.setTextColor(217, 119, 6);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text(label, 21, y + 8);
+      doc.setTextColor(38, 38, 38);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(lines, 67, y + 8);
+      y += height + 6;
+    });
+
+    doc.save(`registro-pensamientos-resma-${date}.pdf`);
+  };
+
   if (view === "intro") {
     return (
       <div className="flex min-h-screen flex-col bg-resource-rumination-bg px-5 pt-12 pb-6 text-resource-rumination-accent safe-area-top">
@@ -71,9 +120,6 @@ export default function Rumination() {
           <p className="mt-4 max-w-sm text-base font-semibold leading-7 text-resource-rumination-accent/75">
             La rumiación es cuando tu mente da vueltas sobre el mismo tema una y otra vez. Estas herramientas te ayudan a ver tus pensamientos desde afuera para que dejen de pesarte tanto.
           </p>
-          <p className="mt-4 rounded-[2rem] bg-card/65 px-5 py-3 text-sm font-semibold leading-6 text-resource-rumination-accent/70">
-            No hay apuro, tomate tu tiempo
-          </p>
           <div className="mt-7 w-full space-y-3">
             <button onClick={() => { setRecordStep(0); setView("record"); }} className="flex w-full items-center gap-4 rounded-[2.5rem] border border-resource-rumination-accent/15 bg-card/85 p-5 text-left shadow-sm active:scale-[0.98]">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-resource-rumination-accent/10"><Notepad size={24} weight="duotone" /></span>
@@ -85,6 +131,29 @@ export default function Rumination() {
             </button>
           </div>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (view === "recordDone") {
+    return (
+      <div className="flex min-h-screen flex-col bg-resource-rumination-bg px-5 pt-14 pb-6 text-resource-rumination-accent safe-area-top">
+        <div className="mb-8 flex items-center gap-3">
+          <button onClick={() => setView("record")} className="flex h-11 w-11 items-center justify-center rounded-full bg-card/80 shadow-sm"><ArrowLeft size={20} /></button>
+          <div><p className="font-display text-lg font-semibold">Registro completo</p><p className="text-xs font-semibold text-resource-rumination-accent/65">Cuadro listo para compartir</p></div>
+        </div>
+        <div className="flex flex-1 flex-col justify-center">
+          <div className="rounded-[2.5rem] border border-resource-rumination-accent/15 bg-card/85 p-6 text-center shadow-sm">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-resource-rumination-accent/10"><Check size={32} weight="bold" /></div>
+            <h1 className="font-display text-3xl font-semibold leading-tight">Registro guardado</h1>
+            <p className="mt-3 text-sm font-semibold leading-6 text-resource-rumination-accent/70">Podés descargarlo en formato profesional para llevarlo a terapia.</p>
+          </div>
+          <button onClick={downloadThoughtRecord} className="mt-6 flex w-full items-center justify-center gap-2 rounded-[2.5rem] bg-resource-rumination-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-rumination-accent/20 active:scale-[0.98]">
+            <DownloadSimple size={20} weight="bold" />
+            Descargar para mi terapeuta
+          </button>
+          <button onClick={() => setView("intro")} className="mt-3 rounded-[2.5rem] border border-resource-rumination-accent/20 bg-card/80 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Volver</button>
+        </div>
       </div>
     );
   }
@@ -101,9 +170,6 @@ export default function Rumination() {
           </div>
           <h1 className="font-display text-3xl font-semibold leading-tight">¡Mente clara!</h1>
           <p className="mt-4 text-base font-semibold leading-7 text-resource-rumination-accent/75">Mirar tus pensamientos es el primer paso para liberarte de ellos. ¡Mente clara!</p>
-          <p className="mt-4 rounded-[2rem] bg-card/65 px-5 py-3 text-sm font-semibold leading-6 text-resource-rumination-accent/70">
-            si te distraes no te juzgues, vuelve de a poco a conectar con el presente
-          </p>
           <button onClick={() => navigate("/herramientas")} className="mt-9 w-full rounded-[2.5rem] bg-resource-rumination-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-rumination-accent/20 active:scale-[0.98]">
             Cerrar
           </button>
@@ -178,15 +244,15 @@ export default function Rumination() {
           <p className="mt-2 text-sm font-semibold leading-6 text-resource-rumination-accent/70">{current.prompt}</p>
           <div className="mt-6 rounded-[2.5rem] border border-resource-rumination-accent/15 bg-card p-5 shadow-sm">
             {current.type === "textarea" && <textarea value={(recordData[current.key] as string) || ""} onChange={(e) => setRecordData({ ...recordData, [current.key]: e.target.value })} placeholder="Anotá acá..." className="min-h-[170px] w-full resize-none bg-transparent text-base font-semibold leading-7 outline-none placeholder:text-resource-rumination-accent/35" autoFocus />}
-            {current.type === "emotion" && <div className="space-y-5"><input value={(recordData.emotion as string) || ""} onChange={(e) => setRecordData({ ...recordData, emotion: e.target.value })} placeholder="Triste, ansioso, enojado..." className="w-full bg-transparent text-base font-semibold outline-none placeholder:text-resource-rumination-accent/35" autoFocus /><div><p className="mb-3 text-center font-display text-4xl font-semibold">{recordData.intensity}</p><input type="range" min="1" max="100" value={(recordData.intensity as number) || 50} onChange={(e) => setRecordData({ ...recordData, intensity: Number(e.target.value) })} className="w-full accent-resource-rumination-accent" /></div></div>}
-            {current.type === "belief" && <div className="space-y-5"><textarea value={(recordData.thought as string) || ""} onChange={(e) => setRecordData({ ...recordData, thought: e.target.value })} placeholder="Me dije que..." className="min-h-[110px] w-full resize-none bg-transparent text-base font-semibold leading-7 outline-none placeholder:text-resource-rumination-accent/35" autoFocus /><div><p className="mb-3 text-center font-display text-4xl font-semibold">{recordData.belief}</p><input type="range" min="1" max="100" value={(recordData.belief as number) || 50} onChange={(e) => setRecordData({ ...recordData, belief: Number(e.target.value) })} className="w-full accent-resource-rumination-accent" /></div></div>}
-            {current.type === "result" && <div className="space-y-5"><div><p className="mb-3 text-center font-display text-4xl font-semibold">{recordData.finalBelief}</p><input type="range" min="1" max="100" value={(recordData.finalBelief as number) || 50} onChange={(e) => setRecordData({ ...recordData, finalBelief: Number(e.target.value) })} className="w-full accent-resource-rumination-accent" /></div><textarea value={(recordData.result as string) || ""} onChange={(e) => setRecordData({ ...recordData, result: e.target.value })} placeholder="Ahora me siento..." className="min-h-[115px] w-full resize-none rounded-[2rem] border border-resource-rumination-accent/15 bg-resource-rumination-bg/55 p-4 text-base font-semibold leading-7 outline-none placeholder:text-resource-rumination-accent/35" autoFocus /></div>}
+            {current.type === "emotion" && <div className="space-y-5"><input value={(recordData.emotion as string) || ""} onChange={(e) => setRecordData({ ...recordData, emotion: e.target.value })} placeholder="Triste, ansioso, enojado..." className="w-full bg-transparent text-base font-semibold outline-none placeholder:text-resource-rumination-accent/35" autoFocus /><div><p className="mb-3 text-center font-display text-4xl font-semibold">{recordData.intensity}</p><input type="range" min="0" max="100" value={(recordData.intensity as number) ?? 50} onChange={(e) => setRecordData({ ...recordData, intensity: Number(e.target.value) })} className="w-full accent-resource-rumination-accent" /><div className="mt-2 flex justify-between text-[10px] font-semibold text-resource-rumination-accent/50"><span>0</span><span>100</span></div></div></div>}
+            {current.type === "belief" && <div className="space-y-5"><textarea value={(recordData.thought as string) || ""} onChange={(e) => setRecordData({ ...recordData, thought: e.target.value })} placeholder="Me dije que..." className="min-h-[110px] w-full resize-none bg-transparent text-base font-semibold leading-7 outline-none placeholder:text-resource-rumination-accent/35" autoFocus /><div><p className="mb-3 text-center font-display text-4xl font-semibold">{recordData.belief}</p><input type="range" min="0" max="100" value={(recordData.belief as number) ?? 50} onChange={(e) => setRecordData({ ...recordData, belief: Number(e.target.value) })} className="w-full accent-resource-rumination-accent" /><div className="mt-2 flex justify-between text-[10px] font-semibold text-resource-rumination-accent/50"><span>0</span><span>100</span></div></div></div>}
+            {current.type === "result" && <div className="space-y-5"><div><p className="mb-3 text-center font-display text-4xl font-semibold">{recordData.finalBelief}</p><input type="range" min="0" max="100" value={(recordData.finalBelief as number) ?? 50} onChange={(e) => setRecordData({ ...recordData, finalBelief: Number(e.target.value) })} className="w-full accent-resource-rumination-accent" /><div className="mt-2 flex justify-between text-[10px] font-semibold text-resource-rumination-accent/50"><span>0</span><span>100</span></div></div><textarea value={(recordData.result as string) || ""} onChange={(e) => setRecordData({ ...recordData, result: e.target.value })} placeholder="Ahora me siento..." className="min-h-[115px] w-full resize-none rounded-[2rem] border border-resource-rumination-accent/15 bg-resource-rumination-bg/55 p-4 text-base font-semibold leading-7 outline-none placeholder:text-resource-rumination-accent/35" autoFocus /></div>}
           </div>
         </motion.div>
       </AnimatePresence>
       <div className="mt-5 grid grid-cols-2 gap-3">
         <button onClick={goBack} className="rounded-[2.5rem] border border-resource-rumination-accent/20 bg-card/80 py-3.5 font-display text-sm font-semibold shadow-sm active:scale-[0.98]">Atrás</button>
-        <button onClick={() => recordStep < recordSteps.length - 1 ? setRecordStep(recordStep + 1) : finish()} className="flex items-center justify-center gap-2 rounded-[2.5rem] bg-resource-rumination-accent py-3.5 font-display text-sm font-semibold text-primary-foreground shadow-lg shadow-resource-rumination-accent/20 active:scale-[0.98]">{recordStep === recordSteps.length - 1 ? "Finalizar" : "Siguiente"}<ArrowRight size={16} /></button>
+        <button onClick={() => recordStep < recordSteps.length - 1 ? setRecordStep(recordStep + 1) : setView("recordDone")} className="flex items-center justify-center gap-2 rounded-[2.5rem] bg-resource-rumination-accent py-3.5 font-display text-sm font-semibold text-primary-foreground shadow-lg shadow-resource-rumination-accent/20 active:scale-[0.98]">{recordStep === recordSteps.length - 1 ? "Finalizar" : "Siguiente"}<ArrowRight size={16} /></button>
       </div>
     </div>
   );
