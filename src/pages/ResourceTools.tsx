@@ -70,7 +70,7 @@ export default function ResourceTools() {
     return <div className="p-6 text-center text-sm text-muted-foreground">Cargando…</div>;
   }
 
-  const Icon = iconMap[category.icon] || Sparkles;
+  const Icon = category.slug === "recuperacion" ? Wine : iconMap[category.icon] || Sparkles;
   const colorClass = slugThemeMap[category.slug] || colorMap[category.color] || colorMap.muted;
   const baseRoute = runnerRoute[category.slug] || `/herramientas/${category.slug}`;
 
