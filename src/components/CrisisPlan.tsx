@@ -233,7 +233,7 @@ export default function CrisisPlan() {
   const StepIcon = STEP_ICONS[step];
 
   const inputClass =
-    "w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 font-body";
+    "w-full rounded-2xl border border-resource-safety-accent/20 bg-card/75 px-4 py-3 text-sm placeholder:text-resource-safety-accent/35 focus:outline-none focus:ring-2 focus:ring-resource-safety-accent/20 font-body";
 
   const renderContactList = (
     key: ContactKey,
@@ -243,7 +243,7 @@ export default function CrisisPlan() {
   ) => (
     <>
       {data[key].map((c, i) => (
-        <div key={i} className="space-y-2 rounded-2xl border border-border/60 bg-muted/20 p-3">
+        <div key={i} className="space-y-2 rounded-2xl border border-resource-safety-accent/15 bg-card/45 p-3">
           <div className="flex items-center gap-2">
             <input
               placeholder={namePlaceholder}
@@ -254,7 +254,7 @@ export default function CrisisPlan() {
             {data[key].length > 1 && (
               <button
                 onClick={() => removeRow(key, i)}
-                className="text-muted-foreground/60"
+                className="text-resource-safety-accent/60"
                 aria-label="Quitar"
               >
                 <Trash2 size={16} />
@@ -272,7 +272,7 @@ export default function CrisisPlan() {
       ))}
       <button
         onClick={() => addRow(key)}
-        className="flex items-center gap-1.5 text-[12px] font-medium text-primary"
+        className="flex items-center gap-1.5 text-[12px] font-medium text-resource-safety-accent"
       >
         <Plus size={14} /> {addLabel}
       </button>
@@ -285,20 +285,20 @@ export default function CrisisPlan() {
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={() => setOpen(true)}
-        className="mt-4 flex w-full items-center gap-4 rounded-[2.5rem] border border-destructive/15 bg-destructive/5 p-5 text-left shadow-sm"
+        className="mt-4 flex w-full items-center gap-4 rounded-[2.5rem] border border-resource-safety-accent/15 bg-resource-safety-bg p-5 text-left text-resource-safety-accent shadow-sm"
       >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-destructive/10">
-          <AlertTriangle size={22} className="text-destructive" />
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-resource-safety-accent/10">
+          <AlertTriangle size={22} />
         </div>
         <div className="flex-1">
-          <p className="font-display text-sm font-semibold text-foreground">Plan de Seguridad</p>
-          <p className="text-[11px] text-muted-foreground">Protocolo de seguridad personalizado</p>
+          <p className="font-display text-sm font-semibold">Plan de Seguridad</p>
+          <p className="text-[11px] opacity-70">Protocolo de seguridad personalizado</p>
         </div>
       </motion.button>
 
       {/* Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[2rem] border-border p-0 sm:max-w-md">
+        <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[2rem] border-resource-safety-accent/15 bg-resource-safety-bg p-0 sm:max-w-md">
           <AnimatePresence mode="wait">
             {saved ? (
               <motion.div
@@ -312,7 +312,7 @@ export default function CrisisPlan() {
                   <Check size={32} className="text-emerald-600" />
                 </div>
                 <p className="font-display text-lg font-semibold text-foreground">¡Plan guardado!</p>
-                <p className="text-sm text-muted-foreground">Podés editarlo cuando quieras.</p>
+                <p className="text-sm text-resource-safety-accent/65">Podés editarlo cuando quieras.</p>
               </motion.div>
             ) : (
               <motion.div
@@ -326,36 +326,36 @@ export default function CrisisPlan() {
                 {/* Header */}
                 <div className="mb-1 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
-                      <StepIcon size={16} className="text-primary" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-resource-safety-accent/10">
+                      <StepIcon size={16} className="text-resource-safety-accent" />
                     </div>
-                    <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                    <span className="text-[10px] font-medium uppercase tracking-widest text-resource-safety-accent/65">
                       Paso {step + 1} de 6
                     </span>
                   </div>
-                  <button onClick={() => setOpen(false)} className="text-muted-foreground">
+                  <button onClick={() => setOpen(false)} className="text-resource-safety-accent/65">
                     <X size={18} />
                   </button>
                 </div>
 
-                <h3 className="mt-3 font-display text-lg font-semibold leading-tight text-foreground">
+                <h3 className="mt-3 font-display text-lg font-semibold leading-tight text-resource-safety-accent">
                   {STEP_TITLES[step]}
                 </h3>
-                <p className="mt-1 text-[12px] text-muted-foreground font-body">
+                <p className="mt-1 text-[12px] text-resource-safety-accent/65 font-body">
                   {STEP_PLACEHOLDERS_HINT[step]}
                 </p>
 
                 {/* Resmita guide */}
                 <div className="mt-4 flex items-start gap-3">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sky-50 ring-1 ring-sky-100 p-1">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-card/65 ring-1 ring-resource-safety-accent/10 p-1">
                     <img
                       src={resmitaAvatar}
                       alt="Resmita"
                       className="h-full w-full object-contain"
                     />
                   </div>
-                  <div className="rounded-2xl rounded-tl-md bg-muted/60 px-4 py-3">
-                    <p className="text-[12px] leading-relaxed text-muted-foreground font-body">
+                  <div className="rounded-2xl rounded-tl-md bg-card/65 px-4 py-3">
+                    <p className="text-[12px] leading-relaxed text-resource-safety-accent/70 font-body">
                       {RESMITA_MESSAGES[step]}
                     </p>
                   </div>
@@ -375,7 +375,7 @@ export default function CrisisPlan() {
 
                   {step === 1 && (
                     <>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[11px] text-resource-safety-accent/65">
                         Sugerencias: respiración, agarrar hielos, ducharte con agua fría, escuchar música, caminar.
                       </p>
                       <textarea
@@ -416,33 +416,33 @@ export default function CrisisPlan() {
                       <div className="pt-2 space-y-2">
                         <a
                           href="tel:911"
-                          className="flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 transition-colors active:bg-destructive/10"
+                          className="flex items-center gap-3 rounded-2xl border border-resource-safety-accent/20 bg-card/60 p-4 text-resource-safety-accent transition-colors active:bg-resource-safety-accent/10"
                         >
-                          <Phone size={20} className="text-destructive" />
+                          <Phone size={20} />
                           <div>
                             <p className="font-display text-sm font-semibold">911</p>
-                            <p className="text-[11px] text-muted-foreground">Emergencias</p>
+                            <p className="text-[11px] opacity-65">Emergencias</p>
                           </div>
                         </a>
                         <a
                           href="tel:08002225462"
-                          className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 transition-colors active:bg-primary/10"
+                          className="flex items-center gap-3 rounded-2xl border border-resource-safety-accent/20 bg-card/60 p-4 text-resource-safety-accent transition-colors active:bg-resource-safety-accent/10"
                         >
-                          <Phone size={20} className="text-primary" />
+                          <Phone size={20} />
                           <div>
                             <p className="font-display text-sm font-semibold">0800 222 5462</p>
-                            <p className="text-[11px] text-muted-foreground">Salud Mental Responde (24 hs)</p>
+                            <p className="text-[11px] opacity-65">Salud Mental Responde (24 hs)</p>
                           </div>
                         </a>
                         <button
                           type="button"
                           onClick={openHospitalMaps}
-                          className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left transition-colors active:bg-muted"
+                          className="flex w-full items-center gap-3 rounded-2xl border border-resource-safety-accent/20 bg-card/60 p-4 text-left text-resource-safety-accent transition-colors active:bg-resource-safety-accent/10"
                         >
-                          <MapPin size={20} className="text-muted-foreground" />
+                          <MapPin size={20} />
                           <div>
                             <p className="font-display text-sm font-semibold">Hospital Público</p>
-                            <p className="text-[11px] text-muted-foreground">Buscar guardia de salud mental cercana</p>
+                            <p className="text-[11px] opacity-65">Buscar guardia de salud mental cercana</p>
                           </div>
                         </button>
                       </div>
@@ -460,7 +460,7 @@ export default function CrisisPlan() {
                       />
                       <button
                         onClick={handleDownload}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 py-3 font-display text-sm text-foreground transition-colors active:bg-muted"
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-resource-safety-accent/20 bg-card/60 py-3 font-display text-sm text-resource-safety-accent transition-colors active:bg-resource-safety-accent/10"
                       >
                         <Download size={16} /> Descargar mi Plan (PDF)
                       </button>
@@ -474,7 +474,7 @@ export default function CrisisPlan() {
                     <div
                       key={i}
                       className={`h-1.5 rounded-full transition-all ${
-                        i === step ? "w-6 bg-primary" : i < step ? "w-1.5 bg-primary/40" : "w-1.5 bg-muted"
+                        i === step ? "w-6 bg-resource-safety-accent" : i < step ? "w-1.5 bg-resource-safety-accent/40" : "w-1.5 bg-card/80"
                       }`}
                     />
                   ))}
@@ -485,7 +485,7 @@ export default function CrisisPlan() {
                   {step > 0 && (
                     <button
                       onClick={() => setStep(step - 1)}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl border border-border py-3 font-display text-sm text-muted-foreground active:bg-muted"
+                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl border border-resource-safety-accent/20 bg-card/60 py-3 font-display text-sm text-resource-safety-accent/70 active:bg-resource-safety-accent/10"
                     >
                       <ChevronLeft size={16} /> Anterior
                     </button>
@@ -493,14 +493,14 @@ export default function CrisisPlan() {
                   {step < 5 ? (
                     <button
                       onClick={() => setStep(step + 1)}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-primary py-3 font-display text-sm text-primary-foreground active:opacity-90"
+                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-resource-safety-accent py-3 font-display text-sm text-primary-foreground active:opacity-90"
                     >
                       Siguiente <ChevronRight size={16} />
                     </button>
                   ) : (
                     <button
                       onClick={handleSave}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-primary py-3 font-display text-sm text-primary-foreground active:opacity-90"
+                      className="flex flex-1 items-center justify-center gap-1 rounded-2xl bg-resource-safety-accent py-3 font-display text-sm text-primary-foreground active:opacity-90"
                     >
                       <Check size={16} /> Finalizar
                     </button>

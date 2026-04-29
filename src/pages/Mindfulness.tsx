@@ -18,6 +18,8 @@ const breathPhases = [
   { label: "Exhalá", scale: 0.92, speech: "Exhalá lento. Dejá pasar los pensamientos como nubes." },
 ];
 
+const roseShadow = "shadow-[0_18px_35px_hsl(var(--resource-mindfulness-accent)/0.18)]";
+
 type View = "intro" | "config" | "session" | "summary";
 
 function Mandala({ phase, running }: { phase: number; running: boolean }) {
@@ -28,12 +30,12 @@ function Mandala({ phase, running }: { phase: number; running: boolean }) {
   return (
     <div className="relative flex h-[min(72vw,18rem)] w-[min(72vw,18rem)] items-center justify-center">
       <motion.div
-        className="absolute h-[92%] w-[92%] rounded-full bg-mindful-yellow/25 blur-3xl"
+        className="absolute h-[92%] w-[92%] rounded-full bg-resource-mindfulness-accent/15 blur-3xl"
         animate={{ scale: running ? [0.82, 1.12, 0.9] : 0.9, opacity: running ? [0.35, 0.68, 0.38] : 0.35 }}
         transition={{ duration: 4.5, repeat: running ? Infinity : 0, ease: [0.4, 0, 0.2, 1] }}
       />
       <motion.div
-        className="absolute h-[72%] w-[72%] rounded-full bg-mindful-orange/20 blur-2xl"
+        className="absolute h-[72%] w-[72%] rounded-full bg-resource-mindfulness-accent/10 blur-2xl"
         animate={{ scale: running ? [0.9, 1.18, 0.86] : 0.95, opacity: running ? [0.2, 0.5, 0.22] : 0.22 }}
         transition={{ duration: 4.5, repeat: running ? Infinity : 0, ease: [0.4, 0, 0.2, 1], delay: 0.25 }}
       />
@@ -46,9 +48,9 @@ function Mandala({ phase, running }: { phase: number; running: boolean }) {
       >
         <defs>
           <radialGradient id="mandalaCore" cx="50%" cy="50%" r="55%">
-            <stop offset="0%" stopColor="hsl(var(--mindful-yellow))" stopOpacity="0.95" />
-            <stop offset="58%" stopColor="hsl(var(--mindful-orange))" stopOpacity="0.58" />
-            <stop offset="100%" stopColor="hsl(var(--secondary))" stopOpacity="0.18" />
+            <stop offset="0%" stopColor="hsl(var(--resource-mindfulness-accent))" stopOpacity="0.95" />
+            <stop offset="58%" stopColor="hsl(var(--resource-mindfulness-accent))" stopOpacity="0.42" />
+            <stop offset="100%" stopColor="hsl(var(--resource-mindfulness-bg))" stopOpacity="0.28" />
           </radialGradient>
         </defs>
         <circle cx="120" cy="120" r="98" fill="hsl(var(--card))" opacity="0.92" />
@@ -59,7 +61,7 @@ function Mandala({ phase, running }: { phase: number; running: boolean }) {
             cy="44"
             rx="13"
             ry="34"
-            fill={index % 2 === 0 ? "hsl(var(--mindful-yellow))" : "hsl(var(--mindful-orange))"}
+            fill="hsl(var(--resource-mindfulness-accent))"
             fillOpacity="0.38"
             stroke="hsl(var(--card))"
             strokeWidth="1.5"
@@ -77,9 +79,9 @@ function Mandala({ phase, running }: { phase: number; running: boolean }) {
             transform={`rotate(${index * 30} 120 120)`}
           />
         ))}
-        <circle cx="120" cy="120" r="45" fill="hsl(var(--mindful-sky))" opacity="0.86" />
-        <circle cx="120" cy="120" r="28" fill="hsl(var(--mindful-yellow))" opacity="0.96" />
-        <circle cx="120" cy="120" r="10" fill="hsl(var(--mindful-orange))" opacity="0.9" />
+        <circle cx="120" cy="120" r="45" fill="hsl(var(--resource-mindfulness-bg))" opacity="0.92" />
+        <circle cx="120" cy="120" r="28" fill="hsl(var(--resource-mindfulness-accent))" opacity="0.82" />
+        <circle cx="120" cy="120" r="10" fill="hsl(var(--resource-mindfulness-accent))" opacity="0.95" />
       </motion.svg>
     </div>
   );
@@ -91,7 +93,7 @@ function TogglePill({ active, onClick, icon: Icon, label }: { active: boolean; o
       onClick={onClick}
       className={cn(
         "flex items-center gap-2 rounded-full border px-4 py-3 font-sans text-xs font-semibold shadow-sm transition-all active:scale-95",
-        active ? "border-accent bg-mindful-yellow/40 text-foreground" : "border-border bg-card/80 text-muted-foreground"
+        active ? "border-resource-mindfulness-accent bg-resource-mindfulness-bg text-resource-mindfulness-accent" : "border-resource-mindfulness-accent/15 bg-card/80 text-resource-mindfulness-accent/55"
       )}
     >
       <Icon size={16} weight={active ? "fill" : "regular"} />
@@ -187,17 +189,17 @@ export default function Mindfulness() {
   };
 
   return (
-    <main className="min-h-screen bg-mindful-cream px-4 pb-28 pt-10 font-sans text-foreground safe-area-top">
+    <main className="min-h-screen bg-resource-mindfulness-bg px-4 pb-28 pt-10 font-sans text-foreground safe-area-top">
       <div className="mx-auto flex min-h-[calc(100vh-9.5rem)] w-full max-w-md flex-col">
         <header className="mb-4 flex items-center justify-between">
           <button
             onClick={view === "intro" ? close : () => setView(view === "session" ? "config" : "intro")}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground shadow-sm transition-transform active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-resource-mindfulness-accent/15 bg-card/75 text-resource-mindfulness-accent shadow-sm transition-transform active:scale-95"
             aria-label="Volver"
           >
             <ArrowLeft size={20} />
           </button>
-          <span className="rounded-full bg-card/80 px-4 py-2 font-sans text-xs font-semibold text-muted-foreground shadow-sm">
+          <span className="rounded-full bg-card/75 px-4 py-2 font-sans text-xs font-semibold text-resource-mindfulness-accent shadow-sm">
             Mindfulness
           </span>
         </header>
@@ -220,16 +222,16 @@ export default function Mindfulness() {
                 <img src={resmitaAvatar} alt="Resmita" className="relative h-full w-full object-contain drop-shadow-2xl" />
               </motion.div>
 
-              <div className="rounded-[3rem] border border-border bg-card px-5 py-5 shadow-[0_18px_45px_hsl(var(--border)/0.55)] sm:px-6 sm:py-7">
-                <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Hola, soy Resmita</h1>
-                <p className="font-sans text-xs leading-6 text-muted-foreground sm:text-sm sm:leading-7">
-                  Mindfulness es estar presente, aquí y ahora. Es notar lo que sentís sin juzgarlo, dejándolo pasar como nubes en el cielo. Practicarlo te va a ayudar a bajar la ansiedad, mejorar tu concentración y darle un respiro a tu mente para que puedas sentirte con más calma y claridad durante el día.
+              <div className="px-5 py-5 sm:px-6 sm:py-7">
+                <h1 className="mb-3 font-mindful text-3xl leading-tight text-resource-mindfulness-accent sm:text-4xl">Mindfulness</h1>
+                <p className="font-sans text-xs leading-6 text-resource-mindfulness-accent/75 sm:text-sm sm:leading-7">
+                  El Mindfulness es notar lo que sentís sin juzgarlo, dejándolo pasar como nubes en el cielo. Practicarlo te va a ayudar a bajar la ansiedad, mejorar tu concentración y darle un respiro a tu mente para que puedas sentirte con más calma y claridad durante el día.
                 </p>
               </div>
 
               <button
                 onClick={() => setView("config")}
-                className="w-full rounded-[3rem] bg-primary px-8 py-4 font-sans text-base font-bold text-primary-foreground shadow-[0_18px_35px_hsl(var(--primary)/0.22)] transition-transform active:scale-95 sm:py-5"
+                className={cn("w-full rounded-[3rem] bg-resource-mindfulness-accent px-8 py-4 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95 sm:py-5", roseShadow)}
               >
                 ¿Empezamos?
               </button>
@@ -246,8 +248,8 @@ export default function Mindfulness() {
               className="flex flex-1 flex-col justify-center"
             >
               <div className="mb-8 text-center">
-                <h1 className="font-mindful text-5xl leading-tight">Tu Espacio</h1>
-                <p className="mt-2 font-sans text-sm text-muted-foreground">¿Cuánto tiempo necesitás hoy?</p>
+                <h1 className="font-mindful text-5xl leading-tight text-resource-mindfulness-accent">Tu Espacio</h1>
+                <p className="mt-2 font-sans text-sm text-resource-mindfulness-accent/65">¿Cuánto tiempo necesitás hoy?</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -258,19 +260,19 @@ export default function Mindfulness() {
                     className={cn(
                       "min-h-32 rounded-[3rem] border p-5 text-left transition-all duration-300 active:scale-95",
                       selectedDuration === index
-                        ? "scale-105 border-accent bg-mindful-yellow shadow-[0_22px_42px_hsl(var(--mindful-orange)/0.32)]"
-                        : "border-border bg-card shadow-[0_12px_28px_hsl(var(--border)/0.45)]"
+                        ? "scale-105 border-resource-mindfulness-accent bg-card text-resource-mindfulness-accent shadow-[0_22px_42px_hsl(var(--resource-mindfulness-accent)/0.22)]"
+                        : "border-resource-mindfulness-accent/15 bg-card/65 text-resource-mindfulness-accent/70 shadow-[0_12px_28px_hsl(var(--resource-mindfulness-accent)/0.08)]"
                     )}
                   >
                     <span className="block font-mindful text-5xl leading-none">{duration.minutes}</span>
-                    <span className="mt-2 block font-sans text-sm font-semibold text-muted-foreground">minutos</span>
+                    <span className="mt-2 block font-sans text-sm font-semibold opacity-70">minutos</span>
                   </button>
                 ))}
               </div>
 
               <button
                 onClick={startSession}
-                className="mt-8 w-full rounded-[3rem] bg-primary px-8 py-5 font-sans text-base font-bold text-primary-foreground shadow-[0_18px_35px_hsl(var(--primary)/0.22)] transition-transform active:scale-95"
+                className={cn("mt-8 w-full rounded-[3rem] bg-resource-mindfulness-accent px-8 py-5 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95", roseShadow)}
               >
                 Comenzar sesión
               </button>
@@ -284,7 +286,7 @@ export default function Mindfulness() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-              className="flex flex-1 flex-col items-center justify-between gap-4 overflow-hidden rounded-[3rem] border border-border bg-card/80 px-4 py-6 shadow-[0_20px_60px_hsl(var(--border)/0.42)]"
+              className="flex flex-1 flex-col items-center justify-between gap-4 overflow-hidden rounded-[3rem] border border-resource-mindfulness-accent/15 bg-card/75 px-4 py-6 shadow-[0_20px_60px_hsl(var(--resource-mindfulness-accent)/0.12)]"
             >
               <div className="text-center">
                 <AnimatePresence mode="wait">
@@ -294,12 +296,12 @@ export default function Mindfulness() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-                    className="font-mindful text-5xl leading-none"
+                    className="font-mindful text-5xl leading-none text-resource-mindfulness-accent"
                   >
                     {breathPhases[phase].label}
                   </motion.h1>
                 </AnimatePresence>
-                <p className="mt-2 font-sans text-sm text-muted-foreground tabular-nums">
+                <p className="mt-2 font-sans text-sm text-resource-mindfulness-accent/65 tabular-nums">
                   {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
                 </p>
               </div>
@@ -307,20 +309,20 @@ export default function Mindfulness() {
               <Mandala phase={phase} running={isRunning} />
 
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                <motion.div className="h-full rounded-full bg-mindful-orange" animate={{ width: `${progress * 100}%` }} />
+                <motion.div className="h-full rounded-full bg-resource-mindfulness-accent" animate={{ width: `${progress * 100}%` }} />
               </div>
 
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsRunning((current) => !current)}
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_16px_32px_hsl(var(--primary)/0.25)] transition-transform active:scale-95"
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-resource-mindfulness-accent text-primary-foreground shadow-[0_16px_32px_hsl(var(--resource-mindfulness-accent)/0.22)] transition-transform active:scale-95"
                   aria-label={isRunning ? "Pausar" : "Reproducir"}
                 >
                   {isRunning ? <Pause size={26} weight="fill" /> : <Play size={26} weight="fill" />}
                 </button>
                 <button
                   onClick={resetSession}
-                  className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-transform active:scale-95"
+                  className="flex h-16 w-16 items-center justify-center rounded-full border border-resource-mindfulness-accent/15 bg-card text-resource-mindfulness-accent/65 shadow-sm transition-transform active:scale-95"
                   aria-label="Reiniciar"
                 >
                   <ArrowCounterClockwise size={24} />
@@ -344,27 +346,27 @@ export default function Mindfulness() {
               className="flex flex-1 flex-col justify-center gap-5 text-center"
             >
               <div className="rounded-[3rem] border border-border bg-card px-6 py-9 shadow-[0_20px_55px_hsl(var(--border)/0.5)]">
-                <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-mindful-yellow/50">
+                <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-resource-mindfulness-bg text-resource-mindfulness-accent">
                   <span className="font-mindful text-5xl">☁</span>
                 </div>
-                <h1 className="font-mindful text-5xl leading-tight">Presencia plena</h1>
-                <p className="mt-3 font-sans text-base text-muted-foreground">Tu mente está un poco más clara</p>
+                <h1 className="font-mindful text-5xl leading-tight text-resource-mindfulness-accent">Presencia plena</h1>
+                <p className="mt-3 font-sans text-base text-resource-mindfulness-accent/65">Tu mente está un poco más clara</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-[2.5rem] border border-border bg-mindful-rose p-5 text-left shadow-sm">
-                  <p className="font-sans text-xs font-semibold text-muted-foreground">Racha</p>
+                <div className="rounded-[2.5rem] border border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg p-5 text-left text-resource-mindfulness-accent shadow-sm">
+                  <p className="font-sans text-xs font-semibold opacity-65">Racha</p>
                   <p className="mt-2 font-mindful text-3xl">5 días</p>
                 </div>
-                <div className="rounded-[2.5rem] border border-border bg-mindful-yellow/45 p-5 text-left shadow-sm">
-                  <p className="font-sans text-xs font-semibold text-muted-foreground">Puntos Zen</p>
+                <div className="rounded-[2.5rem] border border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg p-5 text-left text-resource-mindfulness-accent shadow-sm">
+                  <p className="font-sans text-xs font-semibold opacity-65">Puntos Zen</p>
                   <p className="mt-2 font-mindful text-3xl">+150</p>
                 </div>
               </div>
 
               <button
                 onClick={close}
-                className="mt-4 w-full rounded-[3rem] bg-primary px-8 py-5 font-sans text-base font-bold text-primary-foreground shadow-[0_18px_35px_hsl(var(--primary)/0.22)] transition-transform active:scale-95"
+                className={cn("mt-4 w-full rounded-[3rem] bg-resource-mindfulness-accent px-8 py-5 font-sans text-base font-bold text-primary-foreground transition-transform active:scale-95", roseShadow)}
               >
                 Cerrar
               </button>
