@@ -88,6 +88,7 @@ export default {
           selfcare: { bg: "hsl(var(--resource-selfcare-bg))", accent: "hsl(var(--resource-selfcare-accent))" },
           breathing: { bg: "hsl(var(--resource-breathing-bg))", accent: "hsl(var(--resource-breathing-accent))" },
           sleep: { bg: "hsl(var(--resource-sleep-bg))", accent: "hsl(var(--resource-sleep-accent))" },
+          rumination: { bg: "hsl(var(--resource-rumination-bg))", accent: "hsl(var(--resource-rumination-accent))" },
           safety: { bg: "hsl(var(--resource-safety-bg))", accent: "hsl(var(--resource-safety-accent))" },
         },
       },
