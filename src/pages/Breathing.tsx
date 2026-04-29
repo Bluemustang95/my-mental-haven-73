@@ -74,9 +74,9 @@ export default function Breathing() {
   const scale = phase === "inhale" ? 0.6 + progress * 0.4 : phase === "exhale" ? 1 - progress * 0.4 : phase === "idle" ? 0.6 : 1;
 
   return (
-    <div className="flex min-h-screen flex-col items-center px-5 pt-14 pb-4 safe-area-top">
+    <div className="flex min-h-screen flex-col items-center bg-resource-breathing-bg px-5 pt-14 pb-4 text-resource-breathing-accent safe-area-top">
       <h1 className="mb-2 font-display text-xl font-semibold">Respiración guiada</h1>
-      <p className="mb-8 text-sm text-muted-foreground">Elegí un patrón y dejá que tu cuerpo se regule.</p>
+      <p className="mb-8 text-sm text-resource-breathing-accent/65">Elegí un patrón y dejá que tu cuerpo se regule.</p>
 
       {/* Preset selection */}
       <div className="mb-10 flex gap-2">
@@ -86,7 +86,7 @@ export default function Breathing() {
             onClick={() => { setSelectedPreset(i); reset(); }}
             className={cn(
               "rounded-full border px-4 py-2 font-display text-xs font-medium transition-all",
-              i === selectedPreset ? "border-accent bg-accent/10" : "border-border bg-card text-muted-foreground"
+              i === selectedPreset ? "border-resource-breathing-accent bg-resource-breathing-accent/10 text-resource-breathing-accent" : "border-resource-breathing-accent/15 bg-card/70 text-resource-breathing-accent/60"
             )}
           >
             {p.name}
@@ -99,19 +99,19 @@ export default function Breathing() {
         <motion.div
           animate={{ scale }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="absolute inset-0 rounded-full border-2 border-accent/30 bg-accent/10"
+          className="absolute inset-0 rounded-full border-2 border-resource-breathing-accent/30 bg-resource-breathing-accent/10"
         />
         <motion.div
           animate={{ scale: scale * 0.7 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="absolute inset-8 rounded-full bg-accent/20"
+          className="absolute inset-8 rounded-full bg-resource-breathing-accent/20"
         />
         <p className="relative z-10 font-display text-sm font-medium">
           {phaseLabels[phase]}
         </p>
       </div>
 
-      <p className="mb-8 text-xs text-muted-foreground">
+      <p className="mb-8 text-xs text-resource-breathing-accent/65">
         {preset.description} · {cycleCount} {cycleCount === 1 ? "ciclo" : "ciclos"}
       </p>
 
@@ -119,14 +119,14 @@ export default function Breathing() {
       <div className="flex gap-4">
         <button
           onClick={() => setIsRunning(!isRunning)}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-resource-breathing-accent text-primary-foreground shadow-lg shadow-resource-breathing-accent/20 transition-transform active:scale-95"
         >
           {isRunning ? <Pause size={24} weight="fill" /> : <Play size={24} weight="fill" />}
         </button>
         {elapsed > 0 && (
           <button
             onClick={reset}
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-transform active:scale-95"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-resource-breathing-accent/15 bg-card/70 text-resource-breathing-accent/65 transition-transform active:scale-95"
           >
             <ArrowCounterClockwise size={20} />
           </button>
