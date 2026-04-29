@@ -75,8 +75,8 @@ export default function Breathing() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-resource-breathing-bg px-5 pt-14 pb-4 text-resource-breathing-accent safe-area-top">
-      <h1 className="mb-2 font-display text-xl font-semibold">Respiración guiada</h1>
-      <p className="mb-8 text-sm text-resource-breathing-accent/65">Elegí un patrón y dejá que tu cuerpo se regule.</p>
+      <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Respiración guiada</h1>
+      <p className="mb-8 font-sans text-xs font-normal leading-6 text-resource-breathing-accent/65 sm:text-sm sm:leading-7">Elegí un patrón y dejá que tu cuerpo se regule.</p>
 
       {/* Preset selection */}
       <div className="mb-10 flex gap-2">

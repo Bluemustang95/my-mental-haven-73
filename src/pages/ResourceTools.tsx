@@ -2,11 +2,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon, PillBottle } from "lucide-react";
+import { ArrowLeft, Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon, PillBottle, Wine } from "lucide-react";
 
 type ResourceTool = { id: string; name: string; description: string | null; slug: string; tool_type: string; config: { url?: string } | null };
 
-const iconMap: Record<string, typeof Sparkles> = { Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon, PillBottle };
+const iconMap: Record<string, typeof Sparkles> = { Sparkles, Wind, Flower2, Hand, Leaf, BookOpen, Heart, Brain, Music, Moon, PillBottle, Wine };
 
 const colorMap: Record<string, string> = {
   accent: "bg-accent/15 border-accent/30",
@@ -70,7 +70,7 @@ export default function ResourceTools() {
     return <div className="p-6 text-center text-sm text-muted-foreground">Cargando…</div>;
   }
 
-  const Icon = iconMap[category.icon] || Sparkles;
+  const Icon = category.slug === "recuperacion" ? Wine : iconMap[category.icon] || Sparkles;
   const colorClass = slugThemeMap[category.slug] || colorMap[category.color] || colorMap.muted;
   const baseRoute = runnerRoute[category.slug] || `/herramientas/${category.slug}`;
 
@@ -94,8 +94,8 @@ export default function ResourceTools() {
         <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-card/70">
           <Icon className="h-6 w-6" />
         </div>
-        <h1 className="font-display text-xl font-semibold">{category.name}</h1>
-        {category.description && <p className="mt-1 text-sm opacity-80">{category.description}</p>}
+        <h1 className="font-mindful text-3xl leading-tight">{category.name}</h1>
+        {category.description && <p className="mt-1 font-sans text-xs font-normal leading-6 opacity-80 sm:text-sm sm:leading-7">{category.description}</p>}
       </div>
 
       <div className="space-y-3">

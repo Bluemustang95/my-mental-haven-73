@@ -77,9 +77,9 @@ export default function ContentLibrary() {
         <button onClick={() => navigate(-1)} className="text-resource-psycho-accent/65">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-display text-lg font-semibold text-resource-psycho-accent">Psicoeducación</h1>
+        <h1 className="font-mindful text-3xl leading-tight text-resource-psycho-accent sm:text-4xl">Psicoeducación</h1>
       </div>
-      <p className="mb-4 text-sm text-resource-psycho-accent/65">Material para aprender sobre tu salud mental.</p>
+      <p className="mb-4 font-sans text-xs font-normal leading-6 text-resource-psycho-accent/65 sm:text-sm sm:leading-7">Material para aprender sobre tu salud mental.</p>
 
       {/* Psico-Factos CTA */}
       <button

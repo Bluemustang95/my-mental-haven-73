@@ -72,8 +72,8 @@ export default function Sleep() {
           <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-card/70 shadow-sm shadow-resource-sleep-accent/10">
             <Moon size={28} weight="duotone" />
           </div>
-          <h1 className="font-display text-4xl font-semibold leading-tight">Sueño</h1>
-          <p className="mt-5 max-w-xs text-base font-semibold leading-8 text-resource-sleep-accent/70">
+          <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Sueño</h1>
+          <p className="max-w-xs font-sans text-xs font-normal leading-6 text-resource-sleep-accent/70 sm:text-sm sm:leading-7">
             La higiene del sueño te ayuda a preparar el descanso con hábitos simples, acompañando al cuerpo y la mente para dormir mejor.
           </p>
         </motion.div>
@@ -94,8 +94,8 @@ export default function Sleep() {
           <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/80 shadow-xl shadow-resource-sleep-accent/10">
             <Check size={40} weight="bold" />
           </div>
-          <h1 className="font-display text-3xl font-semibold">¡Dulces sueños!</h1>
-          <p className="mt-4 text-base leading-7 text-resource-sleep-accent/75">Si los problemas de sueño son crónicos, la Terapia Cognitivo-Conductual es el enfoque más efectivo para abordarlos de manera profunda.</p>
+          <h1 className="font-mindful text-3xl leading-tight">¡Dulces sueños!</h1>
+          <p className="mt-4 font-sans text-xs font-normal leading-6 text-resource-sleep-accent/75 sm:text-sm sm:leading-7">Si los problemas de sueño son crónicos, la Terapia Cognitivo-Conductual es el enfoque más efectivo para abordarlos de manera profunda.</p>
           <button onClick={() => navigate("/herramientas")} className="mt-9 w-full rounded-[2.5rem] bg-resource-sleep-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-sleep-accent/20 active:scale-[0.98]">
             Cerrar
           </button>
@@ -127,7 +127,7 @@ export default function Sleep() {
           <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[1.75rem] bg-card/70 shadow-sm shadow-resource-sleep-accent/10">
             <Icon size={30} weight="duotone" />
           </div>
-          <h1 className="font-display text-3xl font-semibold leading-tight">{current.title}</h1>
+          <h1 className="font-mindful text-3xl leading-tight">{current.title}</h1>
           <div className="mt-6 space-y-3">
             {current.items.map((item, index) => (
               <div key={item}>

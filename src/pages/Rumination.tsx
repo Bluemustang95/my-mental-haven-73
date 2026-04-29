@@ -116,8 +116,8 @@ export default function Rumination() {
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-card/80 shadow-sm shadow-resource-rumination-accent/10">
             <Brain size={34} weight="duotone" />
           </div>
-          <h1 className="font-display text-4xl font-semibold leading-tight">Rumiación</h1>
-          <p className="mt-4 max-w-sm text-base font-semibold leading-7 text-resource-rumination-accent/75">
+          <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Rumiación</h1>
+          <p className="max-w-sm font-sans text-xs font-normal leading-6 text-resource-rumination-accent/75 sm:text-sm sm:leading-7">
             La rumiación es cuando tu mente da vueltas sobre el mismo tema una y otra vez. Estas herramientas te ayudan a ver tus pensamientos desde afuera para que dejen de pesarte tanto.
           </p>
           <div className="mt-7 w-full space-y-3">
@@ -145,8 +145,8 @@ export default function Rumination() {
         <div className="flex flex-1 flex-col justify-center">
           <div className="rounded-[2.5rem] border border-resource-rumination-accent/15 bg-card/85 p-6 text-center shadow-sm">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-resource-rumination-accent/10"><Check size={32} weight="bold" /></div>
-            <h1 className="font-display text-3xl font-semibold leading-tight">Registro guardado</h1>
-            <p className="mt-3 text-sm font-semibold leading-6 text-resource-rumination-accent/70">Podés descargarlo en formato profesional para llevarlo a terapia.</p>
+            <h1 className="font-mindful text-3xl leading-tight">Registro guardado</h1>
+            <p className="mt-3 font-sans text-xs font-normal leading-6 text-resource-rumination-accent/70 sm:text-sm">Podés descargarlo en formato profesional para llevarlo a terapia.</p>
           </div>
           <button onClick={downloadThoughtRecord} className="mt-6 flex w-full items-center justify-center gap-2 rounded-[2.5rem] bg-resource-rumination-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-rumination-accent/20 active:scale-[0.98]">
             <DownloadSimple size={20} weight="bold" />
@@ -168,8 +168,8 @@ export default function Rumination() {
           <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/85 shadow-xl shadow-resource-rumination-accent/10">
             <Check size={40} weight="bold" />
           </div>
-          <h1 className="font-display text-3xl font-semibold leading-tight">¡Mente clara!</h1>
-          <p className="mt-4 text-base font-semibold leading-7 text-resource-rumination-accent/75">Mirar tus pensamientos es el primer paso para liberarte de ellos. ¡Mente clara!</p>
+          <h1 className="font-mindful text-3xl leading-tight">¡Mente clara!</h1>
+          <p className="mt-4 font-sans text-xs font-normal leading-6 text-resource-rumination-accent/75 sm:text-sm sm:leading-7">Mirar tus pensamientos es el primer paso para liberarte de ellos. ¡Mente clara!</p>
           <button onClick={() => navigate("/herramientas")} className="mt-9 w-full rounded-[2.5rem] bg-resource-rumination-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-rumination-accent/20 active:scale-[0.98]">
             Cerrar
           </button>
@@ -240,8 +240,8 @@ export default function Rumination() {
       <div className="mb-6 flex gap-2">{recordSteps.map((step, index) => <div key={step.key} className={cn("h-2 flex-1 rounded-full", index <= recordStep ? "bg-resource-rumination-accent" : "bg-card/80")} />)}</div>
       <AnimatePresence mode="wait">
         <motion.div key={current.key} initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -28 }} className="flex-1">
-          <h1 className="font-display text-3xl font-semibold leading-tight">{current.title}</h1>
-          <p className="mt-2 text-sm font-semibold leading-6 text-resource-rumination-accent/70">{current.prompt}</p>
+          <h1 className="font-mindful text-3xl leading-tight">{current.title}</h1>
+          <p className="mt-2 font-sans text-xs font-normal leading-6 text-resource-rumination-accent/70 sm:text-sm sm:leading-7">{current.prompt}</p>
           <div className="mt-6 rounded-[2.5rem] border border-resource-rumination-accent/15 bg-card p-5 shadow-sm">
             {current.type === "textarea" && <textarea value={(recordData[current.key] as string) || ""} onChange={(e) => setRecordData({ ...recordData, [current.key]: e.target.value })} placeholder="Anotá acá..." className="min-h-[170px] w-full resize-none bg-transparent text-base font-semibold leading-7 outline-none placeholder:text-resource-rumination-accent/35" autoFocus />}
             {current.type === "emotion" && <div className="space-y-5"><input value={(recordData.emotion as string) || ""} onChange={(e) => setRecordData({ ...recordData, emotion: e.target.value })} placeholder="Triste, ansioso, enojado..." className="w-full bg-transparent text-base font-semibold outline-none placeholder:text-resource-rumination-accent/35" autoFocus /><div><p className="mb-3 text-center font-display text-4xl font-semibold">{recordData.intensity}</p><input type="range" min="0" max="100" value={(recordData.intensity as number) ?? 50} onChange={(e) => setRecordData({ ...recordData, intensity: Number(e.target.value) })} className="w-full accent-resource-rumination-accent" /><div className="mt-2 flex justify-between text-[10px] font-semibold text-resource-rumination-accent/50"><span>0</span><span>100</span></div></div></div>}
