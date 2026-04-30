@@ -39,7 +39,7 @@ export function BottomNav() {
         whileTap={{ scale: 0.85, opacity: 0.7 }}
         aria-label={tab.label}
         className={cn(
-          "flex flex-1 items-center justify-center py-2.5 transition-colors min-w-0",
+          "flex h-11 w-11 items-center justify-center rounded-full transition-colors",
           active ? "text-foreground" : "text-muted-foreground"
         )}
       >
@@ -63,38 +63,43 @@ export function BottomNav() {
     <motion.nav
       animate={shrunk ? { scale: 0.94, y: 4 } : { scale: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className="fixed bottom-4 left-1/2 z-40 w-[min(92vw,22rem)] -translate-x-1/2"
+      style={{
+        position: "fixed",
+        bottom: "2rem",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 50,
+        width: "fit-content",
+      }}
     >
-      <div className="flex items-center justify-between rounded-full border border-border/40 bg-card/70 px-3 py-1.5 shadow-lg backdrop-blur-xl">
+      <div className="mx-auto flex w-fit items-center justify-center gap-1 rounded-full border border-border/40 bg-card/70 px-3 py-1.5 shadow-lg backdrop-blur-xl">
         {/* Left side */}
-        <div className="flex flex-1 items-center justify-around gap-1">
+        <div className="flex items-center gap-1">
           {leftTabs.map(renderTab)}
         </div>
 
         {/* Center – Resmita FAB */}
-        <div className="flex w-14 shrink-0 items-center justify-center">
-          <motion.button
-            onClick={() => navigate("/resmita")}
-            whileTap={{ scale: 0.9 }}
-            aria-label="Resmita"
-            className="relative -mt-5 flex items-center justify-center"
+        <motion.button
+          onClick={() => navigate("/resmita")}
+          whileTap={{ scale: 0.9 }}
+          aria-label="Resmita"
+          className="relative -mt-5 mx-1 flex items-center justify-center"
+        >
+          <motion.div
+            animate={resmitaActive ? { scale: 1.08 } : { scale: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className={cn(
+              "flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-md transition-colors",
+              "bg-[hsl(48_100%_85%)] border-[hsl(38_85%_55%)] text-[hsl(28_70%_30%)]",
+              resmitaActive && "ring-2 ring-[hsl(38_85%_55%)]/40"
+            )}
           >
-            <motion.div
-              animate={resmitaActive ? { scale: 1.08 } : { scale: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-md transition-colors",
-                "bg-[hsl(48_100%_85%)] border-[hsl(38_85%_55%)] text-[hsl(28_70%_30%)]",
-                resmitaActive && "ring-2 ring-[hsl(38_85%_55%)]/40"
-              )}
-            >
-              <ChatCircle size={24} weight={resmitaActive ? "fill" : "bold"} />
-            </motion.div>
-          </motion.button>
-        </div>
+            <ChatCircle size={24} weight={resmitaActive ? "fill" : "bold"} />
+          </motion.div>
+        </motion.button>
 
         {/* Right side */}
-        <div className="flex flex-1 items-center justify-around gap-1">
+        <div className="flex items-center gap-1">
           {rightTabs.map(renderTab)}
         </div>
       </div>
