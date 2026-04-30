@@ -39,7 +39,7 @@ export function BottomNav() {
         whileTap={{ scale: 0.85, opacity: 0.7 }}
         aria-label={tab.label}
         className={cn(
-          "flex flex-1 items-center justify-center py-2.5 transition-colors min-w-0",
+          "flex h-11 w-11 items-center justify-center rounded-full transition-colors",
           active ? "text-foreground" : "text-muted-foreground"
         )}
       >
