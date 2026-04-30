@@ -263,7 +263,7 @@ export default function Diario() {
       </AnimatePresence>
 
       {/* ── Writing area (flexible canvas) ── */}
-      <div className="flex flex-col px-6 pt-3 transition-all duration-300">
+      <div className="flex flex-col px-6 pt-1 transition-all duration-300">
         <textarea
           ref={(el) => {
             if (!el) return;
@@ -279,7 +279,7 @@ export default function Diario() {
           }}
           placeholder={zenMode ? "Escribí con calma..." : dynamicPlaceholder}
           className={`w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-foreground shadow-none leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
-            zenMode ? "min-h-[40vh] text-[17px]" : "min-h-[8rem] text-[15px]"
+            zenMode ? "min-h-[40vh] text-[17px]" : "min-h-0 text-[15px]"
           }`}
           autoFocus
         />
