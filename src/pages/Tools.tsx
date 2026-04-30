@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Heart,
@@ -25,9 +24,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import CrisisPlan from "@/components/CrisisPlan";
-import { supabase } from "@/integrations/supabase/client";
-
-type FeelingOption = { label: string; path: string; name: string };
 
 const resourceThemes = {
   psicoeducacion: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent",
@@ -41,38 +37,95 @@ const resourceThemes = {
   regulacion: "border-resource-regulation-accent/15 bg-resource-regulation-bg text-resource-regulation-accent",
   alimentacion: "border-resource-eating-accent/15 bg-resource-eating-bg text-resource-eating-accent",
   valores: "border-resource-values-accent/15 bg-resource-values-bg text-resource-values-accent",
+  guia: "border-primary/15 bg-primary/5 text-primary",
+} as const;
+
+type ResourceKey = keyof typeof resourceThemes;
+type Recommendation = { key: ResourceKey; path: string; name: string };
+type GuideChoice = { label: string; scores: Partial<Record<ResourceKey, number>> };
+
+const recommendations: Record<ResourceKey, Recommendation> = {
+  psicoeducacion: { key: "psicoeducacion", path: "/herramientas/intro/psicoeducacion", name: "Psicoeducación" },
+  mindfulness: { key: "mindfulness", path: "/herramientas/mindfulness", name: "Mindfulness" },
+  autocuidado: { key: "autocuidado", path: "/herramientas/intro/autocuidado", name: "Autocuidado" },
+  grounding: { key: "grounding", path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" },
+  respiracion: { key: "respiracion", path: "/herramientas/respiracion", name: "Respiración" },
+  sueno: { key: "sueno", path: "/herramientas/sueno", name: "Sueño" },
+  rumiacion: { key: "rumiacion", path: "/herramientas/rumiacion", name: "Rumiación" },
+  recuperacion: { key: "recuperacion", path: "/herramientas/recuperacion", name: "Recuperación" },
+  regulacion: { key: "regulacion", path: "/herramientas/regulacion-emocional", name: "Regulación Emocional" },
+  alimentacion: { key: "alimentacion", path: "/herramientas/intro/alimentacion-consciente", name: "Alimentación Consciente" },
+  valores: { key: "valores", path: "/herramientas/intro/mis-valores", name: "Mis Valores" },
+  guia: { key: "guia", path: "/herramientas", name: "Te guiamos" },
 };
 
-const FALLBACK_FEELINGS: FeelingOption[] = [
-  { label: "Ansiedad o nervios", path: "/herramientas/respiracion", name: "Respiración Guiada" },
-  { label: "Tensión física", path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" },
-  { label: "Mente acelerada", path: "/herramientas/mindfulness", name: "Mindfulness" },
-  { label: "Desmotivación", path: "/herramientas/autocuidado", name: "Autocuidado Offline" },
-  { label: "Quiero aprender", path: "/herramientas/contenido", name: "Psicoeducación" },
+const guideQuestions: { title: string; choices: GuideChoice[] }[] = [
+  {
+    title: "¿Qué necesitás cuidar ahora?",
+    choices: [
+      { label: "Calmar el cuerpo", scores: { grounding: 3, respiracion: 2, regulacion: 1 } },
+      { label: "Ordenar pensamientos", scores: { rumiacion: 3, mindfulness: 2, psicoeducacion: 1 } },
+      { label: "Conectar con lo importante", scores: { valores: 3, recuperacion: 1, autocuidado: 1 } },
+      { label: "Cuidar hábitos cotidianos", scores: { autocuidado: 3, sueno: 2, alimentacion: 2 } },
+    ],
+  },
+  {
+    title: "¿Qué sentís con más fuerza?",
+    choices: [
+      { label: "Ansiedad o tensión", scores: { respiracion: 3, grounding: 2, regulacion: 1 } },
+      { label: "Emociones intensas", scores: { regulacion: 3, grounding: 2, mindfulness: 1 } },
+      { label: "Cansancio o desconexión", scores: { autocuidado: 3, sueno: 2, recuperacion: 1 } },
+      { label: "Dudas sobre mis decisiones", scores: { valores: 3, psicoeducacion: 1, mindfulness: 1 } },
+    ],
+  },
+  {
+    title: "¿Qué tipo de recurso te serviría más?",
+    choices: [
+      { label: "Un ejercicio breve", scores: { grounding: 3, respiracion: 3, mindfulness: 2 } },
+      { label: "Escribir y registrar", scores: { valores: 3, alimentacion: 3, recuperacion: 2 } },
+      { label: "Aprender algo claro", scores: { psicoeducacion: 3, rumiacion: 2, regulacion: 1 } },
+      { label: "Planear un cuidado concreto", scores: { autocuidado: 3, sueno: 2, alimentacion: 1 } },
+    ],
+  },
 ];
 
 export default function Tools() {
   const navigate = useNavigate();
   const [guideOpen, setGuideOpen] = useState(false);
-  const [recommendation, setRecommendation] = useState<{ path: string; name: string } | null>(null);
+  const [guideStep, setGuideStep] = useState(0);
+  const [guideScores, setGuideScores] = useState<Partial<Record<ResourceKey, number>>>({});
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
 
-  const { data: feelingOptions = FALLBACK_FEELINGS } = useQuery<FeelingOption[]>({
-    queryKey: ["te-guiamos-options"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("resource_tools")
-        .select("config, resource_categories!inner(slug)")
-        .eq("resource_categories.slug", "te-guiamos")
-        .eq("is_published", true)
-        .maybeSingle();
-      const opts = (data?.config as { options?: FeelingOption[] } | null)?.options;
-      return Array.isArray(opts) && opts.length ? opts : FALLBACK_FEELINGS;
-    },
-  });
-
-  const handleFeeling = (opt: { path: string; name: string }) => {
-    setRecommendation({ path: opt.path, name: opt.name });
+  const resetGuide = () => {
+    setGuideStep(0);
+    setGuideScores({});
+    setRecommendation(null);
   };
+
+  const chooseRecommendation = (scores: Partial<Record<ResourceKey, number>>) => {
+    const winner = (Object.entries(scores) as [ResourceKey, number][]).reduce(
+      (best, current) => (current[1] > best[1] ? current : best),
+      ["grounding", 0] as [ResourceKey, number],
+    )[0];
+    setRecommendation(recommendations[winner]);
+  };
+
+  const handleGuideChoice = (choice: GuideChoice) => {
+    const nextScores = { ...guideScores };
+    (Object.entries(choice.scores) as [ResourceKey, number][]).forEach(([key, value]) => {
+      nextScores[key] = (nextScores[key] ?? 0) + value;
+    });
+
+    if (guideStep >= guideQuestions.length - 1) {
+      chooseRecommendation(nextScores);
+      return;
+    }
+
+    setGuideScores(nextScores);
+    setGuideStep((step) => step + 1);
+  };
+
+  const currentQuestion = guideQuestions[guideStep];
 
   return (
     <div className="px-5 pt-14 pb-4 safe-area-top">
@@ -94,15 +147,15 @@ export default function Tools() {
       {/* Hero – Te guiamos */}
       <motion.button
         whileTap={{ scale: 0.97 }}
-        onClick={() => { setRecommendation(null); setGuideOpen(true); }}
-        className="mb-6 flex w-full items-center gap-4 rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
+        onClick={() => { resetGuide(); setGuideOpen(true); }}
+        className={`mb-6 flex w-full flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.guia}`}
       >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/15">
-          <Sparkles size={22} className="text-accent-foreground" />
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+          <Sparkles size={20} />
         </div>
-        <div className="flex-1">
-          <p className="font-display text-sm font-semibold text-foreground">Te guiamos</p>
-          <p className="text-xs text-muted-foreground">¿No sabés por dónde empezar?</p>
+        <div className="mt-4">
+          <p className="font-display text-sm font-semibold">Te guiamos</p>
+          <p className="mt-0.5 text-[11px] leading-snug opacity-75">Encontrá el recurso más apropiado para este momento</p>
         </div>
       </motion.button>
 
@@ -249,38 +302,46 @@ export default function Tools() {
 
       {/* Guide Dialog */}
       <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
-        <DialogContent className="rounded-[2rem] border-border">
+        <DialogContent className={`rounded-[2rem] border p-6 ${recommendation ? resourceThemes[recommendation.key] : resourceThemes.guia}`}>
           <DialogHeader>
             <DialogTitle className="font-display">¿Cómo te sentís ahora?</DialogTitle>
-            <DialogDescription>Elegí lo que más resuene y te recomendamos un recurso.</DialogDescription>
+            <DialogDescription className="text-current opacity-70">
+              {recommendation ? "Te recomendamos probar:" : "Elegí lo que más resuene y te recomendamos un recurso."}
+            </DialogDescription>
           </DialogHeader>
 
           {!recommendation ? (
-            <div className="space-y-2 pt-2">
-              {feelingOptions.map((opt) => (
+            <motion.div
+              key={guideStep}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-3 pt-2"
+            >
+              <p className="font-display text-lg font-semibold">{currentQuestion.title}</p>
+              {currentQuestion.choices.map((choice) => (
                 <button
-                  key={opt.label}
-                  onClick={() => handleFeeling(opt)}
-                  className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-left font-display text-sm transition-colors active:bg-muted"
+                  key={choice.label}
+                  onClick={() => handleGuideChoice(choice)}
+                  className="w-full rounded-2xl border border-current/10 bg-card/80 px-4 py-3 text-left font-display text-sm transition-transform active:scale-[0.98]"
                 >
-                  {opt.label}
+                  {choice.label}
                 </button>
               ))}
-            </div>
+            </motion.div>
           ) : (
             <div className="space-y-4 pt-2 text-center">
-              <p className="text-sm text-muted-foreground">Te recomendamos probar:</p>
-              <p className="font-display text-lg font-semibold text-foreground">{recommendation.name}</p>
+              <p className="font-display text-2xl font-semibold">{recommendation.name}</p>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setRecommendation(null)}
-                  className="flex-1 rounded-2xl border border-border py-2.5 font-display text-sm text-muted-foreground transition-colors active:bg-muted"
+                  onClick={resetGuide}
+                  className="flex-1 rounded-2xl border border-current/15 bg-card/65 py-2.5 font-display text-sm transition-colors active:bg-card"
                 >
                   Volver
                 </button>
                 <button
                   onClick={() => { setGuideOpen(false); navigate(recommendation.path); }}
-                  className="flex-1 rounded-2xl bg-primary py-2.5 font-display text-sm text-primary-foreground transition-colors active:opacity-90"
+                  className="flex-1 rounded-2xl bg-current py-2.5 font-display text-sm text-card transition-colors active:opacity-90"
                 >
                   Ir al recurso
                 </button>
