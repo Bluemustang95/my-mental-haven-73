@@ -603,34 +603,37 @@ export default function Dashboard() {
               </section>
 
               {/* ── Quick links from calendar ── */}
-              <div className="mb-4 grid grid-cols-2 gap-2.5">
-                <button
+              <div className="mb-4 grid grid-cols-2 gap-3">
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => { setSelectedDay(null); navigate("/diario/checkin"); }}
-                  className="flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-safety-accent/15 bg-resource-safety-bg p-3.5 text-left text-resource-safety-accent shadow-sm transition active:scale-[0.98]"
+                  className="flex min-h-[132px] flex-col items-start rounded-[2.5rem] border border-resource-safety-accent/15 bg-resource-safety-bg p-5 text-left text-resource-safety-accent shadow-sm"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70">
-                    <Heart size={17} weight="duotone" />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-card/70">
+                    <Heart size={20} weight="duotone" />
                   </span>
-                  <span className="font-display text-[11px] font-semibold leading-tight">Check-in rápido</span>
-                </button>
-                <button
+                  <span className="mt-auto pt-4 font-display text-sm font-semibold leading-tight">Check-in rápido</span>
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => { setSelectedDay(null); navigate("/diario/objetivos"); }}
-                  className="flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-values-accent/15 bg-resource-values-bg p-3.5 text-left text-resource-values-accent shadow-sm transition active:scale-[0.98]"
+                  className="flex min-h-[132px] flex-col items-start rounded-[2.5rem] border border-resource-values-accent/15 bg-resource-values-bg p-5 text-left text-resource-values-accent shadow-sm"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70">
-                    <Flag size={17} weight="duotone" />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-card/70">
+                    <Flag size={20} weight="duotone" />
                   </span>
-                  <span className="font-display text-[11px] font-semibold leading-tight">Mis objetivos</span>
-                </button>
-                <button
+                  <span className="mt-auto pt-4 font-display text-sm font-semibold leading-tight">Mis objetivos</span>
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => { setSelectedDay(null); navigate("/diario/logros"); }}
-                  className="col-span-2 flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-breathing-accent/15 bg-resource-breathing-bg p-3.5 text-left text-resource-breathing-accent shadow-sm transition active:scale-[0.98]"
+                  className="col-span-2 flex min-h-[118px] flex-col items-start rounded-[2.5rem] border border-resource-breathing-accent/15 bg-resource-breathing-bg p-5 text-left text-resource-breathing-accent shadow-sm"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70">
-                    <Trophy size={17} weight="duotone" />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-card/70">
+                    <Trophy size={20} weight="duotone" />
                   </span>
-                  <span className="font-display text-[11px] font-semibold leading-tight">Micro-logros</span>
-                </button>
+                  <span className="mt-auto pt-4 font-display text-sm font-semibold leading-tight">Micro-logros</span>
+                </motion.button>
               </div>
 
               {/* ── Separator ──── */}
