@@ -284,6 +284,15 @@ export default function Dashboard() {
     fetchCheckins();
   };
 
+  useEffect(() => {
+    if (restoredCalendarDay.current) return;
+    const state = location.state as { calendarDay?: string } | null;
+    if (!state?.calendarDay) return;
+    restoredCalendarDay.current = true;
+    openDayDetail(new Date(`${state.calendarDay}T12:00:00`));
+    navigate(location.pathname, { replace: true });
+  }, [location.pathname, location.state, navigate]);
+
   const empathicMsg = modalMood ? getEmpathicMsg(modalMood) : null;
   const selectedDayStr = selectedDay ? localDateStr(selectedDay) : "";
   const isSelectedToday = selectedDay ? isSameDay(selectedDay, today) : false;
