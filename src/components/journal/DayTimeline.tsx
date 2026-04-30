@@ -6,17 +6,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import HistoryPanel from "./HistoryPanel";
+import { useConsistentBack } from "@/hooks/useConsistentBack";
 
 const periods = [
-  { key: "morning", label: "Mañana", icon: Sun, color: "bg-accent/15 text-accent-foreground" },
-  { key: "afternoon", label: "Tarde", icon: CloudSun, color: "bg-secondary text-secondary-foreground" },
-  { key: "night", label: "Noche", icon: Moon, color: "bg-primary/10 text-foreground" },
+  { key: "morning", label: "Mañana", icon: Sun },
+  { key: "afternoon", label: "Tarde", icon: CloudSun },
+  { key: "night", label: "Noche", icon: Moon },
 ];
 
 const moodLabels = ["", "Muy mal", "Mal", "Regular", "Bien", "Muy bien"];
 
 export default function DayTimeline() {
   const navigate = useNavigate();
+  const goBack = useConsistentBack("/diario/herramientas");
   const { user } = useAuth();
   const [entries, setEntries] = useState<Record<string, { mood: number; note: string }>>({
     morning: { mood: 0, note: "" },
@@ -69,7 +71,7 @@ export default function DayTimeline() {
         );
       }
       toast.success("Línea del día guardada");
-      navigate("/diario");
+      goBack();
     } catch {
       toast.error("Error al guardar");
     } finally {
@@ -80,17 +82,19 @@ export default function DayTimeline() {
   const hasData = Object.values(entries).some((e) => e.mood > 0);
 
   return (
-    <div className="flex min-h-screen flex-col px-5 pt-14 pb-4 safe-area-top">
+    <div className="flex min-h-screen flex-col bg-resource-sleep-bg px-5 pt-14 pb-4 text-resource-sleep-accent safe-area-top">
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => navigate("/diario")} className="text-muted-foreground">
+        <button onClick={goBack} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-sleep-accent/15 bg-card/75 text-resource-sleep-accent shadow-sm">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="flex-1 font-display text-lg font-semibold">Línea del día</h1>
+        <div className="flex-1">
+          <h1 className="font-mindful text-3xl leading-tight">Línea del día</h1>
+          <p className="font-sans text-xs leading-5 text-resource-sleep-accent/65">Cómo fue cada momento</p>
+        </div>
         <HistoryPanel<{ id: string; created_at: string | null; period: string; mood_score: number | null; note: string | null; entry_date: string | null }>
           tableName="day_timeline_entries"
           renderItem={(item) => {
             const periodLabel = item.period === "morning" ? "Mañana" : item.period === "afternoon" ? "Tarde" : "Noche";
-            const moodLabels = ["", "Muy mal", "Mal", "Regular", "Bien", "Muy bien"];
             return (
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-medium text-foreground">{periodLabel}</span>
@@ -100,7 +104,6 @@ export default function DayTimeline() {
           }}
           renderDetail={(item) => {
             const periodLabel = item.period === "morning" ? "Mañana" : item.period === "afternoon" ? "Tarde" : "Noche";
-            const moodLabels = ["", "Muy mal", "Mal", "Regular", "Bien", "Muy bien"];
             return (
               <div className="space-y-3">
                 <div>
@@ -123,32 +126,29 @@ export default function DayTimeline() {
         />
       </div>
 
-      <p className="mb-6 text-sm text-muted-foreground">Registrá cómo fue cada momento de tu día.</p>
-
       <div className="flex-1 space-y-4">
         {periods.map((p) => {
           const Icon = p.icon;
           const data = entries[p.key];
           return (
-            <div key={p.key} className="rounded-2xl border border-border bg-card p-4">
+            <div key={p.key} className="rounded-[2rem] border border-resource-sleep-accent/15 bg-card/75 p-4 shadow-sm">
               <div className="mb-3 flex items-center gap-2.5">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${p.color}`}>
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-resource-sleep-bg/70">
                   <Icon size={16} weight="duotone" />
                 </div>
-                <span className="font-display text-sm font-medium">{p.label}</span>
+                <span className="font-display text-sm font-semibold">{p.label}</span>
               </div>
 
-              {/* Mood selector */}
               <div className="mb-3 flex gap-1.5">
                 {[1, 2, 3, 4, 5].map((v) => (
                   <button
                     key={v}
                     onClick={() => updatePeriod(p.key, "mood", v)}
                     className={cn(
-                      "flex-1 rounded-lg py-1.5 font-display text-[10px] transition-all",
+                      "flex-1 rounded-xl py-1.5 font-display text-[10px] font-semibold transition-all",
                       data.mood === v
-                        ? "bg-accent text-accent-foreground"
-                        : "bg-muted/50 text-muted-foreground"
+                        ? "bg-resource-sleep-accent text-primary-foreground"
+                        : "bg-resource-sleep-bg/55 text-resource-sleep-accent/70"
                     )}
                   >
                     {moodLabels[v]}
@@ -160,8 +160,8 @@ export default function DayTimeline() {
                 value={data.note}
                 onChange={(e) => updatePeriod(p.key, "note", e.target.value)}
                 placeholder="¿Qué pasó? (opcional)"
-                className="w-full resize-none rounded-xl border border-border bg-background p-2.5 text-xs font-body placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 rows={2}
+                className="w-full resize-none rounded-xl border border-resource-sleep-accent/15 bg-resource-sleep-bg/40 p-2.5 font-sans text-xs text-resource-sleep-accent placeholder:text-resource-sleep-accent/45 focus:outline-none focus:ring-2 focus:ring-resource-sleep-accent/20"
               />
             </div>
           );
@@ -172,8 +172,8 @@ export default function DayTimeline() {
         onClick={save}
         disabled={!hasData || saving}
         className={cn(
-          "mt-4 w-full rounded-2xl py-3 font-display text-sm font-medium transition-all",
-          hasData ? "bg-primary text-primary-foreground active:scale-[0.98]" : "bg-muted text-muted-foreground"
+          "mt-4 w-full rounded-2xl py-3 font-display text-sm font-semibold transition-all",
+          hasData ? "bg-resource-sleep-accent text-primary-foreground active:scale-[0.98]" : "bg-card/55 text-resource-sleep-accent/45"
         )}
       >
         {saving ? "Guardando..." : "Guardar"}
