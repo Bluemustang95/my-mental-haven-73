@@ -63,9 +63,16 @@ export function BottomNav() {
     <motion.nav
       animate={shrunk ? { scale: 0.94, y: 4 } : { scale: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className="fixed bottom-4 left-1/2 z-40 w-[min(92vw,22rem)] -translate-x-1/2"
+      style={{
+        position: "fixed",
+        bottom: "2rem",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 50,
+        width: "fit-content",
+      }}
     >
-      <div className="flex items-center justify-between rounded-full border border-border/40 bg-card/70 px-3 py-1.5 shadow-lg backdrop-blur-xl">
+      <div className="mx-auto flex w-fit items-center justify-center gap-1 rounded-full border border-border/40 bg-card/70 px-3 py-1.5 shadow-lg backdrop-blur-xl">
         {/* Left side */}
         <div className="flex flex-1 items-center justify-around gap-1">
           {leftTabs.map(renderTab)}
