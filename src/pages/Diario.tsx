@@ -473,8 +473,8 @@ export default function Diario() {
         onClick={() => { setZenMode(!zenMode); setFabOpen(false); }}
         className={`fixed z-40 flex items-center gap-2 rounded-full shadow-lg transition-all duration-300 ${
           zenMode
-            ? "bottom-8 right-5 h-11 w-11 items-center justify-center bg-card border border-border/50"
-            : "bottom-24 right-5 bg-card border border-border/50 px-4 py-2.5"
+            ? "bottom-8 right-5 h-11 w-11 items-center justify-center bg-card/90"
+            : "bottom-24 right-5 bg-card/90 px-4 py-2.5"
         }`}
         aria-label={zenMode ? "Salir del Modo Zen" : "Modo Zen"}
       >
