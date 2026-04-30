@@ -102,6 +102,7 @@ export default function Diario() {
   const [fabOpen, setFabOpen] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftKey = user ? `diario_draft_${user.id}` : "diario_draft";
+  const [dynamicPlaceholder] = useState(() => placeholderOptions[Math.floor(Math.random() * placeholderOptions.length)]);
 
   // Voice
   const [isRecording, setIsRecording] = useState(false);
@@ -192,7 +193,7 @@ export default function Diario() {
   const toolsList = Object.values(allRecommendations);
 
   return (
-    <div className={`flex min-h-screen flex-col bg-[#FDFCFB] dark:bg-background safe-area-top transition-all duration-500 ${zenMode ? "zen-active" : ""}`}>
+    <div className={`flex min-h-screen flex-col bg-background safe-area-top transition-all duration-500 ${zenMode ? "zen-active" : ""}`}>
       {/* ── Header ── */}
       <AnimatePresence>
         {!zenMode && (
@@ -209,14 +210,14 @@ export default function Diario() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate("/diario/herramientas")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border/50 shadow-sm transition-all active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 shadow-sm transition-all active:scale-95"
                 aria-label="Herramientas"
               >
                 <Toolbox size={18} weight="duotone" className="text-muted-foreground" />
               </button>
               <button
                 onClick={() => navigate("/diario/historial")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border/50 shadow-sm transition-all active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 shadow-sm transition-all active:scale-95"
                 aria-label="Historial"
               >
                 <Clock size={18} className="text-muted-foreground" />
@@ -238,7 +239,7 @@ export default function Diario() {
             <p className="text-xs font-medium text-muted-foreground/50 tracking-wider uppercase">Modo Zen</p>
             <button
               onClick={() => setZenMode(false)}
-              className="flex items-center gap-1.5 rounded-full border border-border/40 bg-card/80 px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-all active:scale-95"
+              className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1.5 text-[11px] font-medium text-muted-foreground shadow-sm transition-all active:scale-95"
             >
               <X size={12} />
               Salir
@@ -262,7 +263,7 @@ export default function Diario() {
       </AnimatePresence>
 
       {/* ── Writing area (auto-expanding, no internal scroll) ── */}
-      <div className={`px-6 pt-3 transition-all duration-300 ${zenMode ? "flex-1" : ""}`}>
+      <div className={`flex-1 px-6 pt-4 transition-all duration-300 ${zenMode ? "" : ""}`}>
         <textarea
           ref={(el) => {
             if (el) {
@@ -277,9 +278,9 @@ export default function Diario() {
             el.style.height = "auto";
             el.style.height = el.scrollHeight + "px";
           }}
-          placeholder={zenMode ? "Escribí con calma..." : "Escribí lo que necesites soltar..."}
+          placeholder={zenMode ? "Escribí con calma..." : dynamicPlaceholder}
           className={`w-full resize-none overflow-hidden bg-transparent text-foreground leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
-            zenMode ? "min-h-[60vh] text-[17px]" : "min-h-[120px] text-[15px]"
+            zenMode ? "min-h-[60vh] text-[17px]" : "min-h-[34vh] text-[15px]"
           }`}
           autoFocus
         />
