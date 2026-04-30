@@ -3,20 +3,20 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Users, Calendar, MessageCircle, Brain, Mail, Trophy, Moon } from "lucide-react";
 
 const tools = [
-  { id: "vinculos",     label: "Vínculos",                 desc: "Registrá dinámicas con personas importantes", icon: Users,          path: "/diario/vinculos" },
-  { id: "timeline",     label: "Línea del día",            desc: "Mapeá tu día por momentos",                  icon: Calendar,       path: "/diario/dia" },
-  { id: "dialogo",      label: "Diálogo interno",          desc: "Observá tu voz crítica y compasiva",         icon: MessageCircle,  path: "/diario/dialogo" },
-  { id: "pensamientos", label: "Registro de pensamientos", desc: "Identificá patrones de pensamiento",         icon: Brain,          path: "/diario/pensamientos" },
-  { id: "cartas",       label: "Cartas sin enviar",        desc: "Escribí lo que no pudiste decir",            icon: Mail,           path: "/diario/cartas" },
-  { id: "suenos",       label: "Registro de sueños",       desc: "Anotá y explorá lo que soñás",               icon: Moon,           path: "/diario/suenos" },
-  { id: "logros",       label: "Micro-logros",             desc: "Celebrá tus avances del día",                icon: Trophy,         path: "/diario/logros" },
+  { id: "vinculos",     label: "Vínculos",                 desc: "Personas importantes", icon: Users,          path: "/diario/vinculos", theme: "border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg text-resource-mindfulness-accent" },
+  { id: "timeline",     label: "Línea del día",            desc: "Momentos y escenas",   icon: Calendar,       path: "/diario/dia", theme: "border-resource-sleep-accent/15 bg-resource-sleep-bg text-resource-sleep-accent" },
+  { id: "dialogo",      label: "Diálogo interno",          desc: "Voz crítica y compasiva", icon: MessageCircle,  path: "/diario/dialogo", theme: "border-resource-selfcare-accent/15 bg-resource-selfcare-bg text-resource-selfcare-accent" },
+  { id: "pensamientos", label: "Pensamientos",             desc: "Patrones y perspectiva", icon: Brain,          path: "/diario/pensamientos", theme: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent" },
+  { id: "cartas",       label: "Cartas sin enviar",        desc: "Lo que necesitás decir", icon: Mail,           path: "/diario/cartas", theme: "border-resource-eating-accent/15 bg-resource-eating-bg text-resource-eating-accent" },
+  { id: "suenos",       label: "Registro de sueños",       desc: "Anotá y explorá", icon: Moon,           path: "/diario/suenos", theme: "border-resource-regulation-accent/15 bg-resource-regulation-bg text-resource-regulation-accent" },
+  { id: "logros",       label: "Micro-logros",             desc: "Pequeños avances", icon: Trophy,         path: "/diario/logros", theme: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent" },
 ];
 
 export default function DiarioTools() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] dark:bg-background px-5 pt-14 pb-24 safe-area-top">
+    <div className="min-h-screen bg-background px-5 pt-14 pb-24 safe-area-top">
       <div className="mb-6 flex items-center gap-3">
         <button onClick={() => navigate("/diario")} className="text-muted-foreground active:scale-95 transition-transform">
           <ArrowLeft size={20} />
@@ -27,7 +27,7 @@ export default function DiarioTools() {
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
         {tools.map((tool, i) => {
           const Icon = tool.icon;
           return (
@@ -38,14 +38,14 @@ export default function DiarioTools() {
               transition={{ delay: i * 0.04 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => navigate(tool.path)}
-              className="flex w-full items-center gap-4 rounded-[28px] border border-border bg-card p-4 text-left shadow-sm transition-colors"
+              className={`flex min-h-[148px] w-full flex-col items-start rounded-[2.5rem] border p-4 text-left shadow-sm transition-colors ${tool.theme}`}
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10">
-                <Icon size={18} className="text-accent-foreground" />
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-card/70">
+                <Icon size={20} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-display text-sm font-semibold text-foreground">{tool.label}</p>
-                <p className="text-[11px] text-muted-foreground leading-snug">{tool.desc}</p>
+              <div className="mt-auto pt-5">
+                <p className="font-display text-sm font-semibold leading-tight">{tool.label}</p>
+                <p className="mt-1 text-[11px] leading-snug opacity-75">{tool.desc}</p>
               </div>
             </motion.button>
           );
