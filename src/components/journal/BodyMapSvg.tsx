@@ -23,16 +23,16 @@ interface BodyMapSvgProps {
 
 export function BodyMapSvg({ selected, onToggle }: BodyMapSvgProps) {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center text-resource-safety-accent">
       <svg viewBox="0 0 200 300" className="h-[280px] w-auto">
         {/* Body outline */}
-        <ellipse cx="100" cy="30" rx="20" ry="24" fill="none" stroke="hsl(var(--border))" strokeWidth="1.5" />
-        <line x1="100" y1="54" x2="100" y2="70" stroke="hsl(var(--border))" strokeWidth="1.5" />
-        <ellipse cx="100" cy="110" rx="35" ry="45" fill="none" stroke="hsl(var(--border))" strokeWidth="1.5" />
-        <line x1="65" y1="85" x2="35" y2="150" stroke="hsl(var(--border))" strokeWidth="1.5" />
-        <line x1="135" y1="85" x2="165" y2="150" stroke="hsl(var(--border))" strokeWidth="1.5" />
-        <line x1="85" y1="155" x2="80" y2="275" stroke="hsl(var(--border))" strokeWidth="1.5" />
-        <line x1="115" y1="155" x2="120" y2="275" stroke="hsl(var(--border))" strokeWidth="1.5" />
+        <ellipse cx="100" cy="30" rx="20" ry="24" fill="none" stroke="currentColor" strokeOpacity="0.22" strokeWidth="1.5" />
+        <line x1="100" y1="54" x2="100" y2="70" stroke="currentColor" strokeOpacity="0.22" strokeWidth="1.5" />
+        <ellipse cx="100" cy="110" rx="35" ry="45" fill="none" stroke="currentColor" strokeOpacity="0.22" strokeWidth="1.5" />
+        <line x1="65" y1="85" x2="35" y2="150" stroke="currentColor" strokeOpacity="0.22" strokeWidth="1.5" />
+        <line x1="135" y1="85" x2="165" y2="150" stroke="currentColor" strokeOpacity="0.22" strokeWidth="1.5" />
+        <line x1="85" y1="155" x2="80" y2="275" stroke="currentColor" strokeOpacity="0.22" strokeWidth="1.5" />
+        <line x1="115" y1="155" x2="120" y2="275" stroke="currentColor" strokeOpacity="0.22" strokeWidth="1.5" />
 
         {/* Interactive zones */}
         {bodyParts.map((part) => {
@@ -47,8 +47,8 @@ export function BodyMapSvg({ selected, onToggle }: BodyMapSvgProps) {
               className={cn(
                 "cursor-pointer transition-all",
                 isSelected
-                  ? "fill-destructive/40 stroke-destructive"
-                  : "fill-transparent stroke-transparent hover:fill-muted/50 hover:stroke-muted-foreground/30"
+                  ? "fill-resource-safety-accent/25 stroke-resource-safety-accent"
+                  : "fill-transparent stroke-transparent hover:fill-resource-safety-accent/10 hover:stroke-resource-safety-accent/25"
               )}
               strokeWidth="1.5"
               onClick={() => onToggle(part.id)}
@@ -63,7 +63,7 @@ export function BodyMapSvg({ selected, onToggle }: BodyMapSvgProps) {
             return (
               <span
                 key={id}
-                className="rounded-full bg-destructive/10 px-2.5 py-0.5 font-display text-[10px] text-destructive"
+                className="rounded-full bg-card/75 px-2.5 py-0.5 font-display text-[10px] font-semibold text-resource-safety-accent"
               >
                 {part?.label}
               </span>
