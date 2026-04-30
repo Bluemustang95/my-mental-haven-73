@@ -19,16 +19,17 @@ interface Recommendation {
   label: string;
   icon: typeof Users;
   path: string;
+  theme: string;
 }
 
 const allRecommendations: Record<string, Recommendation> = {
-  vinculos:    { id: "vinculos",    label: "Vínculos",            icon: Users,          path: "/diario/vinculos" },
-  timeline:    { id: "timeline",    label: "Línea del día",       icon: Calendar,       path: "/diario/dia" },
-  dialogo:     { id: "dialogo",     label: "Diálogo interno",     icon: MessageCircle,  path: "/diario/dialogo" },
-  pensamientos:{ id: "pensamientos",label: "Registro de pensamientos", icon: Brain,     path: "/diario/pensamientos" },
-  cartas:      { id: "cartas",      label: "Cartas sin enviar",   icon: Mail,           path: "/diario/cartas" },
-  suenos:      { id: "suenos",      label: "Registro de sueños",  icon: Moon,           path: "/diario/suenos" },
-  logros:      { id: "logros",      label: "Micro-logros",        icon: Trophy,         path: "/diario/logros" },
+  vinculos:    { id: "vinculos",    label: "Vínculos",            icon: Users,          path: "/diario/vinculos", theme: "bg-resource-mindfulness-bg text-resource-mindfulness-accent" },
+  timeline:    { id: "timeline",    label: "Línea del día",       icon: Calendar,       path: "/diario/dia", theme: "bg-resource-sleep-bg text-resource-sleep-accent" },
+  dialogo:     { id: "dialogo",     label: "Diálogo interno",     icon: MessageCircle,  path: "/diario/dialogo", theme: "bg-resource-selfcare-bg text-resource-selfcare-accent" },
+  pensamientos:{ id: "pensamientos",label: "Registro de pensamientos", icon: Brain,     path: "/diario/pensamientos", theme: "bg-resource-psycho-bg text-resource-psycho-accent" },
+  cartas:      { id: "cartas",      label: "Cartas sin enviar",   icon: Mail,           path: "/diario/cartas", theme: "bg-resource-eating-bg text-resource-eating-accent" },
+  suenos:      { id: "suenos",      label: "Registro de sueños",  icon: Moon,           path: "/diario/suenos", theme: "bg-resource-regulation-bg text-resource-regulation-accent" },
+  logros:      { id: "logros",      label: "Micro-logros",        icon: Trophy,         path: "/diario/logros", theme: "bg-resource-breathing-bg text-resource-breathing-accent" },
 };
 
 function detectRecommendations(text: string): Recommendation[] {
@@ -61,6 +62,34 @@ const allEmotions = [
   "Vergüenza", "Orgullo", "Frustración", "Amor", "Nostalgia",
 ];
 
+const placeholderOptions = [
+  "Escribí lo que necesites soltar...",
+  "¿Qué tenés hoy en la cabeza? Soltalo acá...",
+  "Un espacio para vos. ¿Por dónde querés empezar?",
+  "No hace falta que tenga sentido, solo escribí...",
+  "¿Cómo te sentís hoy con respecto a lo que venís trabajando?",
+];
+
+const emotionThemes: Record<string, string> = {
+  Calma: "bg-resource-grounding-bg text-resource-grounding-accent",
+  Alegría: "bg-resource-breathing-bg text-resource-breathing-accent",
+  Tristeza: "bg-resource-psycho-bg text-resource-psycho-accent",
+  Ansiedad: "bg-resource-regulation-bg text-resource-regulation-accent",
+  Enojo: "bg-resource-safety-bg text-resource-safety-accent",
+  Gratitud: "bg-resource-values-bg text-resource-values-accent",
+  Confusión: "bg-resource-psycho-bg text-resource-psycho-accent",
+  Esperanza: "bg-resource-recovery-bg text-resource-recovery-accent",
+  Culpa: "bg-resource-eating-bg text-resource-eating-accent",
+  Alivio: "bg-resource-selfcare-bg text-resource-selfcare-accent",
+  Vergüenza: "bg-resource-mindfulness-bg text-resource-mindfulness-accent",
+  Orgullo: "bg-resource-rumination-bg text-resource-rumination-accent",
+  Frustración: "bg-resource-regulation-bg text-resource-regulation-accent",
+  Amor: "bg-resource-mindfulness-bg text-resource-mindfulness-accent",
+  Nostalgia: "bg-resource-sleep-bg text-resource-sleep-accent",
+};
+
+const getEmotionTheme = (emotion: string) => emotionThemes[emotion] ?? "bg-resource-psycho-bg text-resource-psycho-accent";
+
 export default function Diario() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -73,6 +102,7 @@ export default function Diario() {
   const [fabOpen, setFabOpen] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftKey = user ? `diario_draft_${user.id}` : "diario_draft";
+  const [dynamicPlaceholder] = useState(() => placeholderOptions[Math.floor(Math.random() * placeholderOptions.length)]);
 
   // Voice
   const [isRecording, setIsRecording] = useState(false);
@@ -163,7 +193,7 @@ export default function Diario() {
   const toolsList = Object.values(allRecommendations);
 
   return (
-    <div className={`flex min-h-screen flex-col bg-[#FDFCFB] dark:bg-background safe-area-top transition-all duration-500 ${zenMode ? "zen-active" : ""}`}>
+    <div className={`flex min-h-screen flex-col bg-background safe-area-top transition-all duration-500 ${zenMode ? "zen-active" : ""}`}>
       {/* ── Header ── */}
       <AnimatePresence>
         {!zenMode && (
@@ -180,14 +210,14 @@ export default function Diario() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate("/diario/herramientas")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border/50 shadow-sm transition-all active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 shadow-sm transition-all active:scale-95"
                 aria-label="Herramientas"
               >
                 <Toolbox size={18} weight="duotone" className="text-muted-foreground" />
               </button>
               <button
                 onClick={() => navigate("/diario/historial")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border/50 shadow-sm transition-all active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 shadow-sm transition-all active:scale-95"
                 aria-label="Historial"
               >
                 <Clock size={18} className="text-muted-foreground" />
@@ -209,7 +239,7 @@ export default function Diario() {
             <p className="text-xs font-medium text-muted-foreground/50 tracking-wider uppercase">Modo Zen</p>
             <button
               onClick={() => setZenMode(false)}
-              className="flex items-center gap-1.5 rounded-full border border-border/40 bg-card/80 px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-all active:scale-95"
+              className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1.5 text-[11px] font-medium text-muted-foreground shadow-sm transition-all active:scale-95"
             >
               <X size={12} />
               Salir
@@ -233,7 +263,7 @@ export default function Diario() {
       </AnimatePresence>
 
       {/* ── Writing area (auto-expanding, no internal scroll) ── */}
-      <div className={`px-6 pt-3 transition-all duration-300 ${zenMode ? "flex-1" : ""}`}>
+      <div className={`flex-1 px-6 pt-4 transition-all duration-300 ${zenMode ? "" : ""}`}>
         <textarea
           ref={(el) => {
             if (el) {
@@ -248,9 +278,9 @@ export default function Diario() {
             el.style.height = "auto";
             el.style.height = el.scrollHeight + "px";
           }}
-          placeholder={zenMode ? "Escribí con calma..." : "Escribí lo que necesites soltar..."}
+          placeholder={zenMode ? "Escribí con calma..." : dynamicPlaceholder}
           className={`w-full resize-none overflow-hidden bg-transparent text-foreground leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
-            zenMode ? "min-h-[60vh] text-[17px]" : "min-h-[120px] text-[15px]"
+            zenMode ? "min-h-[60vh] text-[17px]" : "min-h-[34vh] text-[15px]"
           }`}
           autoFocus
         />
@@ -277,7 +307,7 @@ export default function Diario() {
                   <button
                     onClick={save}
                     disabled={saving}
-                    className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-all active:bg-muted/40 disabled:opacity-50"
+                    className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1.5 text-[11px] font-medium text-muted-foreground shadow-sm transition-all active:bg-muted/40 disabled:opacity-50"
                   >
                     {saving ? (
                       <div className="h-3 w-3 animate-spin rounded-full border border-muted-foreground border-t-transparent" />
@@ -293,7 +323,7 @@ export default function Diario() {
             {/* ── Voice recording (compact) ── */}
             <div className="px-6 py-1 flex items-center gap-3">
               {!isRecording && !audioUrl && (
-                <button onClick={startRecording} className="flex items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-muted-foreground transition active:bg-muted">
+                <button onClick={startRecording} className="flex items-center gap-2 rounded-full bg-card/80 px-3 py-1.5 text-xs text-muted-foreground shadow-sm transition active:bg-muted">
                   <Mic size={14} />
                   Nota de voz
                 </button>
@@ -306,7 +336,7 @@ export default function Diario() {
               )}
               {audioUrl && (
                 <div className="flex items-center gap-2">
-                  <button onClick={() => new Audio(audioUrl).play()} className="flex items-center gap-1.5 rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-muted-foreground">
+                  <button onClick={() => new Audio(audioUrl).play()} className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1.5 text-xs text-muted-foreground shadow-sm">
                     <Play size={12} />
                     Reproducir
                   </button>
@@ -324,10 +354,8 @@ export default function Diario() {
                   <button
                     key={em.label}
                     onClick={() => toggleEmotion(em.label)}
-                    className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all ${
-                      selectedEmotions.includes(em.label)
-                        ? "border-accent bg-accent/10 text-accent-foreground"
-                        : "border-border/60 text-muted-foreground"
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-medium shadow-sm transition-all active:scale-95 ${getEmotionTheme(em.label)} ${
+                      selectedEmotions.includes(em.label) ? "ring-2 ring-current/20" : "opacity-80"
                     }`}
                   >
                     {em.label}
@@ -335,10 +363,10 @@ export default function Diario() {
                 ))}
                 <button
                   onClick={() => setShowEmotionPicker(true)}
-                  className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all ${
+                  className={`flex items-center gap-1 rounded-full bg-resource-selfcare-bg px-3 py-1.5 text-[11px] font-medium text-resource-selfcare-accent shadow-sm transition-all ${
                     selectedEmotions.some(e => !primaryEmotions.find(p => p.label === e))
-                      ? "border-accent bg-accent/10 text-accent-foreground"
-                      : "border-border/60 text-muted-foreground"
+                      ? "ring-2 ring-current/20"
+                      : "opacity-80"
                   }`}
                 >
                   <MoreHorizontal size={14} />
@@ -349,7 +377,7 @@ export default function Diario() {
               {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).map(e => (
-                    <span key={e} className="rounded-full bg-accent/10 border border-accent/20 px-2 py-0.5 text-[10px] font-medium text-accent-foreground flex items-center gap-1">
+                    <span key={e} className={`rounded-full px-2 py-0.5 text-[10px] font-medium flex items-center gap-1 ${getEmotionTheme(e)}`}>
                       {e}
                       <button onClick={() => toggleEmotion(e)} className="hover:text-destructive"><X size={10} /></button>
                     </span>
@@ -374,7 +402,7 @@ export default function Diario() {
                     animate={{ y: 0 }}
                     exit={{ y: "100%" }}
                     transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                    className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-[#FDFCFB] dark:bg-card shadow-2xl p-6 pb-10"
+                    className="fixed inset-x-0 bottom-0 z-50 rounded-t-[2rem] bg-background dark:bg-card shadow-2xl p-6 pb-10"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-display text-base font-semibold text-foreground">¿Qué sentís?</h3>
@@ -387,10 +415,8 @@ export default function Diario() {
                         <button
                           key={e}
                           onClick={() => toggleEmotion(e)}
-                          className={`rounded-full border px-3.5 py-2 text-[12px] font-medium transition-all ${
-                            selectedEmotions.includes(e)
-                              ? "border-accent bg-accent/15 text-accent-foreground"
-                              : "border-border/60 text-muted-foreground"
+                          className={`rounded-full px-3.5 py-2 text-[12px] font-medium shadow-sm transition-all active:scale-95 ${getEmotionTheme(e)} ${
+                            selectedEmotions.includes(e) ? "ring-2 ring-current/20" : "opacity-80"
                           }`}
                         >
                           {e}
@@ -424,9 +450,11 @@ export default function Diario() {
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.9 }}
                           onClick={() => navigate(rec.path)}
-                          className="flex items-center gap-2 rounded-2xl border border-accent/20 bg-accent/5 px-3 py-2 text-[11px] font-medium text-accent-foreground transition-all active:scale-95"
+                          className="flex items-center gap-2 rounded-full bg-card/75 py-1.5 pl-1.5 pr-3 text-[11px] font-medium text-foreground shadow-sm transition-all active:scale-95"
                         >
-                          <Icon size={14} className="text-accent" />
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-full ${rec.theme}`}>
+                            <Icon size={13} />
+                          </span>
                           {rec.label}
                         </motion.button>
                       );
@@ -445,8 +473,8 @@ export default function Diario() {
         onClick={() => { setZenMode(!zenMode); setFabOpen(false); }}
         className={`fixed z-40 flex items-center gap-2 rounded-full shadow-lg transition-all duration-300 ${
           zenMode
-            ? "bottom-8 right-5 h-11 w-11 items-center justify-center bg-card border border-border/50"
-            : "bottom-24 right-5 bg-card border border-border/50 px-4 py-2.5"
+            ? "bottom-8 right-5 h-11 w-11 items-center justify-center bg-card/90"
+            : "bottom-24 right-5 bg-card/90 px-4 py-2.5"
         }`}
         aria-label={zenMode ? "Salir del Modo Zen" : "Modo Zen"}
       >
