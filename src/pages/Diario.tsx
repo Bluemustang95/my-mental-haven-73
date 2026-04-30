@@ -302,7 +302,7 @@ export default function Diario() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="px-6 pb-1"
+                  className="px-6"
                 >
                   <button
                     onClick={save}
@@ -321,7 +321,7 @@ export default function Diario() {
             </AnimatePresence>
 
             {/* ── Voice recording (compact) ── */}
-            <div className="px-6 py-1 flex items-center gap-3">
+            <div className="px-6 flex items-center gap-3">
               {!isRecording && !audioUrl && (
                 <button onClick={startRecording} className="flex items-center gap-2 rounded-full bg-card/80 px-3 py-1.5 text-xs text-muted-foreground shadow-sm transition active:bg-muted">
                   <Mic size={14} />
@@ -348,7 +348,7 @@ export default function Diario() {
             </div>
 
             {/* ── Emotion selector (text-only, no emojis) ── */}
-            <div className="px-6 py-2">
+            <div className="px-6 pt-1 pb-2">
               <div className="flex items-center gap-2">
                 {primaryEmotions.map((em) => (
                   <button
@@ -375,7 +375,7 @@ export default function Diario() {
               </div>
 
               {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1.5">
+                <div className="flex flex-wrap gap-1 pt-1.5">
                   {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).map(e => (
                     <span key={e} className={`rounded-full px-2 py-0.5 text-[10px] font-medium flex items-center gap-1 ${getEmotionTheme(e)}`}>
                       {e}
@@ -435,7 +435,7 @@ export default function Diario() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 12 }}
-                  className="px-6 pb-2"
+                   className="px-6 pb-2"
                 >
                   <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
                     Herramientas sugeridas
