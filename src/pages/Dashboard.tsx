@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight,
@@ -93,6 +93,8 @@ type Goal = { id: string; goal_text: string; completed: boolean | null };
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const restoredCalendarDay = useRef(false);
   const { user } = useAuth();
   const greeting = useMemo(() => getGreeting(), []);
   const GreetingIcon = greeting.icon;
