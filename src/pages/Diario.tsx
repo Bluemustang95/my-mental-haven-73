@@ -193,7 +193,7 @@ export default function Diario() {
   const toolsList = Object.values(allRecommendations);
 
   return (
-    <div className={`flex min-h-screen flex-col bg-background safe-area-top transition-all duration-500 ${zenMode ? "zen-active" : ""}`}>
+    <div className={`flex h-[100dvh] flex-col overflow-y-auto bg-background safe-area-top transition-all duration-500 ${zenMode ? "zen-active" : ""}`}>
       {/* ── Header ── */}
       <AnimatePresence>
         {!zenMode && (
@@ -263,12 +263,22 @@ export default function Diario() {
       </AnimatePresence>
 
       {/* ── Writing area (flexible canvas) ── */}
-      <div className="flex min-h-0 flex-1 flex-col px-6 pt-3 transition-all duration-300">
+      <div className="flex flex-grow flex-col px-6 pt-3 transition-all duration-300">
         <textarea
+          ref={(el) => {
+            if (!el) return;
+            el.style.height = "100%";
+            if (el.scrollHeight > el.clientHeight) el.style.height = `${el.scrollHeight}px`;
+          }}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value);
+            const el = e.target;
+            el.style.height = "100%";
+            if (el.scrollHeight > el.clientHeight) el.style.height = `${el.scrollHeight}px`;
+          }}
           placeholder={zenMode ? "Escribí con calma..." : dynamicPlaceholder}
-          className={`min-h-0 flex-1 w-full resize-none overflow-y-auto bg-transparent text-foreground leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
+          className={`h-full min-h-full w-full flex-grow resize-none overflow-hidden border-0 bg-transparent p-0 text-foreground shadow-none leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
             zenMode ? "text-[17px]" : "text-[15px]"
           }`}
           autoFocus
@@ -283,6 +293,7 @@ export default function Diario() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
+            className="shrink-0"
           >
             {/* ── Inline save button (ghost, compact) ── */}
             <AnimatePresence>
