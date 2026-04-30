@@ -291,7 +291,7 @@ export default function Dashboard() {
     restoredCalendarDay.current = true;
     openDayDetail(new Date(`${state.calendarDay}T12:00:00`));
     navigate(location.pathname, { replace: true });
-  }, [location.pathname, location.state, navigate]);
+  }, [location.pathname, location.state, navigate, openDayDetail]);
 
   const empathicMsg = modalMood ? getEmpathicMsg(modalMood) : null;
   const selectedDayStr = selectedDay ? localDateStr(selectedDay) : "";
