@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Heart,
@@ -25,9 +24,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import CrisisPlan from "@/components/CrisisPlan";
-import { supabase } from "@/integrations/supabase/client";
 
-type FeelingOption = { label: string; path: string; name: string };
+type ResourceKey = keyof typeof resourceThemes;
+type Recommendation = { key: ResourceKey; path: string; name: string };
+type GuideChoice = { label: string; scores: Partial<Record<ResourceKey, number>> };
 
 const resourceThemes = {
   psicoeducacion: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent",
@@ -41,14 +41,52 @@ const resourceThemes = {
   regulacion: "border-resource-regulation-accent/15 bg-resource-regulation-bg text-resource-regulation-accent",
   alimentacion: "border-resource-eating-accent/15 bg-resource-eating-bg text-resource-eating-accent",
   valores: "border-resource-values-accent/15 bg-resource-values-bg text-resource-values-accent",
+  guia: "border-primary/15 bg-primary/5 text-primary",
 };
 
-const FALLBACK_FEELINGS: FeelingOption[] = [
-  { label: "Ansiedad o nervios", path: "/herramientas/respiracion", name: "Respiración Guiada" },
-  { label: "Tensión física", path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" },
-  { label: "Mente acelerada", path: "/herramientas/mindfulness", name: "Mindfulness" },
-  { label: "Desmotivación", path: "/herramientas/autocuidado", name: "Autocuidado Offline" },
-  { label: "Quiero aprender", path: "/herramientas/contenido", name: "Psicoeducación" },
+const recommendations: Record<ResourceKey, Recommendation> = {
+  psicoeducacion: { key: "psicoeducacion", path: "/herramientas/intro/psicoeducacion", name: "Psicoeducación" },
+  mindfulness: { key: "mindfulness", path: "/herramientas/mindfulness", name: "Mindfulness" },
+  autocuidado: { key: "autocuidado", path: "/herramientas/intro/autocuidado", name: "Autocuidado" },
+  grounding: { key: "grounding", path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" },
+  respiracion: { key: "respiracion", path: "/herramientas/respiracion", name: "Respiración" },
+  sueno: { key: "sueno", path: "/herramientas/sueno", name: "Sueño" },
+  rumiacion: { key: "rumiacion", path: "/herramientas/rumiacion", name: "Rumiación" },
+  recuperacion: { key: "recuperacion", path: "/herramientas/recuperacion", name: "Recuperación" },
+  regulacion: { key: "regulacion", path: "/herramientas/regulacion-emocional", name: "Regulación Emocional" },
+  alimentacion: { key: "alimentacion", path: "/herramientas/intro/alimentacion-consciente", name: "Alimentación Consciente" },
+  valores: { key: "valores", path: "/herramientas/intro/mis-valores", name: "Mis Valores" },
+  guia: { key: "guia", path: "/herramientas", name: "Te guiamos" },
+};
+
+const guideQuestions: { title: string; choices: GuideChoice[] }[] = [
+  {
+    title: "¿Qué necesitás cuidar ahora?",
+    choices: [
+      { label: "Calmar el cuerpo", scores: { grounding: 3, respiracion: 2, regulacion: 1 } },
+      { label: "Ordenar pensamientos", scores: { rumiacion: 3, mindfulness: 2, psicoeducacion: 1 } },
+      { label: "Conectar con lo importante", scores: { valores: 3, recuperacion: 1, autocuidado: 1 } },
+      { label: "Cuidar hábitos cotidianos", scores: { autocuidado: 3, sueno: 2, alimentacion: 2 } },
+    ],
+  },
+  {
+    title: "¿Qué sentís con más fuerza?",
+    choices: [
+      { label: "Ansiedad o tensión", scores: { respiracion: 3, grounding: 2, regulacion: 1 } },
+      { label: "Emociones intensas", scores: { regulacion: 3, grounding: 2, mindfulness: 1 } },
+      { label: "Cansancio o desconexión", scores: { autocuidado: 3, sueno: 2, recuperacion: 1 } },
+      { label: "Dudas sobre mis decisiones", scores: { valores: 3, psicoeducacion: 1, mindfulness: 1 } },
+    ],
+  },
+  {
+    title: "¿Qué tipo de recurso te serviría más?",
+    choices: [
+      { label: "Un ejercicio breve", scores: { grounding: 3, respiracion: 3, mindfulness: 2 } },
+      { label: "Escribir y registrar", scores: { valores: 3, alimentacion: 3, recuperacion: 2 } },
+      { label: "Aprender algo claro", scores: { psicoeducacion: 3, rumiacion: 2, regulacion: 1 } },
+      { label: "Planear un cuidado concreto", scores: { autocuidado: 3, sueno: 2, alimentacion: 1 } },
+    ],
+  },
 ];
 
 export default function Tools() {
