@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClockCounterClockwise } from "@phosphor-icons/react";
+import { useConsistentBack } from "@/hooks/useConsistentBack";
 
 const suggestions = [
   "Hoy puse un límite",
@@ -27,6 +28,7 @@ interface Achievement {
 
 export default function MicroAchievements() {
   const navigate = useNavigate();
+  const goBack = useConsistentBack("/diario");
   const { user } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [newText, setNewText] = useState("");
@@ -67,7 +69,7 @@ export default function MicroAchievements() {
   return (
     <div className="flex min-h-screen flex-col bg-resource-breathing-bg px-5 pt-14 pb-4 text-resource-breathing-accent safe-area-top">
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-breathing-accent/15 bg-card/75 text-resource-breathing-accent shadow-sm">
+        <button onClick={goBack} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-breathing-accent/15 bg-card/75 text-resource-breathing-accent shadow-sm">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
