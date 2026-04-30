@@ -307,7 +307,7 @@ export default function Diario() {
                   <button
                     onClick={save}
                     disabled={saving}
-                    className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-all active:bg-muted/40 disabled:opacity-50"
+                    className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1.5 text-[11px] font-medium text-muted-foreground shadow-sm transition-all active:bg-muted/40 disabled:opacity-50"
                   >
                     {saving ? (
                       <div className="h-3 w-3 animate-spin rounded-full border border-muted-foreground border-t-transparent" />
@@ -323,7 +323,7 @@ export default function Diario() {
             {/* ── Voice recording (compact) ── */}
             <div className="px-6 py-1 flex items-center gap-3">
               {!isRecording && !audioUrl && (
-                <button onClick={startRecording} className="flex items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-muted-foreground transition active:bg-muted">
+                <button onClick={startRecording} className="flex items-center gap-2 rounded-full bg-card/80 px-3 py-1.5 text-xs text-muted-foreground shadow-sm transition active:bg-muted">
                   <Mic size={14} />
                   Nota de voz
                 </button>
@@ -336,7 +336,7 @@ export default function Diario() {
               )}
               {audioUrl && (
                 <div className="flex items-center gap-2">
-                  <button onClick={() => new Audio(audioUrl).play()} className="flex items-center gap-1.5 rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-muted-foreground">
+                  <button onClick={() => new Audio(audioUrl).play()} className="flex items-center gap-1.5 rounded-full bg-card/80 px-3 py-1.5 text-xs text-muted-foreground shadow-sm">
                     <Play size={12} />
                     Reproducir
                   </button>
@@ -354,10 +354,8 @@ export default function Diario() {
                   <button
                     key={em.label}
                     onClick={() => toggleEmotion(em.label)}
-                    className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all ${
-                      selectedEmotions.includes(em.label)
-                        ? "border-accent bg-accent/10 text-accent-foreground"
-                        : "border-border/60 text-muted-foreground"
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-medium shadow-sm transition-all active:scale-95 ${getEmotionTheme(em.label)} ${
+                      selectedEmotions.includes(em.label) ? "ring-2 ring-current/20" : "opacity-80"
                     }`}
                   >
                     {em.label}
@@ -365,10 +363,10 @@ export default function Diario() {
                 ))}
                 <button
                   onClick={() => setShowEmotionPicker(true)}
-                  className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all ${
+                  className={`flex items-center gap-1 rounded-full bg-resource-selfcare-bg px-3 py-1.5 text-[11px] font-medium text-resource-selfcare-accent shadow-sm transition-all ${
                     selectedEmotions.some(e => !primaryEmotions.find(p => p.label === e))
-                      ? "border-accent bg-accent/10 text-accent-foreground"
-                      : "border-border/60 text-muted-foreground"
+                      ? "ring-2 ring-current/20"
+                      : "opacity-80"
                   }`}
                 >
                   <MoreHorizontal size={14} />
@@ -379,7 +377,7 @@ export default function Diario() {
               {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).map(e => (
-                    <span key={e} className="rounded-full bg-accent/10 border border-accent/20 px-2 py-0.5 text-[10px] font-medium text-accent-foreground flex items-center gap-1">
+                    <span key={e} className={`rounded-full px-2 py-0.5 text-[10px] font-medium flex items-center gap-1 ${getEmotionTheme(e)}`}>
                       {e}
                       <button onClick={() => toggleEmotion(e)} className="hover:text-destructive"><X size={10} /></button>
                     </span>
@@ -404,7 +402,7 @@ export default function Diario() {
                     animate={{ y: 0 }}
                     exit={{ y: "100%" }}
                     transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                    className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl bg-[#FDFCFB] dark:bg-card shadow-2xl p-6 pb-10"
+                    className="fixed inset-x-0 bottom-0 z-50 rounded-t-[2rem] bg-background dark:bg-card shadow-2xl p-6 pb-10"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-display text-base font-semibold text-foreground">¿Qué sentís?</h3>
@@ -417,10 +415,8 @@ export default function Diario() {
                         <button
                           key={e}
                           onClick={() => toggleEmotion(e)}
-                          className={`rounded-full border px-3.5 py-2 text-[12px] font-medium transition-all ${
-                            selectedEmotions.includes(e)
-                              ? "border-accent bg-accent/15 text-accent-foreground"
-                              : "border-border/60 text-muted-foreground"
+                          className={`rounded-full px-3.5 py-2 text-[12px] font-medium shadow-sm transition-all active:scale-95 ${getEmotionTheme(e)} ${
+                            selectedEmotions.includes(e) ? "ring-2 ring-current/20" : "opacity-80"
                           }`}
                         >
                           {e}
@@ -454,9 +450,11 @@ export default function Diario() {
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.9 }}
                           onClick={() => navigate(rec.path)}
-                          className="flex items-center gap-2 rounded-2xl border border-accent/20 bg-accent/5 px-3 py-2 text-[11px] font-medium text-accent-foreground transition-all active:scale-95"
+                          className="flex items-center gap-2 rounded-full bg-card/75 py-1.5 pl-1.5 pr-3 text-[11px] font-medium text-foreground shadow-sm transition-all active:scale-95"
                         >
-                          <Icon size={14} className="text-accent" />
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-full ${rec.theme}`}>
+                            <Icon size={13} />
+                          </span>
                           {rec.label}
                         </motion.button>
                       );
