@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, ClockCounterClockwise, Heart } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,9 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { BodyMapSvg } from "./BodyMapSvg";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useConsistentBack } from "@/hooks/useConsistentBack";
 
 export default function JournalCheckin() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const goBack = useConsistentBack("/diario");
   const { user } = useAuth();
   const [bodyParts, setBodyParts] = useState<string[]>([]);
   const [note, setNote] = useState("");
@@ -45,7 +48,7 @@ export default function JournalCheckin() {
   return (
     <div className="flex min-h-screen flex-col bg-resource-safety-bg px-5 pt-14 pb-4 text-resource-safety-accent safe-area-top">
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-safety-accent/15 bg-card/75 text-resource-safety-accent shadow-sm">
+        <button onClick={goBack} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-safety-accent/15 bg-card/75 text-resource-safety-accent shadow-sm">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
@@ -53,7 +56,7 @@ export default function JournalCheckin() {
           <p className="font-sans text-xs leading-5 text-resource-safety-accent/65">Registro somático</p>
         </div>
         <button
-          onClick={() => navigate("/diario/checkin/historial")}
+          onClick={() => navigate("/diario/checkin/historial", { state: location.state })}
           className="flex items-center gap-1.5 rounded-full border border-resource-safety-accent/15 bg-card/75 px-3 py-1.5 font-display text-[11px] font-semibold text-resource-safety-accent shadow-sm transition-all active:scale-95"
         >
           <ClockCounterClockwise size={13} weight="duotone" />

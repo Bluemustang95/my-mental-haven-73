@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight,
@@ -15,6 +15,7 @@ import BlogCarousel from "@/components/BlogCarousel";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
+import { calendarModuleState } from "@/hooks/useConsistentBack";
 
 /* ── Mood config ─────────────────────────── */
 const moodLevels = [
@@ -92,6 +93,8 @@ type Goal = { id: string; goal_text: string; completed: boolean | null };
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const restoredCalendarDay = useRef(false);
   const { user } = useAuth();
   const greeting = useMemo(() => getGreeting(), []);
   const GreetingIcon = greeting.icon;
@@ -281,6 +284,15 @@ export default function Dashboard() {
     fetchCheckins();
   };
 
+  useEffect(() => {
+    if (restoredCalendarDay.current) return;
+    const state = location.state as { calendarDay?: string } | null;
+    if (!state?.calendarDay) return;
+    restoredCalendarDay.current = true;
+    openDayDetail(new Date(`${state.calendarDay}T12:00:00`));
+    navigate(location.pathname, { replace: true });
+  }, [location.pathname, location.state, navigate, openDayDetail]);
+
   const empathicMsg = modalMood ? getEmpathicMsg(modalMood) : null;
   const selectedDayStr = selectedDay ? localDateStr(selectedDay) : "";
   const isSelectedToday = selectedDay ? isSameDay(selectedDay, today) : false;
@@ -383,7 +395,7 @@ export default function Dashboard() {
                 Objetivos pendientes
               </h2>
               <button
-                onClick={() => navigate("/diario/objetivos")}
+                onClick={() => navigate("/diario/objetivos", { state: calendarModuleState("/") })}
                 className="text-[10px] font-display font-medium text-accent"
               >
                 Ver todos
@@ -606,7 +618,7 @@ export default function Dashboard() {
               <div className="mb-4 grid grid-cols-2 gap-2.5">
                 <motion.button
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => { setSelectedDay(null); navigate("/diario/checkin"); }}
+                  onClick={() => { setSelectedDay(null); navigate("/diario/checkin", { state: calendarModuleState("/", { calendarDay: selectedDayStr }) }); }}
                   className="flex min-h-[78px] items-center gap-3 rounded-[1.75rem] border border-resource-safety-accent/15 bg-resource-safety-bg p-3.5 text-left text-resource-safety-accent shadow-sm"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-card/70">
@@ -616,7 +628,7 @@ export default function Dashboard() {
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => { setSelectedDay(null); navigate("/diario/objetivos"); }}
+                  onClick={() => { setSelectedDay(null); navigate("/diario/objetivos", { state: calendarModuleState("/", { calendarDay: selectedDayStr }) }); }}
                   className="flex min-h-[78px] items-center gap-3 rounded-[1.75rem] border border-resource-values-accent/15 bg-resource-values-bg p-3.5 text-left text-resource-values-accent shadow-sm"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-card/70">
@@ -626,7 +638,7 @@ export default function Dashboard() {
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => { setSelectedDay(null); navigate("/diario/logros"); }}
+                  onClick={() => { setSelectedDay(null); navigate("/diario/logros", { state: calendarModuleState("/", { calendarDay: selectedDayStr }) }); }}
                   className="col-span-2 flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-breathing-accent/15 bg-resource-breathing-bg p-3.5 text-left text-resource-breathing-accent shadow-sm"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-card/70">

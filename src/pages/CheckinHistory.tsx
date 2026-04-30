@@ -79,7 +79,7 @@ export default function CheckinHistory() {
       {/* Header */}
       <div className="flex items-center gap-3 px-5 pt-14 pb-4">
         <button
-          onClick={() => navigate("/diario/checkin")}
+          onClick={() => navigate(-1)}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-card border border-border/50 text-muted-foreground active:scale-95 transition"
         >
           <ArrowLeft size={18} />

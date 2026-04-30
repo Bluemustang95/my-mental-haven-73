@@ -61,7 +61,7 @@ export default function MicroAchievementsHistory() {
     <div className="min-h-screen bg-[#FDFCFB] dark:bg-background safe-area-top">
       <div className="flex items-center gap-3 px-5 pt-14 pb-4">
         <button
-          onClick={() => navigate("/diario/logros")}
+          onClick={() => navigate(-1)}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-card border border-border/50 text-muted-foreground active:scale-95 transition"
         >
           <ArrowLeft size={18} />

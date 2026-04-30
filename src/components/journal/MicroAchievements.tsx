@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Star, Trophy } from "@phosphor-icons/react";
 import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClockCounterClockwise } from "@phosphor-icons/react";
+import { useConsistentBack } from "@/hooks/useConsistentBack";
 
 const suggestions = [
   "Hoy puse un límite",
@@ -27,6 +28,8 @@ interface Achievement {
 
 export default function MicroAchievements() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const goBack = useConsistentBack("/diario");
   const { user } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [newText, setNewText] = useState("");
@@ -67,7 +70,7 @@ export default function MicroAchievements() {
   return (
     <div className="flex min-h-screen flex-col bg-resource-breathing-bg px-5 pt-14 pb-4 text-resource-breathing-accent safe-area-top">
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-breathing-accent/15 bg-card/75 text-resource-breathing-accent shadow-sm">
+        <button onClick={goBack} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-breathing-accent/15 bg-card/75 text-resource-breathing-accent shadow-sm">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
@@ -75,7 +78,7 @@ export default function MicroAchievements() {
           <p className="font-sans text-xs leading-5 text-resource-breathing-accent/65">Pequeñas victorias del día</p>
         </div>
         <button
-          onClick={() => navigate("/diario/logros/historial")}
+          onClick={() => navigate("/diario/logros/historial", { state: location.state })}
           className="flex items-center gap-1.5 rounded-full border border-resource-breathing-accent/15 bg-card/75 px-3 py-1.5 font-display text-[11px] font-semibold text-resource-breathing-accent shadow-sm transition-all active:scale-95"
         >
           <ClockCounterClockwise size={13} weight="duotone" />
