@@ -111,7 +111,7 @@ export default function Tools() {
         {/* Psicoeducación – tall */}
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/contenido")}
+          onClick={() => navigate("/herramientas/intro/psicoeducacion")}
           className={`row-span-2 flex flex-col items-start justify-between rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.psicoeducacion}`}
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
@@ -138,7 +138,7 @@ export default function Tools() {
         {/* Autocuidado */}
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/autocuidado")}
+          onClick={() => navigate("/herramientas/intro/autocuidado")}
           className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.autocuidado}`}
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
@@ -222,7 +222,7 @@ export default function Tools() {
         {/* Alimentación Consciente */}
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/alimentacion-consciente")}
+          onClick={() => navigate("/herramientas/intro/alimentacion-consciente")}
           className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.alimentacion}`}
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
@@ -234,7 +234,7 @@ export default function Tools() {
         {/* Mis Valores */}
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/mis-valores")}
+          onClick={() => navigate("/herramientas/intro/mis-valores")}
           className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.valores}`}
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">

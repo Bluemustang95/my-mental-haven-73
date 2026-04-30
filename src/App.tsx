@@ -72,6 +72,7 @@ import PatientDetail from "@/pages/admin/PatientDetail";
 import ResourcesManager from "@/pages/admin/ResourcesManager";
 import ResourceDetail from "@/pages/admin/ResourceDetail";
 import ResourceTools from "@/pages/ResourceTools";
+import ResourceIntro from "@/pages/ResourceIntro";
 
 const queryClient = new QueryClient();
 
@@ -128,6 +129,7 @@ const App = () => (
 
               {/* Herramientas (tab 4) — only techniques */}
               <Route path="/herramientas" element={<Tools />} />
+              <Route path="/herramientas/intro/:slug" element={<ResourceIntro />} />
               <Route path="/herramientas/respiracion" element={<Breathing />} />
               <Route path="/herramientas/grounding" element={<Grounding />} />
               <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
