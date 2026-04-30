@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ClockCounterClockwise, Heart } from "@phosphor-icons/react";
-import { cn, localDateStr } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { BodyMapSvg } from "./BodyMapSvg";
