@@ -7,9 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { BodyMapSvg } from "./BodyMapSvg";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useConsistentBack } from "@/hooks/useConsistentBack";
 
 export default function JournalCheckin() {
   const navigate = useNavigate();
+  const goBack = useConsistentBack("/diario");
   const { user } = useAuth();
   const [bodyParts, setBodyParts] = useState<string[]>([]);
   const [note, setNote] = useState("");
@@ -45,7 +47,7 @@ export default function JournalCheckin() {
   return (
     <div className="flex min-h-screen flex-col bg-resource-safety-bg px-5 pt-14 pb-4 text-resource-safety-accent safe-area-top">
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-safety-accent/15 bg-card/75 text-resource-safety-accent shadow-sm">
+        <button onClick={goBack} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-safety-accent/15 bg-card/75 text-resource-safety-accent shadow-sm">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
