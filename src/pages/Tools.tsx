@@ -92,24 +92,37 @@ const guideQuestions: { title: string; choices: GuideChoice[] }[] = [
 export default function Tools() {
   const navigate = useNavigate();
   const [guideOpen, setGuideOpen] = useState(false);
-  const [recommendation, setRecommendation] = useState<{ path: string; name: string } | null>(null);
+  const [guideStep, setGuideStep] = useState(0);
+  const [guideScores, setGuideScores] = useState<Partial<Record<ResourceKey, number>>>({});
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
 
-  const { data: feelingOptions = FALLBACK_FEELINGS } = useQuery<FeelingOption[]>({
-    queryKey: ["te-guiamos-options"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("resource_tools")
-        .select("config, resource_categories!inner(slug)")
-        .eq("resource_categories.slug", "te-guiamos")
-        .eq("is_published", true)
-        .maybeSingle();
-      const opts = (data?.config as { options?: FeelingOption[] } | null)?.options;
-      return Array.isArray(opts) && opts.length ? opts : FALLBACK_FEELINGS;
-    },
-  });
+  const resetGuide = () => {
+    setGuideStep(0);
+    setGuideScores({});
+    setRecommendation(null);
+  };
 
-  const handleFeeling = (opt: { path: string; name: string }) => {
-    setRecommendation({ path: opt.path, name: opt.name });
+  const chooseRecommendation = (scores: Partial<Record<ResourceKey, number>>) => {
+    const winner = (Object.entries(scores) as [ResourceKey, number][]).reduce(
+      (best, current) => (current[1] > best[1] ? current : best),
+      ["grounding", 0] as [ResourceKey, number],
+    )[0];
+    setRecommendation(recommendations[winner]);
+  };
+
+  const handleGuideChoice = (choice: GuideChoice) => {
+    const nextScores = { ...guideScores };
+    (Object.entries(choice.scores) as [ResourceKey, number][]).forEach(([key, value]) => {
+      nextScores[key] = (nextScores[key] ?? 0) + value;
+    });
+
+    if (guideStep >= guideQuestions.length - 1) {
+      chooseRecommendation(nextScores);
+      return;
+    }
+
+    setGuideScores(nextScores);
+    setGuideStep((step) => step + 1);
   };
 
   return (
@@ -132,15 +145,15 @@ export default function Tools() {
       {/* Hero – Te guiamos */}
       <motion.button
         whileTap={{ scale: 0.97 }}
-        onClick={() => { setRecommendation(null); setGuideOpen(true); }}
-        className="mb-6 flex w-full items-center gap-4 rounded-[2.5rem] border border-border/50 bg-card p-5 text-left shadow-sm"
+        onClick={() => { resetGuide(); setGuideOpen(true); }}
+        className={`mb-6 flex w-full flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.guia}`}
       >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/15">
-          <Sparkles size={22} className="text-accent-foreground" />
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
+          <Sparkles size={20} />
         </div>
-        <div className="flex-1">
-          <p className="font-display text-sm font-semibold text-foreground">Te guiamos</p>
-          <p className="text-xs text-muted-foreground">¿No sabés por dónde empezar?</p>
+        <div className="mt-4">
+          <p className="font-display text-sm font-semibold">Te guiamos</p>
+          <p className="mt-0.5 text-[11px] leading-snug opacity-75">Encontrá el recurso más apropiado para este momento</p>
         </div>
       </motion.button>
 
