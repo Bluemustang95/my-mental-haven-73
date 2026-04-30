@@ -61,15 +61,16 @@ export function BottomNav() {
 
   return (
     <motion.nav
-      animate={shrunk ? { scale: 0.94, y: 4 } : { scale: 1, y: 0 }}
+      initial={false}
+      animate={shrunk ? { scale: 0.94, y: 4, x: "-50%" } : { scale: 1, y: 0, x: "-50%" }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
       style={{
         position: "fixed",
         bottom: "2rem",
         left: "50%",
-        transform: "translateX(-50%)",
         zIndex: 50,
         width: "fit-content",
+        transformOrigin: "center bottom",
       }}
     >
       <div className="mx-auto flex w-fit items-center justify-center gap-1 rounded-full border border-border/40 bg-card/70 px-3 py-1.5 shadow-lg backdrop-blur-xl">
