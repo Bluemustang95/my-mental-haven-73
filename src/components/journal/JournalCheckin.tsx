@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "@phosphor-icons/react";
+import { ArrowLeft, ClockCounterClockwise, Heart } from "@phosphor-icons/react";
 import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,41 +43,43 @@ export default function JournalCheckin() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col px-5 pt-14 pb-4 safe-area-top">
+    <div className="flex min-h-screen flex-col bg-resource-safety-bg px-5 pt-14 pb-4 text-resource-safety-accent safe-area-top">
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={() => navigate("/")} className="text-muted-foreground">
+        <button onClick={() => navigate("/")} className="flex h-10 w-10 items-center justify-center rounded-full border border-resource-safety-accent/15 bg-card/75 text-resource-safety-accent shadow-sm">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="font-display text-lg font-semibold">Check-in rápido</h1>
-          <p className="text-[11px] text-muted-foreground">Registro somático</p>
+          <h1 className="font-mindful text-3xl leading-tight">Check-in rápido</h1>
+          <p className="font-sans text-xs leading-5 text-resource-safety-accent/65">Registro somático</p>
         </div>
         <button
           onClick={() => navigate("/diario/checkin/historial")}
-          className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 font-display text-[11px] text-muted-foreground transition-all active:bg-muted/60"
+          className="flex items-center gap-1.5 rounded-full border border-resource-safety-accent/15 bg-card/75 px-3 py-1.5 font-display text-[11px] font-semibold text-resource-safety-accent shadow-sm transition-all active:scale-95"
         >
+          <ClockCounterClockwise size={13} weight="duotone" />
           Historial
         </button>
       </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         {/* Body map */}
-        <section className="mb-6">
-          <p className="mb-2 font-display text-base font-medium">¿Dónde sentís tensión o malestar?</p>
-          <p className="mb-3 text-xs text-muted-foreground">Tocá las zonas del cuerpo donde notás algo.</p>
+        <section className="mb-6 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/75 p-5 shadow-sm">
+          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-resource-safety-bg">
+            <Heart size={20} weight="duotone" />
+          </div>
+          <p className="font-display text-base font-semibold">¿Dónde sentís tensión o malestar?</p>
+          <p className="mb-3 mt-1 font-sans text-xs leading-5 text-resource-safety-accent/65">Tocá las zonas del cuerpo donde notás algo.</p>
           <BodyMapSvg selected={bodyParts} onToggle={toggleBody} />
         </section>
 
-        <div className="mb-6 h-px bg-border" />
-
         {/* Note */}
-        <section className="mb-6">
-          <p className="mb-2 font-display text-sm font-medium">¿Querés describir cómo lo sentís?</p>
+        <section className="mb-6 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/75 p-5 shadow-sm">
+          <p className="mb-2 font-display text-sm font-semibold">¿Querés describir cómo lo sentís?</p>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Opcional — describí la sensación, intensidad, contexto..."
-            className="w-full resize-none rounded-2xl border border-border bg-card p-3 text-sm font-body placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full resize-none rounded-[2rem] border border-resource-safety-accent/15 bg-resource-safety-bg/55 p-4 font-sans text-sm text-resource-safety-accent placeholder:text-resource-safety-accent/40 focus:outline-none focus:ring-2 focus:ring-resource-safety-accent/20"
             rows={3}
           />
         </section>
@@ -86,10 +88,10 @@ export default function JournalCheckin() {
           onClick={save}
           disabled={bodyParts.length === 0 || saving}
           className={cn(
-            "w-full rounded-2xl py-3 font-display text-sm font-medium transition-all",
+            "w-full rounded-[3rem] py-4 font-display text-sm font-semibold shadow-lg transition-all",
             bodyParts.length > 0
-              ? "bg-primary text-primary-foreground active:scale-[0.98]"
-              : "bg-muted text-muted-foreground"
+              ? "bg-resource-safety-accent text-primary-foreground shadow-resource-safety-accent/20 active:scale-[0.98]"
+              : "bg-card/70 text-resource-safety-accent/40 shadow-transparent"
           )}
         >
           {saving ? "Guardando..." : "Registrar check-in"}
