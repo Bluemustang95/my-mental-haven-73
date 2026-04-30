@@ -193,7 +193,7 @@ export default function Diario() {
   const toolsList = Object.values(allRecommendations);
 
   return (
-    <div className={`flex min-h-screen flex-col bg-background safe-area-top transition-all duration-500 ${zenMode ? "zen-active" : ""}`}>
+    <div className={`flex h-[100dvh] flex-col overflow-y-auto bg-background safe-area-top transition-all duration-500 ${zenMode ? "zen-active" : ""}`}>
       {/* ── Header ── */}
       <AnimatePresence>
         {!zenMode && (
@@ -263,12 +263,22 @@ export default function Diario() {
       </AnimatePresence>
 
       {/* ── Writing area (flexible canvas) ── */}
-      <div className="flex min-h-0 flex-1 flex-col px-6 pt-3 transition-all duration-300">
+      <div className="flex flex-grow flex-col px-6 pt-3 transition-all duration-300">
         <textarea
+          ref={(el) => {
+            if (!el) return;
+            el.style.height = "100%";
+            if (el.scrollHeight > el.clientHeight) el.style.height = `${el.scrollHeight}px`;
+          }}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value);
+            const el = e.target;
+            el.style.height = "100%";
+            if (el.scrollHeight > el.clientHeight) el.style.height = `${el.scrollHeight}px`;
+          }}
           placeholder={zenMode ? "Escribí con calma..." : dynamicPlaceholder}
-          className={`min-h-0 flex-1 w-full resize-none overflow-y-auto bg-transparent text-foreground leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
+          className={`h-full min-h-full w-full flex-grow resize-none overflow-hidden border-0 bg-transparent p-0 text-foreground shadow-none leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
             zenMode ? "text-[17px]" : "text-[15px]"
           }`}
           autoFocus
@@ -283,6 +293,7 @@ export default function Diario() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
+            className="shrink-0"
           >
             {/* ── Inline save button (ghost, compact) ── */}
             <AnimatePresence>
@@ -291,7 +302,7 @@ export default function Diario() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="px-6 pb-1"
+                  className="px-6"
                 >
                   <button
                     onClick={save}
@@ -310,7 +321,7 @@ export default function Diario() {
             </AnimatePresence>
 
             {/* ── Voice recording (compact) ── */}
-            <div className="px-6 py-1 flex items-center gap-3">
+            <div className="px-6 flex items-center gap-3">
               {!isRecording && !audioUrl && (
                 <button onClick={startRecording} className="flex items-center gap-2 rounded-full bg-card/80 px-3 py-1.5 text-xs text-muted-foreground shadow-sm transition active:bg-muted">
                   <Mic size={14} />
@@ -337,7 +348,7 @@ export default function Diario() {
             </div>
 
             {/* ── Emotion selector (text-only, no emojis) ── */}
-            <div className="px-6 py-2">
+            <div className="px-6 pt-1 pb-2">
               <div className="flex items-center gap-2">
                 {primaryEmotions.map((em) => (
                   <button
@@ -364,7 +375,7 @@ export default function Diario() {
               </div>
 
               {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1.5">
+                <div className="flex flex-wrap gap-1 pt-1.5">
                   {selectedEmotions.filter(e => !primaryEmotions.find(p => p.label === e)).map(e => (
                     <span key={e} className={`rounded-full px-2 py-0.5 text-[10px] font-medium flex items-center gap-1 ${getEmotionTheme(e)}`}>
                       {e}
@@ -424,7 +435,7 @@ export default function Diario() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 12 }}
-                  className="px-6 pb-2"
+                   className="px-6 pb-2"
                 >
                   <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70">
                     Herramientas sugeridas
