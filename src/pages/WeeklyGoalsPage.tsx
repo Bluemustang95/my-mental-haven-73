@@ -1,10 +1,11 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, ClockCounterClockwise } from "@phosphor-icons/react";
 import { WeeklyGoalsWidget } from "@/components/WeeklyGoalsWidget";
 import { useConsistentBack } from "@/hooks/useConsistentBack";
 
 export default function WeeklyGoalsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const goBack = useConsistentBack("/diario");
 
   return (
@@ -18,7 +19,7 @@ export default function WeeklyGoalsPage() {
           <p className="font-sans text-xs leading-5 text-resource-values-accent/65">Cuidá lo importante esta semana</p>
         </div>
         <button
-          onClick={() => navigate("/diario/objetivos/historial")}
+          onClick={() => navigate("/diario/objetivos/historial", { state: location.state })}
           className="flex items-center gap-1.5 rounded-full border border-resource-values-accent/15 bg-card/75 px-3 py-1.5 font-display text-[11px] font-semibold text-resource-values-accent shadow-sm transition-all active:scale-95"
         >
           <ClockCounterClockwise size={13} weight="duotone" />
