@@ -262,25 +262,14 @@ export default function Diario() {
         )}
       </AnimatePresence>
 
-      {/* ── Writing area (auto-expanding, no internal scroll) ── */}
-      <div className={`flex-1 px-6 pt-4 transition-all duration-300 ${zenMode ? "" : ""}`}>
+      {/* ── Writing area (flexible canvas) ── */}
+      <div className="flex min-h-0 flex-1 flex-col px-6 pt-3 transition-all duration-300">
         <textarea
-          ref={(el) => {
-            if (el) {
-              el.style.height = "auto";
-              el.style.height = el.scrollHeight + "px";
-            }
-          }}
           value={content}
-          onChange={(e) => {
-            setContent(e.target.value);
-            const el = e.target;
-            el.style.height = "auto";
-            el.style.height = el.scrollHeight + "px";
-          }}
+          onChange={(e) => setContent(e.target.value)}
           placeholder={zenMode ? "Escribí con calma..." : dynamicPlaceholder}
-          className={`w-full resize-none overflow-hidden bg-transparent text-foreground leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
-            zenMode ? "min-h-[60vh] text-[17px]" : "min-h-[34vh] text-[15px]"
+          className={`min-h-0 flex-1 w-full resize-none overflow-y-auto bg-transparent text-foreground leading-relaxed font-body placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
+            zenMode ? "text-[17px]" : "text-[15px]"
           }`}
           autoFocus
         />
