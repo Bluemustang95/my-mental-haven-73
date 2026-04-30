@@ -125,6 +125,8 @@ export default function Tools() {
     setGuideStep((step) => step + 1);
   };
 
+  const currentQuestion = guideQuestions[guideStep];
+
   return (
     <div className="px-5 pt-14 pb-4 safe-area-top">
       {/* Header */}
@@ -300,38 +302,46 @@ export default function Tools() {
 
       {/* Guide Dialog */}
       <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
-        <DialogContent className="rounded-[2rem] border-border">
+        <DialogContent className={`rounded-[2rem] border p-6 ${recommendation ? resourceThemes[recommendation.key] : resourceThemes.guia}`}>
           <DialogHeader>
             <DialogTitle className="font-display">¿Cómo te sentís ahora?</DialogTitle>
-            <DialogDescription>Elegí lo que más resuene y te recomendamos un recurso.</DialogDescription>
+            <DialogDescription className="text-current opacity-70">
+              {recommendation ? "Te recomendamos probar:" : "Elegí lo que más resuene y te recomendamos un recurso."}
+            </DialogDescription>
           </DialogHeader>
 
           {!recommendation ? (
-            <div className="space-y-2 pt-2">
-              {feelingOptions.map((opt) => (
+            <motion.div
+              key={guideStep}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-3 pt-2"
+            >
+              <p className="font-display text-lg font-semibold">{currentQuestion.title}</p>
+              {currentQuestion.choices.map((choice) => (
                 <button
-                  key={opt.label}
-                  onClick={() => handleFeeling(opt)}
-                  className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-left font-display text-sm transition-colors active:bg-muted"
+                  key={choice.label}
+                  onClick={() => handleGuideChoice(choice)}
+                  className="w-full rounded-2xl border border-current/10 bg-card/80 px-4 py-3 text-left font-display text-sm transition-transform active:scale-[0.98]"
                 >
-                  {opt.label}
+                  {choice.label}
                 </button>
               ))}
-            </div>
+            </motion.div>
           ) : (
             <div className="space-y-4 pt-2 text-center">
-              <p className="text-sm text-muted-foreground">Te recomendamos probar:</p>
-              <p className="font-display text-lg font-semibold text-foreground">{recommendation.name}</p>
+              <p className="font-display text-2xl font-semibold">{recommendation.name}</p>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setRecommendation(null)}
-                  className="flex-1 rounded-2xl border border-border py-2.5 font-display text-sm text-muted-foreground transition-colors active:bg-muted"
+                  onClick={resetGuide}
+                  className="flex-1 rounded-2xl border border-current/15 bg-card/65 py-2.5 font-display text-sm transition-colors active:bg-card"
                 >
                   Volver
                 </button>
                 <button
                   onClick={() => { setGuideOpen(false); navigate(recommendation.path); }}
-                  className="flex-1 rounded-2xl bg-primary py-2.5 font-display text-sm text-primary-foreground transition-colors active:opacity-90"
+                  className="flex-1 rounded-2xl bg-current py-2.5 font-display text-sm text-card transition-colors active:opacity-90"
                 >
                   Ir al recurso
                 </button>
