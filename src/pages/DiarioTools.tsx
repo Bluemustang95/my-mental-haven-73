@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Calendar, MessageCircle, Brain, Mail, Trophy, Moon } from "lucide-react";
+import { ArrowLeft, Users, Calendar, MessageCircle, Brain, Mail, Moon } from "lucide-react";
 
 const tools = [
   { id: "vinculos",     label: "Vínculos",                 desc: "Personas importantes", icon: Users,          path: "/diario/vinculos", theme: "border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg text-resource-mindfulness-accent" },
@@ -9,7 +9,6 @@ const tools = [
   { id: "pensamientos", label: "Pensamientos",             desc: "Patrones y perspectiva", icon: Brain,          path: "/diario/pensamientos", theme: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent" },
   { id: "cartas",       label: "Cartas sin enviar",        desc: "Lo que necesitás decir", icon: Mail,           path: "/diario/cartas", theme: "border-resource-eating-accent/15 bg-resource-eating-bg text-resource-eating-accent" },
   { id: "suenos",       label: "Registro de sueños",       desc: "Anotá y explorá", icon: Moon,           path: "/diario/suenos", theme: "border-resource-regulation-accent/15 bg-resource-regulation-bg text-resource-regulation-accent" },
-  { id: "logros",       label: "Micro-logros",             desc: "Pequeños avances", icon: Trophy,         path: "/diario/logros", theme: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent" },
 ];
 
 export default function DiarioTools() {

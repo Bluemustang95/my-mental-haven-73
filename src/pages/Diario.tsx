@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Users, Calendar, MessageCircle, Brain, Mail, Trophy, Moon, Mic, Square, Play, Trash, Send, MoreHorizontal, X } from "lucide-react";
+import { Clock, Users, Calendar, MessageCircle, Brain, Mail, Moon, Mic, Square, Play, Trash, Send, MoreHorizontal, X } from "lucide-react";
 import { Flower, Toolbox } from "@phosphor-icons/react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,6 @@ const relationshipWords = ["mamá", "papá", "madre", "padre", "amigo", "amiga",
 const temporalWords = ["hoy", "ayer", "mañana", "esta mañana", "esta tarde", "esta noche", "anoche", "día", "semana"];
 const introspectionWords = ["siento", "creo", "pienso", "me doy cuenta", "me cuesta", "necesito", "quiero", "debería", "culpa", "miedo", "vergüenza", "enojo", "tristeza", "ansiedad", "angustia", "soledad"];
 const dreamWords = ["soñé", "sueño", "pesadilla", "dormí", "desperté", "insomnio"];
-const achievementWords = ["logré", "pude", "avancé", "conseguí", "superé", "orgulloso", "orgullosa", "celebro"];
 
 interface Recommendation {
   id: string;
@@ -29,7 +28,6 @@ const allRecommendations: Record<string, Recommendation> = {
   pensamientos:{ id: "pensamientos",label: "Registro de pensamientos", icon: Brain,     path: "/diario/pensamientos", theme: "bg-resource-psycho-bg text-resource-psycho-accent" },
   cartas:      { id: "cartas",      label: "Cartas sin enviar",   icon: Mail,           path: "/diario/cartas", theme: "bg-resource-eating-bg text-resource-eating-accent" },
   suenos:      { id: "suenos",      label: "Registro de sueños",  icon: Moon,           path: "/diario/suenos", theme: "bg-resource-regulation-bg text-resource-regulation-accent" },
-  logros:      { id: "logros",      label: "Micro-logros",        icon: Trophy,         path: "/diario/logros", theme: "bg-resource-breathing-bg text-resource-breathing-accent" },
 };
 
 function detectRecommendations(text: string): Recommendation[] {
@@ -38,7 +36,6 @@ function detectRecommendations(text: string): Recommendation[] {
   if (relationshipWords.some(w => lower.includes(w))) results.push(allRecommendations.vinculos);
   if (temporalWords.some(w => lower.includes(w))) results.push(allRecommendations.timeline);
   if (dreamWords.some(w => lower.includes(w))) results.push(allRecommendations.suenos);
-  if (achievementWords.some(w => lower.includes(w))) results.push(allRecommendations.logros);
   if (introspectionWords.some(w => lower.includes(w))) {
     results.push(allRecommendations.dialogo);
     if (lower.length > 200) results.push(allRecommendations.pensamientos);

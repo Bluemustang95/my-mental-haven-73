@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Brain, Flower, Heartbeat, Notebook, Target } from "@phosphor-icons/react";
+import { ArrowLeft, Brain, Flag, Flower, Heart, Heartbeat, Notebook, Target, Trophy } from "@phosphor-icons/react";
 import { format, isValid, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,6 +57,36 @@ export default function CalendarDay() {
           </p>
         </div>
       </header>
+
+      <div className="mb-6 grid grid-cols-2 gap-2.5">
+        <button
+          onClick={() => navigate("/diario/checkin")}
+          className="flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-safety-accent/15 bg-resource-safety-bg p-3.5 text-left text-resource-safety-accent shadow-sm transition active:scale-[0.98]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70">
+            <Heart size={17} weight="duotone" />
+          </span>
+          <span className="font-display text-[11px] font-semibold leading-tight">Check-in rápido</span>
+        </button>
+        <button
+          onClick={() => navigate("/diario/objetivos")}
+          className="flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-values-accent/15 bg-resource-values-bg p-3.5 text-left text-resource-values-accent shadow-sm transition active:scale-[0.98]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70">
+            <Flag size={17} weight="duotone" />
+          </span>
+          <span className="font-display text-[11px] font-semibold leading-tight">Mis objetivos</span>
+        </button>
+        <button
+          onClick={() => navigate("/diario/logros")}
+          className="col-span-2 flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-breathing-accent/15 bg-resource-breathing-bg p-3.5 text-left text-resource-breathing-accent shadow-sm transition active:scale-[0.98]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70">
+            <Trophy size={17} weight="duotone" />
+          </span>
+          <span className="font-display text-[11px] font-semibold leading-tight">Micro-logros</span>
+        </button>
+      </div>
 
       <section>
         <h2 className="mb-4 font-display text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
