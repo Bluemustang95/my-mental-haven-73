@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Star, Trophy } from "@phosphor-icons/react";
 import { cn, localDateStr } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +28,7 @@ interface Achievement {
 
 export default function MicroAchievements() {
   const navigate = useNavigate();
+  const location = useLocation();
   const goBack = useConsistentBack("/diario");
   const { user } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -77,7 +78,7 @@ export default function MicroAchievements() {
           <p className="font-sans text-xs leading-5 text-resource-breathing-accent/65">Pequeñas victorias del día</p>
         </div>
         <button
-          onClick={() => navigate("/diario/logros/historial")}
+          onClick={() => navigate("/diario/logros/historial", { state: location.state })}
           className="flex items-center gap-1.5 rounded-full border border-resource-breathing-accent/15 bg-card/75 px-3 py-1.5 font-display text-[11px] font-semibold text-resource-breathing-accent shadow-sm transition-all active:scale-95"
         >
           <ClockCounterClockwise size={13} weight="duotone" />
