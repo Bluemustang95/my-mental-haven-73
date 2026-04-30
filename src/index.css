@@ -159,3 +159,20 @@
     display: none;
   }
 }
+
+@layer base {
+  /* Hide scrollbars globally while preserving scroll functionality */
+  html,
+  body,
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 10+ */
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+    width: 0;
+    height: 0;
+  }
+}
