@@ -19,16 +19,17 @@ interface Recommendation {
   label: string;
   icon: typeof Users;
   path: string;
+  theme: string;
 }
 
 const allRecommendations: Record<string, Recommendation> = {
-  vinculos:    { id: "vinculos",    label: "Vínculos",            icon: Users,          path: "/diario/vinculos" },
-  timeline:    { id: "timeline",    label: "Línea del día",       icon: Calendar,       path: "/diario/dia" },
-  dialogo:     { id: "dialogo",     label: "Diálogo interno",     icon: MessageCircle,  path: "/diario/dialogo" },
-  pensamientos:{ id: "pensamientos",label: "Registro de pensamientos", icon: Brain,     path: "/diario/pensamientos" },
-  cartas:      { id: "cartas",      label: "Cartas sin enviar",   icon: Mail,           path: "/diario/cartas" },
-  suenos:      { id: "suenos",      label: "Registro de sueños",  icon: Moon,           path: "/diario/suenos" },
-  logros:      { id: "logros",      label: "Micro-logros",        icon: Trophy,         path: "/diario/logros" },
+  vinculos:    { id: "vinculos",    label: "Vínculos",            icon: Users,          path: "/diario/vinculos", theme: "bg-resource-mindfulness-bg text-resource-mindfulness-accent" },
+  timeline:    { id: "timeline",    label: "Línea del día",       icon: Calendar,       path: "/diario/dia", theme: "bg-resource-sleep-bg text-resource-sleep-accent" },
+  dialogo:     { id: "dialogo",     label: "Diálogo interno",     icon: MessageCircle,  path: "/diario/dialogo", theme: "bg-resource-selfcare-bg text-resource-selfcare-accent" },
+  pensamientos:{ id: "pensamientos",label: "Registro de pensamientos", icon: Brain,     path: "/diario/pensamientos", theme: "bg-resource-psycho-bg text-resource-psycho-accent" },
+  cartas:      { id: "cartas",      label: "Cartas sin enviar",   icon: Mail,           path: "/diario/cartas", theme: "bg-resource-eating-bg text-resource-eating-accent" },
+  suenos:      { id: "suenos",      label: "Registro de sueños",  icon: Moon,           path: "/diario/suenos", theme: "bg-resource-regulation-bg text-resource-regulation-accent" },
+  logros:      { id: "logros",      label: "Micro-logros",        icon: Trophy,         path: "/diario/logros", theme: "bg-resource-breathing-bg text-resource-breathing-accent" },
 };
 
 function detectRecommendations(text: string): Recommendation[] {
@@ -60,6 +61,34 @@ const allEmotions = [
   "Gratitud", "Confusión", "Esperanza", "Culpa", "Alivio",
   "Vergüenza", "Orgullo", "Frustración", "Amor", "Nostalgia",
 ];
+
+const placeholderOptions = [
+  "Escribí lo que necesites soltar...",
+  "¿Qué tenés hoy en la cabeza? Soltalo acá...",
+  "Un espacio para vos. ¿Por dónde querés empezar?",
+  "No hace falta que tenga sentido, solo escribí...",
+  "¿Cómo te sentís hoy con respecto a lo que venís trabajando?",
+];
+
+const emotionThemes: Record<string, string> = {
+  Calma: "bg-resource-grounding-bg text-resource-grounding-accent",
+  Alegría: "bg-resource-breathing-bg text-resource-breathing-accent",
+  Tristeza: "bg-resource-psycho-bg text-resource-psycho-accent",
+  Ansiedad: "bg-resource-regulation-bg text-resource-regulation-accent",
+  Enojo: "bg-resource-safety-bg text-resource-safety-accent",
+  Gratitud: "bg-resource-values-bg text-resource-values-accent",
+  Confusión: "bg-resource-psycho-bg text-resource-psycho-accent",
+  Esperanza: "bg-resource-recovery-bg text-resource-recovery-accent",
+  Culpa: "bg-resource-eating-bg text-resource-eating-accent",
+  Alivio: "bg-resource-selfcare-bg text-resource-selfcare-accent",
+  Vergüenza: "bg-resource-mindfulness-bg text-resource-mindfulness-accent",
+  Orgullo: "bg-resource-rumination-bg text-resource-rumination-accent",
+  Frustración: "bg-resource-regulation-bg text-resource-regulation-accent",
+  Amor: "bg-resource-mindfulness-bg text-resource-mindfulness-accent",
+  Nostalgia: "bg-resource-sleep-bg text-resource-sleep-accent",
+};
+
+const getEmotionTheme = (emotion: string) => emotionThemes[emotion] ?? "bg-resource-psycho-bg text-resource-psycho-accent";
 
 export default function Diario() {
   const navigate = useNavigate();
