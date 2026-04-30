@@ -7,6 +7,7 @@ import { es } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { CalendarActivity, fetchCalendarActivities } from "@/lib/calendarActivity";
+import { calendarModuleState } from "@/hooks/useConsistentBack";
 
 const activityConfig: Record<CalendarActivity["type"], { icon: typeof Brain; color: string }> = {
   journal: { icon: Notebook, color: "text-accent" },
@@ -29,6 +30,7 @@ export default function CalendarDay() {
   const [loading, setLoading] = useState(true);
 
   const day = useMemo(() => parse(date ?? "", "yyyy-MM-dd", new Date()), [date]);
+  const returnTo = date ? `/calendario/${date}` : "/calendario";
 
   useEffect(() => {
     if (!user || !isValid(day)) return;
@@ -62,7 +64,7 @@ export default function CalendarDay() {
       <div className="mb-6 grid grid-cols-2 gap-2.5">
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/diario/checkin")}
+          onClick={() => navigate("/diario/checkin", { state: calendarModuleState(returnTo) })}
           className="flex min-h-[78px] items-center gap-3 rounded-[1.75rem] border border-resource-safety-accent/15 bg-resource-safety-bg p-3.5 text-left text-resource-safety-accent shadow-sm"
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-card/70">
@@ -72,7 +74,7 @@ export default function CalendarDay() {
         </motion.button>
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/diario/objetivos")}
+          onClick={() => navigate("/diario/objetivos", { state: calendarModuleState(returnTo) })}
           className="flex min-h-[78px] items-center gap-3 rounded-[1.75rem] border border-resource-values-accent/15 bg-resource-values-bg p-3.5 text-left text-resource-values-accent shadow-sm"
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-card/70">
@@ -82,7 +84,7 @@ export default function CalendarDay() {
         </motion.button>
         <motion.button
           whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/diario/logros")}
+          onClick={() => navigate("/diario/logros", { state: calendarModuleState(returnTo) })}
           className="col-span-2 flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-breathing-accent/15 bg-resource-breathing-bg p-3.5 text-left text-resource-breathing-accent shadow-sm"
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-card/70">
