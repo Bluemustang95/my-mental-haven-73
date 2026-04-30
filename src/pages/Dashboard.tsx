@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight,
   Stethoscope, Sparkle, X, Brain, Notebook, Barbell, Flower, Heart, Flag,
-  Check, Target, CalendarBlank,
+  Check, Target, CalendarBlank, ArrowLeft,
 } from "@phosphor-icons/react";
 import { cn, localDateStr, localWeekStart } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -492,29 +492,23 @@ export default function Dashboard() {
       <AnimatePresence>
         {selectedDay && (
           <motion.div
-            key="day-modal-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-            onClick={() => setSelectedDay(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {selectedDay && (
-          <motion.div
-            key="day-modal"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-[#FDFCFB] dark:bg-card shadow-2xl"
+            key="day-fullscreen"
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 24 }}
+            transition={{ type: "spring", damping: 32, stiffness: 280 }}
+            className="fixed inset-0 z-50 overflow-y-auto bg-[#FDFCFB] px-6 pb-8 pt-12 safe-area-top dark:bg-background"
           >
-            {/* Modal header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between px-6 pt-5 pb-3 bg-[#FDFCFB] dark:bg-card">
-              <div>
+            {/* Fullscreen header */}
+            <div className="sticky top-0 z-10 -mx-6 mb-6 flex items-center justify-center bg-[#FDFCFB]/95 px-6 pb-4 pt-1 backdrop-blur dark:bg-background/95">
+              <button
+                onClick={() => setSelectedDay(null)}
+                className="absolute left-5 flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground active:bg-muted/45"
+                aria-label="Volver"
+              >
+                <ArrowLeft size={22} />
+              </button>
+              <div className="text-center">
                 <h2 className="font-display text-lg font-semibold text-foreground capitalize">
                   {format(selectedDay, "EEEE d", { locale: es })}
                 </h2>
@@ -522,15 +516,9 @@ export default function Dashboard() {
                   {format(selectedDay, "MMMM yyyy", { locale: es })}
                 </p>
               </div>
-              <button
-                onClick={() => setSelectedDay(null)}
-                className="rounded-full p-2 text-muted-foreground active:bg-muted"
-              >
-                <X size={18} />
-              </button>
             </div>
 
-            <div className="px-6 pb-8 space-y-6">
+            <div className="space-y-6">
               {/* ── Mood Thermometer ──── */}
               <section>
                 <h3 className="font-display text-[11px] font-medium uppercase tracking-widest text-muted-foreground mb-3">
