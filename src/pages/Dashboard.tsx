@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sun, Moon, CloudSun, Wind, PencilSimple, Heartbeat, ArrowRight,
-  Stethoscope, Sparkle, X, Brain, Notebook, Barbell, Flower, Heart, Flag,
+  Stethoscope, Sparkle, Brain, Notebook, Barbell, Flower, Heart, Flag,
   Check, Target, CalendarBlank, ArrowLeft,
+  Trophy,
 } from "@phosphor-icons/react";
 import { cn, localDateStr, localWeekStart } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -602,20 +603,33 @@ export default function Dashboard() {
               </section>
 
               {/* ── Quick links from calendar ── */}
-              <div className="flex gap-2.5 mb-4">
+              <div className="mb-4 grid grid-cols-2 gap-2.5">
                 <button
                   onClick={() => { setSelectedDay(null); navigate("/diario/checkin"); }}
-                  className="flex-1 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/60 p-3 text-left transition active:bg-muted/60"
+                  className="flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-safety-accent/15 bg-resource-safety-bg p-3.5 text-left text-resource-safety-accent shadow-sm transition active:scale-[0.98]"
                 >
-                  <Heart size={16} weight="duotone" className="text-destructive" />
-                  <span className="font-display text-[11px] font-medium text-foreground">Check-in rápido</span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70">
+                    <Heart size={17} weight="duotone" />
+                  </span>
+                  <span className="font-display text-[11px] font-semibold leading-tight">Check-in rápido</span>
                 </button>
                 <button
                   onClick={() => { setSelectedDay(null); navigate("/diario/objetivos"); }}
-                  className="flex-1 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/60 p-3 text-left transition active:bg-muted/60"
+                  className="flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-values-accent/15 bg-resource-values-bg p-3.5 text-left text-resource-values-accent shadow-sm transition active:scale-[0.98]"
                 >
-                  <Flag size={16} weight="duotone" className="text-accent" />
-                  <span className="font-display text-[11px] font-medium text-foreground">Mis objetivos</span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70">
+                    <Flag size={17} weight="duotone" />
+                  </span>
+                  <span className="font-display text-[11px] font-semibold leading-tight">Mis objetivos</span>
+                </button>
+                <button
+                  onClick={() => { setSelectedDay(null); navigate("/diario/logros"); }}
+                  className="col-span-2 flex min-h-[76px] items-center gap-3 rounded-[1.75rem] border border-resource-breathing-accent/15 bg-resource-breathing-bg p-3.5 text-left text-resource-breathing-accent shadow-sm transition active:scale-[0.98]"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card/70">
+                    <Trophy size={17} weight="duotone" />
+                  </span>
+                  <span className="font-display text-[11px] font-semibold leading-tight">Micro-logros</span>
                 </button>
               </div>
 
