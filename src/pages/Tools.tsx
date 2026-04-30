@@ -25,10 +25,6 @@ import {
 } from "@/components/ui/dialog";
 import CrisisPlan from "@/components/CrisisPlan";
 
-type ResourceKey = keyof typeof resourceThemes;
-type Recommendation = { key: ResourceKey; path: string; name: string };
-type GuideChoice = { label: string; scores: Partial<Record<ResourceKey, number>> };
-
 const resourceThemes = {
   psicoeducacion: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent",
   mindfulness: "border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg text-resource-mindfulness-accent",
@@ -42,7 +38,11 @@ const resourceThemes = {
   alimentacion: "border-resource-eating-accent/15 bg-resource-eating-bg text-resource-eating-accent",
   valores: "border-resource-values-accent/15 bg-resource-values-bg text-resource-values-accent",
   guia: "border-primary/15 bg-primary/5 text-primary",
-};
+} as const;
+
+type ResourceKey = keyof typeof resourceThemes;
+type Recommendation = { key: ResourceKey; path: string; name: string };
+type GuideChoice = { label: string; scores: Partial<Record<ResourceKey, number>> };
 
 const recommendations: Record<ResourceKey, Recommendation> = {
   psicoeducacion: { key: "psicoeducacion", path: "/herramientas/intro/psicoeducacion", name: "Psicoeducación" },
