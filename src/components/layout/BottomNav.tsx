@@ -74,34 +74,32 @@ export function BottomNav() {
     >
       <div className="mx-auto flex w-fit items-center justify-center gap-1 rounded-full border border-border/40 bg-card/70 px-3 py-1.5 shadow-lg backdrop-blur-xl">
         {/* Left side */}
-        <div className="flex flex-1 items-center justify-around gap-1">
+        <div className="flex items-center gap-1">
           {leftTabs.map(renderTab)}
         </div>
 
         {/* Center – Resmita FAB */}
-        <div className="flex w-14 shrink-0 items-center justify-center">
-          <motion.button
-            onClick={() => navigate("/resmita")}
-            whileTap={{ scale: 0.9 }}
-            aria-label="Resmita"
-            className="relative -mt-5 flex items-center justify-center"
+        <motion.button
+          onClick={() => navigate("/resmita")}
+          whileTap={{ scale: 0.9 }}
+          aria-label="Resmita"
+          className="relative -mt-5 mx-1 flex items-center justify-center"
+        >
+          <motion.div
+            animate={resmitaActive ? { scale: 1.08 } : { scale: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className={cn(
+              "flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-md transition-colors",
+              "bg-[hsl(48_100%_85%)] border-[hsl(38_85%_55%)] text-[hsl(28_70%_30%)]",
+              resmitaActive && "ring-2 ring-[hsl(38_85%_55%)]/40"
+            )}
           >
-            <motion.div
-              animate={resmitaActive ? { scale: 1.08 } : { scale: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-md transition-colors",
-                "bg-[hsl(48_100%_85%)] border-[hsl(38_85%_55%)] text-[hsl(28_70%_30%)]",
-                resmitaActive && "ring-2 ring-[hsl(38_85%_55%)]/40"
-              )}
-            >
-              <ChatCircle size={24} weight={resmitaActive ? "fill" : "bold"} />
-            </motion.div>
-          </motion.button>
-        </div>
+            <ChatCircle size={24} weight={resmitaActive ? "fill" : "bold"} />
+          </motion.div>
+        </motion.button>
 
         {/* Right side */}
-        <div className="flex flex-1 items-center justify-around gap-1">
+        <div className="flex items-center gap-1">
           {rightTabs.map(renderTab)}
         </div>
       </div>
