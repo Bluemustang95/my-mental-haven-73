@@ -250,7 +250,7 @@ export default function Recovery() {
           </div>
           <button onClick={() => navigate("/herramientas/regulacion-emocional?tool=stop")} className="rounded-[3rem] bg-resource-recovery-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/20 active:scale-[0.98]">Necesito frenar ahora (STOP)</button>
           <button onClick={() => navigate("/herramientas/regulacion-emocional?tool=tip&step=temperatura")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Usar hielo (TIP)</button>
-          <button onClick={() => navigate("/herramientas/rumiacion")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Hacer un registro de rumiación</button>
+          <button onClick={() => navigate("/herramientas/rumiacion")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Escribir en la Nube (rumiación)</button>
         </div>
       </div>
     );
