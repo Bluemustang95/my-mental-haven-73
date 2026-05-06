@@ -748,6 +748,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sleep_log: {
+        Row: {
+          created_at: string
+          id: string
+          log_date: string
+          notes: string | null
+          quality: string
+          score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          quality: string
+          score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          quality?: string
+          score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       test_results: {
         Row: {
           answers: Json | null
