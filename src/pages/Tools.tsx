@@ -8,7 +8,7 @@ import {
   Flower2,
   Leaf,
   Hand,
-  Wind,
+  
   Moon,
   Brain,
   Wine,
