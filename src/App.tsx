@@ -7,7 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import CalendarMonth from "@/pages/CalendarMonth";
 import CalendarDay from "@/pages/CalendarDay";
-import Breathing from "@/pages/Breathing";
+
 import Resmita from "@/pages/Resmita";
 import Profile from "@/pages/Profile";
 import Onboarding from "@/pages/Onboarding";
@@ -130,7 +130,7 @@ const App = () => (
               {/* Herramientas (tab 4) — only techniques */}
               <Route path="/herramientas" element={<Tools />} />
               <Route path="/herramientas/intro/:slug" element={<ResourceIntro />} />
-              <Route path="/herramientas/respiracion" element={<Breathing />} />
+              
               <Route path="/herramientas/grounding" element={<Grounding />} />
               <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />

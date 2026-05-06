@@ -24,7 +24,7 @@ const slugThemeMap: Record<string, string> = {
   mindfulness: "border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg text-resource-mindfulness-accent",
   psicoeducacion: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent",
   autocuidado: "border-resource-selfcare-accent/15 bg-resource-selfcare-bg text-resource-selfcare-accent",
-  respiracion: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent",
+  
   sueno: "border-resource-sleep-accent/15 bg-resource-sleep-bg text-resource-sleep-accent",
   rumiacion: "border-resource-rumination-accent/15 bg-resource-rumination-bg text-resource-rumination-accent",
   recuperacion: "border-resource-recovery-accent/15 bg-resource-recovery-bg text-resource-recovery-accent",
@@ -33,7 +33,7 @@ const slugThemeMap: Record<string, string> = {
 
 // Map category slug → existing runner route (legacy compat)
 const runnerRoute: Record<string, string> = {
-  respiracion: "/herramientas/respiracion",
+  
   mindfulness: "/herramientas/mindfulness",
   grounding: "/herramientas/grounding",
   autocuidado: "/herramientas/autocuidado",

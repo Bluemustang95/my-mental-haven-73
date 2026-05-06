@@ -451,7 +451,7 @@ export default function Dashboard() {
         </h2>
         <div className="grid grid-cols-3 gap-3">
           {[
-            { icon: Wind, label: "Respirar", route: "/herramientas/respiracion" },
+            { icon: Wind, label: "Regular", route: "/herramientas/regulacion-emocional" },
             { icon: PencilSimple, label: "Escribir", route: "/diario/escribir" },
             { icon: Heartbeat, label: "Calmar", route: "/herramientas/grounding" },
           ].map(({ icon: Icon, label, route }) => (
