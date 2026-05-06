@@ -8,7 +8,7 @@ import {
   Flower2,
   Leaf,
   Hand,
-  Wind,
+  
   Moon,
   Brain,
   Wine,
@@ -210,18 +210,6 @@ export default function Tools() {
             <Hand size={20} />
           </div>
           <p className="mt-auto pt-4 font-display text-sm font-semibold">Grounding</p>
-        </motion.button>
-
-        {/* Respiración */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/respiracion")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.respiracion}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Wind size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Respiración</p>
         </motion.button>
 
         {/* Sueño */}

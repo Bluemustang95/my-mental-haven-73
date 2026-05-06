@@ -248,9 +248,9 @@ export default function Recovery() {
             <h1 className="font-mindful text-3xl leading-tight">No te rindas</h1>
             <p className="mt-3 font-sans text-xs font-normal leading-6 text-resource-recovery-accent/70 sm:text-sm">Un impulso sube y baja. Elegí algo concreto para atravesar este momento.</p>
           </div>
-          <button onClick={() => navigate("/herramientas/regulacion-emocional?tool=stop")} className="rounded-[3rem] bg-resource-recovery-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/20 active:scale-[0.98]">Necesito frenar ahora (STOP)</button>
-          <button onClick={() => navigate("/herramientas/regulacion-emocional?tool=tip")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Necesito un cambio químico (TIP)</button>
-          <button onClick={() => navigate("/herramientas/rumiacion")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Hacer un registro de rumiación</button>
+          <button onClick={() => navigate("/herramientas/regulacion-emocional?tool=stop")} className="rounded-[3rem] bg-resource-recovery-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/20 active:scale-[0.98]">Hacer un STOP</button>
+          <button onClick={() => navigate("/herramientas/regulacion-emocional?tool=tip&step=temperatura")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Usar hielo (TIP)</button>
+          <button onClick={() => navigate("/herramientas/rumiacion")} className="rounded-[3rem] border border-resource-recovery-accent/20 bg-card/85 py-4 font-display text-base font-semibold shadow-sm active:scale-[0.98]">Escribir en la Nube (rumiación)</button>
         </div>
       </div>
     );
