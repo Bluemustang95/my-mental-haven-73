@@ -30,7 +30,7 @@ const resourceThemes = {
   mindfulness: "border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg text-resource-mindfulness-accent",
   autocuidado: "border-resource-selfcare-accent/15 bg-resource-selfcare-bg text-resource-selfcare-accent",
   grounding: "border-resource-grounding-accent/15 bg-resource-grounding-bg text-resource-grounding-accent",
-  respiracion: "border-resource-breathing-accent/15 bg-resource-breathing-bg text-resource-breathing-accent",
+  
   sueno: "border-resource-sleep-accent/15 bg-resource-sleep-bg text-resource-sleep-accent",
   rumiacion: "border-resource-rumination-accent/15 bg-resource-rumination-bg text-resource-rumination-accent",
   recuperacion: "border-resource-recovery-accent/15 bg-resource-recovery-bg text-resource-recovery-accent",
@@ -49,7 +49,7 @@ const recommendations: Record<ResourceKey, Recommendation> = {
   mindfulness: { key: "mindfulness", path: "/herramientas/mindfulness", name: "Mindfulness" },
   autocuidado: { key: "autocuidado", path: "/herramientas/intro/autocuidado", name: "Autocuidado" },
   grounding: { key: "grounding", path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" },
-  respiracion: { key: "respiracion", path: "/herramientas/respiracion", name: "Respiración" },
+  
   sueno: { key: "sueno", path: "/herramientas/sueno", name: "Sueño" },
   rumiacion: { key: "rumiacion", path: "/herramientas/rumiacion", name: "Rumiación" },
   recuperacion: { key: "recuperacion", path: "/herramientas/recuperacion", name: "Recuperación" },
@@ -63,7 +63,7 @@ const guideQuestions: { title: string; choices: GuideChoice[] }[] = [
   {
     title: "¿Qué necesitás cuidar ahora?",
     choices: [
-      { label: "Calmar el cuerpo", scores: { grounding: 3, respiracion: 2, regulacion: 1 } },
+      { label: "Calmar el cuerpo", scores: { grounding: 3, regulacion: 2 } },
       { label: "Ordenar pensamientos", scores: { rumiacion: 3, mindfulness: 2, psicoeducacion: 1 } },
       { label: "Conectar con lo importante", scores: { valores: 3, recuperacion: 1, autocuidado: 1 } },
       { label: "Cuidar hábitos cotidianos", scores: { autocuidado: 3, sueno: 2, alimentacion: 2 } },
@@ -72,7 +72,7 @@ const guideQuestions: { title: string; choices: GuideChoice[] }[] = [
   {
     title: "¿Qué sentís con más fuerza?",
     choices: [
-      { label: "Ansiedad o tensión", scores: { respiracion: 3, grounding: 2, regulacion: 1 } },
+      { label: "Ansiedad o tensión", scores: { grounding: 3, regulacion: 2 } },
       { label: "Emociones intensas", scores: { regulacion: 3, grounding: 2, mindfulness: 1 } },
       { label: "Cansancio o desconexión", scores: { autocuidado: 3, sueno: 2, recuperacion: 1 } },
       { label: "Dudas sobre mis decisiones", scores: { valores: 3, psicoeducacion: 1, mindfulness: 1 } },
@@ -81,7 +81,7 @@ const guideQuestions: { title: string; choices: GuideChoice[] }[] = [
   {
     title: "¿Qué tipo de recurso te serviría más?",
     choices: [
-      { label: "Un ejercicio breve", scores: { grounding: 3, respiracion: 3, mindfulness: 2 } },
+      { label: "Un ejercicio breve", scores: { grounding: 3, regulacion: 3, mindfulness: 2 } },
       { label: "Escribir y registrar", scores: { valores: 3, alimentacion: 3, recuperacion: 2 } },
       { label: "Aprender algo claro", scores: { psicoeducacion: 3, rumiacion: 2, regulacion: 1 } },
       { label: "Planear un cuidado concreto", scores: { autocuidado: 3, sueno: 2, alimentacion: 1 } },
