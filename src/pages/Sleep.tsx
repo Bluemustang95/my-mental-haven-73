@@ -9,7 +9,7 @@ import resmitaAvatar from "@/assets/resmita-mindfulness.png";
 
 type Quality = "good" | "ok" | "bad";
 type SleepLog = { log_date: string; quality: Quality };
-type View = "checklist" | "diary" | "done";
+type View = "intro" | "checklist" | "diary" | "done";
 
 const checklistItems = [
   "Dejé el celular fuera de la cama",
@@ -39,7 +39,7 @@ const qualityColor: Record<Quality, string> = {
 export default function Sleep() {
   const navigate = useNavigate();
   const today = localDateStr();
-  const [view, setView] = useState<View>("checklist");
+  const [view, setView] = useState<View>("intro");
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [logs, setLogs] = useState<Record<string, Quality>>({});
   const [savingTodayQuality, setSavingTodayQuality] = useState(false);
