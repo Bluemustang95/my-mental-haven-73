@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Heart, Sparkles, BookOpen, Leaf, Mountain, Moon, Wine, Waves,
-  Apple, Compass, Shield, FlowerLotus, Spiral,
+  Apple, Compass, Shield, Tornado, Flower2,
 } from "lucide-react";
-import { Flower2 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
