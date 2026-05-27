@@ -106,28 +106,30 @@ export default function Rumination() {
   if (view === "intro") {
     return (
       <div className="flex min-h-screen flex-col bg-resource-rumination-bg px-5 pt-12 pb-6 text-resource-rumination-accent safe-area-top">
-        <button onClick={() => navigate("/herramientas")} className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-card/80 shadow-sm">
-          <ArrowLeft size={20} />
-        </button>
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col items-center text-center">
-          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }} className="mb-4 flex h-20 w-20 items-center justify-center">
-            <img src={resmitaAvatar} alt="Resmita" className="h-16 w-16 object-contain drop-shadow-md" />
-          </motion.div>
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-card/80 shadow-sm shadow-resource-rumination-accent/10">
-            <Brain size={34} weight="duotone" />
+        <div className="mb-6 flex items-center justify-between">
+          <button onClick={() => navigate("/herramientas")} className="flex h-11 w-11 items-center justify-center rounded-full bg-card/80 shadow-sm">
+            <ArrowLeft size={20} />
+          </button>
+          <span className="rounded-full bg-card/80 px-4 py-2 font-mindful text-xs font-semibold shadow-sm">Rumiación</span>
+        </div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-[1.6rem] bg-card/85 shadow-sm">
+              <Brain size={28} weight="duotone" />
+            </div>
+            <div>
+              <h1 className="font-mindful text-3xl leading-tight">Frená el bucle</h1>
+              <p className="font-sans text-xs leading-5 text-resource-rumination-accent/65">Elegí una técnica para soltar.</p>
+            </div>
           </div>
-          <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Rumiación</h1>
-          <p className="max-w-sm font-sans text-xs font-normal leading-6 text-resource-rumination-accent/75 sm:text-sm sm:leading-7">
-            La rumiación es cuando tu mente da vueltas sobre el mismo tema una y otra vez. Estas herramientas te ayudan a ver tus pensamientos desde afuera para que dejen de pesarte tanto.
-          </p>
-          <div className="mt-7 w-full space-y-3">
+          <div className="space-y-3">
             <button onClick={() => { setRecordStep(0); setView("record"); }} className="flex w-full items-center gap-4 rounded-[2.5rem] border border-resource-rumination-accent/15 bg-card/85 p-5 text-left shadow-sm active:scale-[0.98]">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-resource-rumination-accent/10"><Notepad size={24} weight="duotone" /></span>
-              <span><span className="block font-display text-base font-semibold">Registro de Pensamientos</span><span className="text-xs font-semibold opacity-65">Cuadro TCC paso a paso</span></span>
+              <span><span className="block font-mindful text-base font-semibold">Registro TCC</span><span className="text-xs font-semibold opacity-65">Cuadro paso a paso · distorsiones</span></span>
             </button>
             <button onClick={() => setView("observer")} className="flex w-full items-center gap-4 rounded-[2.5rem] border border-resource-rumination-accent/15 bg-card/85 p-5 text-left shadow-sm active:scale-[0.98]">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-resource-rumination-accent/10"><Cloud size={24} weight="duotone" /></span>
-              <span><span className="block font-display text-base font-semibold">Nube de Pensamientos</span><span className="text-xs font-semibold opacity-65">Defusión ACT</span></span>
+              <span><span className="block font-mindful text-base font-semibold">Nube de pensamientos</span><span className="text-xs font-semibold opacity-65">Defusión ACT</span></span>
             </button>
           </div>
         </motion.div>

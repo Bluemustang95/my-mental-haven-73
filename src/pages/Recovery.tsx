@@ -207,27 +207,24 @@ export default function Recovery() {
           <ArrowLeft size={20} />
         </button>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col items-center text-center">
-          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }} className="mb-4 flex h-20 w-20 items-center justify-center">
-            <img src={resmitaAvatar} alt="Resmita" className="h-16 w-16 object-contain drop-shadow-md" />
-          </motion.div>
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[2rem] bg-card/80 shadow-sm shadow-resource-recovery-accent/10">
             <Wine size={34} strokeWidth={2.2} />
           </div>
           <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Recuperación</h1>
           <p className="max-w-sm font-sans text-xs font-normal leading-6 text-resource-recovery-accent/75 sm:text-sm sm:leading-7">
-            Tomar consciencia de tus hábitos es el primer paso para el cambio. Mirá cuánto venís ganando en salud y tiempo.
+            Configurá tu inicio para ver cuánto venís ganando en salud y tiempo.
           </p>
           <div className="mt-8 w-full space-y-4 text-left">
             <label className="block rounded-[2.25rem] border border-resource-recovery-accent/15 bg-card/85 p-5 shadow-sm">
-              <span className="mb-2 block font-display text-sm font-semibold">¿Cuál es tu fecha de inicio en este proceso?</span>
+              <span className="mb-2 block font-mindful text-sm font-semibold">Fecha de inicio</span>
               <input type="date" value={settings.startDate} max={today} onChange={(event) => setSettings({ ...settings, startDate: event.target.value })} className="w-full bg-transparent text-base font-semibold outline-none" />
             </label>
             <label className="block rounded-[2.25rem] border border-resource-recovery-accent/15 bg-card/85 p-5 shadow-sm">
-              <span className="mb-2 block font-display text-sm font-semibold">¿Cuánto dinero estimás que gastabas por día en el consumo?</span>
+              <span className="mb-2 block font-mindful text-sm font-semibold">Gasto diario estimado</span>
               <input type="number" min="0" inputMode="numeric" value={settings.dailySpend || ""} onChange={(event) => setSettings({ ...settings, dailySpend: Number(event.target.value) })} placeholder="$" className="w-full bg-transparent text-2xl font-semibold outline-none placeholder:text-resource-recovery-accent/35" />
             </label>
           </div>
-          <button onClick={saveSetup} className="mt-auto w-full rounded-[3rem] bg-resource-recovery-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/25 active:scale-[0.98]">
+          <button onClick={saveSetup} className="mt-auto w-full rounded-[3rem] bg-resource-recovery-accent py-4 font-mindful text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/25 active:scale-[0.98]">
             Empezar
           </button>
         </motion.div>
@@ -294,15 +291,12 @@ export default function Recovery() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-resource-recovery-bg px-5 py-8 text-center text-resource-recovery-accent safe-area-top">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-sm">
-          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }} className="mx-auto mb-7 flex h-24 w-24 items-center justify-center">
-            <img src={resmitaAvatar} alt="Resmita" className="h-20 w-20 object-contain drop-shadow-md" />
-          </motion.div>
-          <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/85 shadow-xl shadow-resource-recovery-accent/10">
+          <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/85 shadow-xl shadow-resource-recovery-accent/15">
             <Confetti size={40} weight="duotone" />
           </div>
           <h1 className="font-mindful text-3xl leading-tight">Seguís caminando</h1>
           <p className="mt-4 font-sans text-xs font-normal leading-6 text-resource-recovery-accent/75 sm:text-sm sm:leading-7">Cada registro suma claridad. No te rindas.</p>
-          <button onClick={() => navigate("/herramientas")} className="mt-9 w-full rounded-[3rem] bg-resource-recovery-accent py-4 font-display text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/20 active:scale-[0.98]">Cerrar</button>
+          <button onClick={() => navigate("/herramientas")} className="mt-9 w-full rounded-[3rem] bg-resource-recovery-accent py-4 font-mindful text-base font-semibold text-primary-foreground shadow-lg shadow-resource-recovery-accent/20 active:scale-[0.98]">Cerrar</button>
         </motion.div>
       </div>
     );

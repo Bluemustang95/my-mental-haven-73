@@ -39,7 +39,7 @@ const qualityColor: Record<Quality, string> = {
 export default function Sleep() {
   const navigate = useNavigate();
   const today = localDateStr();
-  const [view, setView] = useState<View>("intro");
+  const [view, setView] = useState<View>("checklist");
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [logs, setLogs] = useState<Record<string, Quality>>({});
   const [savingTodayQuality, setSavingTodayQuality] = useState(false);
