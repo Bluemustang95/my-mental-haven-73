@@ -31,7 +31,7 @@ const cards: CardDef[] = [
   { key: "grounding", path: "/herramientas/grounding", name: "Grounding", tagline: "Anclate con los 5 sentidos", Icon: Mountain, bgVar: "--resource-grounding-bg", accentVar: "--resource-grounding-accent" },
   { key: "safety", path: "/herramientas/plan-seguridad", name: "Plan de Seguridad", tagline: "Tu red de contención", Icon: Shield, bgVar: "--resource-safety-bg", accentVar: "--resource-safety-accent" },
   { key: "sueno", path: "/herramientas/sueno", name: "Higiene del Sueño", tagline: "Ruido marino y bitácora", Icon: Moon, bgVar: "--resource-sleep-bg", accentVar: "--resource-sleep-accent", large: true },
-  { key: "rumiacion", path: "/herramientas/rumiacion", name: "Rumiación", tagline: "Defusión cognitiva", Icon: Spiral, bgVar: "--resource-rumination-bg", accentVar: "--resource-rumination-accent" },
+  { key: "rumiacion", path: "/herramientas/rumiacion", name: "Rumiación", tagline: "Defusión cognitiva", Icon: Tornado, bgVar: "--resource-rumination-bg", accentVar: "--resource-rumination-accent" },
   { key: "recuperacion", path: "/herramientas/recuperacion", name: "Recuperación", tagline: "Tarro de ahorro y racha", Icon: Wine, bgVar: "--resource-recovery-bg", accentVar: "--resource-recovery-accent" },
   { key: "regulacion", path: "/herramientas/regulacion-emocional", name: "Regulación", tagline: "STOP · TIPP", Icon: Waves, bgVar: "--resource-regulation-bg", accentVar: "--resource-regulation-accent", large: true },
   { key: "psicoeducacion", path: "/herramientas/intro/psicoeducacion", name: "Psicoeducación", tagline: "Videos y lecturas", Icon: BookOpen, bgVar: "--resource-psycho-bg", accentVar: "--resource-psycho-accent" },
