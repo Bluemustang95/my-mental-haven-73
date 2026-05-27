@@ -94,32 +94,10 @@ export default function Sleep() {
     return [...blanks, ...days];
   }, [today]);
 
-  // INTRO
+  // INTRO (deshabilitada — entrada directa al checklist)
   if (view === "intro") {
-    return (
-      <div className="flex min-h-screen flex-col bg-resource-sleep-bg px-5 pt-12 pb-8 text-resource-sleep-accent safe-area-top">
-        <button onClick={() => navigate("/herramientas")} className="mb-6 flex h-11 w-11 items-center justify-center rounded-full bg-card/70 shadow-sm" aria-label="Volver">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <motion.div animate={{ y: [-8, 8, -8], rotate: [-2, 2, -2] }} transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }} className="relative flex h-40 w-40 items-center justify-center sm:h-48 sm:w-48">
-            <img src={resmitaAvatar} alt="Resmita" className="h-full w-full object-contain drop-shadow-2xl" />
-          </motion.div>
-          <div className="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-card/85 shadow-sm">
-            <Moon size={30} weight="duotone" />
-          </div>
-          <div className="px-3 py-3 sm:px-6">
-            <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Sueño</h1>
-            <p className="font-sans text-xs leading-6 text-resource-sleep-accent/75 sm:text-sm sm:leading-7">
-              La psicohigiene del sueño son los pequeños hábitos que preparan tu mente y cuerpo para descansar. Dormir bien regula tu ánimo, ordena tus pensamientos y te ayuda a procesar las emociones del día.
-            </p>
-          </div>
-          <button onClick={() => setView("checklist")} className="mt-2 w-full rounded-[3rem] bg-resource-sleep-accent px-8 py-4 font-mindful text-base font-bold text-primary-foreground shadow-lg shadow-resource-sleep-accent/25 active:scale-[0.98] sm:py-5">
-            ¿Empezamos?
-          </button>
-        </div>
-      </div>
-    );
+    setView("checklist");
+    return null;
   }
 
   // CHECKLIST
@@ -241,9 +219,9 @@ export default function Sleep() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-resource-sleep-bg px-5 py-8 text-center text-resource-sleep-accent safe-area-top">
       <motion.div initial={{ scale: 0.86, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-sm">
-        <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }} className="mx-auto mb-7 flex h-24 w-24 items-center justify-center">
-          <img src={resmitaAvatar} alt="Resmita" className="h-20 w-20 object-contain drop-shadow-md" />
-        </motion.div>
+        <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/80 shadow-xl">
+          <Check size={40} weight="bold" />
+        </div>
         <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/80 shadow-xl">
           <Check size={40} weight="bold" />
         </div>
