@@ -2,89 +2,62 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Heart,
-  Sparkles,
-  BookOpen,
-  Flower2,
-  Leaf,
-  Hand,
-  
-  Moon,
-  Brain,
-  Wine,
-  Waves,
-  Apple,
-  Compass,
+  Heart, Sparkles, BookOpen, Leaf, Mountain, Moon, Wine, Waves,
+  Apple, Compass, Shield, FlowerLotus, Spiral,
 } from "lucide-react";
+import { Flower2 } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import CrisisPlan from "@/components/CrisisPlan";
 
-const resourceThemes = {
-  psicoeducacion: "border-resource-psycho-accent/15 bg-resource-psycho-bg text-resource-psycho-accent",
-  mindfulness: "border-resource-mindfulness-accent/15 bg-resource-mindfulness-bg text-resource-mindfulness-accent",
-  autocuidado: "border-resource-selfcare-accent/15 bg-resource-selfcare-bg text-resource-selfcare-accent",
-  grounding: "border-resource-grounding-accent/15 bg-resource-grounding-bg text-resource-grounding-accent",
-  
-  sueno: "border-resource-sleep-accent/15 bg-resource-sleep-bg text-resource-sleep-accent",
-  rumiacion: "border-resource-rumination-accent/15 bg-resource-rumination-bg text-resource-rumination-accent",
-  recuperacion: "border-resource-recovery-accent/15 bg-resource-recovery-bg text-resource-recovery-accent",
-  regulacion: "border-resource-regulation-accent/15 bg-resource-regulation-bg text-resource-regulation-accent",
-  alimentacion: "border-resource-eating-accent/15 bg-resource-eating-bg text-resource-eating-accent",
-  valores: "border-resource-values-accent/15 bg-resource-values-bg text-resource-values-accent",
-  guia: "border-primary/15 bg-primary/5 text-primary",
-} as const;
+type ResourceKey =
+  | "psicoeducacion" | "mindfulness" | "autocuidado" | "grounding"
+  | "safety" | "sueno" | "rumiacion" | "recuperacion" | "regulacion"
+  | "alimentacion" | "valores" | "guia";
 
-type ResourceKey = keyof typeof resourceThemes;
-type Recommendation = { key: ResourceKey; path: string; name: string };
-type GuideChoice = { label: string; scores: Partial<Record<ResourceKey, number>> };
-
-const recommendations: Record<ResourceKey, Recommendation> = {
-  psicoeducacion: { key: "psicoeducacion", path: "/herramientas/intro/psicoeducacion", name: "Psicoeducación" },
-  mindfulness: { key: "mindfulness", path: "/herramientas/mindfulness", name: "Mindfulness" },
-  autocuidado: { key: "autocuidado", path: "/herramientas/intro/autocuidado", name: "Autocuidado" },
-  grounding: { key: "grounding", path: "/herramientas/grounding", name: "Grounding 5-4-3-2-1" },
-  
-  sueno: { key: "sueno", path: "/herramientas/sueno", name: "Sueño" },
-  rumiacion: { key: "rumiacion", path: "/herramientas/rumiacion", name: "Rumiación" },
-  recuperacion: { key: "recuperacion", path: "/herramientas/recuperacion", name: "Recuperación" },
-  regulacion: { key: "regulacion", path: "/herramientas/regulacion-emocional", name: "Regulación Emocional" },
-  alimentacion: { key: "alimentacion", path: "/herramientas/intro/alimentacion-consciente", name: "Alimentación Consciente" },
-  valores: { key: "valores", path: "/herramientas/intro/mis-valores", name: "Mis Valores" },
-  guia: { key: "guia", path: "/herramientas", name: "Te guiamos" },
+type CardDef = {
+  key: ResourceKey;
+  path: string;
+  name: string;
+  tagline: string;
+  Icon: typeof Heart;
+  bgVar: string;     // hsl(var(--...))
+  accentVar: string;
+  className?: string;
+  large?: boolean;
 };
 
-const guideQuestions: { title: string; choices: GuideChoice[] }[] = [
+const cards: CardDef[] = [
+  { key: "mindfulness", path: "/herramientas/mindfulness", name: "Mindfulness", tagline: "Mandala y atención plena", Icon: Flower2, bgVar: "--resource-mindfulness-bg", accentVar: "--resource-mindfulness-accent", large: true },
+  { key: "grounding", path: "/herramientas/grounding", name: "Grounding", tagline: "Anclate con los 5 sentidos", Icon: Mountain, bgVar: "--resource-grounding-bg", accentVar: "--resource-grounding-accent" },
+  { key: "safety", path: "/herramientas/plan-seguridad", name: "Plan de Seguridad", tagline: "Tu red de contención", Icon: Shield, bgVar: "--resource-safety-bg", accentVar: "--resource-safety-accent" },
+  { key: "sueno", path: "/herramientas/sueno", name: "Higiene del Sueño", tagline: "Ruido marino y bitácora", Icon: Moon, bgVar: "--resource-sleep-bg", accentVar: "--resource-sleep-accent", large: true },
+  { key: "rumiacion", path: "/herramientas/rumiacion", name: "Rumiación", tagline: "Defusión cognitiva", Icon: Spiral, bgVar: "--resource-rumination-bg", accentVar: "--resource-rumination-accent" },
+  { key: "recuperacion", path: "/herramientas/recuperacion", name: "Recuperación", tagline: "Tarro de ahorro y racha", Icon: Wine, bgVar: "--resource-recovery-bg", accentVar: "--resource-recovery-accent" },
+  { key: "regulacion", path: "/herramientas/regulacion-emocional", name: "Regulación", tagline: "STOP · TIPP", Icon: Waves, bgVar: "--resource-regulation-bg", accentVar: "--resource-regulation-accent", large: true },
+  { key: "psicoeducacion", path: "/herramientas/intro/psicoeducacion", name: "Psicoeducación", tagline: "Videos y lecturas", Icon: BookOpen, bgVar: "--resource-psycho-bg", accentVar: "--resource-psycho-accent" },
+  { key: "autocuidado", path: "/herramientas/intro/autocuidado", name: "Autocuidado", tagline: "Tareas y hábitos", Icon: Leaf, bgVar: "--resource-selfcare-bg", accentVar: "--resource-selfcare-accent" },
+  { key: "alimentacion", path: "/herramientas/intro/alimentacion-consciente", name: "Alimentación", tagline: "Comer con conciencia", Icon: Apple, bgVar: "--resource-eating-bg", accentVar: "--resource-eating-accent" },
+  { key: "valores", path: "/herramientas/intro/mis-valores", name: "Mis Valores", tagline: "Brújula personal", Icon: Compass, bgVar: "--resource-values-bg", accentVar: "--resource-values-accent" },
+];
+
+const guideQuestions: { title: string; choices: { label: string; pick: ResourceKey }[] }[] = [
   {
     title: "¿Qué necesitás cuidar ahora?",
     choices: [
-      { label: "Calmar el cuerpo", scores: { grounding: 3, regulacion: 2 } },
-      { label: "Ordenar pensamientos", scores: { rumiacion: 3, mindfulness: 2, psicoeducacion: 1 } },
-      { label: "Conectar con lo importante", scores: { valores: 3, recuperacion: 1, autocuidado: 1 } },
-      { label: "Cuidar hábitos cotidianos", scores: { autocuidado: 3, sueno: 2, alimentacion: 2 } },
+      { label: "Bajar la ansiedad", pick: "grounding" },
+      { label: "Frenar un impulso", pick: "regulacion" },
+      { label: "Ordenar la mente", pick: "rumiacion" },
+      { label: "Estar en crisis", pick: "safety" },
     ],
   },
   {
-    title: "¿Qué sentís con más fuerza?",
+    title: "¿Cómo te sentís ahora?",
     choices: [
-      { label: "Ansiedad o tensión", scores: { grounding: 3, regulacion: 2 } },
-      { label: "Emociones intensas", scores: { regulacion: 3, grounding: 2, mindfulness: 1 } },
-      { label: "Cansancio o desconexión", scores: { autocuidado: 3, sueno: 2, recuperacion: 1 } },
-      { label: "Dudas sobre mis decisiones", scores: { valores: 3, psicoeducacion: 1, mindfulness: 1 } },
-    ],
-  },
-  {
-    title: "¿Qué tipo de recurso te serviría más?",
-    choices: [
-      { label: "Un ejercicio breve", scores: { grounding: 3, regulacion: 3, mindfulness: 2 } },
-      { label: "Escribir y registrar", scores: { valores: 3, alimentacion: 3, recuperacion: 2 } },
-      { label: "Aprender algo claro", scores: { psicoeducacion: 3, rumiacion: 2, regulacion: 1 } },
-      { label: "Planear un cuidado concreto", scores: { autocuidado: 3, sueno: 2, alimentacion: 1 } },
+      { label: "Inquieto/a", pick: "mindfulness" },
+      { label: "Triste o vacío/a", pick: "valores" },
+      { label: "Con ganas de consumir", pick: "recuperacion" },
+      { label: "Cansado/a", pick: "sueno" },
     ],
   },
 ];
@@ -93,246 +66,93 @@ export default function Tools() {
   const navigate = useNavigate();
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
-  const [guideScores, setGuideScores] = useState<Partial<Record<ResourceKey, number>>>({});
-  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [recommendation, setRecommendation] = useState<CardDef | null>(null);
 
-  const resetGuide = () => {
-    setGuideStep(0);
-    setGuideScores({});
-    setRecommendation(null);
-  };
+  const resetGuide = () => { setGuideStep(0); setRecommendation(null); };
 
-  const chooseRecommendation = (scores: Partial<Record<ResourceKey, number>>) => {
-    const winner = (Object.entries(scores) as [ResourceKey, number][]).reduce(
-      (best, current) => (current[1] > best[1] ? current : best),
-      ["grounding", 0] as [ResourceKey, number],
-    )[0];
-    setRecommendation(recommendations[winner]);
-  };
-
-  const handleGuideChoice = (choice: GuideChoice) => {
-    const nextScores = { ...guideScores };
-    (Object.entries(choice.scores) as [ResourceKey, number][]).forEach(([key, value]) => {
-      nextScores[key] = (nextScores[key] ?? 0) + value;
-    });
-
+  const handleGuide = (pick: ResourceKey) => {
     if (guideStep >= guideQuestions.length - 1) {
-      chooseRecommendation(nextScores);
-      return;
+      setRecommendation(cards.find((c) => c.key === pick) ?? null);
+    } else {
+      setGuideStep((s) => s + 1);
     }
-
-    setGuideScores(nextScores);
-    setGuideStep((step) => step + 1);
   };
 
-  const currentQuestion = guideQuestions[guideStep];
+  const Card = ({ card }: { card: CardDef }) => (
+    <motion.button
+      whileTap={{ scale: 0.96 }}
+      onClick={() => navigate(card.path)}
+      className={`relative flex flex-col items-start overflow-hidden rounded-[2.75rem] border border-white/40 p-5 text-left ${card.large ? "row-span-2 min-h-[14rem]" : "min-h-[7.5rem]"}`}
+      style={{
+        backgroundColor: `hsl(var(${card.bgVar}))`,
+        color: `hsl(var(${card.accentVar}))`,
+        boxShadow: `0 20px 50px -18px hsl(var(${card.accentVar}) / 0.45), inset 0 1px 0 hsl(0 0% 100% / 0.5)`,
+      }}
+    >
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/65 shadow-sm" style={{ color: `hsl(var(${card.accentVar}))` }}>
+        <card.Icon size={22} strokeWidth={2.1} />
+      </div>
+      <div className="mt-auto pt-5">
+        <p className="font-mindful text-lg leading-tight">{card.name}</p>
+        <p className="mt-1 font-sans text-[11px] font-medium leading-snug opacity-75">{card.tagline}</p>
+      </div>
+    </motion.button>
+  );
 
   return (
     <div className="px-5 pt-14 pb-4 safe-area-top">
-      {/* Header */}
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <h1 className="font-display text-xl font-semibold text-foreground">Recursos</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Técnicas para tu bienestar.</p>
+          <h1 className="font-mindful text-3xl leading-tight text-foreground">Recursos</h1>
+          <p className="mt-0.5 font-sans text-sm text-muted-foreground">Elegí el camino de hoy.</p>
         </div>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => navigate("/herramientas/favoritos")}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-destructive/15 bg-destructive/5 shadow-sm"
-        >
+        <motion.button whileTap={{ scale: 0.9 }} onClick={() => navigate("/herramientas/favoritos")}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-destructive/15 bg-destructive/5 shadow-sm">
           <Heart size={18} className="fill-destructive text-destructive" />
         </motion.button>
       </div>
 
-      {/* Hero – Te guiamos */}
-      <motion.button
-        whileTap={{ scale: 0.97 }}
-        onClick={() => { resetGuide(); setGuideOpen(true); }}
-        className={`mb-6 flex w-full flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.guia}`}
-      >
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-          <Sparkles size={20} />
+      <motion.button whileTap={{ scale: 0.97 }} onClick={() => { resetGuide(); setGuideOpen(true); }}
+        className="mb-6 flex w-full items-center gap-4 rounded-[2.5rem] border border-primary/15 bg-gradient-to-r from-primary/5 via-accent/15 to-primary/5 p-5 text-left shadow-[0_18px_45px_-22px_hsl(var(--primary)/0.4)]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-card/80">
+          <Sparkles size={20} className="text-primary" />
         </div>
-        <div className="mt-4">
-          <p className="font-display text-sm font-semibold">Te guiamos</p>
-          <p className="mt-0.5 text-[11px] leading-snug opacity-75">Encontrá el recurso más apropiado para este momento</p>
+        <div>
+          <p className="font-mindful text-base font-semibold text-foreground">Te guiamos</p>
+          <p className="font-sans text-xs text-muted-foreground">Encontrá el recurso para este momento</p>
         </div>
       </motion.button>
 
-      {/* Bento Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Psicoeducación – tall */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/intro/psicoeducacion")}
-          className={`row-span-2 flex flex-col items-start justify-between rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.psicoeducacion}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <BookOpen size={20} />
-          </div>
-          <div className="mt-auto pt-6">
-            <p className="font-display text-sm font-semibold">Psicoeducación</p>
-            <p className="mt-0.5 text-[11px] leading-snug opacity-75">Videos, audios, lecturas y Psico-Factos</p>
-          </div>
-        </motion.button>
-
-        {/* Mindfulness */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/mindfulness")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.mindfulness}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Flower2 size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Mindfulness</p>
-        </motion.button>
-
-        {/* Autocuidado */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/intro/autocuidado")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.autocuidado}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Leaf size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Autocuidado</p>
-        </motion.button>
-
-        {/* Grounding */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/grounding")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.grounding}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Hand size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Grounding</p>
-        </motion.button>
-
-        {/* Sueño */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/sueno")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.sueno}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Moon size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Sueño</p>
-        </motion.button>
-
-        {/* Rumiación */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/rumiacion")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.rumiacion}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Brain size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Rumiación</p>
-        </motion.button>
-
-        {/* Recuperación */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/recuperacion")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.recuperacion}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Wine size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Recuperación</p>
-        </motion.button>
-
-        {/* Regulación Emocional */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/regulacion-emocional")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.regulacion}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Waves size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Regulación Emocional</p>
-        </motion.button>
-
-        {/* Alimentación Consciente */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/intro/alimentacion-consciente")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.alimentacion}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Apple size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Alimentación Consciente</p>
-        </motion.button>
-
-        {/* Mis Valores */}
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate("/herramientas/intro/mis-valores")}
-          className={`flex flex-col items-start rounded-[2.5rem] border p-5 text-left shadow-sm ${resourceThemes.valores}`}
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-card/70">
-            <Compass size={20} />
-          </div>
-          <p className="mt-auto pt-4 font-display text-sm font-semibold">Mis Valores</p>
-        </motion.button>
+      <div className="grid auto-rows-[minmax(7rem,auto)] grid-cols-2 gap-3">
+        {cards.map((card) => <Card key={card.key} card={card} />)}
       </div>
 
-      {/* Plan de Crisis */}
-      <CrisisPlan />
-
-      {/* Guide Dialog */}
       <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
-        <DialogContent className={`rounded-[2rem] border p-6 ${recommendation ? resourceThemes[recommendation.key] : resourceThemes.guia}`}>
+        <DialogContent className="rounded-[2rem] p-6">
           <DialogHeader>
-            <DialogTitle className="font-display">¿Cómo te sentís ahora?</DialogTitle>
-            <DialogDescription className="text-current opacity-70">
-              {recommendation ? "Te recomendamos probar:" : "Elegí lo que más resuene y te recomendamos un recurso."}
+            <DialogTitle className="font-mindful text-2xl">¿Cómo te sentís ahora?</DialogTitle>
+            <DialogDescription>
+              {recommendation ? "Te recomendamos:" : "Elegí lo que más resuene."}
             </DialogDescription>
           </DialogHeader>
 
           {!recommendation ? (
-            <motion.div
-              key={guideStep}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-3 pt-2"
-            >
-              <p className="font-display text-lg font-semibold">{currentQuestion.title}</p>
-              {currentQuestion.choices.map((choice) => (
-                <button
-                  key={choice.label}
-                  onClick={() => handleGuideChoice(choice)}
-                  className="w-full rounded-2xl border border-current/10 bg-card/80 px-4 py-3 text-left font-display text-sm transition-transform active:scale-[0.98]"
-                >
-                  {choice.label}
+            <motion.div key={guideStep} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 pt-2">
+              <p className="font-mindful text-lg">{guideQuestions[guideStep].title}</p>
+              {guideQuestions[guideStep].choices.map((c) => (
+                <button key={c.label} onClick={() => handleGuide(c.pick)}
+                  className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-left font-sans text-sm font-semibold transition active:scale-[0.98]">
+                  {c.label}
                 </button>
               ))}
             </motion.div>
           ) : (
             <div className="space-y-4 pt-2 text-center">
-              <p className="font-display text-2xl font-semibold">{recommendation.name}</p>
+              <p className="font-mindful text-3xl">{recommendation.name}</p>
               <div className="flex gap-2">
-                <button
-                  onClick={resetGuide}
-                  className="flex-1 rounded-2xl border border-current/15 bg-card/65 py-2.5 font-display text-sm transition-colors active:bg-card"
-                >
-                  Volver
-                </button>
-                <button
-                  onClick={() => { setGuideOpen(false); navigate(recommendation.path); }}
-                  className="flex-1 rounded-2xl bg-current py-2.5 font-display text-sm text-card transition-colors active:opacity-90"
-                >
-                  Ir al recurso
-                </button>
+                <button onClick={resetGuide} className="flex-1 rounded-2xl border border-border bg-card py-2.5 font-sans text-sm">Otra vez</button>
+                <button onClick={() => { setGuideOpen(false); navigate(recommendation.path); }}
+                  className="flex-1 rounded-2xl bg-primary py-2.5 font-sans text-sm text-primary-foreground">Ir al recurso</button>
               </div>
             </div>
           )}
