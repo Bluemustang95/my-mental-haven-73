@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, Moon, Smiley, SmileyMeh, SmileySad } from "@phosphor-icons/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Check, Moon, Smiley, SmileyMeh, SmileySad, SpeakerHigh, SpeakerSlash, Waves, CloudRain } from "@phosphor-icons/react";
+import { motion } from "framer-motion";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import resmitaAvatar from "@/assets/resmita-mindfulness.png";
+import * as sleepAudio from "@/lib/sleepAudio";
+import { saveLog } from "@/lib/resourceLogs";
 
 type Quality = "good" | "ok" | "bad";
 type SleepLog = { log_date: string; quality: Quality };
