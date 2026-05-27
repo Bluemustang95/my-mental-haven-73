@@ -45,8 +45,8 @@
     --mindful-sky: 193 52% 93%;
     --mindful-rose: 6 100% 95%;
 
-    --resource-grounding-bg: 138 76% 97%;
-    --resource-grounding-accent: 142 71% 29%;
+    --resource-grounding-bg: 35 33% 97%;
+    --resource-grounding-accent: 22 47% 36%;
     --resource-mindfulness-bg: 327 73% 97%;
     --resource-mindfulness-accent: 336 74% 35%;
     --resource-psycho-bg: 210 40% 96%;
@@ -55,11 +55,11 @@
     --resource-selfcare-accent: 185 84% 32%;
     --resource-breathing-bg: 33 100% 96%;
     --resource-breathing-accent: 20 89% 38%;
-    --resource-sleep-bg: 214 100% 97%;
-    --resource-sleep-accent: 226 71% 40%;
-    --resource-rumination-bg: 55 92% 95%;
+    --resource-sleep-bg: 222 47% 6%;
+    --resource-sleep-accent: 210 40% 92%;
+    --resource-rumination-bg: 55 100% 97%;
     --resource-rumination-accent: 32 95% 44%;
-    --resource-recovery-bg: 252 100% 98%;
+    --resource-recovery-bg: 258 100% 99%;
     --resource-recovery-accent: 262 83% 58%;
     --resource-recovery-relapse: 24 95% 53%;
     --resource-regulation-bg: 204 100% 97%;
@@ -68,8 +68,8 @@
     --resource-eating-accent: 151 46% 32%;
     --resource-values-bg: 48 100% 96%;
     --resource-values-accent: 184 47% 28%;
-    --resource-safety-bg: 355 100% 97%;
-    --resource-safety-accent: 0 72% 51%;
+    --resource-safety-bg: 0 100% 98%;
+    --resource-safety-accent: 348 76% 41%;
 
     --border: 220 10% 85%;
     --input: 220 10% 85%;

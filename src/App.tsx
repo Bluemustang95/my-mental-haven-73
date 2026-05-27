@@ -73,6 +73,7 @@ import ResourcesManager from "@/pages/admin/ResourcesManager";
 import ResourceDetail from "@/pages/admin/ResourceDetail";
 import ResourceTools from "@/pages/ResourceTools";
 import ResourceIntro from "@/pages/ResourceIntro";
+import SafetyPlan from "@/pages/SafetyPlan";
 
 const queryClient = new QueryClient();
 
@@ -143,6 +144,7 @@ const App = () => (
               <Route path="/herramientas/regulacion-emocional" element={<EmotionalRegulation />} />
               <Route path="/herramientas/alimentacion-consciente" element={<MindfulEating />} />
               <Route path="/herramientas/mis-valores" element={<MyValues />} />
+              <Route path="/herramientas/plan-seguridad" element={<SafetyPlan />} />
               <Route path="/recursos/:slug" element={<ResourceTools />} />
 
               {/* Mi Proceso (tab 5) */}

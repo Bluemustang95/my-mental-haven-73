@@ -104,7 +104,7 @@ function TogglePill({ active, onClick, icon: Icon, label }: { active: boolean; o
 
 export default function Mindfulness() {
   const navigate = useNavigate();
-  const [view, setView] = useState<View>("intro");
+  const [view, setView] = useState<View>("config");
   const [selectedDuration, setSelectedDuration] = useState(0);
   const [timeLeft, setTimeLeft] = useState(durations[0].seconds);
   const [isRunning, setIsRunning] = useState(false);

@@ -27,7 +27,7 @@ const stopSteps = [
 export default function EmotionalRegulation() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [view, setView] = useState<View>("intro");
+  const [view, setView] = useState<View>("menu");
 
   // STOP swipe
   const [stopIndex, setStopIndex] = useState(0);
@@ -390,12 +390,9 @@ export default function EmotionalRegulation() {
           {/* FINISH */}
           {view === "finish" && (
             <motion.section key="finish" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.35 }} className="flex flex-1 flex-col items-center justify-center text-center">
-              <motion.div animate={{ y: [-7, 7, -7], rotate: [-2, 2, -2] }} transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }} className="mb-6 flex h-32 w-32 items-center justify-center">
-                <img src={resmitaAvatar} alt="Resmita" className="h-28 w-28 object-contain drop-shadow-2xl" />
-              </motion.div>
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-card/85 shadow-xl"><CheckCircle2 size={42} /></div>
+              <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-card/85 shadow-xl shadow-resource-regulation-accent/15"><CheckCircle2 size={48} /></div>
               <h1 className="font-mindful text-3xl leading-tight">Mente en control</h1>
-              <p className="mt-4 px-4 font-sans text-xs leading-6 text-resource-regulation-accent/75 sm:text-sm">Cambiando tu química corporal, recuperás el control de tu mente.</p>
+              <p className="mt-4 px-4 font-sans text-xs leading-6 text-resource-regulation-accent/75 sm:text-sm">Cambiaste tu química corporal. Volvé cuando lo necesites.</p>
               <div className="mt-8 flex w-full gap-3">
                 <button onClick={() => setView("menu")} className="flex-1 rounded-[3rem] border border-resource-regulation-accent/20 bg-card/85 py-4 font-mindful text-sm font-bold shadow-sm active:scale-[0.98]">Otra técnica</button>
                 <button onClick={close} className="flex-1 rounded-[3rem] bg-resource-regulation-accent py-4 font-mindful text-sm font-bold text-primary-foreground shadow-lg active:scale-[0.98]">Cerrar</button>

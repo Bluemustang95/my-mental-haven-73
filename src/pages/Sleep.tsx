@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, Moon, Smiley, SmileyMeh, SmileySad } from "@phosphor-icons/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Check, Moon, Smiley, SmileyMeh, SmileySad, SpeakerHigh, SpeakerSlash, Waves, CloudRain } from "@phosphor-icons/react";
+import { motion } from "framer-motion";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import resmitaAvatar from "@/assets/resmita-mindfulness.png";
+import * as sleepAudio from "@/lib/sleepAudio";
+import { saveLog } from "@/lib/resourceLogs";
 
 type Quality = "good" | "ok" | "bad";
 type SleepLog = { log_date: string; quality: Quality };
@@ -39,10 +40,19 @@ const qualityColor: Record<Quality, string> = {
 export default function Sleep() {
   const navigate = useNavigate();
   const today = localDateStr();
-  const [view, setView] = useState<View>("intro");
+  const [view, setView] = useState<View>("checklist");
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [logs, setLogs] = useState<Record<string, Quality>>({});
   const [savingTodayQuality, setSavingTodayQuality] = useState(false);
+  const [sound, setSound] = useState<sleepAudio.SoundType>("off");
+  const [volume, setVolumeState] = useState(0.4);
+
+  useEffect(() => () => sleepAudio.stop(), []);
+  const toggleSound = (s: sleepAudio.SoundType) => {
+    if (sound === s) { sleepAudio.stop(); setSound("off"); }
+    else { sleepAudio.play(s, volume); setSound(s); }
+  };
+  const onVolume = (v: number) => { setVolumeState(v); sleepAudio.setVolume(v); };
 
   // Load logs
   useEffect(() => {
@@ -77,8 +87,10 @@ export default function Sleep() {
     }, { onConflict: "user_id,log_date" });
     setSavingTodayQuality(false);
     if (error) { toast.error("No se pudo guardar"); return; }
+    saveLog("sleep", { post: score, meta: { quality, sound } });
     setLogs((p) => ({ ...p, [today]: quality }));
     toast.success("Anotado en tu diario");
+    sleepAudio.stop();
     setView("done");
   };
 
@@ -93,32 +105,10 @@ export default function Sleep() {
     return [...blanks, ...days];
   }, [today]);
 
-  // INTRO
+  // INTRO (deshabilitada — entrada directa al checklist)
   if (view === "intro") {
-    return (
-      <div className="flex min-h-screen flex-col bg-resource-sleep-bg px-5 pt-12 pb-8 text-resource-sleep-accent safe-area-top">
-        <button onClick={() => navigate("/herramientas")} className="mb-6 flex h-11 w-11 items-center justify-center rounded-full bg-card/70 shadow-sm" aria-label="Volver">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <motion.div animate={{ y: [-8, 8, -8], rotate: [-2, 2, -2] }} transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }} className="relative flex h-40 w-40 items-center justify-center sm:h-48 sm:w-48">
-            <img src={resmitaAvatar} alt="Resmita" className="h-full w-full object-contain drop-shadow-2xl" />
-          </motion.div>
-          <div className="flex h-16 w-16 items-center justify-center rounded-[2rem] bg-card/85 shadow-sm">
-            <Moon size={30} weight="duotone" />
-          </div>
-          <div className="px-3 py-3 sm:px-6">
-            <h1 className="mb-3 font-mindful text-3xl leading-tight sm:text-4xl">Sueño</h1>
-            <p className="font-sans text-xs leading-6 text-resource-sleep-accent/75 sm:text-sm sm:leading-7">
-              La psicohigiene del sueño son los pequeños hábitos que preparan tu mente y cuerpo para descansar. Dormir bien regula tu ánimo, ordena tus pensamientos y te ayuda a procesar las emociones del día.
-            </p>
-          </div>
-          <button onClick={() => setView("checklist")} className="mt-2 w-full rounded-[3rem] bg-resource-sleep-accent px-8 py-4 font-mindful text-base font-bold text-primary-foreground shadow-lg shadow-resource-sleep-accent/25 active:scale-[0.98] sm:py-5">
-            ¿Empezamos?
-          </button>
-        </div>
-      </div>
-    );
+    setView("checklist");
+    return null;
   }
 
   // CHECKLIST
@@ -171,8 +161,23 @@ export default function Sleep() {
           })}
         </div>
 
-        {/* Quality buttons */}
-        <div className="mt-6 rounded-[2.5rem] border border-resource-sleep-accent/15 bg-card/85 p-5 shadow-sm">
+        <div className="mt-4 rounded-[2.5rem] border border-resource-sleep-accent/15 bg-card/85 p-5 shadow-sm">
+          <p className="mb-3 font-mindful text-sm font-semibold">Ruido para dormir</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => toggleSound("waves")} className={cn("flex items-center justify-center gap-2 rounded-2xl py-3 font-mindful text-xs font-semibold transition active:scale-95", sound === "waves" ? "bg-resource-sleep-accent text-primary-foreground" : "bg-resource-sleep-bg/80 text-resource-sleep-accent/75")}>
+              <Waves size={20} weight="duotone" /> Olas
+            </button>
+            <button onClick={() => toggleSound("rain")} className={cn("flex items-center justify-center gap-2 rounded-2xl py-3 font-mindful text-xs font-semibold transition active:scale-95", sound === "rain" ? "bg-resource-sleep-accent text-primary-foreground" : "bg-resource-sleep-bg/80 text-resource-sleep-accent/75")}>
+              <CloudRain size={20} weight="duotone" /> Lluvia
+            </button>
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            {sound === "off" ? <SpeakerSlash size={18} /> : <SpeakerHigh size={18} />}
+            <input type="range" min={0} max={1} step={0.05} value={volume} onChange={(e) => onVolume(Number(e.target.value))} className="flex-1 accent-resource-sleep-accent" />
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-[2.5rem] border border-resource-sleep-accent/15 bg-card/85 p-5 shadow-sm">
           <p className="mb-3 font-mindful text-sm font-semibold">¿Cómo dormiste anoche?</p>
           <div className="grid grid-cols-3 gap-2">
             {(["good", "ok", "bad"] as Quality[]).map((q) => {
@@ -240,9 +245,9 @@ export default function Sleep() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-resource-sleep-bg px-5 py-8 text-center text-resource-sleep-accent safe-area-top">
       <motion.div initial={{ scale: 0.86, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-sm">
-        <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }} className="mx-auto mb-7 flex h-24 w-24 items-center justify-center">
-          <img src={resmitaAvatar} alt="Resmita" className="h-20 w-20 object-contain drop-shadow-md" />
-        </motion.div>
+        <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/80 shadow-xl">
+          <Check size={40} weight="bold" />
+        </div>
         <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-card/80 shadow-xl">
           <Check size={40} weight="bold" />
         </div>
