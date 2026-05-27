@@ -87,8 +87,10 @@ export default function Sleep() {
     }, { onConflict: "user_id,log_date" });
     setSavingTodayQuality(false);
     if (error) { toast.error("No se pudo guardar"); return; }
+    saveLog("sleep", { post: score, meta: { quality, sound } });
     setLogs((p) => ({ ...p, [today]: quality }));
     toast.success("Anotado en tu diario");
+    sleepAudio.stop();
     setView("done");
   };
 
@@ -159,8 +161,23 @@ export default function Sleep() {
           })}
         </div>
 
-        {/* Quality buttons */}
-        <div className="mt-6 rounded-[2.5rem] border border-resource-sleep-accent/15 bg-card/85 p-5 shadow-sm">
+        <div className="mt-4 rounded-[2.5rem] border border-resource-sleep-accent/15 bg-card/85 p-5 shadow-sm">
+          <p className="mb-3 font-mindful text-sm font-semibold">Ruido para dormir</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => toggleSound("waves")} className={cn("flex items-center justify-center gap-2 rounded-2xl py-3 font-mindful text-xs font-semibold transition active:scale-95", sound === "waves" ? "bg-resource-sleep-accent text-primary-foreground" : "bg-resource-sleep-bg/80 text-resource-sleep-accent/75")}>
+              <Waves size={20} weight="duotone" /> Olas
+            </button>
+            <button onClick={() => toggleSound("rain")} className={cn("flex items-center justify-center gap-2 rounded-2xl py-3 font-mindful text-xs font-semibold transition active:scale-95", sound === "rain" ? "bg-resource-sleep-accent text-primary-foreground" : "bg-resource-sleep-bg/80 text-resource-sleep-accent/75")}>
+              <CloudRain size={20} weight="duotone" /> Lluvia
+            </button>
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            {sound === "off" ? <SpeakerSlash size={18} /> : <SpeakerHigh size={18} />}
+            <input type="range" min={0} max={1} step={0.05} value={volume} onChange={(e) => onVolume(Number(e.target.value))} className="flex-1 accent-resource-sleep-accent" />
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-[2.5rem] border border-resource-sleep-accent/15 bg-card/85 p-5 shadow-sm">
           <p className="mb-3 font-mindful text-sm font-semibold">¿Cómo dormiste anoche?</p>
           <div className="grid grid-cols-3 gap-2">
             {(["good", "ok", "bad"] as Quality[]).map((q) => {
