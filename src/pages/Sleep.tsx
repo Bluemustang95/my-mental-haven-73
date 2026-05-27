@@ -44,6 +44,15 @@ export default function Sleep() {
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [logs, setLogs] = useState<Record<string, Quality>>({});
   const [savingTodayQuality, setSavingTodayQuality] = useState(false);
+  const [sound, setSound] = useState<sleepAudio.SoundType>("off");
+  const [volume, setVolumeState] = useState(0.4);
+
+  useEffect(() => () => sleepAudio.stop(), []);
+  const toggleSound = (s: sleepAudio.SoundType) => {
+    if (sound === s) { sleepAudio.stop(); setSound("off"); }
+    else { sleepAudio.play(s, volume); setSound(s); }
+  };
+  const onVolume = (v: number) => { setVolumeState(v); sleepAudio.setVolume(v); };
 
   // Load logs
   useEffect(() => {
