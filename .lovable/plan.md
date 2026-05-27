@@ -1,61 +1,93 @@
-## Plan: Reestructuración de Recursos (Respiración, Regulación, Sueño, Recuperación)
+# Reestructuración integral de Recursos
 
-### 1. Eliminar "Respiración" del menú principal
-- Quitar la card de Respiración de `src/pages/Tools.tsx` (y/o `ResourceTools.tsx` si aplica).
-- Eliminar la ruta `/respiracion` del router en `src/App.tsx`.
-- Conservar el archivo `src/pages/Breathing.tsx` por si se reutiliza internamente, pero sin acceso desde menú. (Si preferís borrarlo, decímelo.)
+Voy a transformar la pestaña de Recursos en un ecosistema clínico-interactivo unificado en tipografía/voseo, pero con identidad sensorial única por módulo. Cada recurso va a seguir el mismo loop de datos: **Registro inicial → Intervención → Feedback post → Progreso histórico**, persistido en `localStorage` con clave `resma:<recurso>:logs`.
 
-### 2. Regulación Emocional (Celeste, ola)
-Refactor `src/pages/EmotionalRegulation.tsx`:
-- **Nueva pantalla inicial**: "Termómetro de malestar" 1–10 (slider vertical estilo termómetro con gradiente celeste→rojo).
-- Según el valor:
-  - ≥7 → Resmita recomienda **TIP** con CTA destacado.
-  - <7 → Resmita recomienda **STOP** con CTA destacado.
-  - El usuario puede igual elegir la otra.
-- **TIP – Temperatura interactivo**:
-  - Ilustración de cubitos de hielo (icono `Snowflake` grande con animación).
-  - Al tocar: cronómetro circular de 30s con animación de "agua fría" (ondas pulsando) y un pequeño audio loop opcional (si no es viable sin asset, omitir sonido y dejar solo vibración visual).
-- **TIP – Respiración pausada**:
-  - Círculo que se expande 5s (inhalar) y contrae 7s (exhalar) en bucle, con label dinámico.
-- **STOP interactivo (swipe)**:
-  - 4 pasos S→T→O→P en horizontal; el usuario desliza (drag con framer-motion) para avanzar al siguiente. Indicador de progreso.
+---
 
-### 3. Sueño (Azul, luna)
-Refactor `src/pages/Sleep.tsx`:
-- **Checklist nocturno** con ítems (ej: "Dejé el celular", "Bajé la temperatura", "Hice registro de rumiación", "Sin pantallas 30 min antes", "Respiración pausada", "Cuarto a oscuras"). 
-- Medidor circular animado **"Probabilidad de buen sueño" 0–100%** que sube según ítems marcados.
-- **Diario de sueño**: mini calendario mensual donde se marca con iconos (😴 bien / 😣 mal / 😐 regular). 
-  - Crear tabla `sleep_log` en Supabase Cloud: `user_id, date, quality (good|ok|bad), notes`.
-  - RLS por user_id. Persistir selección.
-  - Reutilizar patrón del calendario de Recuperación.
+## 1. Reglas globales (aplican a TODA la app)
 
-### 4. Recuperación (Violeta, botella de vino)
-Editar `src/pages/Recovery.tsx`:
-- Cambiar icono principal a **botella de vino** (`Wine` de lucide-react).
-- Botón destacado **"Tengo ganas de consumir"** → abre Sheet/Dialog con 3 accesos directos:
-  - "Hacer un STOP" → `/regulacion-emocional?tool=stop`
-  - "Usar hielo (TIP)" → `/regulacion-emocional?tool=tip&step=temperatura` (auto-arranca cronómetro de hielo)
-  - "Escribir en la Nube" → `/rumiacion` (recurso amarillo)
+- **Tipografía unificada**: títulos con `font-mindful`, cuerpo con `font-sans`, tamaños y espaciados clonados de `Mindfulness.tsx`.
+- **Voseo argentino** en todos los textos UI ("Sumergí", "Frená", "Anotá", "Observá", "Registrá").
+- **Sin intros estáticas**: eliminar pantallas `view === "intro"` de Mindfulness, Grounding, Sleep, Recovery, EmotionalRegulation, Rumination, CrisisPlan. Entrada directa al flujo.
+- **Resmita**: solo en Dashboard/Home. Removerla de pantallas internas de recursos.
+- **Helper común** `src/lib/resourceLogs.ts`: `saveLog(resource, payload)`, `getLogs(resource)`, `getLastLog(resource)` sobre `localStorage`.
+- **Componente común** `<ResourceOutro>` reutilizable: muestra comparativa (ej. ansiedad antes vs después), mini-gráfico de últimas 7 sesiones y CTA "Volver".
 
-### 5. Estética global
-- Aplicar `font-mindful` (la usada en Mindfulness) a todos los títulos de los 3 recursos editados.
-- Voseo argentino en todas las copies ("Sumergí", "Frená", "Anotá", "Inhalá", "Soltá").
-- Avatar Resmita solo en intro y cierre motivador (ya está así en Regulación; replicar en Sueño y en cierres de Recuperación).
+## 2. Rediseño de la pestaña de Recursos (`Tools.tsx`)
 
-### Detalles técnicos
-- Migración SQL para `sleep_log` con RLS (insert/select/update/delete por `auth.uid() = user_id`).
-- Query params soportados en EmotionalRegulation: `?tool=tip&step=temperatura` para auto-iniciar cronómetro.
-- Slider termómetro: input range custom estilizado verticalmente con gradiente.
-- Swipe STOP: `motion.div drag="x"` con `onDragEnd` validando umbral.
-- Cronómetro hielo: 30s con `setInterval`, anillo SVG animado.
-- Sin assets de audio nuevos a menos que confirmes (omitiría el sonido de agua fría).
+Grid asimétrico con tarjetas de tamaños variados, `rounded-[3rem]`, **glowing shadows** del color del módulo (`shadow-[0_20px_60px_-15px_hsl(var(--resource-X)/0.45)]`). Cada tarjeta: ícono grande, nombre, micro-tagline y fondo del color sensorial del recurso.
 
-### Archivos a modificar/crear
-- `src/App.tsx` (quitar ruta respiración)
-- `src/pages/Tools.tsx` (quitar tarjeta)
-- `src/pages/EmotionalRegulation.tsx` (rewrite mayor)
-- `src/pages/Sleep.tsx` (rewrite mayor)
-- `src/pages/Recovery.tsx` (icono + botón emergencia)
-- Migración Supabase: tabla `sleep_log`
+Recursos visibles: Mindfulness, Grounding, Plan de Seguridad, Higiene del Sueño, Pensamiento/Rumiación, Recuperación, Regulación Emocional. (Se elimina cualquier residuo de "Respiración" como recurso independiente.)
 
-¿Apruebo y avanzo? Si querés que también borre `Breathing.tsx` o que incluya audio para el hielo, decímelo antes de empezar.
+## 3. Rediseño por recurso
+
+### Mindfulness — Rosa Blush (#FDF2F8), ícono Spa
+- Mandala respiratorio (animación expand/contract 4s/6s) ya existente, refinado.
+- Nuevas pestañas: **Observar** (foco atencional en un punto/onda animada con timer 1/3/5 min) y **Describir** (textarea + chips "sin juicio").
+- Loop: estado mental 1-10 antes → práctica → estado 1-10 después → outro comparativo.
+
+### Grounding — Arena/Terracota (#FAF7F2), ícono Mountain
+- Reemplaza el flujo actual de 5 inputs.
+- **Termómetro de ansiedad 0-100** al entrar (slider).
+- Juego 5-4-3-2-1 con botones por sentido (Ver/Tocar/Oír/Oler/Gustar): tap incrementa contador hasta llegar al objetivo del paso. Texturas (gradient noise) y bordes pesados.
+- Outro: termómetro post + delta.
+
+### Plan de Seguridad — Bordó (#FFF5F5), ícono Shield (NUEVA pantalla `/herramientas/plan-seguridad`)
+- Checklist de señales de alerta.
+- Botones grandes de discado rápido (`tel:` para 911, línea de prevención de suicidio AR 135, contactos personales editables).
+- Bloque "modificación ambiental" con tips accionables.
+- Botón **Descargar reporte .txt** (`Blob` → download).
+
+### Higiene del Sueño — Azul Noche (#090D16), ícono Moon, **dark real**
+- Checklist nocturno → indicador circular SVG "Probabilidad de sueño profundo" 0-100%.
+- **Sintetizador Web Audio API nativo** (`src/lib/sleepAudio.ts`): noise generator + biquad lowpass para "Olas" con LFO sobre gain (vaivén ~0.1Hz), y "Lluvia" con noise+highpass. Control de volumen y play/stop. Sin assets externos.
+- Bitácora de pesadillas: "Sueño original" → "Reescritura positiva" (TCC), guardada en `dream_log`.
+
+### Pensamiento/Rumiación — Amarillo Ámbar (#FFFDF0), ícono Spiral
+- Slider de "intensidad del bucle".
+- Cuadro TCC: Situación / Emoción / Pensamiento automático / Respuesta alternativa.
+- Filtro chips de **distorsiones cognitivas** (Lectura de mente, Catastrofismo, Todo o nada, Personalización, Filtro mental, Adivinación, Etiquetado).
+- Animación ACT "nube": el pensamiento se escribe, se antepone "Estoy teniendo el pensamiento de…", y al tocar "Soltar" la nube flota hacia arriba con fade-out (`framer-motion`).
+- Botón "Descargar cuadro" (.txt).
+
+### Recuperación — Violeta (#FAF8FF), ícono Wine
+- Contador de racha con 🔥 (días sin consumir).
+- **Tarro de ahorro**: SVG de frasco de vidrio gigante con etiqueta "Para mi meta". Día exitoso → animación de monedas doradas cayendo (`framer-motion`) + incremento de monto.
+- Recaída → drawer con chips de disparadores (Estrés, Presión Social, Soledad, Aburrimiento, Tristeza) + frase compasiva fija.
+- Botón rojo suave **"Tengo ganas de consumir"** → modal de contención con 3 CTAs:
+  - "Frenar con STOP" → `/herramientas/regulacion-emocional?tool=stop`
+  - "Shock con Hielo (TIPP)" → `/herramientas/regulacion-emocional?tool=tipp&step=temperatura`
+  - "Escribir en la Nube" → `/herramientas/rumiacion?tool=defusion`
+
+### Regulación Emocional — Celeste (#F0F9FF), ícono Wave
+- Slider "temperatura emocional" 1-10.
+- Tab **STOP**: semáforo vertical (4 luces), tap secuencial revela instrucción animada de cada paso.
+- Tab **TIPP**:
+  - **T** (Temperatura): ilustración de cubos de hielo + cronómetro real 30s con animación ripple.
+  - **I** (Intense exercise): timer 60s + guía rápida (jumping jacks).
+  - **P-P** (Paced breathing + Paired relaxation): círculo celeste que expande 5s / contrae 7s, sincronizado con instrucciones de tensar/soltar grupos musculares.
+- Lee `?tool=` y `?step=` para deep-links del Recovery.
+
+## 4. Persistencia y outro
+
+`src/lib/resourceLogs.ts` con shape:
+```ts
+type ResourceLog = { ts: number; resource: string; pre?: number; post?: number; meta?: Record<string, unknown> };
+```
+Al cerrar cada recurso: `<ResourceOutro pre={...} post={...} history={getLogs(...)} />` con mini-barras SVG de las últimas 7 sesiones y un mensaje "Bajaste X puntos hoy. Volvé cuando lo necesites."
+
+## 5. Detalles técnicos
+
+- **Archivos nuevos**: `src/lib/resourceLogs.ts`, `src/lib/sleepAudio.ts`, `src/components/resources/ResourceOutro.tsx`, `src/pages/SafetyPlan.tsx`.
+- **Archivos reescritos**: `src/pages/Tools.tsx`, `src/pages/Mindfulness.tsx`, `src/pages/Grounding.tsx`, `src/pages/Sleep.tsx`, `src/pages/Rumination.tsx`, `src/pages/Recovery.tsx`, `src/pages/EmotionalRegulation.tsx`.
+- **Tokens nuevos** en `index.css`/`tailwind.config.ts`: `--resource-mindful`, `--resource-grounding`, `--resource-safety`, `--resource-sleep`, `--resource-rumination`, `--resource-recovery`, `--resource-regulation` (HSL) + clases `bg-resource-X-bg`, `text-resource-X-accent`, shadow utilities.
+- **Routing** (`App.tsx`): agregar `/herramientas/plan-seguridad`. Mantener resto.
+- **Sin cambios de DB**: todo lo nuevo va a `localStorage`. Se mantiene `sleep_log` y `dream_log` existentes para Sleep.
+
+## 6. Fuera de alcance
+
+- No toco Dashboard, Diario, Proceso, panel admin, BottomNav.
+- No agrego tablas Supabase nuevas.
+- No cambio el sistema de auth ni Resmita chat.
+
+¿Aprobás para empezar?
