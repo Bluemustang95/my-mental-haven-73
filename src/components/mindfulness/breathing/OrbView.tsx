@@ -9,6 +9,7 @@ import { VisualizerBox } from "@/components/mindfulness/breathing/visuals/Visual
 import { VisualizerSleep } from "@/components/mindfulness/breathing/visuals/VisualizerSleep";
 import { VisualizerCoherence } from "@/components/mindfulness/breathing/visuals/VisualizerCoherence";
 import { VisualizerSigh } from "@/components/mindfulness/breathing/visuals/VisualizerSigh";
+import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
 
 interface OrbViewProps {
   pattern: BreathingPattern;
