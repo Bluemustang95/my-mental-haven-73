@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Pause } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { SessionToolbar, nextMusic } from "@/components/mindfulness/breathing/SessionToolbar";
 
 const ZONES = [
   { id: "head", label: "Cabeza", y: 30, speech: "Llevá la atención a tu cabeza. Notá si hay tensión en la frente." },
@@ -15,15 +16,18 @@ const ZONES = [
 
 interface Props {
   totalSeconds: number;
-  voiceEnabled: boolean;
-  music: MusicTrack;
+  initialVoice: boolean;
+  initialMusic: MusicTrack;
   onComplete: () => void;
+  onAbort: () => void;
 }
 
-export function BodyScanView({ totalSeconds, voiceEnabled, music, onComplete }: Props) {
+export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onComplete, onAbort }: Props) {
   const [zoneIdx, setZoneIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
   const [running, setRunning] = useState(true);
+  const [voice, setVoice] = useState(initialVoice);
+  const [music, setMusic] = useState<MusicTrack>(initialMusic);
   const completedRef = useRef(false);
   const audio = useMindfulAudio();
 
@@ -59,7 +63,7 @@ export function BodyScanView({ totalSeconds, voiceEnabled, music, onComplete }: 
   }, [timeLeft]);
 
   useEffect(() => {
-    if (voiceEnabled && running) audio.speak(ZONES[zoneIdx].speech);
+    if (voice && running) audio.speak(ZONES[zoneIdx].speech);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoneIdx]);
 
@@ -68,7 +72,7 @@ export function BodyScanView({ totalSeconds, voiceEnabled, music, onComplete }: 
   const seconds = timeLeft % 60;
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-between px-5 pt-16 pb-10">
+    <div className="relative flex h-full w-full flex-col items-center justify-between px-5 pt-12 pb-40">
       <div className="text-center">
         <div className="text-[10px] uppercase tracking-[0.25em] text-white/45">Escáner corporal</div>
         <div className="mt-1 font-display text-2xl font-semibold text-white tabular-nums">
@@ -77,7 +81,7 @@ export function BodyScanView({ totalSeconds, voiceEnabled, music, onComplete }: 
       </div>
 
       <div className="relative">
-        <svg viewBox="0 0 200 320" className="h-[380px] w-auto">
+        <svg viewBox="0 0 200 320" className="h-[340px] w-auto">
           <defs>
             <linearGradient id="bodyGrad" x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
@@ -89,22 +93,24 @@ export function BodyScanView({ totalSeconds, voiceEnabled, music, onComplete }: 
               <stop offset="100%" stopColor="transparent" />
             </linearGradient>
           </defs>
-          {/* Body silhouette */}
           <ellipse cx="100" cy="30" rx="22" ry="26" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.15)" />
           <path d="M75,60 L125,60 L140,180 L60,180 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.15)" />
           <path d="M60,180 L80,300 L95,300 L100,200 L105,300 L120,300 L140,180 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.15)" />
-
-          {/* Scanner beam */}
           <motion.rect
-            x="40" width="120" height="40"
+            x="40"
+            width="120"
+            height="40"
             fill="url(#beamGrad)"
             animate={{ y: zone.y - 20 }}
             transition={{ duration: 1.2, ease: "easeInOut" }}
             opacity="0.35"
           />
           <motion.line
-            x1="40" x2="160"
-            stroke="#FB923C" strokeWidth="2.5" strokeLinecap="round"
+            x1="40"
+            x2="160"
+            stroke="#FB923C"
+            strokeWidth="2.5"
+            strokeLinecap="round"
             animate={{ y1: zone.y, y2: zone.y }}
             transition={{ duration: 1.2, ease: "easeInOut" }}
           />
@@ -118,9 +124,17 @@ export function BodyScanView({ totalSeconds, voiceEnabled, music, onComplete }: 
           onClick={() => setRunning((r) => !r)}
           className="mt-4 flex h-12 w-12 mx-auto items-center justify-center rounded-full bg-white/10"
         >
-          {running ? <Pause size={20} /> : <span className="text-xs">▶</span>}
+          {running ? <Pause size={20} /> : <Play size={18} fill="currentColor" />}
         </button>
       </div>
+
+      <SessionToolbar
+        voice={voice}
+        onVoiceToggle={() => setVoice((v) => !v)}
+        music={music}
+        onMusicCycle={() => setMusic((m) => nextMusic(m))}
+        onFinish={onAbort}
+      />
     </div>
   );
 }
