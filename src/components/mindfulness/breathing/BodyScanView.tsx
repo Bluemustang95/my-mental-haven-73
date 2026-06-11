@@ -90,42 +90,26 @@ export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onCompl
         </div>
       </div>
 
-      <div className="relative">
-        <svg viewBox="0 0 200 320" className="h-[340px] w-auto">
-          <defs>
-            <linearGradient id="bodyGrad" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
-            </linearGradient>
-            <linearGradient id="beamGrad" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="transparent" />
-              <stop offset="50%" stopColor="#FB923C" />
-              <stop offset="100%" stopColor="transparent" />
-            </linearGradient>
-          </defs>
-          <ellipse cx="100" cy="30" rx="22" ry="26" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.15)" />
-          <path d="M75,60 L125,60 L140,180 L60,180 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.15)" />
-          <path d="M60,180 L80,300 L95,300 L100,200 L105,300 L120,300 L140,180 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.15)" />
-          <motion.rect
-            x="40"
-            width="120"
-            height="40"
-            fill="url(#beamGrad)"
-            animate={{ y: zone.y - 20 }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
-            opacity="0.35"
+      <div className="relative flex items-center justify-center">
+        <div className="relative h-[320px] w-[180px]">
+          <LottiePlayer
+            data={bodyScanAnimation}
+            loop
+            speed={running ? 1 : 0}
+            className="h-full w-full"
           />
-          <motion.line
-            x1="40"
-            x2="160"
-            stroke="#FB923C"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            animate={{ y1: zone.y, y2: zone.y }}
+          <motion.div
+            className="pointer-events-none absolute inset-x-0 h-12 rounded-full"
+            style={{
+              background: "linear-gradient(180deg, transparent, rgba(251,146,60,0.45), transparent)",
+              filter: "blur(8px)",
+            }}
+            animate={{ y: zone.y * (320 / 320) - 24 }}
             transition={{ duration: 1.2, ease: "easeInOut" }}
           />
-        </svg>
+        </div>
       </div>
+
 
       <div className="text-center max-w-xs">
         <div className="font-display text-2xl font-semibold text-[#FB923C]">{zone.label}</div>
