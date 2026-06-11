@@ -71,6 +71,7 @@ import PatientList from "@/pages/admin/PatientList";
 import PatientDetail from "@/pages/admin/PatientDetail";
 import ResourcesManager from "@/pages/admin/ResourcesManager";
 import ResourceDetail from "@/pages/admin/ResourceDetail";
+import QuestionnaireManager from "@/pages/admin/QuestionnaireManager";
 import ResourceTools from "@/pages/ResourceTools";
 import ResourceIntro from "@/pages/ResourceIntro";
 import SafetyPlan from "@/pages/SafetyPlan";
