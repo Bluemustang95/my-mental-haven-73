@@ -5,6 +5,10 @@ import { BreathingPattern } from "@/lib/breathingPatterns";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { SessionToolbar, nextMusic } from "@/components/mindfulness/breathing/SessionToolbar";
+import { VisualizerBox } from "@/components/mindfulness/breathing/visuals/VisualizerBox";
+import { VisualizerSleep } from "@/components/mindfulness/breathing/visuals/VisualizerSleep";
+import { VisualizerCoherence } from "@/components/mindfulness/breathing/visuals/VisualizerCoherence";
+import { VisualizerSigh } from "@/components/mindfulness/breathing/visuals/VisualizerSigh";
 
 interface OrbViewProps {
   pattern: BreathingPattern;
@@ -105,17 +109,21 @@ export function OrbView({
         <motion.div
           className="absolute h-[300px] w-[300px] rounded-full blur-3xl"
           style={{ background: phase.color }}
-          animate={{ scale: phase.scale, opacity: running ? 0.45 : 0.2 }}
+          animate={{ scale: phase.scale, opacity: running ? 0.35 : 0.15 }}
           transition={{ duration: phase.seconds, ease: "easeInOut" }}
         />
-        <motion.div
-          className="relative h-[220px] w-[220px] rounded-full"
-          style={{
-            background: `radial-gradient(circle at 30% 30%, ${phase.color}, ${phase.color}33 70%, transparent 100%)`,
-          }}
-          animate={{ scale: phase.scale }}
-          transition={{ duration: phase.seconds, ease: "easeInOut" }}
-        />
+        {pattern.id === "box" && (
+          <VisualizerBox phaseId={phase.phaseId} duration={phase.seconds} isActive={running} />
+        )}
+        {pattern.id === "478" && (
+          <VisualizerSleep phaseId={phase.phaseId} duration={phase.seconds} isActive={running} />
+        )}
+        {pattern.id === "coherence" && (
+          <VisualizerCoherence phaseId={phase.phaseId} duration={phase.seconds} isActive={running} />
+        )}
+        {pattern.id === "sigh" && (
+          <VisualizerSigh phaseId={phase.phaseId} duration={phase.seconds} isActive={running} />
+        )}
         <svg className="absolute h-[280px] w-[280px] -rotate-90" viewBox="0 0 280 280">
           <circle cx="140" cy="140" r={ringR} stroke="rgba(255,255,255,0.08)" strokeWidth="3" fill="none" />
           <circle
