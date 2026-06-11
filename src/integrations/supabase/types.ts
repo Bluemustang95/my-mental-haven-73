@@ -357,6 +357,7 @@ export type Database = {
           day_goal: string | null
           dream_note: string | null
           emotions: string[] | null
+          goal_completed: string | null
           id: string
           mode: string | null
           mood_score: number | null
@@ -374,6 +375,7 @@ export type Database = {
           day_goal?: string | null
           dream_note?: string | null
           emotions?: string[] | null
+          goal_completed?: string | null
           id?: string
           mode?: string | null
           mood_score?: number | null
@@ -391,6 +393,7 @@ export type Database = {
           day_goal?: string | null
           dream_note?: string | null
           emotions?: string[] | null
+          goal_completed?: string | null
           id?: string
           mode?: string | null
           mood_score?: number | null
@@ -1058,6 +1061,89 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      test_definitions: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          id: string
+          instructions: string | null
+          kind: string
+          name: string
+          scale_labels: Json | null
+          scale_max: number
+          scale_min: number
+          sort: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          kind: string
+          name: string
+          scale_labels?: Json | null
+          scale_max?: number
+          scale_min?: number
+          sort?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          kind?: string
+          name?: string
+          scale_labels?: Json | null
+          scale_max?: number
+          scale_min?: number
+          sort?: number
+        }
+        Relationships: []
+      }
+      test_items: {
+        Row: {
+          created_at: string
+          id: string
+          options: Json | null
+          prompt: string
+          reverse: boolean
+          sort: number
+          subscale: string | null
+          test_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          options?: Json | null
+          prompt: string
+          reverse?: boolean
+          sort: number
+          subscale?: string | null
+          test_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          options?: Json | null
+          prompt?: string
+          reverse?: boolean
+          sort?: number
+          subscale?: string | null
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_items_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "test_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       test_results: {
         Row: {
