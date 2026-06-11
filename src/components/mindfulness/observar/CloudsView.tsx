@@ -122,13 +122,15 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
     const speed = 22 + Math.random() * 14;
     const size: Thought["size"] = text.length > 60 ? "lg" : text.length > 25 ? "md" : "sm";
     const variant = pickVariant();
-    setThoughts((prev) => [
-      ...prev,
-      { id: `${Date.now()}-${Math.random()}`, text, lane, speed, addedAt: Date.now(), size, variant },
-    ]);
+    const id = `${Date.now()}-${Math.random()}`;
+    const newThought: Thought = { id, text, lane, speed, addedAt: Date.now(), size, variant };
+    setThoughts((prev) => [...prev, newThought]);
+    // Schedule settling once the bubble exits the viewport
+    window.setTimeout(() => settleThought(newThought), speed * 1000);
     setDraft("");
     setComposing(false);
   }
+
 
   const sky = useMemo(
     () => Array.from({ length: 22 }).map((_, i) => ({
