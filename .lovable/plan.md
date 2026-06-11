@@ -1,118 +1,100 @@
-# Plan: Rediseño Home + Recursos + Proceso + Settings + Admin
 
-Mantengo paleta actual (cream `#FDFCFB`, dark blue `#101927`, Montserrat/Lora) y aplico el **glassmorphism** que ya usamos en Onboarding sólo en los **modales oscuros** (Check-in mañana/noche, Diario Inteligente, Admin). El resto sigue claro y minimal como las capturas adjuntas.
+## 1. Psicoeducación reemplaza a Resmita en el centro de la BottomNav
 
----
+- En `BottomNav.tsx`: el FAB central deja de ir a `/resmita` y abre el `PsychoModal` (o navega a `/psicoeducacion`).
+- Icono: cambiar `ChatCircle` → `BookOpen` (Phosphor) manteniendo el mismo círculo crema con borde ámbar y animación.
+- Label aria: "Psicoeducación".
+- `Resmita` queda accesible solo desde otra entrada secundaria (lo dejamos como ruta pero sin botón).
 
-## 1. Home `/inicio` (rediseño completo, conserva lógica)
+## 2. Tests reales en `SymptomsTestModal`
 
-- Header: "Buenas tardes, {nombre} ✨" + subtítulo "Tu plan del día te espera". A la derecha: ícono ⚙️ Settings (nuevo) + avatar inicial (existente).
-- Tira semanal L-D con número, día actual en círculo crema, punto verde si hay actividad hoy.
-- **Timeline vertical** (línea gris uniendo 4 viñetas con checkbox cuadrado a la izquierda):
-  1. **Valoración de la mañana** → abre `CheckinModal mode="morning"`.
-  2. **Psicoeducación** → abre `PsychoModal` (contenido dinámico según onboarding goal).
-  3. **Tu práctica de hoy** → 3 chips dinámicos (de `get_daily_recommendations` o fallback por goal del onboarding). Al tocar chip → marca viñeta + texto "Completaste: X" + log en `exercise_sessions`.
-  4. **Valoración de la noche** → abre `CheckinModal mode="night"`.
-- Recompensa: si las 4 listas → checks, línea y número del día en verde + toast "¡Plan completado! 🎉".
-- Banner curvo gradiente morado "Te ayudamos con tu sueño" → `/recursos/sueno`.
+Cargar contenido en `algo_questions` + nuevas tablas mínimas para preguntas internas de cada test:
 
-## 2. Modales
+- **Síntomas**: BDI-II (21 ítems, 0-3), BAI (21 ítems, 0-3), PSWQ (16 ítems, 1-5 con reversos).
+- **Personalidad**: Big Five (BFI-44 reducido a 20 ítems, 5 dimensiones).
 
-### 2.1 `CheckinModal` (fullscreen, `bg-[#1C1C1E]` + backdrop-blur, glass cards)
+Flujo:
+- Grid inicial muestra 3 tarjetas en síntomas (BDI, BAI, PSWQ) y 1 en personalidad (Big Five).
+- Al tocar un test → pantalla de ítems paginados con escala Likert táctil.
+- Al terminar, guarda en `test_results` (ya existe) con `kind`, `score`, `subscale_scores jsonb`, `interpretation`.
+- **Big Five**: ANTES de comenzar muestra un hexágono (5 ejes para OCEAN) vacío como preview de lo que verá al final; al finalizar el mismo hexágono se rellena con resultados.
 
-**Mañana (5 pasos):**
-1. Sueño — gráfico nube + 5 puntos que crecen.
-2. Amanecer — botones verticales (Excelente / Muy bien / Normal / Mal / Pésimo).
-3. Emociones — grid de tarjetas emoji (multiselect).
-4. Diario — 3 textareas: soñaste / pensamiento / objetivo.
-5. Estadísticas — gauge naranja "1/7 días" + consejo dinámico.
+Tablas nuevas:
+- `test_definitions` (id, code, name, kind, scale_min, scale_max, instructions)
+- `test_items` (id, test_id, sort, prompt, reverse boolean, subscale text)
+- Seeds con BDI/BAI/PSWQ/BigFive.
 
-**Noche (4 pasos):** Día (luna) → Emoción → Balance (2 textareas) → Estadísticas/gratitud.
+## 3. Bento de Recursos: 2x2 + rack debajo
 
-Datos persisten en `daily_checkins` (extender columnas si falta: `emotions text[]`, `dream_note`, `thought_note`, `goal`, `balance_highlight`, `balance_improve`).
+Reordenar `BentoGrid.tsx`:
 
-### 2.2 `PsychoModal`
-
-Modal blanco, header gradiente morado con ▶, título/texto desde `psychoeducation_content` filtrado por el goal del onboarding. Botón negro grande: "He leído y aprendido" → marca viñeta 2.
-
-## 3. Recursos `/recursos` (Bento Grid)
-
-Layout asimétrico:
 ```
-[ Mindfulness    ][ Reg.Emocional ]
-[  (alta rosa)   ][ Tol. Malestar ]
-[                ][ Efect.Personal]
-[      Gestión de Pensamientos    ]
-[      Pack de Actividades (dark) ]
-```
-Cada tarjeta navega a `/diario-inteligente/:categorySlug`.
-
-## 4. Diario Inteligente `/diario-inteligente/:slug` (nueva, oscura)
-
-- Fondo `#0F0F12`, calendario semanal mini arriba.
-- **Paso 1:** grid de tarjetas grandes con color de fondo + ícono gigante semi-transparente (sub-recursos de la categoría desde `algo_sub_resources`).
-- **Paso 2:** al tocar → oculta grid, muestra tarjeta apaisada "Registro guardado con éxito" + log en `exercise_sessions`.
-- FAB violeta `+` abajo derecha → vuelve al grid para sumar otra.
-
-## 5. Mi Proceso `/proceso` (rediseño)
-
-1. **Estadísticas de impacto**: barras verticales (divs altura variable) para Calidad de Sueño + 2 mini-cards con barras horizontales (Habilidades vs Síntomas / Actividades vs Síntomas).
-2. **Evaluaciones**:
-   - Test de Síntomas → fullscreen oscuro con grid de tarjetas altas (Irritabilidad, TOC, Desesperanza, etc.) con emoji gigante abajo. Lee `algo_questions` kind=symptom.
-   - Test de Personalidad → idem kind=personality.
-3. **Terapia y Seguimiento**: toggle iOS verde. Si ON → 3 botones (Notas / Resumen / Medicación → rutas existentes). Si OFF → recuadro punteado invitando a activarlo.
-
-Toggle se persiste en `patient_app_profiles.in_therapy`.
-
-## 6. Settings `/configuracion` (nuevo)
-
-- Título = nombre del usuario.
-- Lista iOS agrupada:
-  - **Mi Cuenta**: Información, Estadísticas.
-  - **Preferencias**: toggles Tema oscuro, Notificaciones.
-  - **Seguridad**: Cerrar sesión (rojo), Eliminar cuenta (rojo oscuro).
-- Al final: botón punteado **"Acceso Desarrollador / Admin"** → `/admin` (visible siempre; el guard de admin sigue gobernando acceso real).
-
-Botón ⚙️ del Home abre esta pantalla. Quito el bloque admin actual de `/perfil` (queda solo el botón en Settings).
-
-## 7. Admin Dashboard (estética + tabs)
-
-Header `bg-[#0F172A]` con "v2.4.1" + badge "Modo Admin". Tabs:
-- **Usuarios**: KPIs simulados (1,248 registrados, etc.) + lista de chats soporte (estados rojo/amarillo) — datos mock.
-- **Psicoeducación**: usa el `ContentManager` existente, refactor visual oscuro con form completo.
-- **Actividades (IA)**: lista de `resource_tools` con botón "Editar" (usa `ToolEditor` existente).
-- **Tests**: lista categorías del `QuestionnaireManager` con ícono engranaje (ya existe la lógica).
-
-## 8. Backend (única migración)
-
-```sql
-ALTER TABLE daily_checkins
-  ADD COLUMN IF NOT EXISTS mode text DEFAULT 'morning',
-  ADD COLUMN IF NOT EXISTS sleep_score int,
-  ADD COLUMN IF NOT EXISTS dawn_score text,
-  ADD COLUMN IF NOT EXISTS emotions text[],
-  ADD COLUMN IF NOT EXISTS dream_note text,
-  ADD COLUMN IF NOT EXISTS thought_note text,
-  ADD COLUMN IF NOT EXISTS day_goal text,
-  ADD COLUMN IF NOT EXISTS balance_highlight text,
-  ADD COLUMN IF NOT EXISTS balance_improve text;
-
-ALTER TABLE patient_app_profiles
-  ADD COLUMN IF NOT EXISTS in_therapy boolean DEFAULT false,
-  ADD COLUMN IF NOT EXISTS prefers_dark boolean DEFAULT false,
-  ADD COLUMN IF NOT EXISTS notifications_on boolean DEFAULT true;
+[Mindfulness]      [Reg. Emocional]
+[Tolerancia mal.]  [Efectividad pers.]
+─────────────────────────────────────
+[Gestión de Pensamientos — wide]
+[Pack de Actividades — wide dark]
 ```
 
-(No se crean tablas nuevas, no requiere GRANTs.)
+Las 4 superiores en grid 2×2 mismo tamaño. Se elimina la fila intermedia separada para Efectividad.
 
-## 9. Archivos a crear / modificar
+## 4. Estadística de impacto / Bienestar (Mi Proceso)
 
-**Nuevos:** `src/pages/Settings.tsx`, `src/pages/DiarioInteligente.tsx`, `src/components/home/Timeline.tsx`, `src/components/home/WeekStrip.tsx`, `src/components/modals/CheckinModal.tsx`, `src/components/modals/PsychoModal.tsx`, `src/components/modals/SymptomsTestModal.tsx`, `src/components/recursos/BentoGrid.tsx`, `src/components/ui/IOSToggle.tsx`.
+Agregar a `MiProceso.tsx` un **Índice de Bienestar (0-100)** semanal compuesto:
 
-**Modificados:** `src/pages/Dashboard.tsx` (reemplaza por nuevo Home), `src/pages/Tools.tsx` (Bento), `src/pages/MiProceso.tsx`, `src/pages/Profile.tsx` (quita admin), `src/components/admin/AdminLayout.tsx` (estética + tabs nuevas), `src/App.tsx` (rutas `/configuracion`, `/diario-inteligente/:slug`).
+| Variable | Peso | Fuente |
+|---|---|---|
+| Calidad de sueño promedio | 25% | `sleep_log.quality` + `daily_checkins.sleep_score` |
+| Estado al despertar (dawn) | 10% | `daily_checkins.dawn_score` |
+| Balance del día (noche) | 15% | derivado de emociones positivas vs negativas en checkin nocturno |
+| Recursos completados | 15% | `content_progress` + `exercise_sessions` |
+| Actividades del Pack hechas | 10% | `exercise_sessions` (kind=activity) |
+| Objetivos del día cumplidos | 15% | `daily_checkins.day_goal` marcado como cumplido |
+| Adherencia (días con check-in) | 10% | `daily_checkins` count |
 
-## 10. Fuera de alcance (confirmar)
+Vistas nuevas:
+- Card **"¿Mejoraste esta semana?"**: compara índice de los últimos 7 días vs 7 anteriores → flecha ↑/↓ + delta + frase ("Tu sueño mejoró un 12%").
+- Gráfico de área del índice semanal (8 semanas).
+- Mini-cards: sueño promedio, mejor día, peor día, racha de check-ins.
+- Sección "Cómo empezás vs cómo terminás el día": barras pareadas dawn vs balance nocturno.
 
-- No reescribo Diario clásico ni Journal existente.
-- No reemplazo BottomNav (sigue igual).
-- Datos de KPIs/chats de soporte en Admin → **mock** (no DB).
+Nada de tablas nuevas (todo derivado en cliente o vía RPC `get_wellbeing_index(_user_id, _from, _to)`).
+
+## 5. Settings = pantalla inicial, sin icono extra; BottomNav fija sin scroll horizontal
+
+- En `BottomNav.tsx`: cambiar `position` para usar `left: 0; right: 0` con `justify-content: center` y `max-width: 100vw`. Quitar `width: fit-content` que en pantallas chicas + 5 tabs produce overflow.
+- Reducir `size` de iconos a 20, padding `px-2 py-1`, gap `gap-0.5`, botones `h-10 w-10`.
+- El acceso a "Ajustes" deja de tener icono propio en la nav: queda solo el botón ⚙️ del header del Home y la entrada desde Profile.
+- "Pantalla inicial = Ajustes": cuando el usuario toca el ⚙️ del header va directo a `/configuracion` (ya existe `Settings.tsx`).
+
+(Confirmame si "que la inicial sea ajustes" significa: (a) que el botón ⚙️ del header reemplace al avatar/configuración separada — interpretación que tomo, o (b) que al abrir la app aparezca Settings primero. Asumo (a).)
+
+## 6. Objetivos del día → check-in nocturno
+
+- Morning Check-in step "Objetivo de hoy" guarda `daily_checkins.day_goal` (ya existe).
+- Night Check-in: nuevo paso **"Valoración de objetivos"** que lee el `day_goal` del checkin matutino del mismo día y pregunta:
+  - "¿Cumpliste con: {day_goal}?" → toggle Sí / Parcial / No.
+  - Guarda en `daily_checkins.goal_completed` (nueva columna text: 'yes'|'partial'|'no').
+- Si no hay `day_goal`, se omite el paso.
+
+## 7. Luz ámbar/verde en `WeekStrip`
+
+- Calcular progreso del día = nodos de Timeline completados / 4.
+- Pasar a `WeekStrip` un map `{ [dateStr]: progress }`.
+- Debajo del número del día (no solo hoy, todos los días con actividad):
+  - 1–3 completados → punto ámbar `#F59E0B`.
+  - 4/4 completados → punto verde `#34C759` y el círculo del día se tiñe verde tenue.
+- Hoy mantiene fondo crema; el color del puntito refleja el progreso real.
+
+## Detalles técnicos
+
+- Migración nueva: `test_definitions`, `test_items` + GRANTs + RLS pública lectura para authenticated; columna `daily_checkins.goal_completed text`; RPC `get_wellbeing_index`.
+- Seeds de tests vía `supabase--insert`.
+- Componentes nuevos: `tests/BdiRunner.tsx`, `tests/BaiRunner.tsx`, `tests/PswqRunner.tsx`, `tests/BigFiveRunner.tsx`, `tests/HexagonPreview.tsx` (radar SVG OCEAN), `proceso/WellbeingCard.tsx`, `proceso/WeeklyDelta.tsx`.
+- Hook `useDayProgress(date)` para alimentar Timeline + WeekStrip desde una sola fuente.
+
+## Fuera de alcance (avisame si lo querés sumar)
+
+- Notificaciones push para recordar objetivos.
+- Export PDF de resultados de tests.
+- Comparativa de Big Five con población general (necesitaría baremos).
