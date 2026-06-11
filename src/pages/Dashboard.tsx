@@ -497,6 +497,22 @@ export default function Dashboard() {
         </section>
       )}
 
+      {recos.length === 0 && (
+        <section className="px-6 pt-4 pb-2">
+          <button
+            onClick={() => navigate("/cuestionario")}
+            className="flex w-full items-center gap-3 rounded-2xl border border-accent/25 bg-accent/8 p-4 text-left transition-colors active:bg-accent/15"
+          >
+            <Sparkle size={20} weight="duotone" className="text-accent" />
+            <div className="flex-1">
+              <p className="font-display text-sm font-medium text-foreground">Personalizá tu inicio</p>
+              <p className="text-[11px] text-muted-foreground">Respondé unas preguntas para recibir prácticas a tu medida.</p>
+            </div>
+            <ArrowRight size={16} className="text-muted-foreground" />
+          </button>
+        </section>
+      )}
+
       {/* ── Affirmation ────────────── */}
       {affirmation && (
         <motion.section
