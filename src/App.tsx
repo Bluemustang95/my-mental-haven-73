@@ -32,7 +32,7 @@ import ThoughtRecord from "@/pages/ThoughtRecord";
 import DreamLog from "@/pages/DreamLog";
 import DiarioTools from "@/pages/DiarioTools";
 import Grounding from "@/pages/Grounding";
-import Mindfulness from "@/pages/Mindfulness";
+import Mindfulness from "@/pages/mindfulness/BreathingHome";
 import ContentLibrary from "@/pages/ContentLibrary";
 import PsicoFactos from "@/pages/PsicoFactos";
 import Tests from "@/pages/Tests";
