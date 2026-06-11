@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { BreathingPattern } from "@/lib/breathingPatterns";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -15,7 +15,8 @@ interface OrbViewProps {
   onAbort: () => void;
 }
 
-export function OrbView({ pattern, totalSeconds, voiceEnabled, hapticsEnabled, music, onComplete }: OrbViewProps) {
+export function OrbView({ pattern, totalSeconds, voiceEnabled, hapticsEnabled, music, onComplete, onAbort }: OrbViewProps) {
+
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [phaseElapsed, setPhaseElapsed] = useState(0);
