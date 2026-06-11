@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { Layers, ScanText, HeartPulse } from "lucide-react";
+
 import { ExerciseShell, type ExerciseShellMeta } from "@/components/exercises/ExerciseShell";
 import { PracticeConfigScreen } from "@/components/exercises/PracticeConfigScreen";
 import { HechosJuiciosView } from "@/components/mindfulness/describir/HechosJuiciosView";
