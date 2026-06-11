@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Settings, Sparkles, Sun, BookOpen, Wind, Moon as MoonIcon, ChevronRight } from "lucide-react";
+import { Sparkles, Sun, BookOpen, Wind, Moon as MoonIcon, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { localDateStr } from "@/lib/utils";
