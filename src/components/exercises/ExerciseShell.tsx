@@ -93,7 +93,7 @@ export function ExerciseShell({ meta, renderActivity, onExit }: Props) {
   }, [preScore, postScore]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0F172A] text-white overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-[#0F172A] text-white overflow-hidden">
       {phase === "active" && renderActivity({
         onComplete: () => setPhase("post"),
         onAbort: () => onExit(),
