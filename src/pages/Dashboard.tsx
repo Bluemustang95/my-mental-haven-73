@@ -133,6 +133,15 @@ export default function Dashboard() {
   // Goals
   const [pendingGoals, setPendingGoals] = useState<Goal[]>([]);
 
+  // Daily recommendations
+  type Reco = { sub_resource_id: string; sub_resource_slug: string; sub_resource_name: string; sub_resource_route: string | null; total_score: number };
+  const [recos, setRecos] = useState<Reco[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    (supabase.rpc as any)("get_daily_recommendations", { _user_id: user.id, _limit: 3 })
+      .then(({ data }: { data: Reco[] | null }) => setRecos(data ?? []));
+  }, [user]);
+
   /* ── Fetch checkins ────────────────── */
   const fetchCheckins = useCallback(async () => {
     if (!user) return;
@@ -466,6 +475,27 @@ export default function Dashboard() {
           ))}
         </div>
       </section>
+
+      {/* ── Tu práctica de hoy (RPC) ───── */}
+      {recos.length > 0 && (
+        <section className="px-6 pt-4 pb-2">
+          <h2 className="mb-3 flex items-center gap-1.5 font-display text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+            <Sparkle size={13} weight="duotone" className="text-accent" />
+            Tu práctica de hoy
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {recos.map((r) => (
+              <button
+                key={r.sub_resource_id}
+                onClick={() => r.sub_resource_route && navigate(r.sub_resource_route)}
+                className="rounded-full border border-accent/20 bg-accent/8 px-3.5 py-2 font-display text-[12px] font-medium text-foreground transition-colors active:bg-accent/15"
+              >
+                {r.sub_resource_name}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Affirmation ────────────── */}
       {affirmation && (
