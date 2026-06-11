@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Pause, Play } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { useHojasMessages } from "@/lib/hojasMessages";
+import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
+import { LeafPile } from "@/components/mindfulness/observar/LeafPile";
 
 type Variant = "cloud" | "leaf" | "train";
 
