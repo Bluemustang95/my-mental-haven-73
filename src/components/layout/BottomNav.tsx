@@ -82,12 +82,13 @@ export function BottomNav() {
             animate={psicoActive ? { scale: 1.08 } : { scale: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-full border-2 shadow-md transition-colors",
-              "bg-[hsl(48_100%_85%)] border-[hsl(38_85%_55%)] text-[hsl(28_70%_30%)]",
-              psicoActive && "ring-2 ring-[hsl(38_85%_55%)]/40"
+              "flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-lg transition-colors",
+              psicoActive
+                ? "bg-gradient-to-br from-[hsl(28_95%_60%)] to-[hsl(40_100%_85%)] border-white text-white ring-2 ring-[hsl(28_95%_60%)]/30"
+                : "bg-gradient-to-br from-[hsl(38_90%_70%)] to-[hsl(40_100%_90%)] border-white text-[hsl(28_70%_25%)]"
             )}
           >
-            <BookOpen size={22} weight={psicoActive ? "fill" : "bold"} />
+            <BookOpen size={24} weight={psicoActive ? "fill" : "bold"} />
           </motion.div>
         </motion.button>
 
