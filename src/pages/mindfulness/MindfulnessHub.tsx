@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Wind, Eye } from "lucide-react";
+import { ArrowLeft, Wind, Eye, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,6 +51,14 @@ export default function MindfulnessHub() {
       from: "#60A5FA",
       to2: "#A78BFA",
     },
+    {
+      to: "/herramientas/mindfulness/describir",
+      icon: MessageSquare,
+      title: "Describir",
+      desc: "Hechos vs. juicios, escáner neutral con IA y anatomía emocional.",
+      from: "#A78BFA",
+      to2: "#F472B6",
+    },
   ];
 
   return (
@@ -87,11 +95,6 @@ export default function MindfulnessHub() {
             </div>
           </motion.button>
         ))}
-
-        <div className="rounded-3xl border border-dashed border-black/10 bg-white/40 p-5 text-center">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Próximamente</div>
-          <div className="mt-1 font-display text-sm font-semibold text-[#101927]/60">Describir · Hechos vs. juicios</div>
-        </div>
       </div>
     </div>
   );

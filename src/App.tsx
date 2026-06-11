@@ -35,6 +35,7 @@ import Grounding from "@/pages/Grounding";
 import MindfulnessHub from "@/pages/mindfulness/MindfulnessHub";
 import BreathingHome from "@/pages/mindfulness/BreathingHome";
 import ObservarHome from "@/pages/mindfulness/ObservarHome";
+import DescribirHome from "@/pages/mindfulness/DescribirHome";
 import ContentLibrary from "@/pages/ContentLibrary";
 import PsicoFactos from "@/pages/PsicoFactos";
 import Tests from "@/pages/Tests";
@@ -149,6 +150,7 @@ const App = () => (
               <Route path="/herramientas/mindfulness" element={<MindfulnessHub />} />
               <Route path="/herramientas/mindfulness/respiracion" element={<BreathingHome />} />
               <Route path="/herramientas/mindfulness/observar" element={<ObservarHome />} />
+              <Route path="/herramientas/mindfulness/describir" element={<DescribirHome />} />
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/favoritos" element={<Favorites />} />

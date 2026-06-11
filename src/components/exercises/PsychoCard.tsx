@@ -29,6 +29,18 @@ const COPY: Record<string, { title: string; body: string }> = {
     title: "Anclaje 5-4-3-2-1",
     body: "Esta técnica de grounding sensorial interrumpe el bucle rumiativo y devuelve a tu sistema nervioso la señal de seguridad: el cuerpo está acá, ahora.",
   },
+  "mindfulness.describir.facts": {
+    title: "Hechos vs. juicios",
+    body: "Distinguir un dato observable de una etiqueta es el primer paso de la regulación emocional. Los juicios disparan emoción; los hechos permiten responder.",
+  },
+  "mindfulness.describir.scan": {
+    title: "Lenguaje observable",
+    body: "Reescribir lo que pasa sin adjetivos valorativos baja la activación amigdalina. El cerebro responde distinto a 'es un imbécil' que a 'no me respondió'.",
+  },
+  "mindfulness.describir.anatomy": {
+    title: "Anatomía de la emoción",
+    body: "Nombrar una emoción y ubicarla en el cuerpo (interoceptive labeling) activa la corteza prefrontal y reduce la intensidad de la amígdala. Lo que se nombra, se regula.",
+  },
 };
 
 export function PsychoCard({ resourceKey }: { resourceKey: string }) {
