@@ -76,6 +76,8 @@ import ResourceTools from "@/pages/ResourceTools";
 import ResourceIntro from "@/pages/ResourceIntro";
 import SafetyPlan from "@/pages/SafetyPlan";
 import Questionnaire from "@/pages/Questionnaire";
+import Settings from "@/pages/Settings";
+import DiarioInteligente from "@/pages/DiarioInteligente";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +109,8 @@ const App = () => (
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/cuestionario" element={<Questionnaire />} />
+              <Route path="/configuracion" element={<Settings />} />
+              <Route path="/diario-inteligente/:slug" element={<DiarioInteligente />} />
 
               {/* Diario (tab 2) */}
               <Route path="/diario" element={<Diario />} />
