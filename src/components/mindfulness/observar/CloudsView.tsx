@@ -5,6 +5,8 @@ import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { useHojasMessages } from "@/lib/hojasMessages";
 import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
 import { LeafPile } from "@/components/mindfulness/observar/LeafPile";
+import { LottiePlayer } from "@/components/mindfulness/stage/LottiePlayer";
+import leafFallAnimation from "@/assets/lottie/leaf-fall.json";
 
 type Variant = "cloud" | "leaf" | "train";
 
