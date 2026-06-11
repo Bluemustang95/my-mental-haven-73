@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { ExerciseTopBar } from "@/components/exercises/ExerciseTopBar";
 
 interface Props {
   music: MusicTrack;
@@ -13,7 +14,9 @@ interface Props {
 
 type Result = { neutral: string; removed: string[]; note: string };
 
-export function EscanerNeutralView({ music, onComplete }: Props) {
+const ACCENT = "#A78BFA";
+
+export function EscanerNeutralView({ music, onComplete, onAbort }: Props) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,6 +25,7 @@ export function EscanerNeutralView({ music, onComplete }: Props) {
   useEffect(() => {
     audio.playMusic(music);
     return () => { audio.stopMusic(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music]);
 
   async function scan() {
@@ -43,8 +47,12 @@ export function EscanerNeutralView({ music, onComplete }: Props) {
 
   return (
     <div className="absolute inset-0 flex flex-col px-5 pt-12 pb-8 overflow-y-auto">
-      <h2 className="font-display text-2xl font-semibold text-white">Escáner neutral</h2>
-      <p className="mt-1 text-sm text-white/60">Escribí lo que pasó. Te lo devuelvo en formato "hechos observables", sin etiquetas.</p>
+      <ExerciseTopBar title="Escáner Neutral" onAbort={onAbort} />
+
+      <div className="mt-6">
+        <h2 className="font-serif text-2xl font-bold text-white">Reescribir sin etiquetas</h2>
+        <p className="mt-1 text-sm text-white/55">Escribí lo que pasó. Te lo devuelvo en formato observable, sin juicios.</p>
+      </div>
 
       {!result && (
         <>
@@ -60,7 +68,8 @@ export function EscanerNeutralView({ music, onComplete }: Props) {
           <button
             onClick={scan}
             disabled={!text.trim() || loading}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#A78BFA] py-4 font-display text-sm font-semibold text-[#0F172A] disabled:opacity-40"
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-sm font-bold text-white disabled:opacity-40"
+            style={{ background: ACCENT, boxShadow: `0 12px 30px ${ACCENT}55` }}
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} />}
             {loading ? "Reescribiendo…" : "Reescribir neutral"}
@@ -74,8 +83,8 @@ export function EscanerNeutralView({ music, onComplete }: Props) {
             <div className="text-[10px] uppercase tracking-wider text-white/40">Tu versión</div>
             <p className="mt-2 font-serif text-sm text-white/75 leading-relaxed">{text}</p>
           </div>
-          <div className="rounded-2xl border border-[#A78BFA]/40 bg-[#A78BFA]/10 p-4">
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-[#C4B5FD]">
+          <div className="rounded-2xl border p-4" style={{ borderColor: `${ACCENT}66`, background: `${ACCENT}1a` }}>
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider" style={{ color: "#C4B5FD" }}>
               <Sparkles size={12} /> Versión observable
             </div>
             <p className="mt-2 font-serif text-base text-white leading-relaxed">{result.neutral}</p>
@@ -92,10 +101,14 @@ export function EscanerNeutralView({ music, onComplete }: Props) {
             </div>
           )}
           <div className="grid grid-cols-2 gap-2 pt-2">
-            <button onClick={reset} className="inline-flex items-center justify-center gap-2 rounded-full bg-white/10 py-3 text-sm font-medium text-white/75">
+            <button onClick={reset} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 py-3 text-sm font-medium text-white/75">
               <RotateCcw size={14} /> Otro
             </button>
-            <button onClick={onComplete} className="rounded-full bg-[#FB923C] py-3 text-sm font-semibold text-[#0F172A]">
+            <button
+              onClick={onComplete}
+              className="rounded-2xl py-3 text-sm font-bold text-white"
+              style={{ background: ACCENT, boxShadow: `0 10px 24px ${ACCENT}55` }}
+            >
               Terminar
             </button>
           </div>
