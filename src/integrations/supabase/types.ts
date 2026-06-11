@@ -823,6 +823,7 @@ export type Database = {
       psychoeducation_categories: {
         Row: {
           accent_color: string | null
+          content_type: string
           created_at: string
           description: string | null
           emoji: string | null
@@ -834,6 +835,7 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          content_type?: string
           created_at?: string
           description?: string | null
           emoji?: string | null
@@ -845,6 +847,7 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          content_type?: string
           created_at?: string
           description?: string | null
           emoji?: string | null
