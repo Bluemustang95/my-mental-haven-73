@@ -340,6 +340,53 @@ export default function QuestionnaireManager() {
             </Card>
           ))}
         </TabsContent>
+
+        {/* ─────── PSICOEDUCACIÓN LINKS ─────── */}
+        <TabsContent value="psico" className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Vinculá contenido de psicoeducación a cada sub-recurso. Se mostrará al usuario cuando ese sub-recurso sea recomendado.
+          </p>
+          {subResources.map((sr) => (
+            <Card key={sr.id}>
+              <CardHeader>
+                <CardTitle className="text-base">{sr.name}</CardTitle>
+                <p className="text-xs text-muted-foreground">{sr.slug}</p>
+              </CardHeader>
+              <CardContent>
+                {psychoContent.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Todavía no hay contenido publicado en psicoeducación.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {psychoContent.map((pc) => {
+                      const linked = psychoLinks.some(
+                        (l) => l.sub_resource_id === sr.id && l.psycho_id === pc.id
+                      );
+                      return (
+                        <button
+                          key={pc.id}
+                          onClick={() => togglePsychoLink(sr.id, pc.id)}
+                          className={`rounded-full border px-3 py-1 text-xs transition ${
+                            linked
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          {pc.title}
+                          <span className="ml-1 opacity-60">· {pc.category}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+          {subResources.length === 0 && (
+            <p className="text-sm text-muted-foreground">Creá sub-recursos primero.</p>
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );
