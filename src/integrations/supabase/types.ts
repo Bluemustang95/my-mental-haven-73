@@ -14,6 +14,248 @@ export type Database = {
   }
   public: {
     Tables: {
+      algo_option_links: {
+        Row: {
+          created_at: string
+          id: string
+          option_id: string
+          sub_resource_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_id: string
+          sub_resource_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_id?: string
+          sub_resource_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "algo_option_links_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "algo_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "algo_option_links_sub_resource_id_fkey"
+            columns: ["sub_resource_id"]
+            isOneToOne: false
+            referencedRelation: "algo_sub_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      algo_options: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          question_id: string
+          score: number
+          sort: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          question_id: string
+          score?: number
+          sort?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          question_id?: string
+          score?: number
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "algo_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "algo_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      algo_psycho_links: {
+        Row: {
+          created_at: string
+          id: string
+          psycho_id: string
+          sub_resource_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          psycho_id: string
+          sub_resource_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          psycho_id?: string
+          sub_resource_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "algo_psycho_links_psycho_id_fkey"
+            columns: ["psycho_id"]
+            isOneToOne: false
+            referencedRelation: "psychoeducation_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "algo_psycho_links_sub_resource_id_fkey"
+            columns: ["sub_resource_id"]
+            isOneToOne: false
+            referencedRelation: "algo_sub_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      algo_questions: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          id: string
+          kind: string
+          prompt: string
+          sort: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          kind?: string
+          prompt: string
+          sort?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          prompt?: string
+          sort?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      algo_sub_resources: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+          resource_category_id: string | null
+          route: string | null
+          slug: string
+          sort: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          resource_category_id?: string | null
+          route?: string | null
+          slug: string
+          sort?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          resource_category_id?: string | null
+          route?: string | null
+          slug?: string
+          sort?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "algo_sub_resources_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "algo_sub_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "algo_sub_resources_resource_category_id_fkey"
+            columns: ["resource_category_id"]
+            isOneToOne: false
+            referencedRelation: "resource_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      algo_user_answers: {
+        Row: {
+          answered_at: string
+          answered_week: string
+          id: string
+          option_id: string
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          answered_at?: string
+          answered_week?: string
+          id?: string
+          option_id: string
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          answered_at?: string
+          answered_week?: string
+          id?: string
+          option_id?: string
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "algo_user_answers_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "algo_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "algo_user_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "algo_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       body_map_entries: {
         Row: {
           body_part: string
@@ -1017,6 +1259,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_daily_recommendations: {
+        Args: { _limit?: number; _user_id: string }
+        Returns: {
+          resource_category_id: string
+          sub_resource_id: string
+          sub_resource_name: string
+          sub_resource_route: string
+          sub_resource_slug: string
+          total_score: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
