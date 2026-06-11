@@ -203,17 +203,17 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
 
   // ====== PLAYING ======
   return (
-    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#1E3A5F] via-[#0F172A] to-[#0F172A]">
-      {/* Stars / ambient dust */}
-      {sky.map((s) => (
-        <motion.div
-          key={s.id}
-          className="absolute rounded-full bg-white/50"
-          style={{ top: `${s.top}%`, left: `${s.left}%`, width: s.r * 2, height: s.r * 2 }}
-          animate={{ opacity: [0.15, 0.55, 0.15] }}
-          transition={{ duration: 5 + s.delay, repeat: Infinity, ease: "easeInOut", delay: s.delay }}
-        />
-      ))}
+    <div className="absolute inset-0 overflow-hidden">
+      <OrganicStage
+        accentColor="#10B981"
+        secondaryColor="#FCD34D"
+        particleColor="#FDFCFB"
+        particleCount={10}
+      >
+
+      {/* Leaf pile (accumulated released thoughts) */}
+      <LeafPile leaves={pile} />
+
 
       {/* Header bar */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-6">
