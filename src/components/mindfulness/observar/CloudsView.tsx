@@ -228,7 +228,7 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
       )}
 
       {/* Composer / FAB */}
-      <div className="absolute inset-x-0 bottom-0 z-20 p-4 pb-8">
+      <div className="absolute inset-x-0 bottom-28 z-30 p-4">
         <AnimatePresence mode="wait">
           {composing ? (
             <motion.div
