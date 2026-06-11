@@ -75,6 +75,7 @@ export default function Onboarding() {
 
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
+  const [country, setCountry] = useState("");
   const [brujula, setBrujula] = useState<string[]>([]);
   const [maleta, setMaleta] = useState<string[]>([]);
 
