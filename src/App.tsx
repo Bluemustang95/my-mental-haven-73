@@ -84,6 +84,8 @@ import SettingsHistory from "@/pages/SettingsHistory";
 import DiarioInteligente from "@/pages/DiarioInteligente";
 import Psicoeducacion from "@/pages/Psicoeducacion";
 import SystemSettings from "@/pages/admin/SystemSettings";
+import CategoryDetail from "@/pages/psicoeducacion/CategoryDetail";
+import LessonView from "@/pages/psicoeducacion/LessonView";
 
 const queryClient = new QueryClient();
 
@@ -154,6 +156,8 @@ const App = () => (
               <Route path="/herramientas/mindfulness/describir" element={<DescribirHome />} />
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
+              <Route path="/herramientas/contenido/categoria/:id" element={<CategoryDetail />} />
+              <Route path="/herramientas/contenido/leccion/:id" element={<LessonView />} />
               <Route path="/herramientas/favoritos" element={<Favorites />} />
               <Route path="/herramientas/autocuidado" element={<SelfCare />} />
               <Route path="/herramientas/sueno" element={<Sleep />} />
