@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { toast } from "@/hooks/use-toast";
+import { ExerciseTopBar } from "@/components/exercises/ExerciseTopBar";
 
 interface Props {
   music: MusicTrack;
@@ -12,6 +12,8 @@ interface Props {
   onComplete: () => void;
   onAbort: () => void;
 }
+
+const ACCENT = "#A78BFA";
 
 const EMOTIONS = [
   { id: "ansiedad", label: "Ansiedad", color: "#F59E0B" },
@@ -35,7 +37,14 @@ const PARTS = [
 
 type Step = "emotion" | "location" | "intensity" | "note";
 
-export function AnatomiaEmocionView({ music, voiceEnabled, onComplete }: Props) {
+const STEP_LABEL: Record<Step, string> = {
+  emotion: "Paso 1 de 4 · Emoción",
+  location: "Paso 2 de 4 · Ubicación",
+  intensity: "Paso 3 de 4 · Intensidad",
+  note: "Paso 4 de 4 · Sensación",
+};
+
+export function AnatomiaEmocionView({ music, voiceEnabled, onComplete, onAbort }: Props) {
   const { user } = useAuth();
   const [step, setStep] = useState<Step>("emotion");
   const [emotion, setEmotion] = useState<typeof EMOTIONS[number] | null>(null);
@@ -48,6 +57,7 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete }: Props) 
   useEffect(() => {
     audio.playMusic(music);
     return () => { audio.stopMusic(); audio.stopSpeech(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music]);
 
   useEffect(() => {
@@ -59,6 +69,7 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete }: Props) 
       note: "Si querés, describí la sensación. Punzante, opresiva, cálida.",
     };
     audio.speak(lines[step]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, voiceEnabled]);
 
   function togglePart(id: string) {
@@ -82,14 +93,23 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete }: Props) 
     onComplete();
   }
 
+  const accent = emotion?.color ?? ACCENT;
+
   return (
     <div className="absolute inset-0 flex flex-col px-5 pt-12 pb-8 overflow-y-auto">
-      <h2 className="font-display text-2xl font-semibold text-white">Anatomía de la emoción</h2>
-      <p className="mt-1 text-sm text-white/60">Nombrar y ubicar la emoción la vuelve manejable.</p>
+      <ExerciseTopBar
+        title="Anatomía de la Emoción"
+        subtitle={STEP_LABEL[step]}
+        onAbort={onAbort}
+      />
 
       <AnimatePresence mode="wait">
         {step === "emotion" && (
           <Frame key="e">
+            <div className="text-center">
+              <h2 className="font-serif text-2xl font-bold text-white">¿Qué emoción estás sintiendo?</h2>
+              <p className="mt-1 text-sm text-white/55">Elegí la que más se acerque.</p>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               {EMOTIONS.map((e) => (
                 <button
@@ -107,12 +127,12 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete }: Props) 
 
         {step === "location" && emotion && (
           <Frame key="l">
-            <div className="flex items-center gap-2 text-xs text-white/60">
+            <div className="flex items-center justify-center gap-2 text-xs text-white/60">
               <div className="h-2 w-2 rounded-full" style={{ background: emotion.color }} />
               {emotion.label}
             </div>
             <div className="flex justify-center">
-              <svg viewBox="0 0 200 300" className="h-[340px] w-auto">
+              <svg viewBox="0 0 200 300" className="h-[320px] w-auto">
                 <ellipse cx="100" cy="30" rx="20" ry="24" fill="none" stroke="white" strokeOpacity="0.18" strokeWidth="1.5" />
                 <line x1="100" y1="54" x2="100" y2="70" stroke="white" strokeOpacity="0.18" strokeWidth="1.5" />
                 <ellipse cx="100" cy="110" rx="35" ry="45" fill="none" stroke="white" strokeOpacity="0.18" strokeWidth="1.5" />
@@ -144,50 +164,55 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete }: Props) 
                 ))}
               </div>
             )}
-            <button
+            <PrimaryBtn
               onClick={() => setStep("intensity")}
               disabled={parts.length === 0}
-              className="mt-2 rounded-full bg-[#FB923C] py-4 font-display text-sm font-semibold text-[#0F172A] disabled:opacity-40"
+              accent={accent}
             >
               Continuar
-            </button>
+            </PrimaryBtn>
           </Frame>
         )}
 
         {step === "intensity" && (
           <Frame key="i">
             <div className="text-center">
-              <div className="font-display text-6xl font-bold tabular-nums" style={{ color: emotion?.color }}>{intensity}</div>
-              <div className="mt-1 text-[10px] uppercase tracking-wider text-white/50">Intensidad</div>
+              <div className="font-display text-7xl font-bold tabular-nums" style={{ color: accent }}>{intensity}</div>
+              <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-white/50">Intensidad</div>
             </div>
             <input
               type="range" min={0} max={10} value={intensity}
               onChange={(e) => setIntensity(Number(e.target.value))}
-              className="w-full accent-[#FB923C]"
-              style={{ accentColor: emotion?.color }}
+              className="w-full h-2"
+              style={{ accentColor: accent }}
             />
-            <button onClick={() => setStep("note")} className="rounded-full bg-[#FB923C] py-4 font-display text-sm font-semibold text-[#0F172A]">
+            <div className="flex justify-between text-[10px] uppercase tracking-wider text-white/40">
+              <span>Apenas</span>
+              <span>Máximo</span>
+            </div>
+            <PrimaryBtn onClick={() => setStep("note")} accent={accent}>
               Continuar
-            </button>
+            </PrimaryBtn>
           </Frame>
         )}
 
         {step === "note" && (
           <Frame key="n">
+            <div className="text-center">
+              <h2 className="font-serif text-2xl font-bold text-white">¿Cómo se siente?</h2>
+              <p className="mt-1 text-sm text-white/55">Punzante, opresiva, cálida… (opcional)</p>
+            </div>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="¿Cómo se siente? (opcional)"
+              placeholder="Describí la sensación…"
               maxLength={200}
-              className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-white/5 p-4 font-serif text-sm text-white placeholder:text-white/30 focus:border-[#FB923C] focus:outline-none"
+              className="min-h-[140px] w-full rounded-2xl border border-white/10 bg-white/5 p-4 font-serif text-sm text-white placeholder:text-white/30 focus:outline-none"
+              style={{ borderColor: undefined }}
             />
-            <button
-              onClick={save}
-              disabled={saving}
-              className="rounded-full bg-[#FB923C] py-4 font-display text-sm font-semibold text-[#0F172A] disabled:opacity-50"
-            >
+            <PrimaryBtn onClick={save} disabled={saving} accent={accent}>
               {saving ? "Guardando…" : "Guardar mapa"}
-            </button>
+            </PrimaryBtn>
           </Frame>
         )}
       </AnimatePresence>
@@ -206,5 +231,18 @@ function Frame({ children }: { children: React.ReactNode }) {
     >
       {children}
     </motion.div>
+  );
+}
+
+function PrimaryBtn({ children, onClick, disabled, accent }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; accent: string }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="mt-2 rounded-2xl py-4 font-display text-sm font-bold text-white disabled:opacity-40"
+      style={{ background: accent, boxShadow: disabled ? undefined : `0 12px 30px ${accent}55` }}
+    >
+      {children}
+    </button>
   );
 }
