@@ -6,7 +6,7 @@ import { Grounding54321Manager } from "./mindfulness/Grounding54321Manager";
 import { MiraElPresenteManager } from "./mindfulness/MiraElPresenteManager";
 
 type Section = "mindfulness";
-type MindSub = "respiracion" | "body-scan" | "54321" | "mira-el-presente";
+type MindSub = "respiracion" | "body-scan" | "hojas-pasar" | "54321";
 
 export default function ResourcesManager() {
   const [section] = useState<Section>("mindfulness");
@@ -45,8 +45,8 @@ export default function ResourcesManager() {
           {[
             { id: "respiracion" as const, label: "Respiración", icon: Wind },
             { id: "body-scan" as const, label: "Body Scan", icon: Sparkles },
+            { id: "hojas-pasar" as const, label: "Hojas pasar", icon: Leaf },
             { id: "54321" as const, label: "5-4-3-2-1", icon: Eye },
-            { id: "mira-el-presente" as const, label: "Mira el presente", icon: Leaf },
           ].map((t) => {
             const active = sub === t.id;
             return (
@@ -69,10 +69,8 @@ export default function ResourcesManager() {
       <div>
         {sub === "respiracion" && <BreathingSoundsManager />}
         {sub === "body-scan" && <BodyScanManager />}
+        {sub === "hojas-pasar" && <MiraElPresenteManager />}
         {sub === "54321" && <Grounding54321Manager />}
-        {sub === "mira-el-presente" && (
-          <MiraElPresenteManager onGoTo54321={() => setSub("54321")} />
-        )}
       </div>
     </div>
   );
