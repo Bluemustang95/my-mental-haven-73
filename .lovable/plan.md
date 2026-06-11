@@ -1,54 +1,77 @@
-# Mejoras al Hub de Mindfulness
 
-## 1. WeekStrip — cambiar el click, no eliminarlo
+## Objetivo
 
-El `WeekStrip` sigue visible pero más compacto. Hoy al tocar un día navega a `/calendario/:fecha`. Cambio: en lugar de navegar, abre un **bottom sheet contextual** con el historial del día.
+1. Centralizar la voz de ElevenLabs en una **Configuración Global** del Admin (sin elegir voz por ejercicio).
+2. Hacer **editables desde el Admin**: scripts del 5-4-3-2-1 y mensajes pre/post de "Las hojas pasar".
+3. Renovar el ejercicio "Las hojas pasar" con **3 variantes visuales aleatorias** (nube / hoja / vagón) y pantallas de transición pre/post.
+4. Auto-reproducir el script del 5-4-3-2-1 al pasar a `phase === 'script'`.
 
-- En `MindfulnessHub`: el sheet muestra sólo sesiones de mindfulness de ese día (tipo, modo, duración, SUDS pre/post si existe).
-- En `Home` (Dashboard): el sheet muestra **toda** la actividad de ese día (check-ins, journal, tests, ejercicios, etc.) reutilizando `fetchCalendarActivities` como en `SettingsHistory`.
-- El `WeekStrip` acepta una nueva prop `onSelectDay` que se sobreescribe para abrir el sheet en vez de navegar. Ningún `navigate('/calendario/...')` queda en estos dos lugares.
+---
 
-## 2. Bottom sheet de historial diario
+## Tarea 1 — Admin: nueva pestaña "Configuración" (Voz Global)
 
-Nuevo componente `DayHistorySheet` (basado en `Sheet` de shadcn, side="bottom", rounded-t-3xl, fondo claro).
+**Archivos:**
+- `src/components/admin/AdminLayout.tsx` → agregar item nav `Configuración` (`/admin/configuracion`, icono `Settings`).
+- `src/App.tsx` → ruta `/admin/configuracion` dentro de `AdminRoute`.
+- **Nuevo**: `src/pages/admin/SystemSettings.tsx` con sección **"Voz Global del Sistema (ElevenLabs)"**:
+  - `<select>` con presets: Elena (AR) / Jorge (ES) / Camila (MX) / etc., cada uno con `voiceId` real de ElevenLabs.
+  - Campo opcional para `voiceId` custom.
+  - Persistencia en `localStorage` clave `resma:admin:global_voice` (formato `{ label, voiceId }`).
+- **Nuevo**: `src/lib/globalVoice.ts` — helpers `getGlobalVoice()` / `setGlobalVoice()` / `useGlobalVoice()` (hook con suscripción a `storage` events para sincronizar entre pestañas).
 
-Props: `date`, `scope: "mindfulness" | "all"`, `open`, `onOpenChange`.
+## Tarea 2 — Admin: Recursos → Mindfulness
 
-Contenido:
-- Encabezado: fecha en formato `EEEE d 'de' MMMM` (es).
-- Lista de actividades con hora, etiqueta y resultado (ej: "Respiración 4-7-8 · 3 min · SUDS 7→3").
-- Estado vacío: "Todavía no hiciste nada este día."
-- Para mindfulness, query a `exercise_sessions` filtrando `exercise_type='mindfulness'` y `created_at` en el día (UTC-3 respetando `localDateStr`).
+**`src/pages/admin/ResourcesManager.tsx`**: agregar dos sub-pestañas más → `respiracion | body-scan | 54321 | mira-el-presente`.
 
-## 3. Tarjetas más compactas en el Hub
+**`src/pages/admin/mindfulness/BodyScanManager.tsx`**: eliminar la sección **"Voces por país"** (ya no aplica; voz heredada del global). Quitar campos relacionados de `BodyScan` y de `localStorage` (mantener compat: ignorar `voices` si vienen).
 
-Reducir las 3 tarjetas (Respiración / Observar / Describir):
-- Alto fijo más bajo (~72px en vez de ~96px).
-- Ícono dentro de un cuadrado 44x44 (en lugar de 56x56).
-- Padding `p-3` en lugar de `p-5`.
-- Título `text-base`, descripción a una línea con `line-clamp-1`.
-- Espaciado vertical entre tarjetas: `space-y-2`.
+**Nuevo `src/pages/admin/mindfulness/Grounding54321Manager.tsx`**: editor con 5 textareas (Ver / Tocar / Escuchar / Oler / Saborear) para los scripts de reflexión que se muestran/recitan tras cada sentido. Persistir en `localStorage` clave `resma:admin:54321:scripts` (`{ see, touch, hear, smell, taste }`) con valores default sensatos.
 
-WeekStrip también un poco más discreto: padding vertical reducido.
+**Nuevo `src/pages/admin/mindfulness/MiraElPresenteManager.tsx`** con dos tarjetas:
+- **A. 5-4-3-2-1** — placeholder con link/botón que cambia el sub-tab a `54321` (o duplica un mini-resumen).
+- **B. Las hojas pasar** — 2 textareas:
+  - "Mensaje antes de iniciar"
+  - "Mensaje al finalizar"
+  - Botón "Guardar cambios" (también autosave). `localStorage` clave `resma:admin:hojas:messages` (`{ pre, post }`) con defaults.
 
-## 4. FAB "+" para agregar otro ejercicio del día
+## Tarea 3 — Usuario: 5-4-3-2-1 (`SensesView.tsx`)
 
-Lógica: si el usuario **ya completó al menos un ejercicio de mindfulness hoy**, mostrar un FAB redondo abajo a la derecha del Hub.
+- Quitar cualquier elección de voz local; usar `useGlobalVoice()`.
+- Mantener el toggle de voz (`voiceEnabled`).
+- Cargar scripts editados desde `localStorage` (`resma:admin:54321:scripts`); fallback a los actuales (`STEPS[i].voice`).
+- Introducir **estado `phase`**: `input | script`. Al completar un sentido (botón "Siguiente"), pasar a `phase: 'script'` durante ~6–8 s mostrando el texto editado; luego avanzar al siguiente sentido (o `onComplete()` si es el último).
+- `useEffect` que dispare automáticamente `audio.speak(scriptText, { voiceId: globalVoiceId })` cuando `phase === 'script'` y `voiceEnabled` esté activo.
 
-- Detección: contar sesiones de hoy con `exercise_type='mindfulness'` (se puede derivar del mismo `progressByDate[hoy] > 0`).
-- FAB: 56x56, fondo `#101927`, ícono `+` blanco, sombra, fixed `bottom-24 right-5` (sobre la BottomNav).
-- Al tocar: abre un **bottom sheet selector rápido** (`QuickAddSheet`) con 3 filas: Respiración, Observar, Describir → cada una navega al sub-hub correspondiente.
-- Si todavía no hizo ninguno, el FAB no aparece (las 3 tarjetas grandes ya cumplen ese rol).
+## Tarea 4 — Usuario: "Las hojas pasar" (rebrand de `CloudsView`)
 
-## 5. Resumen de archivos
+**`src/components/mindfulness/observar/CloudsView.tsx`** (o rename a `HojasPasarView.tsx`, manteniendo import en `ObservarHome.tsx`):
 
-Nuevos:
-- `src/components/mindfulness/DayHistorySheet.tsx`
-- `src/components/mindfulness/QuickAddSheet.tsx`
+- Nuevo estado `phase`: `intro | playing | outro`.
+  - **intro**: pantalla de transición a pantalla completa con `messages.pre` + botón "Empezar".
+  - **playing**: animación actual + composer.
+  - **outro**: al terminar el timer, mostrar `messages.post` + botón "Volver" → `onComplete()`.
+- Leer `pre/post` de `localStorage` (`resma:admin:hojas:messages`) con defaults.
 
-Editados:
-- `src/pages/mindfulness/MindfulnessHub.tsx` — tarjetas compactas, FAB condicional, sheets, click del WeekStrip reemplazado.
-- `src/components/home/WeekStrip.tsx` — sólo si hace falta reducir padding; el cambio de click es vía prop.
-- `src/pages/Dashboard.tsx` (Home) — reemplazar el `navigate('/calendario/:fecha')` del WeekStrip por abrir `DayHistorySheet` con `scope="all"`.
+**Componente nuevo `ThoughtBubble`** (dentro del mismo archivo o `src/components/mindfulness/observar/ThoughtBubble.tsx`):
+- Props: `{ text, paused }`.
+- Al montar, elige aleatoriamente `variant: 'cloud' | 'leaf' | 'train'` (almacenado en el objeto `Cloud` al crearse, no en cada render).
+- **cloud**: comportamiento actual (deriva horizontal con `framer-motion`).
+- **leaf**: SVG simple de hoja (path), cae verticalmente con balanceo lateral (`keyframes` Tailwind custom `sway` + animate `y: 0 → 110vh`).
+- **train**: rectángulo con dos círculos (ruedas) que cruza horizontalmente en línea recta a velocidad constante; el texto va dentro del vagón.
 
-Sin cambios de base de datos. Sin tocar `/calendario/:fecha` (la ruta sigue existiendo por si se usa en otros lados, pero ya no se llega desde Home ni Mindfulness).
+**Tailwind config**: agregar keyframes `sway` (rotación + translateX en péndulo) y `train` (translateX lineal) en `tailwind.config.ts` para casos donde framer-motion no aplique.
+
+## Tarea 5 — Limpieza de selectores de voz en usuario
+
+- `BreathingActivity` / `VisualizerBodyScan` / cualquier `useMindfulAudio`: revisar y eliminar selección por país; pasar `voiceId` desde `useGlobalVoice()` al hook de TTS.
+- **No tocar** el toggle de volumen (`voiceEnabled`) — se mantiene tal cual.
+
+## Detalles técnicos varios
+
+- `useMindfulAudio.speak()`: si la firma actual no acepta `voiceId`, extenderla con un parámetro opcional `{ voiceId?: string }` que se pase al endpoint de ElevenLabs (edge function existente o nueva). Si actualmente usa SpeechSynthesis del browser, dejarlo y agregar TODO de migración a ElevenLabs (sin romper).
+- Toda la persistencia admin sigue en `localStorage` (consistente con `BodyScanManager` actual). No requiere migración SQL.
+
+## Fuera de alcance
+
+- Reemplazar `localStorage` por tabla Supabase para los recursos admin (puede ser una iteración futura).
+- Implementar el endpoint real de ElevenLabs si aún no existe — si falta, dejamos el `voiceId` propagado y el TODO marcado.
