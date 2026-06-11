@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Pause, Play } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { SessionToolbar, nextMusic } from "@/components/mindfulness/breathing/SessionToolbar";
+import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
 
 const ZONES = [
   { id: "head", label: "Cabeza", y: 30, speech: "Llevá la atención a tu cabeza. Notá si hay tensión en la frente." },
