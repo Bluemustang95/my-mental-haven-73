@@ -54,7 +54,7 @@ export default function MindfulnessHub() {
     {
       to: "/herramientas/mindfulness/observar",
       icon: Eye,
-      title: "Observar",
+      title: "Mira el presente",
       desc: "Notá lo que aparece sin engancharte.",
       from: "#60A5FA",
       to2: "#A78BFA",
@@ -62,7 +62,7 @@ export default function MindfulnessHub() {
     {
       to: "/herramientas/mindfulness/describir",
       icon: MessageSquare,
-      title: "Describir",
+      title: "Ver los hechos",
       desc: "Hechos vs. juicios y anatomía emocional.",
       from: "#A78BFA",
       to2: "#F472B6",

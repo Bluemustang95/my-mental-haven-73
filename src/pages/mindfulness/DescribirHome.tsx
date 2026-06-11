@@ -20,15 +20,15 @@ const ACCENT = "#A78BFA";
 
 const SUB = {
   facts: {
-    name: "Describir · Hechos vs. juicios",
+    name: "Ver los hechos · Hechos vs. juicios",
     resourceKey: "mindfulness.describir.facts",
   },
   scan: {
-    name: "Describir · Escáner neutral",
+    name: "Ver los hechos · Escáner neutral",
     resourceKey: "mindfulness.describir.scan",
   },
   anatomy: {
-    name: "Describir · Anatomía de la emoción",
+    name: "Ver los hechos · Anatomía de la emoción",
     resourceKey: "mindfulness.describir.anatomy",
   },
 } as const;
@@ -55,7 +55,7 @@ export default function DescribirHome() {
     return (
       <BentoSetupScreen
         title="Poner palabras"
-        subtitle="Tres formas de describir lo que pasa sin etiquetarlo."
+        subtitle="Tres formas de ver los hechos de lo que pasa sin etiquetarlo."
         accent={ACCENT}
         layout="stack"
         onClose={close}

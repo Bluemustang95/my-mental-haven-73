@@ -19,12 +19,12 @@ const ACCENT = "#60A5FA";
 
 const SUB = {
   clouds: {
-    name: "Observar · Nubes pasajeras",
+    name: "Mira el presente · Nubes pasajeras",
     resourceKey: "mindfulness.observar.clouds",
     subtitle: "Nubes pasajeras",
   },
   senses: {
-    name: "Observar · Lupa de los sentidos",
+    name: "Mira el presente · Lupa de los sentidos",
     resourceKey: "mindfulness.observar.senses",
     subtitle: "Lupa de los sentidos · 5-4-3-2-1",
   },
@@ -53,7 +53,7 @@ export default function ObservarHome() {
   if (step === "setup_mode") {
     return (
       <BentoSetupScreen
-        title="¿Cómo querés observar?"
+        title="¿Cómo querés mirar el presente?"
         subtitle="Dos formas de notar lo que aparece, sin engancharte."
         accent={ACCENT}
         onClose={close}
