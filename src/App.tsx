@@ -32,7 +32,9 @@ import ThoughtRecord from "@/pages/ThoughtRecord";
 import DreamLog from "@/pages/DreamLog";
 import DiarioTools from "@/pages/DiarioTools";
 import Grounding from "@/pages/Grounding";
-import Mindfulness from "@/pages/mindfulness/BreathingHome";
+import MindfulnessHub from "@/pages/mindfulness/MindfulnessHub";
+import BreathingHome from "@/pages/mindfulness/BreathingHome";
+import ObservarHome from "@/pages/mindfulness/ObservarHome";
 import ContentLibrary from "@/pages/ContentLibrary";
 import PsicoFactos from "@/pages/PsicoFactos";
 import Tests from "@/pages/Tests";
@@ -144,7 +146,9 @@ const App = () => (
               <Route path="/herramientas/intro/:slug" element={<ResourceIntro />} />
               
               <Route path="/herramientas/grounding" element={<Grounding />} />
-              <Route path="/herramientas/mindfulness" element={<Mindfulness />} />
+              <Route path="/herramientas/mindfulness" element={<MindfulnessHub />} />
+              <Route path="/herramientas/mindfulness/respiracion" element={<BreathingHome />} />
+              <Route path="/herramientas/mindfulness/observar" element={<ObservarHome />} />
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/favoritos" element={<Favorites />} />
