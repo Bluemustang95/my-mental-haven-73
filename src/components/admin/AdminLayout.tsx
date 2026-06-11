@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, Sparkles, Brain, ArrowLeft, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, Sparkles, Brain, ArrowLeft, ShieldCheck, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { title: "Recursos", url: "/admin/recursos", icon: Sparkles },
   { title: "Tests", url: "/admin/cuestionario", icon: Brain },
   { title: "Solicitudes", url: "/admin/solicitudes", icon: ClipboardList },
+  { title: "Configuración", url: "/admin/configuracion", icon: Settings },
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, end: true },
 ];
 

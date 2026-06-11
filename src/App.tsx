@@ -83,6 +83,7 @@ import Settings from "@/pages/Settings";
 import SettingsHistory from "@/pages/SettingsHistory";
 import DiarioInteligente from "@/pages/DiarioInteligente";
 import Psicoeducacion from "@/pages/Psicoeducacion";
+import SystemSettings from "@/pages/admin/SystemSettings";
 
 const queryClient = new QueryClient();
 
@@ -195,6 +196,7 @@ const App = () => (
               <Route path="/admin/pacientes" element={<PatientList />} />
               <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
               <Route path="/admin/cuestionario" element={<QuestionnaireManager />} />
+              <Route path="/admin/configuracion" element={<SystemSettings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
