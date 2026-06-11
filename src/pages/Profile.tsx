@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Moon, Sun, SignOut, Stethoscope, Gear, Bell, Link as LinkIcon, UserCircle, Lifebuoy, Phone, X, PencilSimple, Check } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 
 const emergencyLines = [
@@ -13,6 +14,7 @@ const emergencyLines = [
 export default function Profile() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdminRole();
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains("dark"));
   const [crisisOpen, setCrisisOpen] = useState(false);
   const [preferredName, setPreferredName] = useState("");
@@ -127,11 +129,21 @@ export default function Profile() {
           <span className="text-xs text-muted-foreground">Próximamente</span>
         </div>
 
-        <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
-          <Gear size={20} weight="duotone" />
-          <span className="flex-1 font-display text-sm font-medium">Preferencias</span>
-          <span className="text-xs text-muted-foreground">Próximamente</span>
-        </div>
+        {isAdmin ? (
+          <button onClick={() => navigate("/admin")} className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left">
+            <Gear size={20} weight="duotone" />
+            <div className="flex-1">
+              <p className="font-display text-sm font-medium">Configuración admin</p>
+              <p className="text-xs text-muted-foreground">Entrar al panel de administración</p>
+            </div>
+          </button>
+        ) : (
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
+            <Gear size={20} weight="duotone" />
+            <span className="flex-1 font-display text-sm font-medium">Preferencias</span>
+            <span className="text-xs text-muted-foreground">Próximamente</span>
+          </div>
+        )}
       </div>
 
       <div className="my-6 h-px bg-border" />
