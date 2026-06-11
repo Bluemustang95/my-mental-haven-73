@@ -5,6 +5,8 @@ import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { useHojasMessages } from "@/lib/hojasMessages";
 import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
 import { LeafPile } from "@/components/mindfulness/observar/LeafPile";
+import { LottiePlayer } from "@/components/mindfulness/stage/LottiePlayer";
+import leafFallAnimation from "@/assets/lottie/leaf-fall.json";
 
 type Variant = "cloud" | "leaf" | "train";
 
@@ -356,17 +358,9 @@ function LeafBubble({ thought, paused }: { thought: Thought; paused: boolean }) 
         transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         className="relative"
       >
-        <svg
-          aria-hidden
-          width="44"
-          height="44"
-          viewBox="0 0 64 64"
-          className="absolute -left-3 -top-3 text-emerald-300/80"
-          fill="currentColor"
-        >
-          <path d="M32 4 C 18 14, 10 28, 12 44 C 14 56, 26 60, 32 60 C 38 60, 50 56, 52 44 C 54 28, 46 14, 32 4 Z" />
-          <path d="M32 8 L 32 58" stroke="#0F172A" strokeOpacity="0.25" strokeWidth="1.5" />
-        </svg>
+        <div className="pointer-events-none absolute -left-10 -top-8 h-16 w-16 opacity-90">
+          <LottiePlayer data={leafFallAnimation} loop speed={paused ? 0 : 0.6} className="h-full w-full" />
+        </div>
         <div className={`rounded-[1.5rem] bg-emerald-50/95 text-[#0F172A] shadow-[0_8px_24px_rgba(16,185,129,0.25)] ${bubbleSize(thought.size)} font-serif leading-snug`}>
           {thought.text}
         </div>
@@ -374,6 +368,7 @@ function LeafBubble({ thought, paused }: { thought: Thought; paused: boolean }) 
     </motion.div>
   );
 }
+
 
 function TrainBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
   // Rectangular wagon with wheels, linear horizontal motion
