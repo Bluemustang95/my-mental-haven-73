@@ -6,7 +6,7 @@ export interface BentoOption {
   id: string;
   title: string;
   short: string;
-  Icon: React.ComponentType<{ size?: number; className?: string }>;
+  Icon: React.ComponentType<any>;
   anim: string; // tailwind animate-* class
   bg: string;   // tailwind bg-color/opacity class
 }
