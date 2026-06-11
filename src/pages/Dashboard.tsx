@@ -229,7 +229,10 @@ export default function Dashboard() {
         <div className="mt-6">
           <WeekStrip
             progressByDate={weekProgress}
-            onSelectDay={(d) => navigate(`/calendario/${localDateStr(d)}`)}
+            onSelectDay={(d) => {
+              setHistoryDate(d);
+              setHistoryOpen(true);
+            }}
           />
         </div>
 

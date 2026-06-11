@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Wind, Eye, MessageSquare } from "lucide-react";
+import { ArrowLeft, Wind, Eye, MessageSquare, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { localDateStr } from "@/lib/utils";
 import { addDays, startOfWeek } from "date-fns";
+import { DayHistorySheet } from "@/components/mindfulness/DayHistorySheet";
+import { QuickAddSheet } from "@/components/mindfulness/QuickAddSheet";
 
 export default function MindfulnessHub() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [progressByDate, setProgressByDate] = useState<Record<string, number>>({});
+  const [historyDate, setHistoryDate] = useState<Date | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -34,6 +39,9 @@ export default function MindfulnessHub() {
     })();
   }, [user]);
 
+  const todayKey = localDateStr(new Date());
+  const didSomethingToday = (progressByDate[todayKey] ?? 0) > 0;
+
   const modules = [
     {
       to: "/herramientas/mindfulness/respiracion",
@@ -47,7 +55,7 @@ export default function MindfulnessHub() {
       to: "/herramientas/mindfulness/observar",
       icon: Eye,
       title: "Observar",
-      desc: "Notá lo que aparece sin engancharte. Pensamientos y sentidos.",
+      desc: "Notá lo que aparece sin engancharte.",
       from: "#60A5FA",
       to2: "#A78BFA",
     },
@@ -55,7 +63,7 @@ export default function MindfulnessHub() {
       to: "/herramientas/mindfulness/describir",
       icon: MessageSquare,
       title: "Describir",
-      desc: "Hechos vs. juicios, escáner neutral con IA y anatomía emocional.",
+      desc: "Hechos vs. juicios y anatomía emocional.",
       from: "#A78BFA",
       to2: "#F472B6",
     },
@@ -70,32 +78,59 @@ export default function MindfulnessHub() {
         <h1 className="font-serif text-3xl font-bold text-[#101927]">Mindfulness</h1>
         <p className="mt-1 text-sm text-muted-foreground">Tres caminos para estar más presente.</p>
 
-        <div className="mt-5">
-          <WeekStrip progressByDate={progressByDate} onSelectDay={(d) => navigate(`/calendario/${localDateStr(d)}`)} />
+        <div className="mt-4">
+          <WeekStrip
+            progressByDate={progressByDate}
+            onSelectDay={(d) => {
+              setHistoryDate(d);
+              setHistoryOpen(true);
+            }}
+          />
         </div>
       </div>
 
-      <div className="mt-6 space-y-3 px-5">
+      <div className="mt-5 space-y-2 px-5">
         {modules.map((m) => (
           <motion.button
             key={m.to}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate(m.to)}
-            className="w-full rounded-3xl bg-white p-5 text-left shadow-sm flex items-center gap-4"
+            className="w-full rounded-2xl bg-white p-3 text-left shadow-sm flex items-center gap-3"
           >
             <div
-              className="h-14 w-14 rounded-2xl flex items-center justify-center"
+              className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: `linear-gradient(135deg, ${m.from}, ${m.to2})` }}
             >
-              <m.icon size={26} className="text-white" />
+              <m.icon size={20} className="text-white" />
             </div>
-            <div className="flex-1">
-              <div className="font-display text-lg font-semibold text-[#101927]">{m.title}</div>
-              <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{m.desc}</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-display text-base font-semibold text-[#101927]">{m.title}</div>
+              <div className="text-[11px] leading-snug text-muted-foreground line-clamp-1">{m.desc}</div>
             </div>
           </motion.button>
         ))}
       </div>
+
+      {didSomethingToday && (
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileTap={{ scale: 0.92 }}
+          onClick={() => setQuickAddOpen(true)}
+          aria-label="Agregar ejercicio"
+          className="fixed bottom-24 right-5 z-40 h-14 w-14 rounded-full bg-[#101927] text-white shadow-lg flex items-center justify-center"
+        >
+          <Plus size={24} />
+        </motion.button>
+      )}
+
+      <DayHistorySheet
+        date={historyDate}
+        scope="mindfulness"
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
+      <QuickAddSheet open={quickAddOpen} onOpenChange={setQuickAddOpen} />
     </div>
   );
 }
