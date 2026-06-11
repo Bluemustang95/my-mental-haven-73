@@ -9,6 +9,7 @@ import { WeekStrip } from "@/components/home/WeekStrip";
 import { Timeline, TimelineNode } from "@/components/home/Timeline";
 import { CheckinModal } from "@/components/modals/CheckinModal";
 import { PsychoModal } from "@/components/modals/PsychoModal";
+import { DayHistorySheet } from "@/components/mindfulness/DayHistorySheet";
 import { toast } from "sonner";
 
 function getGreeting() {
@@ -47,6 +48,9 @@ export default function Dashboard() {
 
   const [checkinOpen, setCheckinOpen] = useState<"morning" | "night" | null>(null);
   const [psychoOpen, setPsychoOpen] = useState(false);
+  const [historyDate, setHistoryDate] = useState<Date | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
 
   const [recos, setRecos] = useState<Reco[]>([]);
   const [weekProgress, setWeekProgress] = useState<Record<string, number>>({});
@@ -229,7 +233,10 @@ export default function Dashboard() {
         <div className="mt-6">
           <WeekStrip
             progressByDate={weekProgress}
-            onSelectDay={(d) => navigate(`/calendario/${localDateStr(d)}`)}
+            onSelectDay={(d) => {
+              setHistoryDate(d);
+              setHistoryOpen(true);
+            }}
           />
         </div>
 
@@ -270,6 +277,12 @@ export default function Dashboard() {
         open={psychoOpen}
         onClose={() => setPsychoOpen(false)}
         onComplete={() => setPsychoDone(true)}
+      />
+      <DayHistorySheet
+        date={historyDate}
+        scope="all"
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
       />
     </div>
   );
