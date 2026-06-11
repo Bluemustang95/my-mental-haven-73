@@ -88,10 +88,10 @@ export function TestRunner({
     if (user) {
       await supabase.from("test_results").insert({
         user_id: user.id,
-        test_code: def.code,
+        test_type: def.code,
         score: total,
-        subscale_scores: subMeans,
-        interpretation,
+        answers: { responses: answers, subscales: subMeans },
+        severity: interpretation,
       } as any);
     }
   };
