@@ -4,6 +4,8 @@ import { Pause, Play } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { SessionToolbar, nextMusic } from "@/components/mindfulness/breathing/SessionToolbar";
 import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
+import { LottiePlayer } from "@/components/mindfulness/stage/LottiePlayer";
+import bodyScanAnimation from "@/assets/lottie/body-scan.json";
 
 const ZONES = [
   { id: "head", label: "Cabeza", y: 30, speech: "Llevá la atención a tu cabeza. Notá si hay tensión en la frente." },
