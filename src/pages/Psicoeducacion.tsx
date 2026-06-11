@@ -86,6 +86,7 @@ export default function Psicoeducacion() {
 
   const featured = items.find((i) => i.is_featured && i.content_type === "video") || items.find((i) => i.content_type === "video");
   const podcasts = items.filter((i) => i.content_type === "podcast");
+  const courseCats = cats.filter((c: any) => (c.content_type ?? "video") !== "podcast");
 
   const openLesson = (id: string) => navigate(`/herramientas/contenido/leccion/${id}`);
   const openCategory = (id: string) => navigate(`/herramientas/contenido/categoria/${id}`);
@@ -142,7 +143,7 @@ export default function Psicoeducacion() {
             <div className="mt-8">
               <h3 className="mb-3 px-1 font-display text-base font-semibold text-white">Seguir conociendo</h3>
               <div className="space-y-3">
-                {cats.map((cat) => {
+                {courseCats.map((cat) => {
                   const accent = cat.accent_color ?? "#A78BFA";
                   const prog = progressByCat[cat.id] ?? 0;
                   return (
@@ -166,7 +167,7 @@ export default function Psicoeducacion() {
                     </motion.button>
                   );
                 })}
-                {cats.length === 0 && (
+                {courseCats.length === 0 && (
                   <p className="py-6 text-center text-sm text-white/55">Pronto sumaremos categorías.</p>
                 )}
               </div>

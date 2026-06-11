@@ -36,7 +36,7 @@ type Content = {
   thumbnail_url: string | null;
 };
 
-type Cat = { id: string; title: string };
+type Cat = { id: string; title: string; content_type: ContentType };
 
 const emptyForm = {
   title: "",
@@ -78,7 +78,10 @@ export default function ContentManager() {
   const fetchAll = async () => {
     const [c, k] = await Promise.all([
       supabase.from("psychoeducation_content").select("*").order("sort_order", { ascending: true }),
-      supabase.from("psychoeducation_categories" as any).select("id,title").order("sort_order", { ascending: true }),
+      supabase
+        .from("psychoeducation_categories" as any)
+        .select("id,title,content_type")
+        .order("sort_order", { ascending: true }),
     ]);
     setItems((c.data as any) ?? []);
     setCats((k.data as any) ?? []);
@@ -94,12 +97,15 @@ export default function ContentManager() {
     [items, tab]
   );
 
+  const catsForType = (t: ContentType) => cats.filter((c) => (c.content_type ?? "video") === t);
+
   const openCreate = () => {
     setEditingId(null);
+    const t = (tab === "categories" ? "video" : tab) as ContentType;
     setForm({
       ...emptyForm,
-      content_type: (tab === "categories" ? "video" : tab) as ContentType,
-      category_id: cats[0]?.id ?? "",
+      content_type: t,
+      category_id: catsForType(t)[0]?.id ?? "",
     });
     setOpen(true);
   };
@@ -268,7 +274,10 @@ export default function ContentManager() {
                 <Label>Tipo</Label>
                 <Select
                   value={form.content_type}
-                  onValueChange={(v) => setForm({ ...form, content_type: v as ContentType })}
+                  onValueChange={(v) => {
+                    const t = v as ContentType;
+                    setForm({ ...form, content_type: t, category_id: catsForType(t)[0]?.id ?? "" });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -282,18 +291,27 @@ export default function ContentManager() {
               </div>
               <div>
                 <Label>Categoría</Label>
-                <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sin asignar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cats.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {catsForType(form.content_type).length === 0 ? (
+                  <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                    Aún no hay categorías de este tipo. Creá una en la pestaña <b>Categorías</b>.
+                  </div>
+                ) : (
+                  <Select
+                    value={form.category_id || undefined}
+                    onValueChange={(v) => setForm({ ...form, category_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sin asignar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {catsForType(form.content_type).map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
 
