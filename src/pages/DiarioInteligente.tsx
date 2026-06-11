@@ -36,6 +36,10 @@ const SUB_COLORS = [
 export default function DiarioInteligente() {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (slug === "mindfulness") navigate("/herramientas/mindfulness", { replace: true });
+  }, [slug, navigate]);
   const { user } = useAuth();
   const [subs, setSubs] = useState<Sub[]>([]);
   const [saved, setSaved] = useState<{ name: string } | null>(null);
