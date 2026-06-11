@@ -128,14 +128,14 @@ export default function Onboarding() {
       setSubmitting(false);
       return;
     }
-    // If session is returned immediately (auto-confirm off → no session)
+    // With instant start enabled, a session is returned right away.
     if (data.session?.user) {
       await persistProfile(data.session.user.id, pending);
       navigate("/", { replace: true });
     } else {
-      // Store pending so it persists across email confirm
+      // Fallback for rare delayed-session cases.
       sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-      setAuthMessage("Revisá tu email para confirmar tu cuenta. Tus respuestas quedaron guardadas.");
+      setAuthMessage("Cuenta creada. Iniciá sesión para entrar y guardar tus respuestas.");
     }
     setSubmitting(false);
   };
@@ -304,6 +304,13 @@ export default function Onboarding() {
               <GlassPrimaryButton type="submit" disabled={submitting}>
                 {submitting ? "Creando…" : "Crear cuenta"}
               </GlassPrimaryButton>
+              <button
+                type="button"
+                onClick={() => navigate("/auth")}
+                className="block w-full text-center text-xs font-semibold text-white/75 underline underline-offset-4"
+              >
+                Iniciar sesión
+              </button>
               <button
                 type="button"
                 onClick={() => setAuthMode(null)}

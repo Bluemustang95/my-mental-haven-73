@@ -31,13 +31,14 @@ export default function Auth() {
     }
 
     if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { emailRedirectTo: window.location.origin },
       });
       if (error) setError(error.message);
-      else setMessage("Revisá tu email para confirmar tu cuenta.");
+      else if (data.session) navigate("/");
+      else setMessage("Cuenta creada. Ya podés iniciar sesión.");
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
