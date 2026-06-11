@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
+import { WellbeingCard } from "@/components/proceso/WellbeingCard";
 
 const dayLabels = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
 
@@ -48,7 +49,9 @@ export default function MiProceso() {
           <Activity size={14} /> Estadísticas de impacto
         </p>
 
-        <div className="rounded-3xl bg-white p-5 shadow-[0_2px_18px_-6px_rgba(15,23,42,0.06)]">
+        <WellbeingCard />
+
+        <div className="mt-6 rounded-3xl bg-white p-5 shadow-[0_2px_18px_-6px_rgba(15,23,42,0.06)]">
           <div className="mb-4 flex items-start justify-between">
             <div>
               <h3 className="font-display text-base font-bold text-[#101927]">Calidad de Sueño</h3>
