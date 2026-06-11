@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { Check, X, ArrowRight } from "lucide-react";
+import { Check, X as XIcon, ArrowRight } from "lucide-react";
 import { pickDeck, type Statement } from "@/lib/factJudgmentBank";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { ExerciseTopBar } from "@/components/exercises/ExerciseTopBar";
 
 interface Props {
   music: MusicTrack;
@@ -10,7 +11,9 @@ interface Props {
   onAbort: () => void;
 }
 
-export function HechosJuiciosView({ music, onComplete }: Props) {
+const ACCENT = "#A78BFA";
+
+export function HechosJuiciosView({ music, onComplete, onAbort }: Props) {
   const deck = useMemo(() => pickDeck(10), []);
   const [idx, setIdx] = useState(0);
   const [hits, setHits] = useState(0);
@@ -20,6 +23,7 @@ export function HechosJuiciosView({ music, onComplete }: Props) {
   useEffect(() => {
     audio.playMusic(music);
     return () => { audio.stopMusic(); audio.stopSpeech(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music]);
 
   const current = deck[idx];
@@ -33,19 +37,17 @@ export function HechosJuiciosView({ music, onComplete }: Props) {
 
   function next() {
     setShowFeedback(null);
-    if (idx + 1 >= deck.length) {
-      onComplete();
-    } else {
-      setIdx((i) => i + 1);
-    }
+    if (idx + 1 >= deck.length) onComplete();
+    else setIdx((i) => i + 1);
   }
 
   return (
     <div className="absolute inset-0 flex flex-col px-5 pt-12 pb-8">
-      <div className="flex items-center justify-between text-xs text-white/55">
-        <span>Carta {idx + 1} de {deck.length}</span>
-        <span>Aciertos {hits}</span>
-      </div>
+      <ExerciseTopBar
+        title="Hechos vs. Juicios"
+        subtitle={`Carta ${idx + 1} de ${deck.length} · ${hits} aciertos`}
+        onAbort={onAbort}
+      />
 
       <div className="relative flex-1 flex items-center justify-center">
         <AnimatePresence mode="wait">
@@ -61,13 +63,17 @@ export function HechosJuiciosView({ music, onComplete }: Props) {
               className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/5 p-6 text-center"
             >
               <div className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full ${showFeedback.correct ? "bg-[#34C759]/20 text-[#34C759]" : "bg-[#F87171]/20 text-[#F87171]"}`}>
-                {showFeedback.correct ? <Check size={28} /> : <X size={28} />}
+                {showFeedback.correct ? <Check size={28} /> : <XIcon size={28} />}
               </div>
               <div className="font-display text-xl font-semibold text-white">
                 {showFeedback.correct ? "Bien observado" : "Era un " + (showFeedback.card.kind === "fact" ? "hecho" : "juicio")}
               </div>
               <p className="mt-3 font-serif text-sm text-white/75 leading-relaxed">{showFeedback.card.explain}</p>
-              <button onClick={next} className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#FB923C] px-6 py-3 text-sm font-semibold text-[#0F172A]">
+              <button
+                onClick={next}
+                className="mt-5 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white"
+                style={{ background: ACCENT, boxShadow: `0 10px 28px ${ACCENT}55` }}
+              >
                 {idx + 1 >= deck.length ? "Ver resumen" : "Siguiente"} <ArrowRight size={16} />
               </button>
             </motion.div>
