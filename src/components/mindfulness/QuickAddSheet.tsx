@@ -19,7 +19,7 @@ const OPTIONS = [
   {
     to: "/herramientas/mindfulness/observar",
     icon: Eye,
-    title: "Observar",
+    title: "Mira el presente",
     desc: "Pensamientos y sentidos.",
     from: "#60A5FA",
     to2: "#A78BFA",
@@ -27,7 +27,7 @@ const OPTIONS = [
   {
     to: "/herramientas/mindfulness/describir",
     icon: MessageSquare,
-    title: "Describir",
+    title: "Ver los hechos",
     desc: "Hechos vs. juicios.",
     from: "#A78BFA",
     to2: "#F472B6",

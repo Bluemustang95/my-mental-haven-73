@@ -67,8 +67,8 @@ export default function DiarioInteligente() {
   const fallback = useMemo<Sub[]>(
     () => [
       { id: "f1", name: "Respiración consciente", slug: "respiracion", resource_category_id: null, route: null },
-      { id: "f2", name: "Observar", slug: "observar", resource_category_id: null, route: null },
-      { id: "f3", name: "Definir", slug: "definir", resource_category_id: null, route: null },
+      { id: "f2", name: "Mira el presente", slug: "observar", resource_category_id: null, route: null },
+      { id: "f3", name: "Ver los hechos", slug: "definir", resource_category_id: null, route: null },
     ],
     []
   );
