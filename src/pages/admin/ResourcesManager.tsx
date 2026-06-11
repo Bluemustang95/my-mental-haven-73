@@ -6,7 +6,7 @@ import { Grounding54321Manager } from "./mindfulness/Grounding54321Manager";
 import { MiraElPresenteManager } from "./mindfulness/MiraElPresenteManager";
 
 type Section = "mindfulness";
-type MindSub = "respiracion" | "body-scan" | "54321" | "mira-el-presente";
+type MindSub = "respiracion" | "body-scan" | "hojas-pasar" | "54321";
 
 export default function ResourcesManager() {
   const [section] = useState<Section>("mindfulness");
