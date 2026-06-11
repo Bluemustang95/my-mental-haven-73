@@ -1259,6 +1259,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bootstrap_configured_admin: { Args: never; Returns: boolean }
       get_daily_recommendations: {
         Args: { _limit?: number; _user_id: string }
         Returns: {
