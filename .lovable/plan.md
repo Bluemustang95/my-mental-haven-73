@@ -1,105 +1,118 @@
-## Alcance
+# Plan: Rediseño Home + Recursos + Proceso + Settings + Admin
 
-Mantener la est\u00e9tica actual de Home, Recursos, Mi Proceso y Diario. Tres frentes nuevos:
-
-1. **Onboarding po\u00e9tico dark glassmorphism** que ocurre ANTES del signup.
-2. **Auth con Google** habilitada adem\u00e1s de email/contrase\u00f1a.
-3. **Algoritmo de recomendaci\u00f3n editable**: tablas + UI admin que vincula preguntas del Test de S\u00edntomas \u2192 recursos \u2192 sub-recursos, y modifica las pr\u00e1cticas y la psicoeducaci\u00f3n que aparecen en la Home cada d\u00eda.
-
-Fuera de alcance: rebrand visual de Home/Recursos/Diario/Mi Proceso, cambio de bottom nav, modales de check-in nuevos, Pack de Actividades, modal de psicoeducaci\u00f3n din\u00e1mico (se reutiliza el que ya existe pero con contenido filtrado por algoritmo).
+Mantengo paleta actual (cream `#FDFCFB`, dark blue `#101927`, Montserrat/Lora) y aplico el **glassmorphism** que ya usamos en Onboarding sólo en los **modales oscuros** (Check-in mañana/noche, Diario Inteligente, Admin). El resto sigue claro y minimal como las capturas adjuntas.
 
 ---
 
-## 1) Onboarding antes del signup
+## 1. Home `/inicio` (rediseño completo, conserva lógica)
 
-**Flujo nuevo** (`/onboarding` p\u00fablica, sin requerir auth):
+- Header: "Buenas tardes, {nombre} ✨" + subtítulo "Tu plan del día te espera". A la derecha: ícono ⚙️ Settings (nuevo) + avatar inicial (existente).
+- Tira semanal L-D con número, día actual en círculo crema, punto verde si hay actividad hoy.
+- **Timeline vertical** (línea gris uniendo 4 viñetas con checkbox cuadrado a la izquierda):
+  1. **Valoración de la mañana** → abre `CheckinModal mode="morning"`.
+  2. **Psicoeducación** → abre `PsychoModal` (contenido dinámico según onboarding goal).
+  3. **Tu práctica de hoy** → 3 chips dinámicos (de `get_daily_recommendations` o fallback por goal del onboarding). Al tocar chip → marca viñeta + texto "Completaste: X" + log en `exercise_sessions`.
+  4. **Valoración de la noche** → abre `CheckinModal mode="night"`.
+- Recompensa: si las 4 listas → checks, línea y número del día en verde + toast "¡Plan completado! 🎉".
+- Banner curvo gradiente morado "Te ayudamos con tu sueño" → `/recursos/sueno`.
 
-1. Splash: "Tu espacio seguro\u2026" \u2192 bot\u00f3n Comenzar.
-2. Paso 1 \u2014 "Rompiendo el hielo": nombre/apodo + edad.
-3. Paso 2 \u2014 "\u00bfQu\u00e9 br\u00fajula gu\u00eda tu viaje hoy?": selecci\u00f3n m\u00faltiple po\u00e9tica (8 opciones del PRD).
-4. Paso 3 \u2014 "\u00bfQu\u00e9 maleta te gustar\u00eda aligerar?": selecci\u00f3n m\u00faltiple (6 opciones del PRD).
-5. Pantalla final \u2014 "Crear\u00e1 tu rinc\u00f3n": tabs **Email** y **Google**.
-   - Email \u2192 input email + password + confirmar \u2192 `supabase.auth.signUp` con `data: { display_name, age, brujula, maleta }` en metadata; tambi\u00e9n persiste a `patient_app_profiles` post-confirm.
-   - Google \u2192 `lovable.auth.signInWithOAuth("google", { redirect_uri })`. Antes guarda las respuestas en `sessionStorage` y, al volver del callback, una rutina en `App.tsx` (`useEffect` que detecta `session && pending onboarding`) las vuelca a `patient_app_profiles`.
-6. Redirect a `/`.
+## 2. Modales
 
-**Si ya hay sesi\u00f3n al entrar a `/onboarding`**: saltea directo a la persistencia y va a `/`.
+### 2.1 `CheckinModal` (fullscreen, `bg-[#1C1C1E]` + backdrop-blur, glass cards)
 
-**Est\u00e9tica dark glassmorphism aislada**: nueva clase `.onboarding-shell` con gradiente azul-marino/violeta, `backdrop-blur`, bordes blancos sutiles. Tipograf\u00eda display serif (Lora ya existe) para t\u00edtulos po\u00e9ticos. NO toca tokens globales \u2014 viven dentro de `src/pages/Onboarding.tsx` y un componente local `OnboardingShell`.
+**Mañana (5 pasos):**
+1. Sueño — gráfico nube + 5 puntos que crecen.
+2. Amanecer — botones verticales (Excelente / Muy bien / Normal / Mal / Pésimo).
+3. Emociones — grid de tarjetas emoji (multiselect).
+4. Diario — 3 textareas: soñaste / pensamiento / objetivo.
+5. Estadísticas — gauge naranja "1/7 días" + consejo dinámico.
 
-**Cambios en c\u00f3digo**:
-- Reescribir `src/pages/Onboarding.tsx` con los 5 pasos + paso de auth.
-- En `src/App.tsx`: ruta `/onboarding` p\u00fablica; `/auth` deja de ser el primer destino \u2014 si no hay sesi\u00f3n y no hay onboarding pendiente, redirigir a `/onboarding`. `/auth` se mantiene para login de usuarios existentes (bot\u00f3n "Ya tengo cuenta").
-- `Auth.tsx`: agregar bot\u00f3n Google (mismo mecanismo).
+**Noche (4 pasos):** Día (luna) → Emoción → Balance (2 textareas) → Estadísticas/gratitud.
 
----
+Datos persisten en `daily_checkins` (extender columnas si falta: `emotions text[]`, `dream_note`, `thought_note`, `goal`, `balance_highlight`, `balance_improve`).
 
-## 2) Google sign-in
+### 2.2 `PsychoModal`
 
-- Llamar `supabase--configure_social_auth` con `providers: ["google"]` (sin disable de email).
-- Agregar bot\u00f3n "Continuar con Google" en `Auth.tsx` y en el paso final del onboarding usando `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })`.
+Modal blanco, header gradiente morado con ▶, título/texto desde `psychoeducation_content` filtrado por el goal del onboarding. Botón negro grande: "He leído y aprendido" → marca viñeta 2.
 
----
+## 3. Recursos `/recursos` (Bento Grid)
 
-## 3) Algoritmo de recomendaci\u00f3n (DB + admin + Home)
+Layout asimétrico:
+```
+[ Mindfulness    ][ Reg.Emocional ]
+[  (alta rosa)   ][ Tol. Malestar ]
+[                ][ Efect.Personal]
+[      Gestión de Pensamientos    ]
+[      Pack de Actividades (dark) ]
+```
+Cada tarjeta navega a `/diario-inteligente/:categorySlug`.
 
-### 3.1 Schema nuevo (migration)
+## 4. Diario Inteligente `/diario-inteligente/:slug` (nueva, oscura)
 
-- `algo_sub_resources` (id, resource_category_id FK, slug, name, route, weight, sort) \u2014 ej. "Mindfulness \u2192 Observar \u2192 Escaneo corporal". Se modela como recurso anidado: si necesita 2 niveles, usar `parent_sub_resource_id` self-FK.
-- `algo_questions` (id, code, prompt, kind: 'symptom'|'personality', sort, active).
-- `algo_options` (id, question_id FK, label, score 0\u20133, sort) \u2014 cada respuesta tiene peso.
-- `algo_option_links` (id, option_id FK, sub_resource_id FK, weight) \u2014 vincula respuesta \u2192 sub-recurso (ej. "Irritabilidad alta" \u2192 Escaneo corporal, peso 3).
-- `algo_user_answers` (id, user_id, question_id, option_id, answered_at) \u2014 \u00fanico por (user_id, question_id, date_trunc('week')).
-- `algo_psycho_links` (id, sub_resource_id FK, psychoeducation_content_id FK, weight) \u2014 conecta sub-recursos con cards de psicoeducaci\u00f3n.
+- Fondo `#0F0F12`, calendario semanal mini arriba.
+- **Paso 1:** grid de tarjetas grandes con color de fondo + ícono gigante semi-transparente (sub-recursos de la categoría desde `algo_sub_resources`).
+- **Paso 2:** al tocar → oculta grid, muestra tarjeta apaisada "Registro guardado con éxito" + log en `exercise_sessions`.
+- FAB violeta `+` abajo derecha → vuelve al grid para sumar otra.
 
-GRANTs: `authenticated` SELECT en todas (lectura del catalog); INSERT/UPDATE/DELETE solo en `algo_user_answers` (propio user_id). Catalog (questions/options/links/sub_resources/psycho_links) editable solo por `has_role(auth.uid(),'admin')`. `service_role` ALL. RLS habilitado en todas.
+## 5. Mi Proceso `/proceso` (rediseño)
 
-### 3.2 Funci\u00f3n de scoring
+1. **Estadísticas de impacto**: barras verticales (divs altura variable) para Calidad de Sueño + 2 mini-cards con barras horizontales (Habilidades vs Síntomas / Actividades vs Síntomas).
+2. **Evaluaciones**:
+   - Test de Síntomas → fullscreen oscuro con grid de tarjetas altas (Irritabilidad, TOC, Desesperanza, etc.) con emoji gigante abajo. Lee `algo_questions` kind=symptom.
+   - Test de Personalidad → idem kind=personality.
+3. **Terapia y Seguimiento**: toggle iOS verde. Si ON → 3 botones (Notas / Resumen / Medicación → rutas existentes). Si OFF → recuadro punteado invitando a activarlo.
 
-`get_daily_recommendations(_user_id uuid)` SQL SECURITY DEFINER que:
-1. Toma las \u00faltimas respuestas de la semana del usuario.
-2. Suma `option.score * link.weight` por `sub_resource_id`.
-3. Devuelve top N sub-recursos + sus 3 cards de psicoeducaci\u00f3n vinculadas, con rotaci\u00f3n diaria (orden secundario por `(sub_resource_id + extract(doy))` para variar d\u00eda a d\u00eda).
+Toggle se persiste en `patient_app_profiles.in_therapy`.
 
-### 3.3 Admin UI
+## 6. Settings `/configuracion` (nuevo)
 
-Nueva pesta\u00f1a **Cuestionario** en `AdminDashboard.tsx` (o p\u00e1gina `/admin/cuestionario`):
-- Listado de recursos (de `resource_categories`) \u2192 expandible a sub-recursos \u2192 CRUD anidado.
-- Listado de preguntas con sus opciones; cada opci\u00f3n con multi-select de sub-recursos + peso.
-- Tab adicional para vincular sub-recurso \u2194 cards de `psychoeducation_content`.
-- Reutilizar shadcn Tabs / Accordion / Dialog ya existentes.
+- Título = nombre del usuario.
+- Lista iOS agrupada:
+  - **Mi Cuenta**: Información, Estadísticas.
+  - **Preferencias**: toggles Tema oscuro, Notificaciones.
+  - **Seguridad**: Cerrar sesión (rojo), Eliminar cuenta (rojo oscuro).
+- Al final: botón punteado **"Acceso Desarrollador / Admin"** → `/admin` (visible siempre; el guard de admin sigue gobernando acceso real).
 
-### 3.4 Home
+Botón ⚙️ del Home abre esta pantalla. Quito el bloque admin actual de `/perfil` (queda solo el botón en Settings).
 
-`Dashboard.tsx`: el chip "Tu pr\u00e1ctica de hoy" consume `get_daily_recommendations` (RPC) y muestra los 3 sub-recursos top como chips. Click \u2192 navega a la ruta del recurso padre con `?focus=<slug>`. Si el usuario no respondi\u00f3 nunca el test, fallback a sus `areas_of_interest` del onboarding.
+## 7. Admin Dashboard (estética + tabs)
 
-La card de Psicoeducaci\u00f3n usa el primer item devuelto por el mismo RPC en lugar del query gen\u00e9rico.
+Header `bg-[#0F172A]` con "v2.4.1" + badge "Modo Admin". Tabs:
+- **Usuarios**: KPIs simulados (1,248 registrados, etc.) + lista de chats soporte (estados rojo/amarillo) — datos mock.
+- **Psicoeducación**: usa el `ContentManager` existente, refactor visual oscuro con form completo.
+- **Actividades (IA)**: lista de `resource_tools` con botón "Editar" (usa `ToolEditor` existente).
+- **Tests**: lista categorías del `QuestionnaireManager` con ícono engranaje (ya existe la lógica).
 
----
+## 8. Backend (única migración)
 
-## Archivos a tocar
+```sql
+ALTER TABLE daily_checkins
+  ADD COLUMN IF NOT EXISTS mode text DEFAULT 'morning',
+  ADD COLUMN IF NOT EXISTS sleep_score int,
+  ADD COLUMN IF NOT EXISTS dawn_score text,
+  ADD COLUMN IF NOT EXISTS emotions text[],
+  ADD COLUMN IF NOT EXISTS dream_note text,
+  ADD COLUMN IF NOT EXISTS thought_note text,
+  ADD COLUMN IF NOT EXISTS day_goal text,
+  ADD COLUMN IF NOT EXISTS balance_highlight text,
+  ADD COLUMN IF NOT EXISTS balance_improve text;
 
-**Nuevos**
-- `supabase/migrations/<ts>_algo_engine.sql` (tablas + RLS + GRANTs + funci\u00f3n RPC).
-- `src/pages/admin/QuestionnaireManager.tsx`
-- `src/components/onboarding/OnboardingShell.tsx`
+ALTER TABLE patient_app_profiles
+  ADD COLUMN IF NOT EXISTS in_therapy boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS prefers_dark boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS notifications_on boolean DEFAULT true;
+```
 
-**Modificados**
-- `src/pages/Onboarding.tsx` \u2014 reescritura completa con auth incluida.
-- `src/pages/Auth.tsx` \u2014 bot\u00f3n Google.
-- `src/App.tsx` \u2014 ruta `/onboarding` p\u00fablica + redirect logic + handler post-OAuth para volcar `sessionStorage`.
-- `src/pages/Dashboard.tsx` \u2014 consumir RPC para chips y psicoeducaci\u00f3n.
-- `src/pages/admin/AdminDashboard.tsx` \u2014 nueva tab "Cuestionario".
+(No se crean tablas nuevas, no requiere GRANTs.)
 
-**Tools / efectos secundarios**
-- `supabase--configure_social_auth` con `providers: ["google"]`.
-- 1 migration para todo el schema del algoritmo.
+## 9. Archivos a crear / modificar
 
----
+**Nuevos:** `src/pages/Settings.tsx`, `src/pages/DiarioInteligente.tsx`, `src/components/home/Timeline.tsx`, `src/components/home/WeekStrip.tsx`, `src/components/modals/CheckinModal.tsx`, `src/components/modals/PsychoModal.tsx`, `src/components/modals/SymptomsTestModal.tsx`, `src/components/recursos/BentoGrid.tsx`, `src/components/ui/IOSToggle.tsx`.
 
-## Notas t\u00e9cnicas
+**Modificados:** `src/pages/Dashboard.tsx` (reemplaza por nuevo Home), `src/pages/Tools.tsx` (Bento), `src/pages/MiProceso.tsx`, `src/pages/Profile.tsx` (quita admin), `src/components/admin/AdminLayout.tsx` (estética + tabs nuevas), `src/App.tsx` (rutas `/configuracion`, `/diario-inteligente/:slug`).
 
-- El bypass de auth en `/onboarding` requiere ajustar el guard actual; revisar c\u00f3mo `App.tsx` redirige sin sesi\u00f3n y agregar excepci\u00f3n para `/onboarding` y `/auth`.
-- Cuando Google OAuth vuelve, la sesi\u00f3n se crea pero el perfil puede no existir; el handler `onAuthStateChange` debe revisar `sessionStorage.getItem('onboarding_pending')` y hacer el upsert a `patient_app_profiles`.
-- Mantener la est\u00e9tica dark **solo** dentro del shell del onboarding usando clases locales \u2014 no tocar `index.css` ni `tailwind.config.ts` globales.
-- No se borran datos existentes; el cat\u00e1logo de preguntas arranca vac\u00edo y se rellena desde el admin (o un seed opcional, a decidir despu\u00e9s).
+## 10. Fuera de alcance (confirmar)
+
+- No reescribo Diario clásico ni Journal existente.
+- No reemplazo BottomNav (sigue igual).
+- Datos de KPIs/chats de soporte en Admin → **mock** (no DB).

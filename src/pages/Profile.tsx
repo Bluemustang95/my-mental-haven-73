@@ -129,21 +129,13 @@ export default function Profile() {
           <span className="text-xs text-muted-foreground">Próximamente</span>
         </div>
 
-        {isAdmin ? (
-          <button onClick={() => navigate("/admin")} className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left">
-            <Gear size={20} weight="duotone" />
-            <div className="flex-1">
-              <p className="font-display text-sm font-medium">Configuración admin</p>
-              <p className="text-xs text-muted-foreground">Entrar al panel de administración</p>
-            </div>
-          </button>
-        ) : (
-          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
-            <Gear size={20} weight="duotone" />
-            <span className="flex-1 font-display text-sm font-medium">Preferencias</span>
-            <span className="text-xs text-muted-foreground">Próximamente</span>
+        <button onClick={() => navigate("/configuracion")} className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left">
+          <Gear size={20} weight="duotone" />
+          <div className="flex-1">
+            <p className="font-display text-sm font-medium">Configuración</p>
+            <p className="text-xs text-muted-foreground">Cuenta, preferencias y más</p>
           </div>
-        )}
+        </button>
       </div>
 
       <div className="my-6 h-px bg-border" />

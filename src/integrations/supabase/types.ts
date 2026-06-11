@@ -349,27 +349,54 @@ export type Database = {
       }
       daily_checkins: {
         Row: {
+          balance_highlight: string | null
+          balance_improve: string | null
           checkin_date: string
           created_at: string | null
+          dawn_score: string | null
+          day_goal: string | null
+          dream_note: string | null
+          emotions: string[] | null
           id: string
+          mode: string | null
           mood_score: number | null
           note: string | null
+          sleep_score: number | null
+          thought_note: string | null
           user_id: string
         }
         Insert: {
+          balance_highlight?: string | null
+          balance_improve?: string | null
           checkin_date?: string
           created_at?: string | null
+          dawn_score?: string | null
+          day_goal?: string | null
+          dream_note?: string | null
+          emotions?: string[] | null
           id?: string
+          mode?: string | null
           mood_score?: number | null
           note?: string | null
+          sleep_score?: number | null
+          thought_note?: string | null
           user_id: string
         }
         Update: {
+          balance_highlight?: string | null
+          balance_improve?: string | null
           checkin_date?: string
           created_at?: string | null
+          dawn_score?: string | null
+          day_goal?: string | null
+          dream_note?: string | null
+          emotions?: string[] | null
           id?: string
+          mode?: string | null
           mood_score?: number | null
           note?: string | null
+          sleep_score?: number | null
+          thought_note?: string | null
           user_id?: string
         }
         Relationships: []
@@ -682,9 +709,12 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           id: string
+          in_therapy: boolean | null
           life_stage: string | null
           linked_professional_code: string | null
+          notifications_on: boolean | null
           onboarding_completed: boolean | null
+          prefers_dark: boolean | null
           recent_feelings: string[] | null
           treatment_status: string | null
           updated_at: string | null
@@ -695,9 +725,12 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           id?: string
+          in_therapy?: boolean | null
           life_stage?: string | null
           linked_professional_code?: string | null
+          notifications_on?: boolean | null
           onboarding_completed?: boolean | null
+          prefers_dark?: boolean | null
           recent_feelings?: string[] | null
           treatment_status?: string | null
           updated_at?: string | null
@@ -708,9 +741,12 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           id?: string
+          in_therapy?: boolean | null
           life_stage?: string | null
           linked_professional_code?: string | null
+          notifications_on?: boolean | null
           onboarding_completed?: boolean | null
+          prefers_dark?: boolean | null
           recent_feelings?: string[] | null
           treatment_status?: string | null
           updated_at?: string | null
