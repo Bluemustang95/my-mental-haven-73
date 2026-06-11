@@ -480,7 +480,11 @@ export type Database = {
           id: string
           mood_after: number | null
           mood_before: number | null
+          music_track: string | null
+          pattern: string | null
+          sub_mode: string | null
           user_id: string
+          voice_enabled: boolean | null
         }
         Insert: {
           completed?: boolean | null
@@ -491,7 +495,11 @@ export type Database = {
           id?: string
           mood_after?: number | null
           mood_before?: number | null
+          music_track?: string | null
+          pattern?: string | null
+          sub_mode?: string | null
           user_id: string
+          voice_enabled?: boolean | null
         }
         Update: {
           completed?: boolean | null
@@ -502,7 +510,11 @@ export type Database = {
           id?: string
           mood_after?: number | null
           mood_before?: number | null
+          music_track?: string | null
+          pattern?: string | null
+          sub_mode?: string | null
           user_id?: string
+          voice_enabled?: boolean | null
         }
         Relationships: []
       }
