@@ -32,11 +32,23 @@ const MALETA = [
   "Perdonarme por el pasado",
 ];
 
+const PAISES = [
+  { code: "AR", label: "Argentina", flag: "🇦🇷" },
+  { code: "MX", label: "México", flag: "🇲🇽" },
+  { code: "ES", label: "España", flag: "🇪🇸" },
+  { code: "CO", label: "Colombia", flag: "🇨🇴" },
+  { code: "CL", label: "Chile", flag: "🇨🇱" },
+  { code: "UY", label: "Uruguay", flag: "🇺🇾" },
+  { code: "PE", label: "Perú", flag: "🇵🇪" },
+  { code: "OT", label: "Otro", flag: "🌎" },
+];
+
 const PENDING_KEY = "resma:onboarding_pending";
 
 type Pending = {
   name: string;
   age: string;
+  country: string;
   brujula: string[];
   maleta: string[];
 };
@@ -47,10 +59,11 @@ async function persistProfile(userId: string, data: Pending) {
       user_id: userId,
       display_name: data.name,
       life_stage: data.age,
+      country: data.country,
       areas_of_interest: data.brujula,
       recent_feelings: data.maleta,
       onboarding_completed: true,
-    },
+    } as any,
     { onConflict: "user_id" }
   );
 }
