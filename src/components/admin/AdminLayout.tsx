@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, Sparkles } from "lucide-react";
+import { LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, Sparkles, Brain } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -20,6 +20,7 @@ const navItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Contenido", url: "/admin/contenido", icon: BookOpen },
   { title: "Recursos", url: "/admin/recursos", icon: Sparkles },
+  { title: "Cuestionario", url: "/admin/cuestionario", icon: Brain },
   { title: "Solicitudes", url: "/admin/solicitudes", icon: ClipboardList },
   { title: "Pacientes", url: "/admin/pacientes", icon: Users },
 ];

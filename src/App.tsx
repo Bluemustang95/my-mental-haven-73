@@ -71,6 +71,7 @@ import PatientList from "@/pages/admin/PatientList";
 import PatientDetail from "@/pages/admin/PatientDetail";
 import ResourcesManager from "@/pages/admin/ResourcesManager";
 import ResourceDetail from "@/pages/admin/ResourceDetail";
+import QuestionnaireManager from "@/pages/admin/QuestionnaireManager";
 import ResourceTools from "@/pages/ResourceTools";
 import ResourceIntro from "@/pages/ResourceIntro";
 import SafetyPlan from "@/pages/SafetyPlan";
@@ -86,7 +87,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
 }
 
@@ -99,7 +100,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/calendario" element={<ProtectedRoute><CalendarMonth /></ProtectedRoute>} />
             <Route path="/calendario/:date" element={<ProtectedRoute><CalendarDay /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -177,6 +178,7 @@ const App = () => (
               <Route path="/admin/solicitudes" element={<TreatmentRequests />} />
               <Route path="/admin/pacientes" element={<PatientList />} />
               <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
+              <Route path="/admin/cuestionario" element={<QuestionnaireManager />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
