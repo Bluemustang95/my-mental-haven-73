@@ -260,6 +260,40 @@ export function CheckinModal({
           </div>
         </div>
       );
+    if (hasGoalStep && step === 3)
+      return (
+        <div>
+          <StepHeader title="Tu objetivo de hoy" sub="¿Pudiste cumplirlo?" />
+          <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-300">
+              Te lo propusiste esta mañana
+            </p>
+            <p className="mt-2 text-base font-medium text-white/90">{dayGoal}</p>
+          </div>
+          <div className="space-y-3">
+            {[
+              { v: "yes", l: "Sí, lo cumplí ✨", c: "emerald" },
+              { v: "partial", l: "En parte", c: "amber" },
+              { v: "no", l: "No esta vez", c: "rose" },
+            ].map((o) => {
+              const on = goalCompleted === o.v;
+              return (
+                <button
+                  key={o.v}
+                  onClick={() => setGoalCompleted(o.v as any)}
+                  className={`w-full rounded-2xl border px-5 py-4 text-left font-medium transition active:scale-[0.99] ${
+                    on
+                      ? "border-violet-400/60 bg-violet-500/15 text-white"
+                      : "border-white/10 bg-white/5 text-white/85"
+                  }`}
+                >
+                  {o.l}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
     return <StatsStep tip="Antes de dormir, recordá una cosa que agradecés hoy. La gratitud calma." />;
   };
 
