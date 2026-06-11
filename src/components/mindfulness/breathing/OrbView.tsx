@@ -130,7 +130,7 @@ export function OrbView({ pattern, totalSeconds, voiceEnabled, hapticsEnabled, m
           onClick={() => setRunning((r) => !r)}
           className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur"
         >
-          {running ? <Pause size={22} /> : <Play size={22} weight="fill" as any />}
+          {running ? <Pause size={22} /> : <Play size={22} fill="currentColor" />}
         </button>
         <p className="text-xs text-white/50">Tocá el orbe para pausar</p>
       </div>
