@@ -181,6 +181,8 @@ export function OrbView({
         onMusicCycle={() => setMusic((m) => nextMusic(m))}
         onFinish={onAbort}
       />
+        </div>
+      </OrganicStage>
     </div>
   );
 }
