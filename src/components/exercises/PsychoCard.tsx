@@ -21,6 +21,14 @@ const COPY: Record<string, { title: string; body: string }> = {
     title: "Escáner corporal",
     body: "Llevar la atención zona por zona entrena al cerebro a observar sensaciones sin reaccionar. Es la base del mindfulness clínico.",
   },
+  "mindfulness.observar.clouds": {
+    title: "Defusión cognitiva",
+    body: "Observar tus pensamientos como nubes que pasan, sin engancharte, debilita la fusión cognitiva. Un pensamiento es solo un evento mental, no una orden ni una verdad.",
+  },
+  "mindfulness.observar.senses": {
+    title: "Anclaje 5-4-3-2-1",
+    body: "Esta técnica de grounding sensorial interrumpe el bucle rumiativo y devuelve a tu sistema nervioso la señal de seguridad: el cuerpo está acá, ahora.",
+  },
 };
 
 export function PsychoCard({ resourceKey }: { resourceKey: string }) {
