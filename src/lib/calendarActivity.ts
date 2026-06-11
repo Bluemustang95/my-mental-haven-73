@@ -3,11 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { localDateStr } from "@/lib/utils";
 
 export interface CalendarActivity {
-  type: "journal" | "thought" | "test" | "exercise" | "dream" | "goal";
+  type: "journal" | "thought" | "test" | "exercise" | "dream" | "goal" | "reading";
   label: string;
   detail: string;
   time: string;
 }
+
+const TEST_LABELS: Record<string, string> = {
+  bdi: "Test BDI-II (depresión)",
+  "bdi-ii": "Test BDI-II (depresión)",
+  bai: "Test BAI (ansiedad)",
+  pswq: "Test PSWQ (preocupación)",
+  bigfive: "Test de personalidad Big Five",
+  "big-five": "Test de personalidad Big Five",
+  bfi: "Test de personalidad Big Five",
+};
 
 export async function fetchCalendarActivities(userId: string, day: Date): Promise<CalendarActivity[]> {
   const ds = localDateStr(day);
