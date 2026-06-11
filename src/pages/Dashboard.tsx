@@ -278,6 +278,12 @@ export default function Dashboard() {
         onClose={() => setPsychoOpen(false)}
         onComplete={() => setPsychoDone(true)}
       />
+      <DayHistorySheet
+        date={historyDate}
+        scope="all"
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
     </div>
   );
 }
