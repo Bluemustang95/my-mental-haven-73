@@ -143,7 +143,7 @@ export default function Psicoeducacion() {
             <div className="mt-8">
               <h3 className="mb-3 px-1 font-display text-base font-semibold text-white">Seguir conociendo</h3>
               <div className="space-y-3">
-                {cats.map((cat) => {
+                {courseCats.map((cat) => {
                   const accent = cat.accent_color ?? "#A78BFA";
                   const prog = progressByCat[cat.id] ?? 0;
                   return (
