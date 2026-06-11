@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Pause, Play } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { SessionToolbar, nextMusic } from "@/components/mindfulness/breathing/SessionToolbar";
+import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
 
 const ZONES = [
   { id: "head", label: "Cabeza", y: 30, speech: "Llevá la atención a tu cabeza. Notá si hay tensión en la frente." },
@@ -72,7 +73,14 @@ export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onCompl
   const seconds = timeLeft % 60;
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-between px-5 pt-12 pb-40">
+    <div className="relative h-full w-full">
+      <OrganicStage
+        accentColor="#FB923C"
+        secondaryColor="#10B981"
+        particleColor="#FDFCFB"
+        particleCount={12}
+      >
+        <div className="relative flex h-full w-full flex-col items-center justify-between px-5 pt-12 pb-40">
       <div className="text-center">
         <div className="text-[10px] uppercase tracking-[0.25em] text-white/45">Escáner corporal</div>
         <div className="mt-1 font-display text-2xl font-semibold text-white tabular-nums">
@@ -135,6 +143,8 @@ export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onCompl
         onMusicCycle={() => setMusic((m) => nextMusic(m))}
         onFinish={onAbort}
       />
+        </div>
+      </OrganicStage>
     </div>
   );
 }

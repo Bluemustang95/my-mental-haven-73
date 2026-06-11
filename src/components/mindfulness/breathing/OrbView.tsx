@@ -9,6 +9,7 @@ import { VisualizerBox } from "@/components/mindfulness/breathing/visuals/Visual
 import { VisualizerSleep } from "@/components/mindfulness/breathing/visuals/VisualizerSleep";
 import { VisualizerCoherence } from "@/components/mindfulness/breathing/visuals/VisualizerCoherence";
 import { VisualizerSigh } from "@/components/mindfulness/breathing/visuals/VisualizerSigh";
+import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
 
 interface OrbViewProps {
   pattern: BreathingPattern;
@@ -87,8 +88,27 @@ export function OrbView({
   const ringC = 2 * Math.PI * ringR;
   const ringOffset = ringC * (1 - phaseProgress);
 
+  // Breath driver 0..1 for organic atmosphere (inhale/hold expanded, exhale contracted)
+  const breath =
+    phase.phaseId === "inhale" || phase.phaseId === "inhale2"
+      ? phaseProgress
+      : phase.phaseId === "hold"
+        ? 1
+        : phase.phaseId === "exhale"
+          ? 1 - phaseProgress
+          : 0;
+
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-between px-5 pt-12 pb-40">
+    <div className="relative h-full w-full">
+      <OrganicStage
+        breath={breath}
+        breathDuration={Math.max(1.5, phase.seconds)}
+        accentColor={phase.color}
+        secondaryColor="#FCD34D"
+        particleColor="#FDFCFB"
+        particleCount={14}
+      >
+        <div className="relative flex h-full w-full flex-col items-center justify-between px-5 pt-12 pb-40">
       <div className="w-full text-center">
         <div className="text-[10px] uppercase tracking-[0.25em] text-white/45">
           {pattern.name}
@@ -161,6 +181,8 @@ export function OrbView({
         onMusicCycle={() => setMusic((m) => nextMusic(m))}
         onFinish={onAbort}
       />
+        </div>
+      </OrganicStage>
     </div>
   );
 }

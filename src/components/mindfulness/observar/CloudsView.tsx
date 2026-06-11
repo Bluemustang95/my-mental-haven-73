@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Pause, Play } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { useHojasMessages } from "@/lib/hojasMessages";
+import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
+import { LeafPile } from "@/components/mindfulness/observar/LeafPile";
 
 type Variant = "cloud" | "leaf" | "train";
 
@@ -45,7 +47,24 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
   const [paused, setPaused] = useState(false);
   const [draft, setDraft] = useState("");
   const [thoughts, setThoughts] = useState<Thought[]>([]);
+  const [pile, setPile] = useState<Array<{ id: string; x: number; rotation: number; hue: number }>>([]);
   const [composing, setComposing] = useState(false);
+
+  // When a thought finishes its trip, move it to the pile (only leaf variants get visually piled,
+  // but all variants increment the counter so the user sees their releases).
+  function settleThought(thought: Thought) {
+    setThoughts((prev) => prev.filter((t) => t.id !== thought.id));
+    setPile((prev) => [
+      ...prev.slice(-39), // keep at most 40 in the pile
+      {
+        id: thought.id,
+        x: Math.random(),
+        rotation: -25 + Math.random() * 50,
+        hue: Math.floor(Math.random() * 5),
+      },
+    ]);
+  }
+
   const speakRef = useRef(audio.speak);
   speakRef.current = audio.speak;
 
@@ -103,13 +122,15 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
     const speed = 22 + Math.random() * 14;
     const size: Thought["size"] = text.length > 60 ? "lg" : text.length > 25 ? "md" : "sm";
     const variant = pickVariant();
-    setThoughts((prev) => [
-      ...prev,
-      { id: `${Date.now()}-${Math.random()}`, text, lane, speed, addedAt: Date.now(), size, variant },
-    ]);
+    const id = `${Date.now()}-${Math.random()}`;
+    const newThought: Thought = { id, text, lane, speed, addedAt: Date.now(), size, variant };
+    setThoughts((prev) => [...prev, newThought]);
+    // Schedule settling once the bubble exits the viewport
+    window.setTimeout(() => settleThought(newThought), speed * 1000);
     setDraft("");
     setComposing(false);
   }
+
 
   const sky = useMemo(
     () => Array.from({ length: 22 }).map((_, i) => ({
@@ -184,17 +205,17 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
 
   // ====== PLAYING ======
   return (
-    <div className="absolute inset-0 overflow-hidden bg-gradient-to-b from-[#1E3A5F] via-[#0F172A] to-[#0F172A]">
-      {/* Stars / ambient dust */}
-      {sky.map((s) => (
-        <motion.div
-          key={s.id}
-          className="absolute rounded-full bg-white/50"
-          style={{ top: `${s.top}%`, left: `${s.left}%`, width: s.r * 2, height: s.r * 2 }}
-          animate={{ opacity: [0.15, 0.55, 0.15] }}
-          transition={{ duration: 5 + s.delay, repeat: Infinity, ease: "easeInOut", delay: s.delay }}
-        />
-      ))}
+    <div className="absolute inset-0 overflow-hidden">
+      <OrganicStage
+        accentColor="#10B981"
+        secondaryColor="#FCD34D"
+        particleColor="#FDFCFB"
+        particleCount={10}
+      >
+
+      {/* Leaf pile (accumulated released thoughts) */}
+      <LeafPile leaves={pile} />
+
 
       {/* Header bar */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-6">
@@ -273,6 +294,7 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
           )}
         </AnimatePresence>
       </div>
+      </OrganicStage>
     </div>
   );
 }
