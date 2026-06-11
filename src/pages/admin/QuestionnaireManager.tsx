@@ -42,6 +42,8 @@ type Option = {
   sort: number;
 };
 type OptionLink = { id: string; option_id: string; sub_resource_id: string; weight: number };
+type PsychoContent = { id: string; title: string; category: string };
+type PsychoLink = { id: string; sub_resource_id: string; psycho_id: string; weight: number };
 
 export default function QuestionnaireManager() {
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
@@ -49,22 +51,28 @@ export default function QuestionnaireManager() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [options, setOptions] = useState<Option[]>([]);
   const [links, setLinks] = useState<OptionLink[]>([]);
+  const [psychoContent, setPsychoContent] = useState<PsychoContent[]>([]);
+  const [psychoLinks, setPsychoLinks] = useState<PsychoLink[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadAll = async () => {
     setLoading(true);
-    const [c, s, q, o, l] = await Promise.all([
+    const [c, s, q, o, l, p, pl] = await Promise.all([
       supabase.from("resource_categories").select("id, name, slug").order("name"),
       supabase.from("algo_sub_resources").select("*").order("sort"),
       supabase.from("algo_questions").select("*").order("sort"),
       supabase.from("algo_options").select("*").order("sort"),
       supabase.from("algo_option_links").select("*"),
+      supabase.from("psychoeducation_content").select("id, title, category").eq("is_published", true).order("title"),
+      supabase.from("algo_psycho_links").select("*"),
     ]);
     setCategories((c.data ?? []) as ResourceCategory[]);
     setSubResources((s.data ?? []) as SubResource[]);
     setQuestions((q.data ?? []) as Question[]);
     setOptions((o.data ?? []) as Option[]);
     setLinks((l.data ?? []) as OptionLink[]);
+    setPsychoContent((p.data ?? []) as PsychoContent[]);
+    setPsychoLinks((pl.data ?? []) as PsychoLink[]);
     setLoading(false);
   };
 
