@@ -274,7 +274,10 @@ export default function ContentManager() {
                 <Label>Tipo</Label>
                 <Select
                   value={form.content_type}
-                  onValueChange={(v) => setForm({ ...form, content_type: v as ContentType })}
+                  onValueChange={(v) => {
+                    const t = v as ContentType;
+                    setForm({ ...form, content_type: t, category_id: catsForType(t)[0]?.id ?? "" });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -288,18 +291,27 @@ export default function ContentManager() {
               </div>
               <div>
                 <Label>Categoría</Label>
-                <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sin asignar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cats.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {catsForType(form.content_type).length === 0 ? (
+                  <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                    Aún no hay categorías de este tipo. Creá una en la pestaña <b>Categorías</b>.
+                  </div>
+                ) : (
+                  <Select
+                    value={form.category_id || undefined}
+                    onValueChange={(v) => setForm({ ...form, category_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sin asignar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {catsForType(form.content_type).map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
 
