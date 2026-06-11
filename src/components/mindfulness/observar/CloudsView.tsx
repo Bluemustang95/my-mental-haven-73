@@ -47,7 +47,24 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
   const [paused, setPaused] = useState(false);
   const [draft, setDraft] = useState("");
   const [thoughts, setThoughts] = useState<Thought[]>([]);
+  const [pile, setPile] = useState<Array<{ id: string; x: number; rotation: number; hue: number }>>([]);
   const [composing, setComposing] = useState(false);
+
+  // When a thought finishes its trip, move it to the pile (only leaf variants get visually piled,
+  // but all variants increment the counter so the user sees their releases).
+  function settleThought(thought: Thought) {
+    setThoughts((prev) => prev.filter((t) => t.id !== thought.id));
+    setPile((prev) => [
+      ...prev.slice(-39), // keep at most 40 in the pile
+      {
+        id: thought.id,
+        x: Math.random(),
+        rotation: -25 + Math.random() * 50,
+        hue: Math.floor(Math.random() * 5),
+      },
+    ]);
+  }
+
   const speakRef = useRef(audio.speak);
   speakRef.current = audio.speak;
 
