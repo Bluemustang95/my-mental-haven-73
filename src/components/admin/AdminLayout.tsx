@@ -1,11 +1,11 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, Sparkles, Brain, Terminal, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, Sparkles, Brain, ArrowLeft, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { title: "Usuarios", url: "/admin/pacientes", icon: Users },
   { title: "Psicoeducación", url: "/admin/contenido", icon: BookOpen },
-  { title: "Actividades (IA)", url: "/admin/recursos", icon: Sparkles },
+  { title: "Recursos", url: "/admin/recursos", icon: Sparkles },
   { title: "Tests", url: "/admin/cuestionario", icon: Brain },
   { title: "Solicitudes", url: "/admin/solicitudes", icon: ClipboardList },
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, end: true },
@@ -20,45 +20,53 @@ export function AdminLayout() {
     end ? location.pathname === url : location.pathname.startsWith(url);
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-slate-200">
+    <div className="relative min-h-screen bg-gradient-to-br from-[#fdfbfb] to-[#ebedee] text-slate-800">
+      {/* Decorative blobs */}
+      <div className="pointer-events-none fixed -top-32 -left-32 h-96 w-96 rounded-full bg-[#6B4EFF]/10 blur-3xl" />
+      <div className="pointer-events-none fixed -bottom-40 -right-40 h-[28rem] w-[28rem] rounded-full bg-[#E8A365]/15 blur-3xl" />
+
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-white/5 bg-[#0F172A]/95 backdrop-blur-md">
+      <header className="sticky top-0 z-20 border-b border-white/50 bg-white/60 backdrop-blur-xl shadow-[0_8px_32px_-12px_rgba(107,78,255,0.18)]">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <button
             onClick={() => navigate("/")}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/60 bg-white/70 text-slate-600 shadow-sm transition hover:bg-white"
+            aria-label="Volver"
           >
-            <ArrowLeft size={14} />
+            <ArrowLeft size={15} />
           </button>
-          <Terminal size={18} className="text-emerald-400" />
-          <div className="flex-1">
-            <p className="font-mono text-xs text-slate-400">RESMA Admin · v2.4.1</p>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#6B4EFF]/10 text-[#6B4EFF]">
+            <ShieldCheck size={16} />
           </div>
-          <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300 ring-1 ring-emerald-400/30">
+          <div className="flex-1">
+            <p className="font-display text-sm font-semibold text-slate-800">RESMA Admin</p>
+            <p className="text-[10px] text-slate-500">Panel de control</p>
+          </div>
+          <span className="rounded-full bg-[#E8A365]/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#B5701F] ring-1 ring-[#E8A365]/40">
             Modo Admin
           </span>
           <button
             onClick={signOut}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-red-400"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/60 bg-white/70 text-slate-500 shadow-sm transition hover:bg-white hover:text-rose-500"
             aria-label="Cerrar sesión"
           >
-            <LogOut size={14} />
+            <LogOut size={15} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="border-t border-white/5">
-          <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3 py-2 scrollbar-thin">
+        <div className="border-t border-white/40">
+          <div className="mx-auto flex max-w-6xl gap-1.5 overflow-x-auto px-3 py-2 scrollbar-thin">
             {navItems.map((item) => {
               const active = isActive(item.url, item.end);
               return (
                 <button
                   key={item.url}
                   onClick={() => navigate(item.url)}
-                  className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                  className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition ${
                     active
-                      ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/30"
-                      : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                      ? "bg-[#6B4EFF] text-white shadow-[0_8px_20px_-8px_rgba(107,78,255,0.55)]"
+                      : "text-slate-500 hover:bg-white/70 hover:text-slate-800"
                   }`}
                 >
                   <item.icon size={14} />
@@ -71,9 +79,9 @@ export function AdminLayout() {
       </header>
 
       {/* Main */}
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        <div className="rounded-2xl border border-white/5 bg-[#111c33] p-5 text-slate-200 [&_*]:!text-current">
-          <div className="resma-admin-content text-slate-200">
+      <main className="relative mx-auto max-w-6xl px-4 py-6">
+        <div className="rounded-3xl border border-white/50 bg-white/60 p-6 text-slate-800 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.25)] backdrop-blur-xl">
+          <div className="resma-admin-content">
             <Outlet />
           </div>
         </div>
