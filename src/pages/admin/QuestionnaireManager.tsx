@@ -140,6 +140,21 @@ export default function QuestionnaireManager() {
     loadAll();
   };
 
+  // ─────────── Psicoeducación ↔ Sub-resource links ───────────
+  const togglePsychoLink = async (subId: string, psychoId: string) => {
+    const existing = psychoLinks.find((l) => l.sub_resource_id === subId && l.psycho_id === psychoId);
+    if (existing) {
+      await supabase.from("algo_psycho_links").delete().eq("id", existing.id);
+    } else {
+      await supabase.from("algo_psycho_links").insert({
+        sub_resource_id: subId,
+        psycho_id: psychoId,
+        weight: 1,
+      });
+    }
+    loadAll();
+  };
+
   if (loading) return <p className="text-sm text-muted-foreground">Cargando…</p>;
 
   return (
@@ -151,6 +166,7 @@ export default function QuestionnaireManager() {
           <TabsTrigger value="subresources">Sub-recursos</TabsTrigger>
           <TabsTrigger value="questions">Preguntas</TabsTrigger>
           <TabsTrigger value="links">Vínculos</TabsTrigger>
+          <TabsTrigger value="psico">Psicoeducación</TabsTrigger>
         </TabsList>
 
         {/* ─────── SUB-RESOURCES ─────── */}
