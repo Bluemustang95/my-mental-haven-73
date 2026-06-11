@@ -820,56 +820,112 @@ export type Database = {
         }
         Relationships: []
       }
+      psychoeducation_categories: {
+        Row: {
+          accent_color: string | null
+          created_at: string
+          description: string | null
+          emoji: string | null
+          id: string
+          is_published: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string | null
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          is_published?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string | null
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          is_published?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       psychoeducation_content: {
         Row: {
+          body_html: string | null
           category: string
+          category_id: string | null
           content_type: string
           content_url: string
           created_at: string | null
           description: string | null
           duration: string | null
+          duration_minutes: number | null
           id: string
           is_featured: boolean
           is_premium: boolean | null
           is_published: boolean | null
+          media_url: string | null
           sort_order: number | null
           tags: string[] | null
           thumbnail_url: string | null
           title: string
         }
         Insert: {
+          body_html?: string | null
           category: string
+          category_id?: string | null
           content_type: string
           content_url: string
           created_at?: string | null
           description?: string | null
           duration?: string | null
+          duration_minutes?: number | null
           id?: string
           is_featured?: boolean
           is_premium?: boolean | null
           is_published?: boolean | null
+          media_url?: string | null
           sort_order?: number | null
           tags?: string[] | null
           thumbnail_url?: string | null
           title: string
         }
         Update: {
+          body_html?: string | null
           category?: string
+          category_id?: string | null
           content_type?: string
           content_url?: string
           created_at?: string | null
           description?: string | null
           duration?: string | null
+          duration_minutes?: number | null
           id?: string
           is_featured?: boolean
           is_premium?: boolean | null
           is_published?: boolean | null
+          media_url?: string | null
           sort_order?: number | null
           tags?: string[] | null
           thumbnail_url?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "psychoeducation_content_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "psychoeducation_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       relationship_logs: {
         Row: {
