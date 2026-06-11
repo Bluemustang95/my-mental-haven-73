@@ -1,8 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { House, Notebook, Toolbox, ChartLineUp, ChatCircle } from "@phosphor-icons/react";
+import { House, Notebook, Toolbox, ChartLineUp, BookOpen } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { useState } from "react";
+import { motion } from "framer-motion";
 
 const leftTabs = [
   { path: "/", label: "Inicio", icon: House },
@@ -17,12 +16,6 @@ const rightTabs = [
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { scrollY } = useScroll();
-  const [shrunk, setShrunk] = useState(false);
-
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setShrunk(latest > 30);
-  });
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -39,16 +32,16 @@ export function BottomNav() {
         whileTap={{ scale: 0.85, opacity: 0.7 }}
         aria-label={tab.label}
         className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-full transition-colors",
+          "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
           active ? "text-foreground" : "text-muted-foreground"
         )}
       >
         <motion.div
-          animate={active ? { y: -1, scale: 1.05 } : { y: 0, scale: 1 }}
+          animate={active ? { scale: 1.05 } : { scale: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
         >
           <Icon
-            size={22}
+            size={20}
             weight={active ? "fill" : "regular"}
             className={cn(active && "text-accent")}
           />
@@ -57,53 +50,49 @@ export function BottomNav() {
     );
   };
 
-  const resmitaActive = location.pathname === "/resmita";
+  const psicoActive = location.pathname.startsWith("/psicoeducacion");
 
   return (
-    <motion.nav
-      initial={false}
-      animate={shrunk ? { scale: 0.94, y: 4, x: "-50%" } : { scale: 1, y: 0, x: "-50%" }}
-      transition={{ type: "spring", stiffness: 300, damping: 28 }}
+    <nav
       style={{
         position: "fixed",
-        bottom: "2rem",
-        left: "50%",
+        bottom: "max(1rem, env(safe-area-inset-bottom))",
+        left: 0,
+        right: 0,
         zIndex: 50,
-        width: "fit-content",
-        transformOrigin: "center bottom",
+        display: "flex",
+        justifyContent: "center",
+        pointerEvents: "none",
       }}
     >
-      <div className="mx-auto flex w-fit items-center justify-center gap-1 rounded-full border border-border/40 bg-card/70 px-3 py-1.5 shadow-lg backdrop-blur-xl">
-        {/* Left side */}
-        <div className="flex items-center gap-1">
-          {leftTabs.map(renderTab)}
-        </div>
+      <div
+        className="pointer-events-auto flex items-center justify-center gap-0.5 rounded-full border border-border/40 bg-card/75 px-2 py-1 shadow-lg backdrop-blur-xl"
+        style={{ maxWidth: "calc(100vw - 2rem)" }}
+      >
+        {leftTabs.map(renderTab)}
 
-        {/* Center – Resmita FAB */}
+        {/* Center: Psicoeducación */}
         <motion.button
-          onClick={() => navigate("/resmita")}
+          onClick={() => navigate("/psicoeducacion")}
           whileTap={{ scale: 0.9 }}
-          aria-label="Resmita"
-          className="relative -mt-5 mx-1 flex items-center justify-center"
+          aria-label="Psicoeducación"
+          className="relative -mt-4 mx-0.5 flex items-center justify-center"
         >
           <motion.div
-            animate={resmitaActive ? { scale: 1.08 } : { scale: 1 }}
+            animate={psicoActive ? { scale: 1.08 } : { scale: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-md transition-colors",
+              "flex h-11 w-11 items-center justify-center rounded-full border-2 shadow-md transition-colors",
               "bg-[hsl(48_100%_85%)] border-[hsl(38_85%_55%)] text-[hsl(28_70%_30%)]",
-              resmitaActive && "ring-2 ring-[hsl(38_85%_55%)]/40"
+              psicoActive && "ring-2 ring-[hsl(38_85%_55%)]/40"
             )}
           >
-            <ChatCircle size={24} weight={resmitaActive ? "fill" : "bold"} />
+            <BookOpen size={22} weight={psicoActive ? "fill" : "bold"} />
           </motion.div>
         </motion.button>
 
-        {/* Right side */}
-        <div className="flex items-center gap-1">
-          {rightTabs.map(renderTab)}
-        </div>
+        {rightTabs.map(renderTab)}
       </div>
-    </motion.nav>
+    </nav>
   );
 }

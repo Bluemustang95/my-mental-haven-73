@@ -1,14 +1,15 @@
 import { addDays, format, isSameDay, startOfWeek } from "date-fns";
-import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { localDateStr } from "@/lib/utils";
 
 const initials = ["L", "M", "X", "J", "V", "S", "D"];
 
 export function WeekStrip({
-  hasActivityToday,
+  progressByDate = {},
   onSelectDay,
 }: {
-  hasActivityToday?: boolean;
+  /** map dateStr (YYYY-MM-DD) -> completed nodes 0..4 */
+  progressByDate?: Record<string, number>;
   onSelectDay?: (d: Date) => void;
 }) {
   const today = new Date();
@@ -19,6 +20,11 @@ export function WeekStrip({
     <div className="grid grid-cols-7 gap-1 px-2">
       {days.map((d, i) => {
         const isToday = isSameDay(d, today);
+        const key = localDateStr(d);
+        const prog = progressByDate[key] ?? 0;
+        const complete = prog >= 4;
+        const partial = prog > 0 && prog < 4;
+        const dotColor = complete ? "#34C759" : partial ? "#F59E0B" : null;
         return (
           <button
             key={i}
@@ -37,15 +43,18 @@ export function WeekStrip({
               className={cn(
                 "relative flex h-9 w-9 items-center justify-center rounded-full font-display text-sm transition",
                 isToday
-                  ? hasActivityToday
+                  ? complete
                     ? "bg-[#34C759]/15 text-[#1f7a37] font-bold ring-1 ring-[#34C759]/40"
                     : "bg-[#F4ECE0] text-foreground font-bold"
                   : "text-foreground/70"
               )}
             >
               {format(d, "d")}
-              {isToday && hasActivityToday && (
-                <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#34C759]" />
+              {dotColor && (
+                <span
+                  className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full"
+                  style={{ background: dotColor }}
+                />
               )}
             </div>
           </button>

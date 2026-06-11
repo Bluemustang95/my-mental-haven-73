@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Settings, Sparkles, Sun, BookOpen, Wind, Moon as MoonIcon, ChevronRight } from "lucide-react";
+import { Sparkles, Sun, BookOpen, Wind, Moon as MoonIcon, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { localDateStr } from "@/lib/utils";
@@ -43,11 +43,13 @@ export default function Dashboard() {
   const [psychoDone, setPsychoDone] = useState(false);
   const [practiceDone, setPracticeDone] = useState<string | null>(null);
   const [nightDone, setNightDone] = useState(false);
+  const [todayGoal, setTodayGoal] = useState<string | null>(null);
 
   const [checkinOpen, setCheckinOpen] = useState<"morning" | "night" | null>(null);
   const [psychoOpen, setPsychoOpen] = useState(false);
 
   const [recos, setRecos] = useState<Reco[]>([]);
+  const [weekProgress, setWeekProgress] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -69,14 +71,49 @@ export default function Dashboard() {
     if (!user) return;
     const { data: ci } = await supabase
       .from("daily_checkins")
-      .select("mode, sleep_score")
+      .select("mode, sleep_score, day_goal")
       .eq("user_id", user.id)
       .eq("checkin_date", todayStr);
-    const morn = ci?.some((c: any) => c.mode === "morning" || (!c.mode && c.sleep_score != null)) ?? false;
+    const morningRow = ci?.find((c: any) => c.mode === "morning" || (!c.mode && c.sleep_score != null));
+    const morn = !!morningRow;
     const night = ci?.some((c: any) => c.mode === "night") ?? false;
     setMorningDone(morn);
     setNightDone(night);
-  }, [user, todayStr]);
+    setTodayGoal((morningRow as any)?.day_goal ?? null);
+
+    // week progress: count completed nodes per day this week
+    const start = new Date();
+    start.setDate(start.getDate() - 6);
+    const { data: weekCi } = await supabase
+      .from("daily_checkins")
+      .select("checkin_date, mode")
+      .eq("user_id", user.id)
+      .gte("checkin_date", localDateStr(start));
+    const { data: weekEx } = await supabase
+      .from("exercise_sessions")
+      .select("created_at, exercise_type")
+      .eq("user_id", user.id)
+      .gte("created_at", start.toISOString());
+    const map: Record<string, { m: boolean; n: boolean; p: boolean }> = {};
+    (weekCi ?? []).forEach((c: any) => {
+      const k = c.checkin_date;
+      map[k] = map[k] || { m: false, n: false, p: false };
+      if (c.mode === "morning" || !c.mode) map[k].m = true;
+      if (c.mode === "night") map[k].n = true;
+    });
+    (weekEx ?? []).forEach((e: any) => {
+      const k = localDateStr(new Date(e.created_at));
+      map[k] = map[k] || { m: false, n: false, p: false };
+      if (e.exercise_type === "daily_practice") map[k].p = true;
+    });
+    const prog: Record<string, number> = {};
+    Object.entries(map).forEach(([k, v]) => {
+      prog[k] = (v.m ? 1 : 0) + (v.n ? 1 : 0) + (v.p ? 1 : 0);
+    });
+    // include today's psycho/practice from local state
+    prog[todayStr] = (morn ? 1 : 0) + (night ? 1 : 0) + (psychoDone ? 1 : 0) + (practiceDone ? 1 : 0);
+    setWeekProgress(prog);
+  }, [user, todayStr, psychoDone, practiceDone]);
 
   useEffect(() => {
     loadToday();
@@ -181,26 +218,18 @@ export default function Dashboard() {
             <h2 className="font-display text-3xl font-bold text-[#101927]">{name || "Usuario"}</h2>
             <p className="mt-1 text-sm text-muted-foreground">Tu plan del día te espera</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate("/configuracion")}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm transition active:scale-95"
-              aria-label="Configuración"
-            >
-              <Settings size={18} className="text-[#101927]" />
-            </button>
-            <button
-              onClick={() => navigate("/perfil")}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F4ECE0] font-display text-lg font-bold uppercase text-[#101927] transition active:scale-95"
-            >
-              {name ? name[0] : "U"}
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/configuracion")}
+            aria-label="Ajustes"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F4ECE0] font-display text-lg font-bold uppercase text-[#101927] transition active:scale-95"
+          >
+            {name ? name[0] : "U"}
+          </button>
         </div>
 
         {/* Week strip */}
         <div className="mt-8">
-          <WeekStrip hasActivityToday={allDone} />
+          <WeekStrip progressByDate={weekProgress} />
         </div>
 
         {/* Progress label */}
@@ -232,6 +261,7 @@ export default function Dashboard() {
       <CheckinModal
         open={!!checkinOpen}
         mode={checkinOpen ?? "morning"}
+        dayGoal={todayGoal}
         onClose={() => setCheckinOpen(null)}
         onComplete={() => loadToday()}
       />

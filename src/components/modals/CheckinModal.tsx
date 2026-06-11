@@ -25,17 +25,20 @@ const dawnOptions = ["Excelente", "Muy bien", "Normal", "Mal", "Pésimo"];
 export function CheckinModal({
   open,
   mode,
+  dayGoal,
   onClose,
   onComplete,
 }: {
   open: boolean;
   mode: Mode;
+  dayGoal?: string | null;
   onClose: () => void;
   onComplete?: () => void;
 }) {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
-  const totalSteps = mode === "morning" ? 5 : 4;
+  const hasGoalStep = mode === "night" && !!dayGoal;
+  const totalSteps = mode === "morning" ? 5 : hasGoalStep ? 5 : 4;
 
   const [sleepScore, setSleepScore] = useState<number>(0);
   const [dawnScore, setDawnScore] = useState<string>("");
@@ -45,6 +48,7 @@ export function CheckinModal({
   const [goal, setGoal] = useState("");
   const [balanceHigh, setBalanceHigh] = useState("");
   const [balanceImp, setBalanceImp] = useState("");
+  const [goalCompleted, setGoalCompleted] = useState<"yes" | "partial" | "no" | null>(null);
   const [saving, setSaving] = useState(false);
 
   const toggleEmotion = (l: string) =>
@@ -53,7 +57,7 @@ export function CheckinModal({
   const submit = async () => {
     if (!user) return;
     setSaving(true);
-    const moodScoreApprox = mode === "morning" ? sleepScore || 3 : sleepScore || 3;
+    const moodScoreApprox = sleepScore || 3;
     await supabase.from("daily_checkins").upsert(
       {
         user_id: user.id,
@@ -68,7 +72,8 @@ export function CheckinModal({
         day_goal: goal || null,
         balance_highlight: balanceHigh || null,
         balance_improve: balanceImp || null,
-      },
+        goal_completed: goalCompleted,
+      } as any,
       { onConflict: "user_id,checkin_date" }
     );
     toast.success(mode === "morning" ? "Buen día registrado ✨" : "Cierre del día guardado 🌙");
@@ -252,6 +257,40 @@ export function CheckinModal({
               rows={3}
               className="w-full resize-none rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/35 backdrop-blur-md focus:border-violet-400/60 focus:outline-none"
             />
+          </div>
+        </div>
+      );
+    if (hasGoalStep && step === 3)
+      return (
+        <div>
+          <StepHeader title="Tu objetivo de hoy" sub="¿Pudiste cumplirlo?" />
+          <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-300">
+              Te lo propusiste esta mañana
+            </p>
+            <p className="mt-2 text-base font-medium text-white/90">{dayGoal}</p>
+          </div>
+          <div className="space-y-3">
+            {[
+              { v: "yes", l: "Sí, lo cumplí ✨", c: "emerald" },
+              { v: "partial", l: "En parte", c: "amber" },
+              { v: "no", l: "No esta vez", c: "rose" },
+            ].map((o) => {
+              const on = goalCompleted === o.v;
+              return (
+                <button
+                  key={o.v}
+                  onClick={() => setGoalCompleted(o.v as any)}
+                  className={`w-full rounded-2xl border px-5 py-4 text-left font-medium transition active:scale-[0.99] ${
+                    on
+                      ? "border-violet-400/60 bg-violet-500/15 text-white"
+                      : "border-white/10 bg-white/5 text-white/85"
+                  }`}
+                >
+                  {o.l}
+                </button>
+              );
+            })}
           </div>
         </div>
       );
