@@ -143,6 +143,8 @@ export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onCompl
         onMusicCycle={() => setMusic((m) => nextMusic(m))}
         onFinish={onAbort}
       />
+        </div>
+      </OrganicStage>
     </div>
   );
 }
