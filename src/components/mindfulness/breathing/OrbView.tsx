@@ -79,13 +79,24 @@ export function OrbView({ pattern, totalSeconds, voiceEnabled, hapticsEnabled, m
   const ringOffset = ringC * (1 - phaseProgress);
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-between px-5 pt-16 pb-10">
-      <div className="text-center">
-        <div className="text-[10px] uppercase tracking-[0.25em] text-white/45">{pattern.name}</div>
-        <div className="mt-1 font-display text-2xl font-semibold text-white tabular-nums">
-          {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+    <div className="flex h-full w-full flex-col items-center justify-between px-5 pt-12 pb-10">
+      <div className="w-full flex items-center justify-between">
+        <button
+          onClick={onAbort}
+          aria-label="Cancelar ejercicio"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur"
+        >
+          <X size={18} />
+        </button>
+        <div className="text-center">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-white/45">{pattern.name}</div>
+          <div className="mt-1 font-display text-xl font-semibold text-white tabular-nums">
+            {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+          </div>
         </div>
+        <div className="h-10 w-10" />
       </div>
+
 
       <button
         onClick={() => { haptics.tap(); setRunning((r) => !r); }}
