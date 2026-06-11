@@ -167,13 +167,13 @@ export default function Onboarding() {
     }
   };
 
-  const totalSteps = 4;
+  const totalSteps = 5;
   const canNext =
     (step === 0 && name.trim().length > 0 && Number(age) > 0) ||
-    (step === 1 && brujula.length > 0) ||
-    (step === 2 && maleta.length > 0);
+    (step === 1 && country.length > 0) ||
+    (step === 2 && brujula.length > 0) ||
+    (step === 3 && maleta.length > 0);
 
-  // ─────────── Splash (step -1 not used; we go straight to step 0) ───────────
   return (
     <OnboardingShell
       step={step + 1}
@@ -219,6 +219,42 @@ export default function Onboarding() {
       {step === 1 && (
         <div className="flex flex-1 flex-col">
           <h1 className="text-center font-display text-3xl font-semibold leading-tight">
+            ¿Desde dónde nos acompañás?
+          </h1>
+          <p className="mt-3 text-center text-sm text-white/65">
+            Esto nos ayuda a adaptar el lenguaje y los recursos a tu región.
+          </p>
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            {PAISES.map((p) => {
+              const selected = country === p.code;
+              return (
+                <button
+                  key={p.code}
+                  type="button"
+                  onClick={() => setCountry(p.code)}
+                  className={`flex items-center gap-3 rounded-2xl border px-4 py-4 text-left text-sm font-medium backdrop-blur-md transition active:scale-[0.98] ${
+                    selected
+                      ? "border-indigo-400/70 bg-indigo-500/15 text-white"
+                      : "border-white/10 bg-white/5 text-white/85 hover:border-white/25"
+                  }`}
+                >
+                  <span className="text-xl">{p.flag}</span>
+                  <span>{p.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-8 pt-2">
+            <GlassPrimaryButton disabled={!canNext} onClick={() => setStep(2)}>
+              Siguiente paso <ArrowRight className="h-4 w-4" />
+            </GlassPrimaryButton>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="flex flex-1 flex-col">
+          <h1 className="text-center font-display text-3xl font-semibold leading-tight">
             ¿Qué brújula guía tu viaje hoy?
           </h1>
           <div className="mt-8 space-y-3">
@@ -234,7 +270,7 @@ export default function Onboarding() {
           <div className="mt-8 pt-2">
             <GlassPrimaryButton
               disabled={!canNext}
-              onClick={() => setStep(2)}
+              onClick={() => setStep(3)}
             >
               Siguiente paso <ArrowRight className="h-4 w-4" />
             </GlassPrimaryButton>
@@ -242,7 +278,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <div className="flex flex-1 flex-col">
           <h1 className="text-center font-display text-3xl font-semibold leading-tight">
             ¿Qué maleta te gustaría aligerar?
@@ -258,14 +294,14 @@ export default function Onboarding() {
             ))}
           </div>
           <div className="mt-8 pt-2">
-            <GlassPrimaryButton disabled={!canNext} onClick={() => setStep(3)}>
+            <GlassPrimaryButton disabled={!canNext} onClick={() => setStep(4)}>
               Comenzar mi viaje <ArrowRight className="h-4 w-4" />
             </GlassPrimaryButton>
           </div>
         </div>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <div className="flex flex-1 flex-col">
           <h1 className="text-center font-display text-3xl font-semibold leading-tight">
             Creá tu rincón
