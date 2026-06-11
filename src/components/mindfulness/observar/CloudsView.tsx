@@ -5,8 +5,6 @@ import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { useHojasMessages } from "@/lib/hojasMessages";
 import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
 import { LeafPile } from "@/components/mindfulness/observar/LeafPile";
-import { LottiePlayer } from "@/components/mindfulness/stage/LottiePlayer";
-import leafFallAnimation from "@/assets/lottie/leaf-fall.json";
 
 type Variant = "cloud" | "leaf" | "train";
 
@@ -339,12 +337,12 @@ function CloudBubble({ thought, paused }: { thought: Thought; paused: boolean })
 
 function LeafBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
   // Falls top-to-bottom with horizontal sway (pendulum)
-  const swayAmp = 30 + Math.random() * 40;
+  const swayAmp = 35 + Math.random() * 45;
   const fallDuration = thought.speed * 0.9;
   return (
     <motion.div
       initial={{ y: "-15%", opacity: 0 }}
-      animate={{ y: "115vh", opacity: [0, 0.85, 0.85, 0] }}
+      animate={{ y: "115vh", opacity: [0, 0.9, 0.9, 0] }}
       transition={{
         duration: fallDuration,
         ease: "linear",
@@ -354,14 +352,33 @@ function LeafBubble({ thought, paused }: { thought: Thought; paused: boolean }) 
       className="absolute top-0"
     >
       <motion.div
-        animate={{ x: [-swayAmp, swayAmp, -swayAmp], rotate: [-12, 12, -12] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-        className="relative"
+        animate={{ x: [-swayAmp, swayAmp, -swayAmp], rotate: [-14, 14, -14] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className="relative flex items-center gap-2"
       >
-        <div className="pointer-events-none absolute -left-10 -top-8 h-16 w-16 opacity-90">
-          <LottiePlayer data={leafFallAnimation} loop speed={paused ? 0 : 0.6} className="h-full w-full" />
-        </div>
-        <div className={`rounded-[1.5rem] bg-emerald-50/95 text-[#0F172A] shadow-[0_8px_24px_rgba(16,185,129,0.25)] ${bubbleSize(thought.size)} font-serif leading-snug`}>
+        <motion.svg
+          viewBox="0 0 24 24"
+          className="h-9 w-9 shrink-0 drop-shadow-[0_4px_10px_rgba(16,185,129,0.55)]"
+          animate={{ rotate: [-8, 8, -8] }}
+          transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+          aria-hidden="true"
+        >
+          <path
+            d="M5 19c0-9 7-15 15-15 0 9-6 15-15 15z"
+            fill="#34D399"
+            stroke="#065F46"
+            strokeWidth="0.8"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M5 19c3-4 7-7 12-10"
+            stroke="#065F46"
+            strokeWidth="0.9"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </motion.svg>
+        <div className={`rounded-[1.5rem] bg-emerald-50/95 text-[#0F172A] shadow-[0_8px_24px_rgba(16,185,129,0.3)] ${bubbleSize(thought.size)} font-serif leading-snug`}>
           {thought.text}
         </div>
       </motion.div>

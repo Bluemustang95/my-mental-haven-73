@@ -144,21 +144,23 @@ export function OrbView({
         {pattern.id === "sigh" && (
           <VisualizerSigh phaseId={phase.phaseId} duration={phase.seconds} isActive={running} />
         )}
-        <svg className="absolute h-[280px] w-[280px] -rotate-90" viewBox="0 0 280 280">
-          <circle cx="140" cy="140" r={ringR} stroke="rgba(255,255,255,0.08)" strokeWidth="3" fill="none" />
-          <circle
-            cx="140"
-            cy="140"
-            r={ringR}
-            stroke={phase.color}
-            strokeWidth="3"
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={ringC}
-            strokeDashoffset={ringOffset}
-            style={{ transition: "stroke-dashoffset 100ms linear" }}
-          />
-        </svg>
+        {pattern.id !== "coherence" && pattern.id !== "478" && (
+          <svg className="absolute h-[280px] w-[280px] -rotate-90" viewBox="0 0 280 280">
+            <circle cx="140" cy="140" r={ringR} stroke="rgba(255,255,255,0.08)" strokeWidth="3" fill="none" />
+            <circle
+              cx="140"
+              cy="140"
+              r={ringR}
+              stroke={phase.color}
+              strokeWidth="3"
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={ringC}
+              strokeDashoffset={ringOffset}
+              style={{ transition: "stroke-dashoffset 100ms linear" }}
+            />
+          </svg>
+        )}
         <div className="absolute font-display text-3xl font-bold text-white drop-shadow-lg">
           {running ? phase.label : <Pause size={32} />}
         </div>
