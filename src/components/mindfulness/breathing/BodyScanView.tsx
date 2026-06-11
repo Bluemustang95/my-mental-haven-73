@@ -83,6 +83,11 @@ export function BodyScanView({ totalSeconds, voiceEnabled, music, onComplete }: 
               <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
               <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
             </linearGradient>
+            <linearGradient id="beamGrad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="50%" stopColor="#FB923C" />
+              <stop offset="100%" stopColor="transparent" />
+            </linearGradient>
           </defs>
           {/* Body silhouette */}
           <ellipse cx="100" cy="30" rx="22" ry="26" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.15)" />
@@ -90,13 +95,21 @@ export function BodyScanView({ totalSeconds, voiceEnabled, music, onComplete }: 
           <path d="M60,180 L80,300 L95,300 L100,200 L105,300 L120,300 L140,180 Z" fill="url(#bodyGrad)" stroke="rgba(255,255,255,0.15)" />
 
           {/* Scanner beam */}
+          <motion.rect
+            x="40" width="120" height="40"
+            fill="url(#beamGrad)"
+            animate={{ y: zone.y - 20 }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+            opacity="0.35"
+          />
           <motion.line
             x1="40" x2="160"
             stroke="#FB923C" strokeWidth="2.5" strokeLinecap="round"
             animate={{ y1: zone.y, y2: zone.y }}
             transition={{ duration: 1.2, ease: "easeInOut" }}
           />
-          <motion.rect
+        </svg>
+      </div>
             x="40" width="120" height="40"
             fill="url(#beamGrad)"
             animate={{ y: zone.y - 20 }}
