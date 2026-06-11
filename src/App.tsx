@@ -86,7 +86,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
 }
 
@@ -99,7 +99,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/calendario" element={<ProtectedRoute><CalendarMonth /></ProtectedRoute>} />
             <Route path="/calendario/:date" element={<ProtectedRoute><CalendarDay /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
