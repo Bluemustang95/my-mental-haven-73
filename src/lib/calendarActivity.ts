@@ -30,7 +30,7 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     supabase.from("journal_entries").select("id, created_at, content").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("thought_records").select("id, created_at, situation").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
-    supabase.from("exercise_sessions").select("id, created_at, exercise_type, exercise_name, duration_seconds").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
+    supabase.from("exercise_sessions").select("id, created_at, exercise_type, exercise_name, duration_seconds, mood_before, mood_after").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("dream_log").select("id, created_at, description").eq("user_id", userId).eq("dream_date", ds).order("created_at"),
     supabase.from("micro_achievements").select("id, created_at, achievement_text").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("daily_checkins").select("id, created_at, mood_score, note, mode, goal_completed, day_goal").eq("user_id", userId).eq("checkin_date", ds),
@@ -46,7 +46,11 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     const label = TEST_LABELS[key] || `Test ${t.test_type}`;
     activities.push({ type: "test", label, detail: `Puntaje: ${t.score}${t.severity ? ` · ${t.severity}` : ""}`, time: format(new Date(t.created_at), "HH:mm") });
   });
-  exercises.data?.forEach((e: any) => activities.push({ type: "exercise", label: e.exercise_name || e.exercise_type, detail: e.duration_seconds ? `${Math.round(e.duration_seconds / 60)} min` : "Completado", time: format(new Date(e.created_at), "HH:mm") }));
+  exercises.data?.forEach((e: any) => {
+    const dur = e.duration_seconds ? `${Math.round(e.duration_seconds / 60)} min` : "Completado";
+    const suds = e.mood_before != null && e.mood_after != null ? ` · SUDS ${e.mood_before}→${e.mood_after}` : "";
+    activities.push({ type: "exercise", label: e.exercise_name || e.exercise_type, detail: `${dur}${suds}`, time: format(new Date(e.created_at), "HH:mm") });
+  });
   dreams.data?.forEach((d: any) => activities.push({ type: "dream", label: "Registro de sueño", detail: d.description?.slice(0, 100) || "", time: format(new Date(d.created_at), "HH:mm") }));
   achievements.data?.forEach((a: any) => activities.push({ type: "goal", label: "Logro registrado", detail: a.achievement_text?.slice(0, 100) || "", time: format(new Date(a.created_at), "HH:mm") }));
   checkins.data?.forEach((c: any) => {
