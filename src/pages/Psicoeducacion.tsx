@@ -167,7 +167,7 @@ export default function Psicoeducacion() {
                     </motion.button>
                   );
                 })}
-                {cats.length === 0 && (
+                {courseCats.length === 0 && (
                   <p className="py-6 text-center text-sm text-white/55">Pronto sumaremos categorías.</p>
                 )}
               </div>
