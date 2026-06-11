@@ -721,6 +721,7 @@ export type Database = {
       patient_app_profiles: {
         Row: {
           areas_of_interest: string[] | null
+          country: string | null
           created_at: string | null
           display_name: string | null
           id: string
@@ -737,6 +738,7 @@ export type Database = {
         }
         Insert: {
           areas_of_interest?: string[] | null
+          country?: string | null
           created_at?: string | null
           display_name?: string | null
           id?: string
@@ -753,6 +755,7 @@ export type Database = {
         }
         Update: {
           areas_of_interest?: string[] | null
+          country?: string | null
           created_at?: string | null
           display_name?: string | null
           id?: string
