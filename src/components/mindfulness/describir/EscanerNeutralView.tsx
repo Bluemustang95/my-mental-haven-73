@@ -20,7 +20,7 @@ export function EscanerNeutralView({ music, onComplete }: Props) {
 
   const audio = useMindfulAudio();
   useEffect(() => {
-    audio.startMusic(music);
+    audio.playMusic(music);
     return () => { audio.stopMusic(); };
   }, [music]);
 

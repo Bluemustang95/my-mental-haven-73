@@ -46,8 +46,8 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete }: Props) 
 
   const audio = useMindfulAudio();
   useEffect(() => {
-    audio.startMusic(music);
-    return () => { audio.stopMusic(); audio.stopVoice(); };
+    audio.playMusic(music);
+    return () => { audio.stopMusic(); audio.stopSpeech(); };
   }, [music]);
 
   useEffect(() => {
