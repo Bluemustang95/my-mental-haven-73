@@ -218,21 +218,13 @@ export default function Dashboard() {
             <h2 className="font-display text-3xl font-bold text-[#101927]">{name || "Usuario"}</h2>
             <p className="mt-1 text-sm text-muted-foreground">Tu plan del día te espera</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate("/configuracion")}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm transition active:scale-95"
-              aria-label="Configuración"
-            >
-              <Settings size={18} className="text-[#101927]" />
-            </button>
-            <button
-              onClick={() => navigate("/perfil")}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F4ECE0] font-display text-lg font-bold uppercase text-[#101927] transition active:scale-95"
-            >
-              {name ? name[0] : "U"}
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/configuracion")}
+            aria-label="Ajustes"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F4ECE0] font-display text-lg font-bold uppercase text-[#101927] transition active:scale-95"
+          >
+            {name ? name[0] : "U"}
+          </button>
         </div>
 
         {/* Week strip */}
