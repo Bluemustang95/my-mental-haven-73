@@ -118,7 +118,7 @@ export default function Onboarding() {
   const toggle = (list: string[], setter: (v: string[]) => void, item: string) =>
     setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
 
-  const collectPending = (): Pending => ({ name, age, brujula, maleta });
+  const collectPending = (): Pending => ({ name, age, country, brujula, maleta });
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
