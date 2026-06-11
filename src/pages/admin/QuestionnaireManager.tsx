@@ -42,6 +42,8 @@ type Option = {
   sort: number;
 };
 type OptionLink = { id: string; option_id: string; sub_resource_id: string; weight: number };
+type PsychoContent = { id: string; title: string; category: string };
+type PsychoLink = { id: string; sub_resource_id: string; psycho_id: string; weight: number };
 
 export default function QuestionnaireManager() {
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
@@ -49,22 +51,28 @@ export default function QuestionnaireManager() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [options, setOptions] = useState<Option[]>([]);
   const [links, setLinks] = useState<OptionLink[]>([]);
+  const [psychoContent, setPsychoContent] = useState<PsychoContent[]>([]);
+  const [psychoLinks, setPsychoLinks] = useState<PsychoLink[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadAll = async () => {
     setLoading(true);
-    const [c, s, q, o, l] = await Promise.all([
+    const [c, s, q, o, l, p, pl] = await Promise.all([
       supabase.from("resource_categories").select("id, name, slug").order("name"),
       supabase.from("algo_sub_resources").select("*").order("sort"),
       supabase.from("algo_questions").select("*").order("sort"),
       supabase.from("algo_options").select("*").order("sort"),
       supabase.from("algo_option_links").select("*"),
+      supabase.from("psychoeducation_content").select("id, title, category").eq("is_published", true).order("title"),
+      supabase.from("algo_psycho_links").select("*"),
     ]);
     setCategories((c.data ?? []) as ResourceCategory[]);
     setSubResources((s.data ?? []) as SubResource[]);
     setQuestions((q.data ?? []) as Question[]);
     setOptions((o.data ?? []) as Option[]);
     setLinks((l.data ?? []) as OptionLink[]);
+    setPsychoContent((p.data ?? []) as PsychoContent[]);
+    setPsychoLinks((pl.data ?? []) as PsychoLink[]);
     setLoading(false);
   };
 
@@ -132,6 +140,21 @@ export default function QuestionnaireManager() {
     loadAll();
   };
 
+  // ─────────── Psicoeducación ↔ Sub-resource links ───────────
+  const togglePsychoLink = async (subId: string, psychoId: string) => {
+    const existing = psychoLinks.find((l) => l.sub_resource_id === subId && l.psycho_id === psychoId);
+    if (existing) {
+      await supabase.from("algo_psycho_links").delete().eq("id", existing.id);
+    } else {
+      await supabase.from("algo_psycho_links").insert({
+        sub_resource_id: subId,
+        psycho_id: psychoId,
+        weight: 1,
+      });
+    }
+    loadAll();
+  };
+
   if (loading) return <p className="text-sm text-muted-foreground">Cargando…</p>;
 
   return (
@@ -143,6 +166,7 @@ export default function QuestionnaireManager() {
           <TabsTrigger value="subresources">Sub-recursos</TabsTrigger>
           <TabsTrigger value="questions">Preguntas</TabsTrigger>
           <TabsTrigger value="links">Vínculos</TabsTrigger>
+          <TabsTrigger value="psico">Psicoeducación</TabsTrigger>
         </TabsList>
 
         {/* ─────── SUB-RESOURCES ─────── */}
@@ -315,6 +339,53 @@ export default function QuestionnaireManager() {
               </CardContent>
             </Card>
           ))}
+        </TabsContent>
+
+        {/* ─────── PSICOEDUCACIÓN LINKS ─────── */}
+        <TabsContent value="psico" className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Vinculá contenido de psicoeducación a cada sub-recurso. Se mostrará al usuario cuando ese sub-recurso sea recomendado.
+          </p>
+          {subResources.map((sr) => (
+            <Card key={sr.id}>
+              <CardHeader>
+                <CardTitle className="text-base">{sr.name}</CardTitle>
+                <p className="text-xs text-muted-foreground">{sr.slug}</p>
+              </CardHeader>
+              <CardContent>
+                {psychoContent.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Todavía no hay contenido publicado en psicoeducación.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {psychoContent.map((pc) => {
+                      const linked = psychoLinks.some(
+                        (l) => l.sub_resource_id === sr.id && l.psycho_id === pc.id
+                      );
+                      return (
+                        <button
+                          key={pc.id}
+                          onClick={() => togglePsychoLink(sr.id, pc.id)}
+                          className={`rounded-full border px-3 py-1 text-xs transition ${
+                            linked
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          {pc.title}
+                          <span className="ml-1 opacity-60">· {pc.category}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+          {subResources.length === 0 && (
+            <p className="text-sm text-muted-foreground">Creá sub-recursos primero.</p>
+          )}
         </TabsContent>
       </Tabs>
     </div>

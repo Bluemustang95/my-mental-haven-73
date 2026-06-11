@@ -75,6 +75,7 @@ import QuestionnaireManager from "@/pages/admin/QuestionnaireManager";
 import ResourceTools from "@/pages/ResourceTools";
 import ResourceIntro from "@/pages/ResourceIntro";
 import SafetyPlan from "@/pages/SafetyPlan";
+import Questionnaire from "@/pages/Questionnaire";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,7 @@ const App = () => (
             <Route path="/calendario/:date" element={<ProtectedRoute><CalendarDay /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/cuestionario" element={<Questionnaire />} />
 
               {/* Diario (tab 2) */}
               <Route path="/diario" element={<Diario />} />
