@@ -41,12 +41,25 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
 
   journals.data?.forEach((j: any) => activities.push({ type: "journal", label: "Entrada de diario", detail: j.content?.slice(0, 100) || "", time: format(new Date(j.created_at), "HH:mm") }));
   thoughts.data?.forEach((t: any) => activities.push({ type: "thought", label: "Registro de pensamiento", detail: t.situation?.slice(0, 100) || "", time: format(new Date(t.created_at), "HH:mm") }));
-  tests.data?.forEach((t: any) => activities.push({ type: "test", label: `Test ${t.test_type}`, detail: `Puntaje: ${t.score}${t.severity ? ` · ${t.severity}` : ""}`, time: format(new Date(t.created_at), "HH:mm") }));
+  tests.data?.forEach((t: any) => {
+    const key = (t.test_type || "").toLowerCase();
+    const label = TEST_LABELS[key] || `Test ${t.test_type}`;
+    activities.push({ type: "test", label, detail: `Puntaje: ${t.score}${t.severity ? ` · ${t.severity}` : ""}`, time: format(new Date(t.created_at), "HH:mm") });
+  });
   exercises.data?.forEach((e: any) => activities.push({ type: "exercise", label: e.exercise_name || e.exercise_type, detail: e.duration_seconds ? `${Math.round(e.duration_seconds / 60)} min` : "Completado", time: format(new Date(e.created_at), "HH:mm") }));
   dreams.data?.forEach((d: any) => activities.push({ type: "dream", label: "Registro de sueño", detail: d.description?.slice(0, 100) || "", time: format(new Date(d.created_at), "HH:mm") }));
   achievements.data?.forEach((a: any) => activities.push({ type: "goal", label: "Logro registrado", detail: a.achievement_text?.slice(0, 100) || "", time: format(new Date(a.created_at), "HH:mm") }));
-  checkins.data?.forEach((c: any) => activities.push({ type: "exercise", label: "Check-in emocional", detail: `Estado ${c.mood_score}/5${c.note ? ` · ${c.note.slice(0, 80)}` : ""}`, time: format(new Date(c.created_at), "HH:mm") }));
+  checkins.data?.forEach((c: any) => {
+    const isMorning = c.mode === "morning" || (!c.mode);
+    const label = isMorning ? "Valoración matutina" : c.mode === "night" ? "Valoración nocturna" : "Check-in emocional";
+    activities.push({ type: "exercise", label, detail: `Ánimo ${c.mood_score ?? "—"}/5${c.note ? ` · ${c.note.slice(0, 60)}` : ""}`, time: format(new Date(c.created_at), "HH:mm") });
+    if (c.mode === "night" && c.goal_completed && c.day_goal) {
+      const tag = c.goal_completed === "yes" ? "Cumplido ✓" : c.goal_completed === "partial" ? "Parcialmente" : "No cumplido";
+      activities.push({ type: "goal", label: "Valoración de objetivo", detail: `${c.day_goal.slice(0, 70)} — ${tag}`, time: format(new Date(c.created_at), "HH:mm") });
+    }
+  });
   completedGoals.data?.forEach((g: any) => activities.push({ type: "goal", label: "Objetivo cumplido", detail: g.goal_text?.slice(0, 100) || "", time: format(new Date(g.created_at), "HH:mm") }));
+  readings.data?.forEach((r: any) => activities.push({ type: "reading", label: r.psychoeducation_content?.title ? `Lectura: ${r.psychoeducation_content.title}` : "Lectura completada", detail: r.psychoeducation_content?.content_type === "video" ? "Video" : "Artículo", time: r.completed_at ? format(new Date(r.completed_at), "HH:mm") : "" }));
 
   const bodyPartLabels: Record<string, string> = {
     head: "Cabeza", neck: "Cuello", chest: "Pecho", stomach: "Estómago",
