@@ -36,7 +36,7 @@ type Content = {
   thumbnail_url: string | null;
 };
 
-type Cat = { id: string; title: string };
+type Cat = { id: string; title: string; content_type: ContentType };
 
 const emptyForm = {
   title: "",
@@ -78,7 +78,10 @@ export default function ContentManager() {
   const fetchAll = async () => {
     const [c, k] = await Promise.all([
       supabase.from("psychoeducation_content").select("*").order("sort_order", { ascending: true }),
-      supabase.from("psychoeducation_categories" as any).select("id,title").order("sort_order", { ascending: true }),
+      supabase
+        .from("psychoeducation_categories" as any)
+        .select("id,title,content_type")
+        .order("sort_order", { ascending: true }),
     ]);
     setItems((c.data as any) ?? []);
     setCats((k.data as any) ?? []);
@@ -94,12 +97,15 @@ export default function ContentManager() {
     [items, tab]
   );
 
+  const catsForType = (t: ContentType) => cats.filter((c) => (c.content_type ?? "video") === t);
+
   const openCreate = () => {
     setEditingId(null);
+    const t = (tab === "categories" ? "video" : tab) as ContentType;
     setForm({
       ...emptyForm,
-      content_type: (tab === "categories" ? "video" : tab) as ContentType,
-      category_id: cats[0]?.id ?? "",
+      content_type: t,
+      category_id: catsForType(t)[0]?.id ?? "",
     });
     setOpen(true);
   };
