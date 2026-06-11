@@ -73,7 +73,14 @@ export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onCompl
   const seconds = timeLeft % 60;
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-between px-5 pt-12 pb-40">
+    <div className="relative h-full w-full">
+      <OrganicStage
+        accentColor="#FB923C"
+        secondaryColor="#10B981"
+        particleColor="#FDFCFB"
+        particleCount={12}
+      >
+        <div className="relative flex h-full w-full flex-col items-center justify-between px-5 pt-12 pb-40">
       <div className="text-center">
         <div className="text-[10px] uppercase tracking-[0.25em] text-white/45">Escáner corporal</div>
         <div className="mt-1 font-display text-2xl font-semibold text-white tabular-nums">
