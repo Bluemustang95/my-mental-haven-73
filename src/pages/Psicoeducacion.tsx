@@ -58,7 +58,8 @@ export default function Psicoeducacion() {
         user_id: user.id,
         content_id: item.id,
         completed: true,
-        completed_at: new Date().toISOString(),
+        progress_percent: 100,
+        last_accessed: new Date().toISOString(),
       },
       { onConflict: "user_id,content_id" }
     );
