@@ -25,17 +25,20 @@ const dawnOptions = ["Excelente", "Muy bien", "Normal", "Mal", "Pésimo"];
 export function CheckinModal({
   open,
   mode,
+  dayGoal,
   onClose,
   onComplete,
 }: {
   open: boolean;
   mode: Mode;
+  dayGoal?: string | null;
   onClose: () => void;
   onComplete?: () => void;
 }) {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
-  const totalSteps = mode === "morning" ? 5 : 4;
+  const hasGoalStep = mode === "night" && !!dayGoal;
+  const totalSteps = mode === "morning" ? 5 : hasGoalStep ? 5 : 4;
 
   const [sleepScore, setSleepScore] = useState<number>(0);
   const [dawnScore, setDawnScore] = useState<string>("");
@@ -45,6 +48,7 @@ export function CheckinModal({
   const [goal, setGoal] = useState("");
   const [balanceHigh, setBalanceHigh] = useState("");
   const [balanceImp, setBalanceImp] = useState("");
+  const [goalCompleted, setGoalCompleted] = useState<"yes" | "partial" | "no" | null>(null);
   const [saving, setSaving] = useState(false);
 
   const toggleEmotion = (l: string) =>
@@ -53,7 +57,7 @@ export function CheckinModal({
   const submit = async () => {
     if (!user) return;
     setSaving(true);
-    const moodScoreApprox = mode === "morning" ? sleepScore || 3 : sleepScore || 3;
+    const moodScoreApprox = sleepScore || 3;
     await supabase.from("daily_checkins").upsert(
       {
         user_id: user.id,
@@ -68,7 +72,8 @@ export function CheckinModal({
         day_goal: goal || null,
         balance_highlight: balanceHigh || null,
         balance_improve: balanceImp || null,
-      },
+        goal_completed: goalCompleted,
+      } as any,
       { onConflict: "user_id,checkin_date" }
     );
     toast.success(mode === "morning" ? "Buen día registrado ✨" : "Cierre del día guardado 🌙");
