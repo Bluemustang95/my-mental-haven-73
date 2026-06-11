@@ -110,21 +110,6 @@ export function BodyScanView({ totalSeconds, voiceEnabled, music, onComplete }: 
           />
         </svg>
       </div>
-            x="40" width="120" height="40"
-            fill="url(#beamGrad)"
-            animate={{ y: zone.y - 20 }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
-            opacity="0.35"
-          />
-          <defs>
-            <linearGradient id="beamGrad" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="transparent" />
-              <stop offset="50%" stopColor="#FB923C" />
-              <stop offset="100%" stopColor="transparent" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
 
       <div className="text-center max-w-xs">
         <div className="font-display text-2xl font-semibold text-[#FB923C]">{zone.label}</div>
