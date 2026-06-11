@@ -74,7 +74,7 @@ export default function BreathingHome() {
     <div className="min-h-screen bg-[#FDFCFB] pb-32">
       {/* Header */}
       <div className="px-5 pt-12">
-        <button onClick={() => navigate("/herramientas")} className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+        <button onClick={() => navigate("/herramientas/mindfulness")} className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
           <ArrowLeft size={18} />
         </button>
         <div className="flex items-center gap-3">
