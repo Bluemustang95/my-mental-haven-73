@@ -55,7 +55,7 @@ export default function DescribirHome() {
     return (
       <BentoSetupScreen
         title="Poner palabras"
-        subtitle="Tres formas de describir lo que pasa sin etiquetarlo."
+        subtitle="Tres formas de ver los hechos de lo que pasa sin etiquetarlo."
         accent={ACCENT}
         layout="stack"
         onClose={close}

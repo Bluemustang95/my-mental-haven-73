@@ -53,7 +53,7 @@ export default function ObservarHome() {
   if (step === "setup_mode") {
     return (
       <BentoSetupScreen
-        title="¿Cómo querés observar?"
+        title="¿Cómo querés mirar el presente?"
         subtitle="Dos formas de notar lo que aparece, sin engancharte."
         accent={ACCENT}
         onClose={close}
