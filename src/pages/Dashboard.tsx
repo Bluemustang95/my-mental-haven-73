@@ -205,35 +205,36 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFB] pb-28 safe-area-top">
-      <div className="mx-auto max-w-md px-5 pt-12">
+      <div className="mx-auto max-w-md px-5 pt-8">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="font-display text-3xl font-bold leading-tight text-[#101927]">
-              {greeting},{" "}
-              <span className="inline-flex items-center gap-1">
-                <Sparkles size={22} className="text-amber-500" />
-              </span>
+        <div className="flex items-center justify-between">
+          <div className="min-w-0">
+            <p className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground/70">
+              {greeting} <Sparkles size={11} className="text-amber-500" />
+            </p>
+            <h1 className="mt-0.5 truncate font-display text-xl font-semibold text-[#101927]">
+              {name || "Usuario"}
             </h1>
-            <h2 className="font-display text-3xl font-bold text-[#101927]">{name || "Usuario"}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Tu plan del día te espera</p>
           </div>
           <button
             onClick={() => navigate("/configuracion")}
             aria-label="Ajustes"
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F4ECE0] font-display text-lg font-bold uppercase text-[#101927] transition active:scale-95"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F4ECE0] font-display text-sm font-semibold uppercase text-[#101927] transition active:scale-95"
           >
             {name ? name[0] : "U"}
           </button>
         </div>
 
         {/* Week strip */}
-        <div className="mt-8">
-          <WeekStrip progressByDate={weekProgress} />
+        <div className="mt-6">
+          <WeekStrip
+            progressByDate={weekProgress}
+            onSelectDay={(d) => navigate(`/calendario/${localDateStr(d)}`)}
+          />
         </div>
 
         {/* Progress label */}
-        <p className="mt-10 mb-4 px-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="mt-8 mb-3 px-1 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/70">
           Tu progreso de hoy
         </p>
 

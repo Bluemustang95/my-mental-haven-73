@@ -814,6 +814,7 @@ export type Database = {
           description: string | null
           duration: string | null
           id: string
+          is_featured: boolean
           is_premium: boolean | null
           is_published: boolean | null
           sort_order: number | null
@@ -829,6 +830,7 @@ export type Database = {
           description?: string | null
           duration?: string | null
           id?: string
+          is_featured?: boolean
           is_premium?: boolean | null
           is_published?: boolean | null
           sort_order?: number | null
@@ -844,6 +846,7 @@ export type Database = {
           description?: string | null
           duration?: string | null
           id?: string
+          is_featured?: boolean
           is_premium?: boolean | null
           is_published?: boolean | null
           sort_order?: number | null

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench } from "lucide-react";
+import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -87,6 +87,11 @@ export default function Settings() {
             icon={<UserIcon size={18} />}
             label="Información personal"
             onClick={() => navigate("/perfil")}
+          />
+          <Row
+            icon={<History size={18} />}
+            label="Historial de actividad"
+            onClick={() => navigate("/configuracion/historial")}
           />
           <Row
             icon={<BarChart3 size={18} />}

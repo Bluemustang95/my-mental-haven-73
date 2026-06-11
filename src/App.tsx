@@ -77,6 +77,7 @@ import ResourceIntro from "@/pages/ResourceIntro";
 import SafetyPlan from "@/pages/SafetyPlan";
 import Questionnaire from "@/pages/Questionnaire";
 import Settings from "@/pages/Settings";
+import SettingsHistory from "@/pages/SettingsHistory";
 import DiarioInteligente from "@/pages/DiarioInteligente";
 import Psicoeducacion from "@/pages/Psicoeducacion";
 
@@ -111,6 +112,7 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/cuestionario" element={<Questionnaire />} />
               <Route path="/configuracion" element={<Settings />} />
+              <Route path="/configuracion/historial" element={<SettingsHistory />} />
               <Route path="/diario-inteligente/:slug" element={<DiarioInteligente />} />
               <Route path="/psicoeducacion" element={<Psicoeducacion />} />
 
