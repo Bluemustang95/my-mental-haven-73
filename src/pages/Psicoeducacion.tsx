@@ -86,6 +86,7 @@ export default function Psicoeducacion() {
 
   const featured = items.find((i) => i.is_featured && i.content_type === "video") || items.find((i) => i.content_type === "video");
   const podcasts = items.filter((i) => i.content_type === "podcast");
+  const courseCats = cats.filter((c: any) => (c.content_type ?? "video") !== "podcast");
 
   const openLesson = (id: string) => navigate(`/herramientas/contenido/leccion/${id}`);
   const openCategory = (id: string) => navigate(`/herramientas/contenido/categoria/${id}`);
