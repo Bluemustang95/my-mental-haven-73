@@ -26,16 +26,17 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
   const dayEnd = `${nextDayStr}T03:00:00Z`;
   const activities: CalendarActivity[] = [];
 
-  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap] = await Promise.all([
+  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap, readings] = await Promise.all([
     supabase.from("journal_entries").select("id, created_at, content").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("thought_records").select("id, created_at, situation").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("exercise_sessions").select("id, created_at, exercise_type, exercise_name, duration_seconds").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("dream_log").select("id, created_at, description").eq("user_id", userId).eq("dream_date", ds).order("created_at"),
     supabase.from("micro_achievements").select("id, created_at, achievement_text").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
-    supabase.from("daily_checkins").select("id, created_at, mood_score, note").eq("user_id", userId).eq("checkin_date", ds),
+    supabase.from("daily_checkins").select("id, created_at, mood_score, note, mode, goal_completed, day_goal").eq("user_id", userId).eq("checkin_date", ds),
     supabase.from("weekly_goals").select("id, created_at, goal_text").eq("user_id", userId).eq("completed", true).gte("created_at", dayStart).lt("created_at", dayEnd),
     supabase.from("body_map_entries").select("id, created_at, body_part, note").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
+    supabase.from("content_progress").select("id, completed_at, psychoeducation_content(title, content_type)").eq("user_id", userId).eq("completed", true).gte("completed_at", dayStart).lt("completed_at", dayEnd),
   ]);
 
   journals.data?.forEach((j: any) => activities.push({ type: "journal", label: "Entrada de diario", detail: j.content?.slice(0, 100) || "", time: format(new Date(j.created_at), "HH:mm") }));
