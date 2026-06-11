@@ -292,6 +292,7 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
           )}
         </AnimatePresence>
       </div>
+      </OrganicStage>
     </div>
   );
 }
