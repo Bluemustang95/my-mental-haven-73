@@ -820,6 +820,44 @@ export type Database = {
         }
         Relationships: []
       }
+      practice_responses: {
+        Row: {
+          completed: boolean
+          content_id: string
+          created_at: string
+          data: Json
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          content_id: string
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          content_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_responses_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "psychoeducation_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       psychoeducation_categories: {
         Row: {
           accent_color: string | null
@@ -875,8 +913,11 @@ export type Database = {
           is_premium: boolean | null
           is_published: boolean | null
           media_url: string | null
+          practice_blocks: Json | null
+          practice_intro: string | null
           sort_order: number | null
           tags: string[] | null
+          text_kind: string
           thumbnail_url: string | null
           title: string
         }
@@ -895,8 +936,11 @@ export type Database = {
           is_premium?: boolean | null
           is_published?: boolean | null
           media_url?: string | null
+          practice_blocks?: Json | null
+          practice_intro?: string | null
           sort_order?: number | null
           tags?: string[] | null
+          text_kind?: string
           thumbnail_url?: string | null
           title: string
         }
@@ -915,8 +959,11 @@ export type Database = {
           is_premium?: boolean | null
           is_published?: boolean | null
           media_url?: string | null
+          practice_blocks?: Json | null
+          practice_intro?: string | null
           sort_order?: number | null
           tags?: string[] | null
+          text_kind?: string
           thumbnail_url?: string | null
           title?: string
         }
