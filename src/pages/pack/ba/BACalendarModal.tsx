@@ -127,8 +127,8 @@ export function BACalendarModal({
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[100] bg-[#fdfbfb]">
-      <header className="sticky top-0 z-10 border-b border-[#101927]/5 bg-white/85 backdrop-blur-xl">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#fdfbfb]">
+      <header className="shrink-0 border-b border-[#101927]/5 bg-white/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-5 py-3">
           <p className="font-display text-sm font-bold text-[#101927]">Calendario de Dominio y Agrado</p>
           <button
@@ -139,7 +139,8 @@ export function BACalendarModal({
           </button>
         </div>
       </header>
-      <div className="mx-auto max-w-3xl p-4">{grid}</div>
+      {modalGrid}
+
       {editing && (
         <EntryEditor
           day={editing.day}
