@@ -10,12 +10,16 @@ export function BAOnboarding({
   content,
   onClose,
   onFinish,
+  onReset,
 }: {
   content: BAContent;
   onClose: () => void;
   onFinish: () => void;
+  onReset?: () => Promise<void> | void;
 }) {
   const [step, setStep] = useState(0);
+  const { isAdmin } = useAdminRole();
+
   const slides = content.intro_slides ?? [];
   const total = slides.length || 1;
   const slide = slides[step];
