@@ -110,6 +110,7 @@ export default function CategoryDetail() {
                 const route = isPractice
                   ? `/herramientas/contenido/practica/${it.id}`
                   : `/herramientas/contenido/leccion/${it.id}`;
+                const done = doneIds.has(it.id);
                 return (
                   <motion.button
                     key={it.id}
@@ -117,7 +118,7 @@ export default function CategoryDetail() {
                     whileTap={{ scale: 0.98 }}
                     className="flex w-full items-center gap-4 rounded-2xl border p-4 text-left"
                     style={{
-                      borderColor: `${meta.color}33`,
+                      borderColor: done ? "#10B98166" : `${meta.color}33`,
                       background: `${meta.color}0d`,
                     }}
                   >
@@ -137,6 +138,12 @@ export default function CategoryDetail() {
                         {it.duration_minutes ? `${it.duration_minutes} min.` : it.duration ?? "—"}
                       </div>
                     </div>
+                    {done && (
+                      <div className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+                        <Check size={12} strokeWidth={3} />
+                        {isPractice ? "Hecho" : "Leído"}
+                      </div>
+                    )}
                   </motion.button>
                 );
               })}
