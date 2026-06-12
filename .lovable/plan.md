@@ -1,34 +1,16 @@
-# Arreglos en Lección y Categoría
+# Quitar franja blanca al pie
 
-## Problemas
+## Causa
+`AppLayout` envuelve cada página con `min-h-screen bg-background pb-20`. Las páginas internas (como Psicoeducación) ya son `min-h-screen` con su propio `pb-32` oscuro. El `pb-20` del layout agrega 80 px extra debajo de la página con el color `bg-background` (crema), que aparece como franja blanca detrás del BottomNav flotante al hacer scroll.
 
-1. La barra "Entendido / Leído · Volver" queda flotando sobre el texto y el BottomNav aparece sobre un fondo blanco. Causa: `LessonView` está dentro de `AppLayout` (que renderiza el BottomNav + padding inferior), y además agregamos una segunda barra fija propia. Se pisan entre sí.
-2. Al volver desde una lección ya marcada como leída, en la categoría la tarjeta no muestra ningún indicador de "leído".
+## Cambio
+En `src/components/layout/AppLayout.tsx`:
+- Quitar `pb-20` del wrapper (el BottomNav es `position: fixed`, no necesita reservar espacio; cada página ya define su propio padding inferior).
+- Cambiar `bg-background` a `bg-[#0B0B10]` para que, si alguna página no llena el alto, el fondo coincida con el dark mode de la app y no se vea crema.
 
-## Cambios
+## Fuera de alcance
+- No tocar páginas individuales.
+- No tocar BottomNav.
 
-### 1. Sacar Lección y Práctica del AppLayout
-En `src/App.tsx`, mover las rutas `/herramientas/contenido/leccion/:id` y `/herramientas/contenido/practica/:id` fuera del bloque envuelto por `AppLayout` (igual que hacen las sesiones de mindfulness / ejercicios inmersivos). Así no aparece el BottomNav blanco y la barra inferior de la lección queda pegada abajo sin solaparse con nada.
-
-### 2. Restaurar la barra inferior de Lección
-En `src/pages/psicoeducacion/LessonView.tsx`:
-- Volver el contenedor del botón a `bottom-0` (ya sin BottomNav debajo).
-- Reducir el `pb` del contenedor principal a algo razonable (`pb-28`) para que el texto no quede tapado por la barra fija.
-
-(Mismo ajuste menor en `PracticeView` si ya tenía padding pensado para BottomNav.)
-
-### 3. Mostrar "Leído" en CategoryDetail
-En `src/pages/psicoeducacion/CategoryDetail.tsx`:
-- Cargar `content_progress` del usuario actual para los ids de la categoría (una sola query `select content_id, completed where user_id=? and content_id in (...)`).
-- En cada tarjeta de Teórico/Práctico, si está completado, mostrar a la derecha un check verde (`#10B981`) con texto "Leído" (para teórico) o "Hecho" (para práctico), y un sutil borde/halo verde encima del color base de la tarjeta.
-
-### Fuera de alcance
-- No tocar la lógica de auto‑marcado (scroll + 20 s) ya implementada.
-- No tocar estilos de cards más allá del badge de completado.
-- No tocar otras rutas ni BottomNav.
-
-## Archivos a editar
-- `src/App.tsx`
-- `src/pages/psicoeducacion/LessonView.tsx`
-- `src/pages/psicoeducacion/CategoryDetail.tsx`
-- (opcional) `src/pages/psicoeducacion/PracticeView.tsx` si hace falta ajustar padding.
+## Archivo
+- `src/components/layout/AppLayout.tsx`
