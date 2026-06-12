@@ -164,7 +164,7 @@ export default function LessonView() {
   const url = lesson.media_url ?? lesson.content_url ?? "";
 
   return (
-    <div className="min-h-screen bg-[#0B0B10] pb-40 text-white safe-area-top">
+    <div className="min-h-screen bg-[#0B0B10] pb-28 text-white safe-area-top">
       <div className="sticky top-0 z-10 border-b border-white/5 bg-[#0B0B10]/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-md items-center gap-3 px-5 py-4">
           <button onClick={() => navigate(-1)} className="text-white/80" aria-label="Volver">
@@ -240,7 +240,7 @@ export default function LessonView() {
         )}
       </div>
 
-      <div className="fixed bottom-24 left-0 right-0 z-20 border-t border-white/5 bg-[#0B0B10]/95 p-4 backdrop-blur-md">
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/5 bg-[#0B0B10]/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md">
         <div className="mx-auto max-w-md">
           <button
             onClick={markDone}

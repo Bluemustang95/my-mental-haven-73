@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, BookOpen, Video, Headphones, Clock, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Video, Headphones, Clock, Sparkles, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,6 +38,7 @@ export default function CategoryDetail() {
   const navigate = useNavigate();
   const [cat, setCat] = useState<Category | null>(null);
   const [items, setItems] = useState<Item[]>([]);
+  const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,7 +54,20 @@ export default function CategoryDetail() {
           .order("sort_order", { ascending: true }),
       ]);
       setCat((c.data as any) ?? null);
-      setItems((i.data as any) ?? []);
+      const list = (i.data as any[]) ?? [];
+      setItems(list);
+
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (uid && list.length) {
+        const ids = list.map((x) => x.id);
+        const { data: prog } = await supabase
+          .from("content_progress")
+          .select("content_id, completed")
+          .eq("user_id", uid)
+          .in("content_id", ids);
+        setDoneIds(new Set((prog ?? []).filter((p: any) => p.completed).map((p: any) => p.content_id)));
+      }
       setLoading(false);
     })();
   }, [id]);
@@ -96,6 +110,7 @@ export default function CategoryDetail() {
                 const route = isPractice
                   ? `/herramientas/contenido/practica/${it.id}`
                   : `/herramientas/contenido/leccion/${it.id}`;
+                const done = doneIds.has(it.id);
                 return (
                   <motion.button
                     key={it.id}
@@ -103,7 +118,7 @@ export default function CategoryDetail() {
                     whileTap={{ scale: 0.98 }}
                     className="flex w-full items-center gap-4 rounded-2xl border p-4 text-left"
                     style={{
-                      borderColor: `${meta.color}33`,
+                      borderColor: done ? "#10B98166" : `${meta.color}33`,
                       background: `${meta.color}0d`,
                     }}
                   >
@@ -123,6 +138,12 @@ export default function CategoryDetail() {
                         {it.duration_minutes ? `${it.duration_minutes} min.` : it.duration ?? "—"}
                       </div>
                     </div>
+                    {done && (
+                      <div className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+                        <Check size={12} strokeWidth={3} />
+                        {isPractice ? "Hecho" : "Leído"}
+                      </div>
+                    )}
                   </motion.button>
                 );
               })}

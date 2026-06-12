@@ -113,6 +113,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/herramientas/contenido/leccion/:id" element={<ProtectedRoute><LessonView /></ProtectedRoute>} />
+            <Route path="/herramientas/contenido/practica/:id" element={<ProtectedRoute><PracticeView /></ProtectedRoute>} />
             <Route path="/calendario" element={<ProtectedRoute><CalendarMonth /></ProtectedRoute>} />
             <Route path="/calendario/:date" element={<ProtectedRoute><CalendarDay /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -158,8 +160,6 @@ const App = () => (
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/contenido/categoria/:id" element={<CategoryDetail />} />
-              <Route path="/herramientas/contenido/leccion/:id" element={<LessonView />} />
-              <Route path="/herramientas/contenido/practica/:id" element={<PracticeView />} />
               <Route path="/herramientas/favoritos" element={<Favorites />} />
               <Route path="/herramientas/autocuidado" element={<SelfCare />} />
               <Route path="/herramientas/sueno" element={<Sleep />} />
