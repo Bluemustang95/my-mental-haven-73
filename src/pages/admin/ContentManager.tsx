@@ -14,6 +14,8 @@ import { Pencil, Plus, Trash2, BookText, Video as VideoIcon, Headphones } from "
 import { toast } from "sonner";
 import CategoriesManager from "./CategoriesManager";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { PracticeBuilder } from "@/components/admin/PracticeBuilder";
+import type { PracticeBlock } from "@/lib/practiceTypes";
 
 type ContentType = "video" | "text" | "podcast";
 
@@ -34,6 +36,9 @@ type Content = {
   is_published: boolean | null;
   sort_order: number | null;
   thumbnail_url: string | null;
+  text_kind: string | null;
+  practice_intro: string | null;
+  practice_blocks: PracticeBlock[] | null;
 };
 
 type Cat = { id: string; title: string; content_type: ContentType };
@@ -52,6 +57,9 @@ const emptyForm = {
   is_published: true,
   sort_order: 0,
   thumbnail_url: "",
+  text_kind: "theory" as "theory" | "practice",
+  practice_intro: "",
+  practice_blocks: [] as PracticeBlock[],
 };
 
 const TABS: { key: ContentType; label: string; icon: any }[] = [
