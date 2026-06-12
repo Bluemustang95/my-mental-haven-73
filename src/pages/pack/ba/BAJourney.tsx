@@ -109,28 +109,48 @@ export function BAJourney({
                     onClick={() => {
                       if (dayNum === 1 && program.state === "day1") onOpenDay(1);
                       else if (isCurrent && dayNum >= 2) onOpenDay(dayNum);
+                      else if (isDone) setViewDay(dayNum);
                     }}
                     className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full font-display text-lg font-bold shadow-md transition ${
                       isCurrent
                         ? "scale-110 bg-[#facb60] text-[#101927] ring-4 ring-[#facb60]/30"
                         : isDone
-                        ? "bg-[#7cc2c8] text-white"
+                        ? "bg-[#7cc2c8] text-white hover:scale-105"
                         : "bg-white text-[#101927]/40 ring-1 ring-[#101927]/10"
                     }`}
                   >
                     {isDone ? <Check size={20} /> : isLocked ? <Lock size={16} /> : dayNum}
                   </button>
 
-                  <GlassCard className={`flex-1 p-4 ${isLocked ? "opacity-40" : ""}`}>
-                    <p className="font-display text-xs font-bold uppercase tracking-wider text-[#101927]/55">
-                      Día {dayNum}
-                    </p>
-                    <p className="mt-0.5 font-display text-sm font-bold text-[#101927]">
-                      {dayNum === 1
-                        ? "Planificación"
-                        : step?.text || `Paso ${dayNum - 1} de la escalera`}
-                    </p>
-                  </GlassCard>
+                  <button
+                    type="button"
+                    disabled={isLocked || (!isDone && !isCurrent)}
+                    onClick={() => {
+                      if (isDone) setViewDay(dayNum);
+                      else if (isCurrent && dayNum === 1 && program.state === "day1") onOpenDay(1);
+                      else if (isCurrent && dayNum >= 2) onOpenDay(dayNum);
+                    }}
+                    className={`flex-1 text-left ${isLocked ? "opacity-40" : ""}`}
+                  >
+                    <GlassCard className="p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-display text-xs font-bold uppercase tracking-wider text-[#101927]/55">
+                          Día {dayNum}
+                        </p>
+                        {isDone && (
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-[#7cc2c8]">
+                            Ver registro
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 font-display text-sm font-bold text-[#101927]">
+                        {dayNum === 1
+                          ? "Planificación"
+                          : step?.text || `Paso ${dayNum - 1} de la escalera`}
+                      </p>
+                    </GlassCard>
+                  </button>
+
                 </div>
               );
             })}
