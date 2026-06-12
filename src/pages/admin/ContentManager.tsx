@@ -143,6 +143,9 @@ export default function ContentManager() {
       is_published: item.is_published ?? true,
       sort_order: item.sort_order ?? 0,
       thumbnail_url: item.thumbnail_url ?? "",
+      text_kind: ((item.text_kind as any) === "practice" ? "practice" : "theory"),
+      practice_intro: item.practice_intro ?? "",
+      practice_blocks: (item.practice_blocks ?? []) as PracticeBlock[],
     });
     setOpen(true);
   };
