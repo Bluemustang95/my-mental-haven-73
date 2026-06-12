@@ -24,14 +24,18 @@ export function BADayOne({
   onUpdate,
   onFinish,
   onBack,
+  onReset,
 }: {
   content: BAContent;
   program: BAProgram;
   onUpdate: (patch: Partial<BAProgram>) => void;
   onFinish: () => void;
   onBack: () => void;
+  onReset?: () => Promise<void> | void;
 }) {
   const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
+
   const step = Math.min(program.day_one_step ?? 0, TOTAL_STEPS - 1);
   const setStep = (s: number) => onUpdate({ day_one_step: s });
 
