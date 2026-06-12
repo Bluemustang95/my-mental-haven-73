@@ -157,14 +157,15 @@ export function BAJourney({
           </div>
         </div>
 
-        {import.meta.env.DEV && program.current_day < 7 && (
+        {(import.meta.env.DEV || isAdmin) && program.current_day < 7 && (
           <button
             onClick={simulateNextDay}
             className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-[#101927]/20 py-2 text-[11px] font-bold uppercase tracking-widest text-[#101927]/45"
           >
-            <FastForward size={12} /> DEV · simular 24h
+            <FastForward size={12} /> {isAdmin ? "Admin" : "DEV"} · simular 24h
           </button>
         )}
+
       </main>
 
       {canShowCalendar && (
