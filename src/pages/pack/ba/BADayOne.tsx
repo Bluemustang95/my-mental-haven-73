@@ -13,6 +13,8 @@ import {
 import { BACalendarModal } from "./BACalendarModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
+
 
 const TOTAL_STEPS = 6;
 
