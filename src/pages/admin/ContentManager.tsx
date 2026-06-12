@@ -92,6 +92,15 @@ export default function ContentManager() {
     fetchAll();
   }, []);
 
+  // Refetch categories when switching tabs so newly-created cats appear in the "Nuevo" modal
+  useEffect(() => {
+    supabase
+      .from("psychoeducation_categories" as any)
+      .select("id,title,content_type")
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => setCats((data as any) ?? []));
+  }, [tab]);
+
   const filtered = useMemo(
     () => items.filter((i) => tab !== "categories" && i.content_type === tab),
     [items, tab]
