@@ -113,6 +113,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/herramientas/contenido/leccion/:id" element={<ProtectedRoute><LessonView /></ProtectedRoute>} />
+            <Route path="/herramientas/contenido/practica/:id" element={<ProtectedRoute><PracticeView /></ProtectedRoute>} />
             <Route path="/calendario" element={<ProtectedRoute><CalendarMonth /></ProtectedRoute>} />
             <Route path="/calendario/:date" element={<ProtectedRoute><CalendarDay /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
