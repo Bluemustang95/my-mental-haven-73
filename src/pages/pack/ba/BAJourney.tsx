@@ -183,6 +183,16 @@ export function BAJourney({
         open={calendarOpen}
         onClose={() => setCalendarOpen(false)}
       />
+
+      {viewDay !== null && (
+        <BADayLogSheet
+          day={viewDay}
+          program={program}
+          content={content}
+          onClose={() => setViewDay(null)}
+        />
+      )}
+
     </div>
   );
 }
