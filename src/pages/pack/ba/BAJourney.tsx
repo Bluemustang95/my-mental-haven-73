@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { ArrowLeft, Check, Lock, CalendarDays, FastForward } from "lucide-react";
+import { ArrowLeft, Check, Lock, CalendarDays, FastForward, RotateCcw } from "lucide-react";
 import { AmbientGlows } from "@/components/pack/AmbientGlows";
 import { GlassCard } from "@/components/pack/GlassCard";
 import { BAContent, BAProgram } from "@/lib/baTypes";
 import { BACalendarModal } from "./BACalendarModal";
 import { BAProgressChart } from "./BAProgressChart";
+import { BADayLogSheet } from "./BADayLogSheet";
 import { localDateStr } from "@/lib/utils";
+import { useAdminRole } from "@/hooks/useAdminRole";
+
 
 export function BAJourney({
   content,
