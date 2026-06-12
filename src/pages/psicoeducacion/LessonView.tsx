@@ -41,6 +41,11 @@ export default function LessonView() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [categoryTitle, setCategoryTitle] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [alreadyRead, setAlreadyRead] = useState(false);
+  const [autoMarked, setAutoMarked] = useState(false);
+  const reachedEndRef = useRef(false);
+  const timeReachedRef = useRef(false);
+  const endSentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -59,26 +64,81 @@ export default function LessonView() {
           .maybeSingle();
         setCategoryTitle((c as any)?.title ?? "");
       }
+      if (user && (data as any)?.id) {
+        const { data: p } = await supabase
+          .from("content_progress")
+          .select("completed")
+          .eq("user_id", user.id)
+          .eq("content_id", (data as any).id)
+          .maybeSingle();
+        if ((p as any)?.completed) setAlreadyRead(true);
+      }
       setLoading(false);
     })();
-  }, [id]);
+  }, [id, user]);
+
+  // Auto-mark as read: scroll-to-end + 20s minimum reading time (both conditions)
+  useEffect(() => {
+    if (loading || alreadyRead || autoMarked || !lesson || !user) return;
+    if (lesson.content_type !== "text") return;
+
+    const tryComplete = async () => {
+      if (!reachedEndRef.current || !timeReachedRef.current) return;
+      if (autoMarked) return;
+      setAutoMarked(true);
+      await supabase.from("content_progress").upsert(
+        {
+          user_id: user.id,
+          content_id: lesson.id,
+          completed: true,
+          progress_percent: 100,
+          last_accessed: new Date().toISOString(),
+        },
+        { onConflict: "user_id,content_id" }
+      );
+      setAlreadyRead(true);
+      toast.success("Marcado como leído");
+    };
+
+    const t = window.setTimeout(() => {
+      timeReachedRef.current = true;
+      tryComplete();
+    }, 20000);
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          reachedEndRef.current = true;
+          tryComplete();
+        }
+      },
+      { rootMargin: "0px 0px -5% 0px" }
+    );
+    if (endSentinelRef.current) obs.observe(endSentinelRef.current);
+    return () => {
+      window.clearTimeout(t);
+      obs.disconnect();
+    };
+  }, [loading, alreadyRead, autoMarked, lesson, user]);
 
   const markDone = async () => {
     if (!lesson || !user) {
       navigate(-1);
       return;
     }
-    await supabase.from("content_progress").upsert(
-      {
-        user_id: user.id,
-        content_id: lesson.id,
-        completed: true,
-        progress_percent: 100,
-        last_accessed: new Date().toISOString(),
-      },
-      { onConflict: "user_id,content_id" }
-    );
-    toast.success("Marcado como completado");
+    if (!alreadyRead) {
+      await supabase.from("content_progress").upsert(
+        {
+          user_id: user.id,
+          content_id: lesson.id,
+          completed: true,
+          progress_percent: 100,
+          last_accessed: new Date().toISOString(),
+        },
+        { onConflict: "user_id,content_id" }
+      );
+      toast.success("Marcado como completado");
+    }
     navigate(-1);
   };
 
