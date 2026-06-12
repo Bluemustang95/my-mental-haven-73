@@ -114,12 +114,9 @@ export default function BAProgram() {
         }
       }}
       onUpdate={update}
-      onReset={async () => {
-        await reset();
-        setShowOnboarding(true);
-        setView("journey");
-      }}
+      onReset={doReset}
     />
+
 
   );
 }
