@@ -14,6 +14,8 @@ import { Pencil, Plus, Trash2, BookText, Video as VideoIcon, Headphones } from "
 import { toast } from "sonner";
 import CategoriesManager from "./CategoriesManager";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { PracticeBuilder } from "@/components/admin/PracticeBuilder";
+import type { PracticeBlock } from "@/lib/practiceTypes";
 
 type ContentType = "video" | "text" | "podcast";
 
@@ -34,6 +36,9 @@ type Content = {
   is_published: boolean | null;
   sort_order: number | null;
   thumbnail_url: string | null;
+  text_kind: string | null;
+  practice_intro: string | null;
+  practice_blocks: PracticeBlock[] | null;
 };
 
 type Cat = { id: string; title: string; content_type: ContentType };
@@ -52,6 +57,9 @@ const emptyForm = {
   is_published: true,
   sort_order: 0,
   thumbnail_url: "",
+  text_kind: "theory" as "theory" | "practice",
+  practice_intro: "",
+  practice_blocks: [] as PracticeBlock[],
 };
 
 const TABS: { key: ContentType; label: string; icon: any }[] = [
@@ -135,6 +143,9 @@ export default function ContentManager() {
       is_published: item.is_published ?? true,
       sort_order: item.sort_order ?? 0,
       thumbnail_url: item.thumbnail_url ?? "",
+      text_kind: ((item.text_kind as any) === "practice" ? "practice" : "theory"),
+      practice_intro: item.practice_intro ?? "",
+      practice_blocks: (item.practice_blocks ?? []) as PracticeBlock[],
     });
     setOpen(true);
   };
@@ -142,6 +153,7 @@ export default function ContentManager() {
   const save = async () => {
     if (!form.title.trim()) return toast.error("Falta el título");
     const isText = form.content_type === "text";
+    const isPractice = isText && form.text_kind === "practice";
     if (!isText && !form.media_url.trim()) return toast.error("Falta la URL del contenido");
 
     const catTitle = cats.find((c) => c.id === form.category_id)?.title ?? form.category ?? "general";
@@ -153,7 +165,7 @@ export default function ContentManager() {
       content_type: form.content_type,
       media_url: form.media_url || null,
       content_url: form.media_url || (isText ? "text://inline" : ""),
-      body_html: isText ? form.body_html : null,
+      body_html: isText && !isPractice ? form.body_html : null,
       category_id: form.category_id || null,
       category: catTitle,
       tags,
@@ -163,6 +175,9 @@ export default function ContentManager() {
       is_published: form.is_published,
       sort_order: form.sort_order,
       thumbnail_url: form.thumbnail_url || null,
+      text_kind: isText ? form.text_kind : "theory",
+      practice_intro: isPractice ? (form.practice_intro || null) : null,
+      practice_blocks: isPractice ? form.practice_blocks : null,
     };
 
     if (editingId) {
@@ -218,6 +233,7 @@ export default function ContentManager() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Título</TableHead>
+                    {t.key === "text" && <TableHead className="w-24">Tipo</TableHead>}
                     <TableHead>Categoría</TableHead>
                     <TableHead className="w-24">Duración</TableHead>
                     <TableHead className="w-28">Estado</TableHead>
@@ -227,22 +243,36 @@ export default function ContentManager() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      <TableCell colSpan={t.key === "text" ? 6 : 5} className="py-8 text-center text-muted-foreground">
                         Cargando...
                       </TableCell>
                     </TableRow>
                   ) : filtered.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      <TableCell colSpan={t.key === "text" ? 6 : 5} className="py-8 text-center text-muted-foreground">
                         Aún no hay {t.label.toLowerCase()}
                       </TableCell>
                     </TableRow>
                   ) : (
                     filtered.map((item) => {
                       const catTitle = cats.find((c) => c.id === item.category_id)?.title ?? item.category;
+                      const isPractice = (item as any).text_kind === "practice";
                       return (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">{item.title}</TableCell>
+                          {t.key === "text" && (
+                            <TableCell>
+                              <Badge
+                                className={
+                                  isPractice
+                                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                                    : "bg-violet-100 text-violet-700 hover:bg-violet-100"
+                                }
+                              >
+                                {isPractice ? "Práctico" : "Teórico"}
+                              </Badge>
+                            </TableCell>
+                          )}
                           <TableCell>{catTitle ?? "—"}</TableCell>
                           <TableCell>{item.duration_minutes ? `${item.duration_minutes} min` : item.duration}</TableCell>
                           <TableCell>
@@ -370,9 +400,65 @@ export default function ContentManager() {
             )}
 
             {form.content_type === "text" && (
-              <div>
-                <Label>Contenido</Label>
-                <RichTextEditor value={form.body_html} onChange={(v) => setForm({ ...form, body_html: v })} />
+              <div className="space-y-3 rounded-lg border bg-slate-50 p-3">
+                <div>
+                  <Label>Subtipo de texto</Label>
+                  <div className="mt-1 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, text_kind: "theory" })}
+                      className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                        form.text_kind === "theory"
+                          ? "border-violet-500 bg-violet-100 text-violet-800"
+                          : "border-slate-200 bg-white text-slate-600"
+                      }`}
+                    >
+                      Teórico
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, text_kind: "practice" })}
+                      className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                        form.text_kind === "practice"
+                          ? "border-emerald-500 bg-emerald-100 text-emerald-800"
+                          : "border-slate-200 bg-white text-slate-600"
+                      }`}
+                    >
+                      Práctico
+                    </button>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    {form.text_kind === "theory"
+                      ? "Explicación conceptual. Se marca como leído al llegar al final."
+                      : "Ejercicio interactivo. La persona completa bloques y se guarda su respuesta."}
+                  </p>
+                </div>
+
+                {form.text_kind === "theory" ? (
+                  <div>
+                    <Label>Contenido</Label>
+                    <RichTextEditor value={form.body_html} onChange={(v) => setForm({ ...form, body_html: v })} />
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <Label>Descripción de la actividad</Label>
+                      <Textarea
+                        value={form.practice_intro}
+                        onChange={(e) => setForm({ ...form, practice_intro: e.target.value })}
+                        placeholder="Texto breve que aparece arriba de los bloques."
+                        rows={3}
+                      />
+                    </div>
+                    <div>
+                      <Label>Bloques de la práctica</Label>
+                      <PracticeBuilder
+                        value={form.practice_blocks}
+                        onChange={(v) => setForm({ ...form, practice_blocks: v })}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

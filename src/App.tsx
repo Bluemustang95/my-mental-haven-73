@@ -86,6 +86,7 @@ import Psicoeducacion from "@/pages/Psicoeducacion";
 import SystemSettings from "@/pages/admin/SystemSettings";
 import CategoryDetail from "@/pages/psicoeducacion/CategoryDetail";
 import LessonView from "@/pages/psicoeducacion/LessonView";
+import PracticeView from "@/pages/psicoeducacion/PracticeView";
 
 const queryClient = new QueryClient();
 
@@ -158,6 +159,7 @@ const App = () => (
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/contenido/categoria/:id" element={<CategoryDetail />} />
               <Route path="/herramientas/contenido/leccion/:id" element={<LessonView />} />
+              <Route path="/herramientas/contenido/practica/:id" element={<PracticeView />} />
               <Route path="/herramientas/favoritos" element={<Favorites />} />
               <Route path="/herramientas/autocuidado" element={<SelfCare />} />
               <Route path="/herramientas/sueno" element={<Sleep />} />
