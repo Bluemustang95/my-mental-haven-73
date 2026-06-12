@@ -60,5 +60,12 @@ export function useBAProgram() {
     [program]
   );
 
-  return { program, loading, create, update, flush, refetch: fetchProgram };
+  const reset = useCallback(async () => {
+    if (!program) return;
+    await supabase.from("ba_programs" as any).delete().eq("id", program.id);
+    setProgram(null);
+    await fetchProgram();
+  }, [program, fetchProgram]);
+
+  return { program, loading, create, update, flush, reset, refetch: fetchProgram };
 }

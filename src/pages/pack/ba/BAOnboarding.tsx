@@ -1,19 +1,25 @@
 import { useState } from "react";
-import { X, Zap, ChevronRight } from "lucide-react";
+import { X, Zap, ChevronRight, RotateCcw } from "lucide-react";
 import { AmbientGlows } from "@/components/pack/AmbientGlows";
 import { StepDots } from "@/components/pack/StepDots";
 import { BAContent } from "@/lib/baTypes";
+import { useAdminRole } from "@/hooks/useAdminRole";
+
 
 export function BAOnboarding({
   content,
   onClose,
   onFinish,
+  onReset,
 }: {
   content: BAContent;
   onClose: () => void;
   onFinish: () => void;
+  onReset?: () => Promise<void> | void;
 }) {
   const [step, setStep] = useState(0);
+  const { isAdmin } = useAdminRole();
+
   const slides = content.intro_slides ?? [];
   const total = slides.length || 1;
   const slide = slides[step];
@@ -28,13 +34,29 @@ export function BAOnboarding({
       <AmbientGlows />
 
       <div className="relative mx-auto flex min-h-screen max-w-md flex-col px-5 pb-8 pt-6">
-        <button
-          onClick={onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#101927]/10 bg-white shadow-sm"
-          aria-label="Cerrar"
-        >
-          <X size={18} />
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#101927]/10 bg-white shadow-sm"
+            aria-label="Cerrar"
+          >
+            <X size={18} />
+          </button>
+          {isAdmin && onReset && (
+            <button
+              onClick={async () => {
+                if (!window.confirm("¿Reiniciar el programa de Activación Comportamental?")) return;
+                await onReset();
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-rose-300/50 bg-white text-rose-600 shadow-sm"
+              aria-label="Reiniciar programa (admin)"
+              title="Reiniciar programa (admin)"
+            >
+              <RotateCcw size={16} />
+            </button>
+          )}
+        </div>
+
 
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <div className="relative">

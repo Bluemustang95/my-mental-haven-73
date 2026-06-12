@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, Moon, Activity, Check, Info, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowLeft, Moon, Activity, Check, Info, ChevronDown, Sparkles, RotateCcw } from "lucide-react";
 import { AmbientGlows } from "@/components/pack/AmbientGlows";
 import { GlassCard } from "@/components/pack/GlassCard";
 import { StepDots } from "@/components/pack/StepDots";
@@ -13,6 +13,8 @@ import {
 import { BACalendarModal } from "./BACalendarModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
+
 
 const TOTAL_STEPS = 6;
 
@@ -22,14 +24,18 @@ export function BADayOne({
   onUpdate,
   onFinish,
   onBack,
+  onReset,
 }: {
   content: BAContent;
   program: BAProgram;
   onUpdate: (patch: Partial<BAProgram>) => void;
   onFinish: () => void;
   onBack: () => void;
+  onReset?: () => Promise<void> | void;
 }) {
   const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
+
   const step = Math.min(program.day_one_step ?? 0, TOTAL_STEPS - 1);
   const setStep = (s: number) => onUpdate({ day_one_step: s });
 
@@ -86,7 +92,22 @@ export function BADayOne({
             <ArrowLeft size={18} />
           </button>
           <p className="font-display text-sm font-semibold">Día 1: Planificación</p>
-          <div className="w-9" />
+          {isAdmin && onReset ? (
+            <button
+              onClick={async () => {
+                if (!window.confirm("¿Reiniciar el programa de Activación Comportamental?")) return;
+                await onReset();
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-rose-300/50 bg-white text-rose-600 shadow-sm"
+              aria-label="Reiniciar programa (admin)"
+              title="Reiniciar programa (admin)"
+            >
+              <RotateCcw size={16} />
+            </button>
+          ) : (
+            <div className="w-9" />
+          )}
+
         </div>
         <div className="px-5 pb-3">
           <StepDots total={TOTAL_STEPS} current={step} />

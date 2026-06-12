@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { ArrowLeft, Check, Lock, CalendarDays, FastForward } from "lucide-react";
+import { ArrowLeft, Check, Lock, CalendarDays, FastForward, RotateCcw } from "lucide-react";
 import { AmbientGlows } from "@/components/pack/AmbientGlows";
 import { GlassCard } from "@/components/pack/GlassCard";
 import { BAContent, BAProgram } from "@/lib/baTypes";
 import { BACalendarModal } from "./BACalendarModal";
 import { BAProgressChart } from "./BAProgressChart";
+import { BADayLogSheet } from "./BADayLogSheet";
 import { localDateStr } from "@/lib/utils";
+import { useAdminRole } from "@/hooks/useAdminRole";
+
 
 export function BAJourney({
   content,
@@ -13,17 +16,20 @@ export function BAJourney({
   onBack,
   onOpenDay,
   onUpdate,
+  onReset,
 }: {
   content: BAContent;
   program: BAProgram;
   onBack: () => void;
   onOpenDay: (day: number) => void;
   onUpdate: (patch: Partial<BAProgram>) => void;
+  onReset: () => Promise<void>;
 }) {
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [viewDay, setViewDay] = useState<number | null>(null);
+  const { isAdmin } = useAdminRole();
 
   const today = localDateStr();
-  const completedDays = program.current_day - 1; // days 1..completedDays are done
   const canShowCalendar = program.current_day > 1 || program.day_one_step > 3;
 
   const simulateNextDay = () => {
@@ -31,6 +37,12 @@ export function BAJourney({
       onUpdate({ current_day: program.current_day + 1, last_completed_date: today });
     }
   };
+
+  const handleReset = async () => {
+    if (!window.confirm("¿Reiniciar el programa? Se borrarán los registros de Activación Comportamental.")) return;
+    await onReset();
+  };
+
 
   return (
     <div className="relative min-h-screen bg-[#fdfbfb] text-[#101927] safe-area-top">
@@ -46,7 +58,19 @@ export function BAJourney({
             <ArrowLeft size={18} />
           </button>
           <p className="font-display text-sm font-semibold">Tu camino · 7 días</p>
-          <div className="w-9" />
+          {isAdmin ? (
+            <button
+              onClick={handleReset}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-rose-300/50 bg-white text-rose-600 shadow-sm"
+              aria-label="Reiniciar programa (admin)"
+              title="Reiniciar programa (admin)"
+            >
+              <RotateCcw size={16} />
+            </button>
+          ) : (
+            <div className="w-9" />
+          )}
+
         </div>
       </header>
 
@@ -85,42 +109,63 @@ export function BAJourney({
                     onClick={() => {
                       if (dayNum === 1 && program.state === "day1") onOpenDay(1);
                       else if (isCurrent && dayNum >= 2) onOpenDay(dayNum);
+                      else if (isDone) setViewDay(dayNum);
                     }}
                     className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full font-display text-lg font-bold shadow-md transition ${
                       isCurrent
                         ? "scale-110 bg-[#facb60] text-[#101927] ring-4 ring-[#facb60]/30"
                         : isDone
-                        ? "bg-[#7cc2c8] text-white"
+                        ? "bg-[#7cc2c8] text-white hover:scale-105"
                         : "bg-white text-[#101927]/40 ring-1 ring-[#101927]/10"
                     }`}
                   >
                     {isDone ? <Check size={20} /> : isLocked ? <Lock size={16} /> : dayNum}
                   </button>
 
-                  <GlassCard className={`flex-1 p-4 ${isLocked ? "opacity-40" : ""}`}>
-                    <p className="font-display text-xs font-bold uppercase tracking-wider text-[#101927]/55">
-                      Día {dayNum}
-                    </p>
-                    <p className="mt-0.5 font-display text-sm font-bold text-[#101927]">
-                      {dayNum === 1
-                        ? "Planificación"
-                        : step?.text || `Paso ${dayNum - 1} de la escalera`}
-                    </p>
-                  </GlassCard>
+                  <button
+                    type="button"
+                    disabled={isLocked || (!isDone && !isCurrent)}
+                    onClick={() => {
+                      if (isDone) setViewDay(dayNum);
+                      else if (isCurrent && dayNum === 1 && program.state === "day1") onOpenDay(1);
+                      else if (isCurrent && dayNum >= 2) onOpenDay(dayNum);
+                    }}
+                    className={`flex-1 text-left ${isLocked ? "opacity-40" : ""}`}
+                  >
+                    <GlassCard className="p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-display text-xs font-bold uppercase tracking-wider text-[#101927]/55">
+                          Día {dayNum}
+                        </p>
+                        {isDone && (
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-[#7cc2c8]">
+                            Ver registro
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 font-display text-sm font-bold text-[#101927]">
+                        {dayNum === 1
+                          ? "Planificación"
+                          : step?.text || `Paso ${dayNum - 1} de la escalera`}
+                      </p>
+                    </GlassCard>
+                  </button>
+
                 </div>
               );
             })}
           </div>
         </div>
 
-        {import.meta.env.DEV && program.current_day < 7 && (
+        {(import.meta.env.DEV || isAdmin) && program.current_day < 7 && (
           <button
             onClick={simulateNextDay}
             className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border border-dashed border-[#101927]/20 py-2 text-[11px] font-bold uppercase tracking-widest text-[#101927]/45"
           >
-            <FastForward size={12} /> DEV · simular 24h
+            <FastForward size={12} /> {isAdmin ? "Admin" : "DEV"} · simular 24h
           </button>
         )}
+
       </main>
 
       {canShowCalendar && (
@@ -138,6 +183,16 @@ export function BAJourney({
         open={calendarOpen}
         onClose={() => setCalendarOpen(false)}
       />
+
+      {viewDay !== null && (
+        <BADayLogSheet
+          day={viewDay}
+          program={program}
+          content={content}
+          onClose={() => setViewDay(null)}
+        />
+      )}
+
     </div>
   );
 }
