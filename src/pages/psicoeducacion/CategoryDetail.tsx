@@ -38,6 +38,7 @@ export default function CategoryDetail() {
   const navigate = useNavigate();
   const [cat, setCat] = useState<Category | null>(null);
   const [items, setItems] = useState<Item[]>([]);
+  const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,7 +54,20 @@ export default function CategoryDetail() {
           .order("sort_order", { ascending: true }),
       ]);
       setCat((c.data as any) ?? null);
-      setItems((i.data as any) ?? []);
+      const list = (i.data as any[]) ?? [];
+      setItems(list);
+
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (uid && list.length) {
+        const ids = list.map((x) => x.id);
+        const { data: prog } = await supabase
+          .from("content_progress")
+          .select("content_id, completed")
+          .eq("user_id", uid)
+          .in("content_id", ids);
+        setDoneIds(new Set((prog ?? []).filter((p: any) => p.completed).map((p: any) => p.content_id)));
+      }
       setLoading(false);
     })();
   }, [id]);
