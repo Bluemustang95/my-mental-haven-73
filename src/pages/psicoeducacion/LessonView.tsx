@@ -177,6 +177,14 @@ export default function LessonView() {
       <div className="mx-auto max-w-md px-5 pt-6">
         {lesson.content_type === "text" && (
           <>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#8B7CF6]/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#A78BFA]">
+              Teórico
+              {alreadyRead && (
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white">
+                  <Check size={10} strokeWidth={3} />
+                </span>
+              )}
+            </div>
             <h1 className="font-mindful text-3xl leading-tight text-white">{lesson.title}</h1>
             {lesson.body_html ? (
               <div
@@ -186,6 +194,7 @@ export default function LessonView() {
             ) : (
               <p className="mt-6 text-white/60">Sin contenido.</p>
             )}
+            <div ref={endSentinelRef} className="h-1" />
           </>
         )}
 
@@ -235,9 +244,17 @@ export default function LessonView() {
         <div className="mx-auto max-w-md">
           <button
             onClick={markDone}
-            className="w-full rounded-2xl bg-[#6B4EFF] py-4 font-display text-sm font-semibold text-white transition active:scale-[0.98]"
+            className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-sm font-semibold text-white transition active:scale-[0.98] ${
+              alreadyRead ? "bg-emerald-500" : "bg-[#6B4EFF]"
+            }`}
           >
-            Entendido, continuar
+            {alreadyRead ? (
+              <>
+                <Check size={16} strokeWidth={3} /> Leído · Volver
+              </>
+            ) : (
+              "Entendido, continuar"
+            )}
           </button>
         </div>
       </div>
