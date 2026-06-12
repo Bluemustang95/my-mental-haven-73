@@ -153,6 +153,7 @@ export default function ContentManager() {
   const save = async () => {
     if (!form.title.trim()) return toast.error("Falta el título");
     const isText = form.content_type === "text";
+    const isPractice = isText && form.text_kind === "practice";
     if (!isText && !form.media_url.trim()) return toast.error("Falta la URL del contenido");
 
     const catTitle = cats.find((c) => c.id === form.category_id)?.title ?? form.category ?? "general";
@@ -164,7 +165,7 @@ export default function ContentManager() {
       content_type: form.content_type,
       media_url: form.media_url || null,
       content_url: form.media_url || (isText ? "text://inline" : ""),
-      body_html: isText ? form.body_html : null,
+      body_html: isText && !isPractice ? form.body_html : null,
       category_id: form.category_id || null,
       category: catTitle,
       tags,
@@ -174,6 +175,9 @@ export default function ContentManager() {
       is_published: form.is_published,
       sort_order: form.sort_order,
       thumbnail_url: form.thumbnail_url || null,
+      text_kind: isText ? form.text_kind : "theory",
+      practice_intro: isPractice ? (form.practice_intro || null) : null,
+      practice_blocks: isPractice ? form.practice_blocks : null,
     };
 
     if (editingId) {
