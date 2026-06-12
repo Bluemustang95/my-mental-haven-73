@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, Moon, Activity, Check, Info, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowLeft, Moon, Activity, Check, Info, ChevronDown, Sparkles, RotateCcw } from "lucide-react";
 import { AmbientGlows } from "@/components/pack/AmbientGlows";
 import { GlassCard } from "@/components/pack/GlassCard";
 import { StepDots } from "@/components/pack/StepDots";
