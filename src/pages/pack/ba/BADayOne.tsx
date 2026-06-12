@@ -92,7 +92,22 @@ export function BADayOne({
             <ArrowLeft size={18} />
           </button>
           <p className="font-display text-sm font-semibold">Día 1: Planificación</p>
-          <div className="w-9" />
+          {isAdmin && onReset ? (
+            <button
+              onClick={async () => {
+                if (!window.confirm("¿Reiniciar el programa de Activación Comportamental?")) return;
+                await onReset();
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-rose-300/50 bg-white text-rose-600 shadow-sm"
+              aria-label="Reiniciar programa (admin)"
+              title="Reiniciar programa (admin)"
+            >
+              <RotateCcw size={16} />
+            </button>
+          ) : (
+            <div className="w-9" />
+          )}
+
         </div>
         <div className="px-5 pb-3">
           <StepDots total={TOTAL_STEPS} current={step} />
