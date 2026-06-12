@@ -233,6 +233,7 @@ export default function ContentManager() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Título</TableHead>
+                    {t.key === "text" && <TableHead className="w-24">Tipo</TableHead>}
                     <TableHead>Categoría</TableHead>
                     <TableHead className="w-24">Duración</TableHead>
                     <TableHead className="w-28">Estado</TableHead>
@@ -242,22 +243,36 @@ export default function ContentManager() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      <TableCell colSpan={t.key === "text" ? 6 : 5} className="py-8 text-center text-muted-foreground">
                         Cargando...
                       </TableCell>
                     </TableRow>
                   ) : filtered.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      <TableCell colSpan={t.key === "text" ? 6 : 5} className="py-8 text-center text-muted-foreground">
                         Aún no hay {t.label.toLowerCase()}
                       </TableCell>
                     </TableRow>
                   ) : (
                     filtered.map((item) => {
                       const catTitle = cats.find((c) => c.id === item.category_id)?.title ?? item.category;
+                      const isPractice = (item as any).text_kind === "practice";
                       return (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">{item.title}</TableCell>
+                          {t.key === "text" && (
+                            <TableCell>
+                              <Badge
+                                className={
+                                  isPractice
+                                    ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                                    : "bg-violet-100 text-violet-700 hover:bg-violet-100"
+                                }
+                              >
+                                {isPractice ? "Práctico" : "Teórico"}
+                              </Badge>
+                            </TableCell>
+                          )}
                           <TableCell>{catTitle ?? "—"}</TableCell>
                           <TableCell>{item.duration_minutes ? `${item.duration_minutes} min` : item.duration}</TableCell>
                           <TableCell>
