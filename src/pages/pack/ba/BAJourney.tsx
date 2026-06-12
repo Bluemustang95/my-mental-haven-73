@@ -16,17 +16,20 @@ export function BAJourney({
   onBack,
   onOpenDay,
   onUpdate,
+  onReset,
 }: {
   content: BAContent;
   program: BAProgram;
   onBack: () => void;
   onOpenDay: (day: number) => void;
   onUpdate: (patch: Partial<BAProgram>) => void;
+  onReset: () => Promise<void>;
 }) {
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [viewDay, setViewDay] = useState<number | null>(null);
+  const { isAdmin } = useAdminRole();
 
   const today = localDateStr();
-  const completedDays = program.current_day - 1; // days 1..completedDays are done
   const canShowCalendar = program.current_day > 1 || program.day_one_step > 3;
 
   const simulateNextDay = () => {
@@ -34,6 +37,12 @@ export function BAJourney({
       onUpdate({ current_day: program.current_day + 1, last_completed_date: today });
     }
   };
+
+  const handleReset = async () => {
+    if (!window.confirm("¿Reiniciar el programa? Se borrarán los registros de Activación Comportamental.")) return;
+    await onReset();
+  };
+
 
   return (
     <div className="relative min-h-screen bg-[#fdfbfb] text-[#101927] safe-area-top">
