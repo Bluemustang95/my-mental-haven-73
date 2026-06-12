@@ -240,7 +240,7 @@ export default function LessonView() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/5 bg-[#0B0B10]/95 p-4 backdrop-blur-md">
+      <div className="fixed bottom-24 left-0 right-0 z-20 border-t border-white/5 bg-[#0B0B10]/95 p-4 backdrop-blur-md">
         <div className="mx-auto max-w-md">
           <button
             onClick={markDone}
