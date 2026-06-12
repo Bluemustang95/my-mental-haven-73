@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, BookOpen, Video, Headphones, Clock, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Video, Headphones, Clock, Sparkles, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
