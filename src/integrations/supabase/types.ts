@@ -256,6 +256,220 @@ export type Database = {
           },
         ]
       }
+      ba_baseline_entries: {
+        Row: {
+          activity: string
+          agrado: number | null
+          created_at: string
+          day_of_week: number
+          dominio: number | null
+          emotion: string | null
+          hour: number
+          id: string
+          intensity: number | null
+          program_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity?: string
+          agrado?: number | null
+          created_at?: string
+          day_of_week: number
+          dominio?: number | null
+          emotion?: string | null
+          hour: number
+          id?: string
+          intensity?: number | null
+          program_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity?: string
+          agrado?: number | null
+          created_at?: string
+          day_of_week?: number
+          dominio?: number | null
+          emotion?: string | null
+          hour?: number
+          id?: string
+          intensity?: number | null
+          program_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ba_baseline_entries_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "ba_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ba_content: {
+        Row: {
+          active: boolean
+          barriers_catalog: Json
+          clinical_plan: Json
+          created_at: string
+          cycle_text: Json
+          daily_messages: Json
+          default_ladder: Json
+          id: string
+          intro_slides: Json
+          program_meta: Json
+          singleton: boolean
+          updated_at: string
+          values_catalog: Json
+        }
+        Insert: {
+          active?: boolean
+          barriers_catalog?: Json
+          clinical_plan?: Json
+          created_at?: string
+          cycle_text?: Json
+          daily_messages?: Json
+          default_ladder?: Json
+          id?: string
+          intro_slides?: Json
+          program_meta?: Json
+          singleton?: boolean
+          updated_at?: string
+          values_catalog?: Json
+        }
+        Update: {
+          active?: boolean
+          barriers_catalog?: Json
+          clinical_plan?: Json
+          created_at?: string
+          cycle_text?: Json
+          daily_messages?: Json
+          default_ladder?: Json
+          id?: string
+          intro_slides?: Json
+          program_meta?: Json
+          singleton?: boolean
+          updated_at?: string
+          values_catalog?: Json
+        }
+        Relationships: []
+      }
+      ba_day_logs: {
+        Row: {
+          actual_difficulty: number | null
+          agrado: number | null
+          anticipated_difficulty: number | null
+          barrier_chosen: string | null
+          completed_at: string | null
+          created_at: string
+          day: number
+          dominio: number | null
+          id: string
+          phase: string
+          program_id: string
+          scheduled_time: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_difficulty?: number | null
+          agrado?: number | null
+          anticipated_difficulty?: number | null
+          barrier_chosen?: string | null
+          completed_at?: string | null
+          created_at?: string
+          day: number
+          dominio?: number | null
+          id?: string
+          phase?: string
+          program_id: string
+          scheduled_time?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_difficulty?: number | null
+          agrado?: number | null
+          anticipated_difficulty?: number | null
+          barrier_chosen?: string | null
+          completed_at?: string | null
+          created_at?: string
+          day?: number
+          dominio?: number | null
+          id?: string
+          phase?: string
+          program_id?: string
+          scheduled_time?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ba_day_logs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "ba_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ba_programs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_day: number
+          day_one_step: number
+          goals: Json
+          id: string
+          ladder: Json
+          last_completed_date: string | null
+          motivation: string | null
+          selected_goal_idx: number | null
+          selected_values: Json
+          started_at: string
+          state: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_day?: number
+          day_one_step?: number
+          goals?: Json
+          id?: string
+          ladder?: Json
+          last_completed_date?: string | null
+          motivation?: string | null
+          selected_goal_idx?: number | null
+          selected_values?: Json
+          started_at?: string
+          state?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_day?: number
+          day_one_step?: number
+          goals?: Json
+          id?: string
+          ladder?: Json
+          last_completed_date?: string | null
+          motivation?: string | null
+          selected_goal_idx?: number | null
+          selected_values?: Json
+          started_at?: string
+          state?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       body_map_entries: {
         Row: {
           body_part: string

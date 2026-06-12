@@ -77,7 +77,7 @@ export function BentoGrid() {
 
       {/* Pack Actividades */}
       <button
-        onClick={() => navigate("/diario-inteligente/pack-actividades")}
+        onClick={() => navigate("/herramientas/pack")}
         className="relative flex w-full items-center justify-between overflow-hidden rounded-3xl bg-[#1C1C1E] p-5 text-left text-white"
       >
         <div>
