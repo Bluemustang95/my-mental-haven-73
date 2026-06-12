@@ -324,6 +324,7 @@ export type Database = {
           singleton: boolean
           updated_at: string
           values_catalog: Json
+          vlq_domains: Json
         }
         Insert: {
           active?: boolean
@@ -339,6 +340,7 @@ export type Database = {
           singleton?: boolean
           updated_at?: string
           values_catalog?: Json
+          vlq_domains?: Json
         }
         Update: {
           active?: boolean
@@ -354,6 +356,7 @@ export type Database = {
           singleton?: boolean
           updated_at?: string
           values_catalog?: Json
+          vlq_domains?: Json
         }
         Relationships: []
       }
@@ -433,6 +436,10 @@ export type Database = {
           state: string
           updated_at: string
           user_id: string
+          vlq_completed_at: string | null
+          vlq_consistency: Json
+          vlq_importance: Json
+          vlq_top_domains: Json
         }
         Insert: {
           completed_at?: string | null
@@ -450,6 +457,10 @@ export type Database = {
           state?: string
           updated_at?: string
           user_id: string
+          vlq_completed_at?: string | null
+          vlq_consistency?: Json
+          vlq_importance?: Json
+          vlq_top_domains?: Json
         }
         Update: {
           completed_at?: string | null
@@ -467,6 +478,10 @@ export type Database = {
           state?: string
           updated_at?: string
           user_id?: string
+          vlq_completed_at?: string | null
+          vlq_consistency?: Json
+          vlq_importance?: Json
+          vlq_top_domains?: Json
         }
         Relationships: []
       }
@@ -1662,6 +1677,47 @@ export type Database = {
           weekly_action?: string | null
         }
         Relationships: []
+      }
+      vlq_responses: {
+        Row: {
+          consistency: number
+          created_at: string
+          domain_key: string
+          gap: number | null
+          id: string
+          importance: number
+          program_id: string | null
+          user_id: string
+        }
+        Insert: {
+          consistency: number
+          created_at?: string
+          domain_key: string
+          gap?: number | null
+          id?: string
+          importance: number
+          program_id?: string | null
+          user_id: string
+        }
+        Update: {
+          consistency?: number
+          created_at?: string
+          domain_key?: string
+          gap?: number | null
+          id?: string
+          importance?: number
+          program_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vlq_responses_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "ba_programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       weekly_goals: {
         Row: {

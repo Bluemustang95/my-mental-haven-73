@@ -7,6 +7,13 @@ export type BAValue = {
   subtitle: string;
 };
 
+export type BAVlqDomain = {
+  key: string;
+  emoji: string;
+  title: string;
+  subtitle: string;
+};
+
 export type BALadderStep = { text: string; suds: number };
 
 export type BABarrier = { label: string; response: string };
@@ -23,6 +30,7 @@ export type BAContent = {
   };
   clinical_plan: { title: string; steps: string[]; designed_for: string[] };
   values_catalog: BAValue[];
+  vlq_domains: BAVlqDomain[];
   default_ladder: BALadderStep[];
   barriers_catalog: BABarrier[];
   daily_messages: Record<string, string>;
@@ -45,6 +53,10 @@ export type BAProgram = {
   started_at: string;
   last_completed_date: string | null;
   completed_at: string | null;
+  vlq_importance: Record<string, number>;
+  vlq_consistency: Record<string, number>;
+  vlq_top_domains: string[];
+  vlq_completed_at: string | null;
 };
 
 export type BABaselineEntry = {
@@ -77,6 +89,28 @@ export type BADayLog = {
   completed_at: string | null;
 };
 
+export const HOURS = Array.from({ length: 15 }, (_, i) => 8 + i); // 8..22
+export const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+/** Computes top domains by gap (importance - consistency), filtered by importance >= minImportance. */
+export function computeVlqTopDomains(
+  domains: BAVlqDomain[],
+  importance: Record<string, number>,
+  consistency: Record<string, number>,
+  limit = 3,
+  minImportance = 6,
+): { domain: BAVlqDomain; importance: number; consistency: number; gap: number }[] {
+  return domains
+    .map((d) => {
+      const imp = importance[d.key] ?? 0;
+      const con = consistency[d.key] ?? 0;
+      return { domain: d, importance: imp, consistency: con, gap: imp - con };
+    })
+    .filter((r) => r.importance >= minImportance)
+    .sort((a, b) => b.gap - a.gap || b.importance - a.importance)
+    .slice(0, limit);
+}
+
 export const DEFAULT_BA_CONTENT: BAContent = {
   id: "",
   program_meta: { title: "Activación Comportamental", subtitle: "Recuperá tu energía vital actuando de afuera hacia adentro.", icon: "zap" },
@@ -89,11 +123,9 @@ export const DEFAULT_BA_CONTENT: BAContent = {
   },
   clinical_plan: { title: "El Plan Clínico", steps: [], designed_for: [] },
   values_catalog: [],
+  vlq_domains: [],
   default_ladder: [],
   barriers_catalog: [],
   daily_messages: {},
   active: true,
 };
-
-export const HOURS = Array.from({ length: 15 }, (_, i) => 8 + i); // 8..22
-export const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];

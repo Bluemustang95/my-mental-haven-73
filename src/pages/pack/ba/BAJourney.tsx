@@ -4,6 +4,7 @@ import { AmbientGlows } from "@/components/pack/AmbientGlows";
 import { GlassCard } from "@/components/pack/GlassCard";
 import { BAContent, BAProgram } from "@/lib/baTypes";
 import { BACalendarModal } from "./BACalendarModal";
+import { BAProgressChart } from "./BAProgressChart";
 import { localDateStr } from "@/lib/utils";
 
 export function BAJourney({
@@ -56,12 +57,15 @@ export function BAJourney({
         </p>
 
         {program.state === "completed" && (
-          <GlassCard className="mt-5 border-[#7cc2c8]/40 p-5 text-center">
-            <p className="font-mindful text-xl">¡Programa completado!</p>
-            <p className="mt-2 text-sm text-[#101927]/65">
-              Recorriste los 7 escalones. Volvé al pack para seguir creciendo.
-            </p>
-          </GlassCard>
+          <>
+            <GlassCard className="mt-5 border-[#7cc2c8]/40 p-5 text-center">
+              <p className="font-mindful text-xl">¡Programa completado!</p>
+              <p className="mt-2 text-sm text-[#101927]/65">
+                Recorriste los 7 escalones. Volvé al pack para seguir creciendo.
+              </p>
+            </GlassCard>
+            <BAProgressChart programId={program.id} />
+          </>
         )}
 
         <div className="relative mt-8">
