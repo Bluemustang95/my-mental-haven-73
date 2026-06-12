@@ -99,6 +99,23 @@ export function BADayTask({
       agrado,
       completed_at: new Date().toISOString(),
     });
+    // Integración con el Diario: aparece como momento del día
+    if (user) {
+      const hour = Number((scheduledTime || "12:00").slice(0, 2));
+      const period = hour < 12 ? "morning" : hour < 19 ? "afternoon" : "night";
+      const moodScore = Math.max(1, Math.min(5, Math.round(((dominio + agrado) / 2) / 2)));
+      const note = `🔆 BA · Día ${day}: ${step.text} — D ${dominio}/10 · A ${agrado}/10`;
+      await supabase.from("day_timeline_entries").upsert(
+        {
+          user_id: user.id,
+          period,
+          mood_score: moodScore,
+          note,
+          entry_date: localDateStr(),
+        },
+        { onConflict: "user_id,entry_date,period" },
+      );
+    }
     onDayCompleted();
   };
 

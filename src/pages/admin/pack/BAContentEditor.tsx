@@ -63,11 +63,35 @@ export default function BAContentEditor() {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="intro">Onboarding</TabsTrigger>
           <TabsTrigger value="psico">Psicoeducación</TabsTrigger>
-          <TabsTrigger value="values">Valores</TabsTrigger>
+          <TabsTrigger value="vlq">Dominios VLQ</TabsTrigger>
+          <TabsTrigger value="values">Valores (legacy)</TabsTrigger>
           <TabsTrigger value="ladder">Escalera</TabsTrigger>
           <TabsTrigger value="barriers">Barreras</TabsTrigger>
           <TabsTrigger value="daily">Mensajes diarios</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="vlq" className="space-y-3 pt-4">
+          <p className="text-xs text-slate-500">
+            Cuestionario VLQ (Valued Living Questionnaire). Cada dominio se presenta con dos sliders:
+            Importancia y Consistencia. El sistema sugiere los top 3 dominios según la brecha.
+          </p>
+          {(content.vlq_domains ?? []).map((d, i) => (
+            <div key={i} className="rounded-xl border bg-white p-3">
+              <div className="flex items-center gap-2">
+                <Input className="w-16" value={d.emoji} onChange={(e) => { const next = [...content.vlq_domains]; next[i] = { ...d, emoji: e.target.value }; patch("vlq_domains", next); }} />
+                <Input value={d.title} onChange={(e) => { const next = [...content.vlq_domains]; next[i] = { ...d, title: e.target.value }; patch("vlq_domains", next); }} />
+                <Button size="icon" variant="ghost" onClick={() => patch("vlq_domains", content.vlq_domains.filter((_, j) => j !== i))}>
+                  <Trash2 size={14} className="text-rose-500" />
+                </Button>
+              </div>
+              <Input className="mt-2" placeholder="Subtítulo / descripción clínica" value={d.subtitle} onChange={(e) => { const next = [...content.vlq_domains]; next[i] = { ...d, subtitle: e.target.value }; patch("vlq_domains", next); }} />
+              <Input className="mt-2" placeholder="key (sin espacios, único)" value={d.key} onChange={(e) => { const next = [...content.vlq_domains]; next[i] = { ...d, key: e.target.value }; patch("vlq_domains", next); }} />
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => patch("vlq_domains", [...(content.vlq_domains ?? []), { key: `dominio_${Date.now()}`, emoji: "✨", title: "Nuevo dominio", subtitle: "" }])}>
+            <Plus size={14} className="mr-1" /> Agregar dominio
+          </Button>
+        </TabsContent>
 
         <TabsContent value="general" className="space-y-3 pt-4">
           <Field label="Título"><Input value={content.program_meta.title} onChange={(e) => patch("program_meta", { ...content.program_meta, title: e.target.value })} /></Field>
