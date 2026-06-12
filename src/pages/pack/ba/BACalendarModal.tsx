@@ -106,7 +106,8 @@ export function BACalendarModal({
   if (embedded) {
     return (
       <>
-        {grid}
+        {embeddedGrid}
+
         {editing && (
           <EntryEditor
             day={editing.day}
