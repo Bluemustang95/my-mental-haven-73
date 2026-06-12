@@ -87,6 +87,10 @@ import SystemSettings from "@/pages/admin/SystemSettings";
 import CategoryDetail from "@/pages/psicoeducacion/CategoryDetail";
 import LessonView from "@/pages/psicoeducacion/LessonView";
 import PracticeView from "@/pages/psicoeducacion/PracticeView";
+import PackHome from "@/pages/pack/PackHome";
+import BAProgram from "@/pages/pack/ba/BAProgram";
+import PackOverview from "@/pages/admin/pack/PackOverview";
+import BAContentEditor from "@/pages/admin/pack/BAContentEditor";
 
 const queryClient = new QueryClient();
 
@@ -115,6 +119,8 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/herramientas/contenido/leccion/:id" element={<ProtectedRoute><LessonView /></ProtectedRoute>} />
             <Route path="/herramientas/contenido/practica/:id" element={<ProtectedRoute><PracticeView /></ProtectedRoute>} />
+            <Route path="/herramientas/pack" element={<ProtectedRoute><PackHome /></ProtectedRoute>} />
+            <Route path="/herramientas/pack/ba" element={<ProtectedRoute><BAProgram /></ProtectedRoute>} />
             <Route path="/calendario" element={<ProtectedRoute><CalendarMonth /></ProtectedRoute>} />
             <Route path="/calendario/:date" element={<ProtectedRoute><CalendarDay /></ProtectedRoute>} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -203,6 +209,8 @@ const App = () => (
               <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
               <Route path="/admin/cuestionario" element={<QuestionnaireManager />} />
               <Route path="/admin/configuracion" element={<SystemSettings />} />
+              <Route path="/admin/pack" element={<PackOverview />} />
+              <Route path="/admin/pack/ba" element={<BAContentEditor />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
