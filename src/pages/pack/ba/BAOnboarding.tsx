@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { X, Zap, ChevronRight } from "lucide-react";
+import { X, Zap, ChevronRight, RotateCcw } from "lucide-react";
 import { AmbientGlows } from "@/components/pack/AmbientGlows";
 import { StepDots } from "@/components/pack/StepDots";
 import { BAContent } from "@/lib/baTypes";
+import { useAdminRole } from "@/hooks/useAdminRole";
+
 
 export function BAOnboarding({
   content,
