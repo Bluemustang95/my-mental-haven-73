@@ -39,11 +39,18 @@ export default function BAProgram() {
     );
   }
 
+  const doReset = async () => {
+    await reset();
+    setShowOnboarding(true);
+    setView("journey");
+  };
+
   if (showOnboarding || !program) {
     return (
       <BAOnboarding
         content={content}
         onClose={() => navigate("/herramientas/pack")}
+        onReset={program ? doReset : undefined}
         onFinish={async () => {
           const p = await create();
           if (p) {
@@ -61,6 +68,7 @@ export default function BAProgram() {
         content={content}
         program={program}
         onUpdate={update}
+        onReset={doReset}
         onBack={() => navigate("/herramientas/pack")}
         onFinish={async () => {
           await flush({ state: "active", current_day: 2, day_one_step: 5 });
@@ -69,6 +77,7 @@ export default function BAProgram() {
       />
     );
   }
+
 
   if (view === "day_task") {
     return (
