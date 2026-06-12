@@ -400,9 +400,65 @@ export default function ContentManager() {
             )}
 
             {form.content_type === "text" && (
-              <div>
-                <Label>Contenido</Label>
-                <RichTextEditor value={form.body_html} onChange={(v) => setForm({ ...form, body_html: v })} />
+              <div className="space-y-3 rounded-lg border bg-slate-50 p-3">
+                <div>
+                  <Label>Subtipo de texto</Label>
+                  <div className="mt-1 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, text_kind: "theory" })}
+                      className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                        form.text_kind === "theory"
+                          ? "border-violet-500 bg-violet-100 text-violet-800"
+                          : "border-slate-200 bg-white text-slate-600"
+                      }`}
+                    >
+                      Teórico
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, text_kind: "practice" })}
+                      className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                        form.text_kind === "practice"
+                          ? "border-emerald-500 bg-emerald-100 text-emerald-800"
+                          : "border-slate-200 bg-white text-slate-600"
+                      }`}
+                    >
+                      Práctico
+                    </button>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    {form.text_kind === "theory"
+                      ? "Explicación conceptual. Se marca como leído al llegar al final."
+                      : "Ejercicio interactivo. La persona completa bloques y se guarda su respuesta."}
+                  </p>
+                </div>
+
+                {form.text_kind === "theory" ? (
+                  <div>
+                    <Label>Contenido</Label>
+                    <RichTextEditor value={form.body_html} onChange={(v) => setForm({ ...form, body_html: v })} />
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <Label>Descripción de la actividad</Label>
+                      <Textarea
+                        value={form.practice_intro}
+                        onChange={(e) => setForm({ ...form, practice_intro: e.target.value })}
+                        placeholder="Texto breve que aparece arriba de los bloques."
+                        rows={3}
+                      />
+                    </div>
+                    <div>
+                      <Label>Bloques de la práctica</Label>
+                      <PracticeBuilder
+                        value={form.practice_blocks}
+                        onChange={(v) => setForm({ ...form, practice_blocks: v })}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
