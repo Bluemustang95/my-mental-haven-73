@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, BookOpen, Video, Headphones, Clock } from "lucide-react";
+import { ArrowLeft, BookOpen, Video, Headphones, Clock, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,16 +17,21 @@ type Item = {
   title: string;
   description: string | null;
   content_type: string;
+  text_kind: string | null;
   duration: string | null;
   duration_minutes: number | null;
   sort_order: number | null;
 };
 
-const typeMeta: Record<string, { label: string; Icon: any; color: string }> = {
-  text: { label: "LECTURA", Icon: BookOpen, color: "#E8A365" },
-  video: { label: "VIDEO", Icon: Video, color: "#8B7CF6" },
-  podcast: { label: "PODCAST", Icon: Headphones, color: "#4FD1C5" },
-};
+function metaFor(item: Item) {
+  if (item.content_type === "video")
+    return { label: "VIDEO", Icon: Video, color: "#8B7CF6" };
+  if (item.content_type === "podcast")
+    return { label: "PODCAST", Icon: Headphones, color: "#4FD1C5" };
+  if (item.content_type === "text" && item.text_kind === "practice")
+    return { label: "PRÁCTICO", Icon: Sparkles, color: "#10B981" };
+  return { label: "TEÓRICO", Icon: BookOpen, color: "#8B7CF6" };
+}
 
 export default function CategoryDetail() {
   const { id } = useParams();
@@ -42,7 +47,7 @@ export default function CategoryDetail() {
         supabase.from("psychoeducation_categories" as any).select("*").eq("id", id).maybeSingle(),
         supabase
           .from("psychoeducation_content")
-          .select("id,title,description,content_type,duration,duration_minutes,sort_order")
+          .select("id,title,description,content_type,text_kind,duration,duration_minutes,sort_order")
           .eq("category_id", id)
           .eq("is_published", true)
           .order("sort_order", { ascending: true }),
@@ -85,14 +90,22 @@ export default function CategoryDetail() {
 
             <div className="mt-6 space-y-3">
               {items.map((it) => {
-                const meta = typeMeta[it.content_type] ?? typeMeta.text;
+                const meta = metaFor(it);
                 const Icon = meta.Icon;
+                const isPractice = it.content_type === "text" && it.text_kind === "practice";
+                const route = isPractice
+                  ? `/herramientas/contenido/practica/${it.id}`
+                  : `/herramientas/contenido/leccion/${it.id}`;
                 return (
                   <motion.button
                     key={it.id}
-                    onClick={() => navigate(`/herramientas/contenido/leccion/${it.id}`)}
+                    onClick={() => navigate(route)}
                     whileTap={{ scale: 0.98 }}
-                    className="flex w-full items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.04] p-4 text-left"
+                    className="flex w-full items-center gap-4 rounded-2xl border p-4 text-left"
+                    style={{
+                      borderColor: `${meta.color}33`,
+                      background: `${meta.color}0d`,
+                    }}
                   >
                     <div
                       className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
