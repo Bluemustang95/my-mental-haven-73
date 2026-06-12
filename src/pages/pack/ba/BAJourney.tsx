@@ -58,7 +58,19 @@ export function BAJourney({
             <ArrowLeft size={18} />
           </button>
           <p className="font-display text-sm font-semibold">Tu camino · 7 días</p>
-          <div className="w-9" />
+          {isAdmin ? (
+            <button
+              onClick={handleReset}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-rose-300/50 bg-white text-rose-600 shadow-sm"
+              aria-label="Reiniciar programa (admin)"
+              title="Reiniciar programa (admin)"
+            >
+              <RotateCcw size={16} />
+            </button>
+          ) : (
+            <div className="w-9" />
+          )}
+
         </div>
       </header>
 
