@@ -158,8 +158,6 @@ const App = () => (
               <Route path="/herramientas/contenido" element={<ContentLibrary />} />
               <Route path="/herramientas/contenido/psico-factos" element={<PsicoFactos />} />
               <Route path="/herramientas/contenido/categoria/:id" element={<CategoryDetail />} />
-              <Route path="/herramientas/contenido/leccion/:id" element={<LessonView />} />
-              <Route path="/herramientas/contenido/practica/:id" element={<PracticeView />} />
               <Route path="/herramientas/favoritos" element={<Favorites />} />
               <Route path="/herramientas/autocuidado" element={<SelfCare />} />
               <Route path="/herramientas/sueno" element={<Sleep />} />
