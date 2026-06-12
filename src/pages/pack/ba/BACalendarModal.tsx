@@ -38,59 +38,70 @@ export function BACalendarModal({
   const findEntry = (day: number, hour: number) =>
     entries.find((e) => e.day_of_week === day && e.hour === hour);
 
-  const grid = (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-xs">
-        <thead>
-          <tr>
-            <th className="sticky left-0 z-10 bg-white p-2 text-left font-display font-bold text-[#101927]">Hora</th>
-            {DAY_LABELS.map((d, i) => (
-              <th key={i} className="min-w-[110px] p-2 text-left font-display font-bold text-[#101927]">
-                {d}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {HOURS.map((h) => (
-            <tr key={h} className="border-t border-[#101927]/5">
-              <td className="sticky left-0 z-10 bg-white p-2 align-top font-bold text-[#7cc2c8]">
-                {String(h).padStart(2, "0")}:00
-              </td>
-              {DAY_LABELS.map((_, dayIdx) => {
-                const e = findEntry(dayIdx, h);
-                return (
-                  <td key={dayIdx} className="p-1.5 align-top">
-                    <button
-                      onClick={() => setEditing({ day: dayIdx, hour: h, existing: e })}
-                      className={`flex h-20 w-full flex-col justify-center rounded-xl border ${
-                        e
-                          ? "border-[#facb60]/40 bg-[#facb60]/8 p-2 text-left"
-                          : "border-dashed border-[#101927]/15 bg-white items-center justify-center text-[#101927]/30 hover:border-[#facb60]"
-                      }`}
-                    >
-                      {e ? (
-                        <>
-                          <p className="line-clamp-2 text-[11px] font-semibold text-[#101927]">{e.activity}</p>
-                          <p className="line-clamp-1 text-[10px] text-[#101927]/55">{e.emotion}</p>
-                          <div className="mt-1 flex gap-2 text-[10px] font-bold">
-                            <span className="text-[#facb60]">D:{e.dominio}</span>
-                            <span className="text-[#7cc2c8]">A:{e.agrado}</span>
-                          </div>
-                        </>
-                      ) : (
-                        <Plus size={18} />
-                      )}
-                    </button>
-                  </td>
-                );
-              })}
-            </tr>
+  const gridTable = (
+    <table className="w-full border-collapse text-xs">
+      <thead className="sticky top-0 z-20 bg-white">
+        <tr>
+          <th className="sticky left-0 top-0 z-30 bg-white p-2 text-left font-display font-bold text-[#101927]">Hora</th>
+          {DAY_LABELS.map((d, i) => (
+            <th key={i} className="min-w-[110px] bg-white p-2 text-left font-display font-bold text-[#101927]">
+              {d}
+            </th>
           ))}
-        </tbody>
-      </table>
+        </tr>
+      </thead>
+      <tbody>
+        {HOURS.map((h) => (
+          <tr key={h} className="border-t border-[#101927]/5">
+            <td className="sticky left-0 z-10 bg-white p-2 align-top font-bold text-[#7cc2c8]">
+              {String(h).padStart(2, "0")}:00
+            </td>
+            {DAY_LABELS.map((_, dayIdx) => {
+              const e = findEntry(dayIdx, h);
+              return (
+                <td key={dayIdx} className="p-1.5 align-top">
+                  <button
+                    onClick={() => setEditing({ day: dayIdx, hour: h, existing: e })}
+                    className={`flex h-20 w-full flex-col justify-center rounded-xl border ${
+                      e
+                        ? "border-[#facb60]/40 bg-[#facb60]/8 p-2 text-left"
+                        : "border-dashed border-[#101927]/15 bg-white items-center justify-center text-[#101927]/30 hover:border-[#facb60]"
+                    }`}
+                  >
+                    {e ? (
+                      <>
+                        <p className="line-clamp-2 text-[11px] font-semibold text-[#101927]">{e.activity}</p>
+                        <p className="line-clamp-1 text-[10px] text-[#101927]/55">{e.emotion}</p>
+                        <div className="mt-1 flex gap-2 text-[10px] font-bold">
+                          <span className="text-[#facb60]">D:{e.dominio}</span>
+                          <span className="text-[#7cc2c8]">A:{e.agrado}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <Plus size={18} />
+                    )}
+                  </button>
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  const embeddedGrid = (
+    <div className="max-h-[55vh] overflow-auto rounded-2xl border border-[#101927]/10 bg-white">
+      {gridTable}
     </div>
   );
+
+  const modalGrid = (
+    <div className="flex-1 overflow-auto px-4 pb-[env(safe-area-inset-bottom)]">
+      <div className="mx-auto max-w-3xl">{gridTable}</div>
+    </div>
+  );
+
 
   if (embedded) {
     return (
