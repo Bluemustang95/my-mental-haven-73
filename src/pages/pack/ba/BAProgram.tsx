@@ -11,7 +11,7 @@ import { AmbientGlows } from "@/components/pack/AmbientGlows";
 export default function BAProgram() {
   const navigate = useNavigate();
   const { content, loading: loadingContent } = useBAContent();
-  const { program, loading: loadingProgram, create, update, flush } = useBAProgram();
+  const { program, loading: loadingProgram, create, update, flush, reset } = useBAProgram();
 
   const [view, setView] = useState<"journey" | "day_task" | "day_one">("journey");
   const [taskDay, setTaskDay] = useState<number>(2);
