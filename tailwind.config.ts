@@ -14,10 +14,17 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Montserrat", "sans-serif"],
+        display: ["Poppins", "Montserrat", "sans-serif"],
         body: ["Lora", "serif"],
-        sans: ["Montserrat", "sans-serif"],
+        sans: ["Poppins", "Montserrat", "sans-serif"],
         mindful: ["DM Serif Display", "serif"],
+      },
+      boxShadow: {
+        glass: "0 8px 32px rgba(16,25,39,0.04)",
+        "glass-lg": "0 12px 48px rgba(16,25,39,0.08)",
+        "primary-glow": "0 20px 40px rgba(124,194,200,0.3)",
+        "accent-glow": "0 15px 35px rgba(250,203,96,0.25)",
+        "violet-glow": "0 15px 40px -15px rgba(139,121,242,0.8)",
       },
       colors: {
         border: "hsl(var(--border))",

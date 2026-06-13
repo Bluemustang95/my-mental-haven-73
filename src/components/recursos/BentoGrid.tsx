@@ -78,14 +78,14 @@ export function BentoGrid() {
       {/* Pack Actividades */}
       <button
         onClick={() => navigate("/herramientas/pack")}
-        className="relative flex w-full items-center justify-between overflow-hidden rounded-3xl bg-[#1C1C1E] p-5 text-left text-white"
+        className="relative flex w-full items-center justify-between overflow-hidden rounded-3xl bg-primary p-5 text-left text-primary-foreground shadow-primary-glow"
       >
         <div>
           <h3 className="font-display text-base font-bold">Pack de Actividades</h3>
-          <p className="mt-1 text-xs opacity-70">Abrí el kit con ejercicios de la app.</p>
+          <p className="mt-1 text-xs font-medium opacity-80">Abrí el kit con ejercicios de la app.</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400 text-black">
-          <Zap size={20} fill="black" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+          <Zap size={20} fill="currentColor" />
         </div>
       </button>
     </div>

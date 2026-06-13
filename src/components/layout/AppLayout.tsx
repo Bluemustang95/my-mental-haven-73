@@ -1,10 +1,14 @@
 import { Outlet } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
+import { AmbientGlows } from "./AmbientGlows";
 
 export function AppLayout() {
   return (
-    <div className="min-h-screen bg-[#0B0B10]">
-      <Outlet />
+    <div className="relative min-h-screen bg-background">
+      <AmbientGlows />
+      <div className="relative">
+        <Outlet />
+      </div>
       <BottomNav />
     </div>
   );

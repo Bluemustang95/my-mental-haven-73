@@ -18,15 +18,21 @@ export function OnboardingShell({
       className="relative min-h-screen w-full overflow-hidden text-white"
       style={{
         background:
-          "radial-gradient(120% 80% at 20% 0%, #1e1b4b 0%, #0f172a 55%, #020617 100%)",
+          "radial-gradient(120% 80% at 20% 0%, #2a1758 0%, #1d163b 55%, #101927 100%)",
       }}
     >
-      {/* Glass orbs */}
-      <div className="pointer-events-none absolute -top-32 -left-24 h-72 w-72 rounded-full bg-indigo-500/30 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-24 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 -left-24 h-72 w-72 rounded-full opacity-60"
+        style={{ background: "#4c2889", filter: "blur(120px)" }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-32 -right-24 h-72 w-72 rounded-full opacity-50"
+        style={{ background: "#8b79f2", filter: "blur(120px)" }}
+      />
 
       <div className="relative mx-auto flex min-h-screen max-w-md flex-col px-6 pt-12 pb-8 safe-area-top">
-        {/* Header */}
         <div className="mb-10 flex items-center gap-4">
           {onBack ? (
             <button
@@ -43,7 +49,7 @@ export function OnboardingShell({
               <div
                 key={i}
                 className={`h-1.5 w-10 rounded-full transition-colors ${
-                  i < step ? "bg-indigo-400" : "bg-white/15"
+                  i < step ? "bg-[#8b79f2]" : "bg-white/15"
                 }`}
               />
             ))}
@@ -68,8 +74,8 @@ export function OnboardingShell({
 export function GlassInput(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   const { label, className, ...rest } = props;
   return (
-    <label className="block rounded-2xl border border-white/15 bg-white/5 px-5 py-4 backdrop-blur-md focus-within:border-indigo-400/60 focus-within:bg-white/10 transition">
-      <span className="block text-[10px] font-semibold uppercase tracking-widest text-indigo-300">
+    <label className="block rounded-[24px] border border-white/10 bg-[#101927]/40 px-5 py-4 shadow-inner backdrop-blur-xl transition focus-within:border-[#8b79f2]/60 focus-within:bg-[#101927]/60">
+      <span className="block text-[10px] font-semibold uppercase tracking-widest text-[#b5a7ff]">
         {label}
       </span>
       <input
@@ -93,16 +99,16 @@ export function GlassChoice({
     <button
       onClick={onClick}
       type="button"
-      className={`flex w-full items-center justify-between rounded-2xl border px-5 py-4 text-left text-sm font-medium backdrop-blur-md transition active:scale-[0.99] ${
+      className={`flex w-full items-center justify-between rounded-[24px] border px-5 py-4 text-left text-sm font-medium backdrop-blur-xl transition active:scale-[0.99] ${
         selected
-          ? "border-indigo-400/70 bg-indigo-500/15 text-white"
-          : "border-white/10 bg-white/5 text-white/85 hover:border-white/25"
+          ? "border-[#8b79f2]/70 bg-[#8b79f2]/15 text-white"
+          : "border-white/10 bg-[#101927]/40 text-white/85 hover:border-white/25"
       }`}
     >
       <span>{label}</span>
       <span
         className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-          selected ? "border-indigo-300 bg-indigo-400/40" : "border-white/30"
+          selected ? "border-[#b5a7ff] bg-[#8b79f2]/60" : "border-white/30"
         }`}
       >
         {selected && <span className="h-2 w-2 rounded-full bg-white" />}
@@ -127,7 +133,7 @@ export function GlassPrimaryButton({
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-500 py-4 text-sm font-semibold text-white shadow-[0_15px_40px_-15px_rgba(99,102,241,0.8)] transition active:scale-[0.98] disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none"
+      className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8b79f2] py-4 font-display text-sm font-bold text-white shadow-violet-glow transition hover:bg-[#9d8df5] active:scale-[0.98] disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none"
     >
       {children}
     </button>

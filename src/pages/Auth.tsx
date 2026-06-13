@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { ArrowRight, Envelope, GoogleLogo } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -60,100 +59,138 @@ export default function Auth() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 safe-area-top">
-      {/* Logo */}
-      <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/20">
-        <span className="font-display text-2xl font-bold text-accent-foreground">R</span>
-      </div>
+    <div
+      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-white safe-area-top"
+      style={{
+        background: "linear-gradient(135deg, #101927 0%, #1d163b 50%, #2a1758 100%)",
+      }}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full opacity-50"
+        style={{ background: "#4c2889", filter: "blur(120px)" }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full opacity-40"
+        style={{ background: "#8b79f2", filter: "blur(120px)" }}
+      />
 
-      <h1 className="mb-2 font-display text-xl font-semibold">
-        {mode === "login" ? "Bienvenido/a" : mode === "signup" ? "Crear cuenta" : "Recuperar contraseña"}
-      </h1>
-      <p className="mb-8 text-sm text-muted-foreground">
-        {mode === "login" ? "Ingresá a tu cuenta RESMA" : mode === "signup" ? "Empezá a cuidar tu salud mental" : "Te enviaremos un link por email"}
-      </p>
-
-      {/* Google */}
-      {mode !== "forgot" && (
-        <>
-          <button
-            onClick={handleGoogle}
-            disabled={loading}
-            className="mb-4 flex w-full max-w-xs items-center justify-center gap-3 rounded-2xl border border-border bg-card py-3 font-display text-sm font-medium transition-all active:scale-[0.98]"
-          >
-            <GoogleLogo size={18} weight="bold" />
-            Continuar con Google
-          </button>
-
-          <div className="mb-4 flex w-full max-w-xs items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="font-display text-[10px] uppercase tracking-wider text-muted-foreground">o con email</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-        </>
-      )}
-
-      {/* Email form */}
-      <form onSubmit={handleEmailAuth} className="w-full max-w-xs space-y-3">
-        <div className="relative">
-          <Envelope size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-            className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          />
+      <div className="relative z-10 flex w-full max-w-xs flex-col items-center">
+        <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-[24px] border border-white/15 bg-white/10 shadow-inner backdrop-blur-xl">
+          <span className="font-display text-2xl font-bold text-white">R</span>
         </div>
 
+        <h1 className="mb-2 font-display text-2xl font-bold text-white">
+          {mode === "login" ? "Bienvenido/a" : mode === "signup" ? "Crear cuenta" : "Recuperar contraseña"}
+        </h1>
+        <p className="mb-8 text-center text-sm font-medium text-white/60">
+          {mode === "login"
+            ? "Ingresá a tu cuenta RESMA"
+            : mode === "signup"
+              ? "Empezá a cuidar tu salud mental"
+              : "Te enviaremos un link por email"}
+        </p>
+
         {mode !== "forgot" && (
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña"
-            required
-            minLength={6}
-            className="w-full rounded-xl border border-border bg-card py-3 px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          />
-        )}
-
-        {error && <p className="text-xs text-destructive">{error}</p>}
-        {message && <p className="text-xs text-success">{message}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 font-display text-sm font-medium text-primary-foreground transition-all active:scale-[0.98] disabled:opacity-50"
-        >
-          {loading ? "Cargando..." : mode === "login" ? "Iniciar sesión" : mode === "signup" ? "Crear cuenta" : "Enviar link"}
-          {!loading && <ArrowRight size={14} />}
-        </button>
-      </form>
-
-      {/* Mode switchers */}
-      <div className="mt-6 space-y-2 text-center">
-        {mode === "login" && (
           <>
-            <button onClick={() => setMode("forgot")} className="block w-full font-display text-xs text-muted-foreground">
-              ¿Olvidaste tu contraseña?
+            <button
+              onClick={handleGoogle}
+              disabled={loading}
+              className="mb-4 flex w-full items-center justify-center gap-3 rounded-full bg-white py-3.5 font-display text-sm font-bold text-[#101927] transition active:scale-[0.98] disabled:opacity-50"
+            >
+              <GoogleLogo size={18} weight="bold" />
+              Continuar con Google
             </button>
-            <button onClick={() => { setMode("signup"); setError(""); setMessage(""); }} className="font-display text-xs text-accent-foreground">
-              ¿No tenés cuenta? <span className="underline">Crear una</span>
-            </button>
+
+            <div className="mb-4 flex w-full items-center gap-3">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="font-display text-[10px] uppercase tracking-wider text-white/40">o con email</span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
           </>
         )}
-        {mode === "signup" && (
-          <button onClick={() => { setMode("login"); setError(""); setMessage(""); }} className="font-display text-xs text-accent-foreground">
-            ¿Ya tenés cuenta? <span className="underline">Iniciar sesión</span>
+
+        <form onSubmit={handleEmailAuth} className="w-full space-y-3">
+          <div className="relative">
+            <Envelope size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+              className="w-full rounded-[24px] border border-white/10 bg-[#101927]/40 py-3.5 pl-10 pr-4 text-sm text-white placeholder:text-white/40 shadow-inner backdrop-blur-xl focus:border-[#8b79f2]/60 focus:outline-none"
+            />
+          </div>
+
+          {mode !== "forgot" && (
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Contraseña"
+              required
+              minLength={6}
+              className="w-full rounded-[24px] border border-white/10 bg-[#101927]/40 py-3.5 px-4 text-sm text-white placeholder:text-white/40 shadow-inner backdrop-blur-xl focus:border-[#8b79f2]/60 focus:outline-none"
+            />
+          )}
+
+          {error && (
+            <p className="rounded-2xl border border-rose-400/30 bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-200">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p className="rounded-2xl border border-emerald-400/30 bg-emerald-500/15 px-3 py-2 text-xs font-medium text-emerald-200">
+              {message}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8b79f2] py-3.5 font-display text-sm font-bold text-white shadow-violet-glow transition hover:bg-[#9d8df5] active:scale-[0.98] disabled:opacity-50"
+          >
+            {loading ? "Cargando..." : mode === "login" ? "Iniciar sesión" : mode === "signup" ? "Crear cuenta" : "Enviar link"}
+            {!loading && <ArrowRight size={14} />}
           </button>
-        )}
-        {mode === "forgot" && (
-          <button onClick={() => { setMode("login"); setError(""); setMessage(""); }} className="font-display text-xs text-accent-foreground">
-            Volver a <span className="underline">iniciar sesión</span>
-          </button>
-        )}
+        </form>
+
+        <div className="mt-6 space-y-2 text-center">
+          {mode === "login" && (
+            <>
+              <button
+                onClick={() => setMode("forgot")}
+                className="block w-full font-display text-xs font-medium text-white/50 hover:text-white/80"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+              <button
+                onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
+                className="font-display text-xs font-medium text-white/70 hover:text-white"
+              >
+                ¿No tenés cuenta? <span className="font-bold text-[#b5a7ff] underline">Crear una</span>
+              </button>
+            </>
+          )}
+          {mode === "signup" && (
+            <button
+              onClick={() => { setMode("login"); setError(""); setMessage(""); }}
+              className="font-display text-xs font-medium text-white/70 hover:text-white"
+            >
+              ¿Ya tenés cuenta? <span className="font-bold text-[#b5a7ff] underline">Iniciar sesión</span>
+            </button>
+          )}
+          {mode === "forgot" && (
+            <button
+              onClick={() => { setMode("login"); setError(""); setMessage(""); }}
+              className="font-display text-xs font-medium text-white/70 hover:text-white"
+            >
+              Volver a <span className="font-bold text-[#b5a7ff] underline">iniciar sesión</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
