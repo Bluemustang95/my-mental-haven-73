@@ -36,10 +36,10 @@ export default function MiProceso() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFB] pb-32 safe-area-top">
+    <div className="min-h-screen bg-background pb-32 safe-area-top">
       <div className="mx-auto max-w-md px-5 pt-12">
         {/* Header */}
-        <h1 className="font-serif text-4xl font-bold text-[#101927]">Mi Proceso</h1>
+        <h1 className="font-display text-3xl font-bold text-foreground">Mi Proceso</h1>
         <p className="mt-1 font-serif italic text-base text-muted-foreground">
           Tu evolución, paso a paso.
         </p>
@@ -51,10 +51,10 @@ export default function MiProceso() {
 
         <WellbeingCard />
 
-        <div className="mt-6 rounded-3xl bg-white p-5 shadow-[0_2px_18px_-6px_rgba(15,23,42,0.06)]">
+        <div className="mt-6 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-5 shadow-glass">
           <div className="mb-4 flex items-start justify-between">
             <div>
-              <h3 className="font-display text-base font-bold text-[#101927]">Calidad de Sueño</h3>
+              <h3 className="font-display text-base font-bold text-foreground">Calidad de Sueño</h3>
               <p className="mt-0.5 text-xs text-muted-foreground">Uso de estrategias nocturnas</p>
             </div>
             <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
@@ -97,7 +97,7 @@ export default function MiProceso() {
             <Activity size={22} className="text-violet-600" />
           </div>
           <div className="flex-1">
-            <p className="font-display text-base font-bold text-[#101927]">Test de Síntomas</p>
+            <p className="font-display text-base font-bold text-foreground">Test de Síntomas</p>
             <p className="text-xs text-muted-foreground">Completa tu evaluación semanal</p>
           </div>
           <ChevronRight size={18} className="text-muted-foreground" />
@@ -111,7 +111,7 @@ export default function MiProceso() {
             <Brain size={22} className="text-rose-600" />
           </div>
           <div className="flex-1">
-            <p className="font-display text-base font-bold text-[#101927]">Test de Personalidad</p>
+            <p className="font-display text-base font-bold text-foreground">Test de Personalidad</p>
             <p className="text-xs text-muted-foreground">Conócete a mayor profundidad</p>
           </div>
           <ChevronRight size={18} className="text-muted-foreground" />
@@ -122,7 +122,7 @@ export default function MiProceso() {
 
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h3 className="font-display text-base font-bold text-[#101927]">Terapia y Seguimiento</h3>
+            <h3 className="font-display text-base font-bold text-foreground">Terapia y Seguimiento</h3>
             <p className="mt-0.5 text-xs text-muted-foreground">Conecta tu app con tu psicólogo/a</p>
           </div>
           <IOSToggle checked={inTherapy} onChange={updateTherapy} label="En terapia" />
@@ -172,8 +172,8 @@ export default function MiProceso() {
 
 function MiniBar({ label, pct, status, color }: { label: string; pct: number; status: string; color: string }) {
   return (
-    <div className="rounded-3xl bg-white p-4 shadow-[0_2px_18px_-6px_rgba(15,23,42,0.06)]">
-      <p className="font-display text-sm font-bold leading-tight text-[#101927]">{label}</p>
+    <div className="rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 shadow-glass">
+      <p className="font-display text-sm font-bold leading-tight text-foreground">{label}</p>
       <div className="mt-4 flex items-center gap-2">
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#E5E7EB]">
           <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
@@ -206,7 +206,7 @@ function TherapyRow({
         {icon}
       </div>
       <div className="flex-1">
-        <p className="font-display text-base font-bold text-[#101927]">{title}</p>
+        <p className="font-display text-base font-bold text-foreground">{title}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>
       </div>
     </button>
