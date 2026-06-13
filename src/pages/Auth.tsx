@@ -150,7 +150,7 @@ export default function Auth() {
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8b79f2] py-3.5 font-display text-sm font-bold text-white shadow-violet-glow transition hover:bg-[#9d8df5] active:scale-[0.98] disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#7cc2c8] py-3.5 font-display text-sm font-bold text-[#0b2326] shadow-primary-glow transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? "Cargando..." : mode === "login" ? "Iniciar sesión" : mode === "signup" ? "Crear cuenta" : "Enviar link"}
             {!loading && <ArrowRight size={14} />}
