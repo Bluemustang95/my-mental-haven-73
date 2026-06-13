@@ -40,7 +40,7 @@ export default function MiProceso() {
       <div className="mx-auto max-w-md px-5 pt-12">
         {/* Header */}
         <h1 className="font-display text-3xl font-bold text-foreground">Mi Proceso</h1>
-        <p className="mt-1 font-serif italic text-base text-muted-foreground">
+        <p className="mt-1 font-body italic text-base text-muted-foreground">
           Tu evolución, paso a paso.
         </p>
 
@@ -91,7 +91,7 @@ export default function MiProceso() {
 
         <button
           onClick={() => setOpenTest("symptom")}
-          className="flex w-full items-center gap-4 rounded-3xl bg-white p-4 text-left shadow-[0_2px_18px_-6px_rgba(15,23,42,0.06)] transition active:scale-[0.99]"
+          className="flex w-full items-center gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100">
             <Activity size={22} className="text-violet-600" />
@@ -105,7 +105,7 @@ export default function MiProceso() {
 
         <button
           onClick={() => setOpenTest("personality")}
-          className="mt-3 flex w-full items-center gap-4 rounded-3xl bg-white p-4 text-left shadow-[0_2px_18px_-6px_rgba(15,23,42,0.06)] transition active:scale-[0.99]"
+          className="mt-3 flex w-full items-center gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100">
             <Brain size={22} className="text-rose-600" />
@@ -200,7 +200,7 @@ function TherapyRow({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-start gap-4 rounded-3xl bg-white p-4 text-left shadow-[0_2px_18px_-6px_rgba(15,23,42,0.06)] transition active:scale-[0.99]"
+      className="flex w-full items-start gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
     >
       <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${bg}`}>
         {icon}
