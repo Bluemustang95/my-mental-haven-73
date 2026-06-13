@@ -120,7 +120,7 @@ export default function Auth() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
               required
-              className="w-full rounded-[24px] border border-white/10 bg-[#101927]/40 py-3.5 pl-10 pr-4 text-sm text-white placeholder:text-white/40 shadow-inner backdrop-blur-xl focus:border-[#8b79f2]/60 focus:outline-none"
+              className="w-full rounded-[24px] border border-white/10 bg-[#0b2326]/40 py-3.5 pl-10 pr-4 text-sm text-white placeholder:text-white/40 shadow-inner backdrop-blur-xl focus:border-[#7cc2c8]/70 focus:outline-none"
             />
           </div>
 
