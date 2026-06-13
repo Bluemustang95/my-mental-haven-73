@@ -62,18 +62,18 @@ export default function Auth() {
     <div
       className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-white safe-area-top"
       style={{
-        background: "linear-gradient(135deg, #101927 0%, #1d163b 50%, #2a1758 100%)",
+        background: "linear-gradient(135deg, #0b2326 0%, #103a3f 50%, #16585f 100%)",
       }}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full opacity-50"
-        style={{ background: "#4c2889", filter: "blur(120px)" }}
+        className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full opacity-45"
+        style={{ background: "#7cc2c8", filter: "blur(120px)" }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full opacity-40"
-        style={{ background: "#8b79f2", filter: "blur(120px)" }}
+        className="pointer-events-none absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full opacity-35"
+        style={{ background: "#a8dde1", filter: "blur(120px)" }}
       />
 
       <div className="relative z-10 flex w-full max-w-xs flex-col items-center">
@@ -120,7 +120,7 @@ export default function Auth() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
               required
-              className="w-full rounded-[24px] border border-white/10 bg-[#101927]/40 py-3.5 pl-10 pr-4 text-sm text-white placeholder:text-white/40 shadow-inner backdrop-blur-xl focus:border-[#8b79f2]/60 focus:outline-none"
+              className="w-full rounded-[24px] border border-white/10 bg-[#0b2326]/40 py-3.5 pl-10 pr-4 text-sm text-white placeholder:text-white/40 shadow-inner backdrop-blur-xl focus:border-[#7cc2c8]/70 focus:outline-none"
             />
           </div>
 
@@ -132,7 +132,7 @@ export default function Auth() {
               placeholder="Contraseña"
               required
               minLength={6}
-              className="w-full rounded-[24px] border border-white/10 bg-[#101927]/40 py-3.5 px-4 text-sm text-white placeholder:text-white/40 shadow-inner backdrop-blur-xl focus:border-[#8b79f2]/60 focus:outline-none"
+              className="w-full rounded-[24px] border border-white/10 bg-[#0b2326]/40 py-3.5 px-4 text-sm text-white placeholder:text-white/40 shadow-inner backdrop-blur-xl focus:border-[#7cc2c8]/70 focus:outline-none"
             />
           )}
 
@@ -150,7 +150,7 @@ export default function Auth() {
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8b79f2] py-3.5 font-display text-sm font-bold text-white shadow-violet-glow transition hover:bg-[#9d8df5] active:scale-[0.98] disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#7cc2c8] py-3.5 font-display text-sm font-bold text-[#0b2326] shadow-primary-glow transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? "Cargando..." : mode === "login" ? "Iniciar sesión" : mode === "signup" ? "Crear cuenta" : "Enviar link"}
             {!loading && <ArrowRight size={14} />}
@@ -170,7 +170,7 @@ export default function Auth() {
                 onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
                 className="font-display text-xs font-medium text-white/70 hover:text-white"
               >
-                ¿No tenés cuenta? <span className="font-bold text-[#b5a7ff] underline">Crear una</span>
+                ¿No tenés cuenta? <span className="font-bold text-[#a8dde1] underline">Crear una</span>
               </button>
             </>
           )}
@@ -179,7 +179,7 @@ export default function Auth() {
               onClick={() => { setMode("login"); setError(""); setMessage(""); }}
               className="font-display text-xs font-medium text-white/70 hover:text-white"
             >
-              ¿Ya tenés cuenta? <span className="font-bold text-[#b5a7ff] underline">Iniciar sesión</span>
+              ¿Ya tenés cuenta? <span className="font-bold text-[#a8dde1] underline">Iniciar sesión</span>
             </button>
           )}
           {mode === "forgot" && (
@@ -187,7 +187,7 @@ export default function Auth() {
               onClick={() => { setMode("login"); setError(""); setMessage(""); }}
               className="font-display text-xs font-medium text-white/70 hover:text-white"
             >
-              Volver a <span className="font-bold text-[#b5a7ff] underline">iniciar sesión</span>
+              Volver a <span className="font-bold text-[#a8dde1] underline">iniciar sesión</span>
             </button>
           )}
         </div>

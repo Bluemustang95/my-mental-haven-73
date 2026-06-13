@@ -234,7 +234,7 @@ export default function Onboarding() {
                   onClick={() => setCountry(p.code)}
                   className={`flex items-center gap-3 rounded-2xl border px-4 py-4 text-left text-sm font-medium backdrop-blur-md transition active:scale-[0.98] ${
                     selected
-                      ? "border-indigo-400/70 bg-indigo-500/15 text-white"
+                      ? "border-[#7cc2c8]/70 bg-[#7cc2c8]/15 text-white"
                       : "border-white/10 bg-white/5 text-white/85 hover:border-white/25"
                   }`}
                 >
