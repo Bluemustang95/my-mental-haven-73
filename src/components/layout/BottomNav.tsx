@@ -62,7 +62,7 @@ export function BottomNav() {
       }}
     >
       <div
-        className="pointer-events-auto mx-4 flex items-center justify-center gap-1 rounded-[32px] border border-white/20 bg-primary/95 px-3 py-2 shadow-primary-glow backdrop-blur-3xl"
+        className="pointer-events-auto mx-4 flex items-center justify-center gap-0.5 rounded-[28px] border border-white/20 bg-primary/95 px-2 py-1.5 shadow-primary-glow backdrop-blur-3xl"
         style={{ maxWidth: "calc(100vw - 2rem)" }}
       >
         {leftTabs.map(renderTab)}
@@ -71,19 +71,19 @@ export function BottomNav() {
           onClick={() => navigate("/psicoeducacion")}
           whileTap={{ scale: 0.9 }}
           aria-label="Psicoeducación"
-          className="relative -mt-5 mx-1 flex items-center justify-center"
+          className="relative -mt-4 mx-0.5 flex items-center justify-center"
         >
           <motion.div
             animate={psicoActive ? { scale: 1.08 } : { scale: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-lg transition-colors",
+              "flex h-10 w-10 items-center justify-center rounded-full border-2 border-white shadow-primary-glow transition-colors",
               psicoActive
-                ? "bg-gradient-to-br from-[hsl(28_95%_60%)] to-[hsl(40_100%_85%)] border-white text-white ring-2 ring-white/40"
-                : "bg-gradient-to-br from-[hsl(38_90%_70%)] to-[hsl(40_100%_90%)] border-white text-[hsl(28_70%_25%)]"
+                ? "bg-foreground text-primary ring-2 ring-white/40"
+                : "bg-primary text-foreground"
             )}
           >
-            <BookOpen size={24} weight={psicoActive ? "fill" : "bold"} />
+            <BookOpen size={20} weight={psicoActive ? "fill" : "bold"} />
           </motion.div>
         </motion.button>
 
