@@ -62,18 +62,18 @@ export default function Auth() {
     <div
       className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-white safe-area-top"
       style={{
-        background: "linear-gradient(135deg, #101927 0%, #1d163b 50%, #2a1758 100%)",
+        background: "linear-gradient(135deg, #0b2326 0%, #103a3f 50%, #16585f 100%)",
       }}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full opacity-50"
-        style={{ background: "#4c2889", filter: "blur(120px)" }}
+        className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full opacity-45"
+        style={{ background: "#7cc2c8", filter: "blur(120px)" }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full opacity-40"
-        style={{ background: "#8b79f2", filter: "blur(120px)" }}
+        className="pointer-events-none absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full opacity-35"
+        style={{ background: "#a8dde1", filter: "blur(120px)" }}
       />
 
       <div className="relative z-10 flex w-full max-w-xs flex-col items-center">
