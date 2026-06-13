@@ -170,7 +170,7 @@ export default function Auth() {
                 onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
                 className="font-display text-xs font-medium text-white/70 hover:text-white"
               >
-                ¿No tenés cuenta? <span className="font-bold text-[#b5a7ff] underline">Crear una</span>
+                ¿No tenés cuenta? <span className="font-bold text-[#a8dde1] underline">Crear una</span>
               </button>
             </>
           )}
@@ -179,7 +179,7 @@ export default function Auth() {
               onClick={() => { setMode("login"); setError(""); setMessage(""); }}
               className="font-display text-xs font-medium text-white/70 hover:text-white"
             >
-              ¿Ya tenés cuenta? <span className="font-bold text-[#b5a7ff] underline">Iniciar sesión</span>
+              ¿Ya tenés cuenta? <span className="font-bold text-[#a8dde1] underline">Iniciar sesión</span>
             </button>
           )}
           {mode === "forgot" && (
@@ -187,7 +187,7 @@ export default function Auth() {
               onClick={() => { setMode("login"); setError(""); setMessage(""); }}
               className="font-display text-xs font-medium text-white/70 hover:text-white"
             >
-              Volver a <span className="font-bold text-[#b5a7ff] underline">iniciar sesión</span>
+              Volver a <span className="font-bold text-[#a8dde1] underline">iniciar sesión</span>
             </button>
           )}
         </div>
