@@ -32,19 +32,15 @@ export function BottomNav() {
         whileTap={{ scale: 0.85, opacity: 0.7 }}
         aria-label={tab.label}
         className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-          active ? "text-foreground" : "text-muted-foreground"
+          "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
+          active ? "text-foreground" : "text-white/70"
         )}
       >
         <motion.div
-          animate={active ? { scale: 1.05 } : { scale: 1 }}
+          animate={active ? { scale: 1.1 } : { scale: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
         >
-          <Icon
-            size={20}
-            weight={active ? "fill" : "regular"}
-            className={cn(active && "text-accent")}
-          />
+          <Icon size={22} weight={active ? "fill" : "regular"} />
         </motion.div>
       </motion.button>
     );
@@ -66,17 +62,16 @@ export function BottomNav() {
       }}
     >
       <div
-        className="pointer-events-auto flex items-center justify-center gap-0.5 rounded-full border border-border/40 bg-card/75 px-2 py-1 shadow-lg backdrop-blur-xl"
+        className="pointer-events-auto mx-4 flex items-center justify-center gap-1 rounded-[32px] border border-white/20 bg-primary/95 px-3 py-2 shadow-primary-glow backdrop-blur-3xl"
         style={{ maxWidth: "calc(100vw - 2rem)" }}
       >
         {leftTabs.map(renderTab)}
 
-        {/* Center: Psicoeducación */}
         <motion.button
           onClick={() => navigate("/psicoeducacion")}
           whileTap={{ scale: 0.9 }}
           aria-label="Psicoeducación"
-          className="relative -mt-4 mx-0.5 flex items-center justify-center"
+          className="relative -mt-5 mx-1 flex items-center justify-center"
         >
           <motion.div
             animate={psicoActive ? { scale: 1.08 } : { scale: 1 }}
@@ -84,7 +79,7 @@ export function BottomNav() {
             className={cn(
               "flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-lg transition-colors",
               psicoActive
-                ? "bg-gradient-to-br from-[hsl(28_95%_60%)] to-[hsl(40_100%_85%)] border-white text-white ring-2 ring-[hsl(28_95%_60%)]/30"
+                ? "bg-gradient-to-br from-[hsl(28_95%_60%)] to-[hsl(40_100%_85%)] border-white text-white ring-2 ring-white/40"
                 : "bg-gradient-to-br from-[hsl(38_90%_70%)] to-[hsl(40_100%_90%)] border-white text-[hsl(28_70%_25%)]"
             )}
           >

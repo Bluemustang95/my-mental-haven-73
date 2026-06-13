@@ -8,7 +8,6 @@ export function WeekStrip({
   progressByDate = {},
   onSelectDay,
 }: {
-  /** map dateStr (YYYY-MM-DD) -> completed nodes 0..4 */
   progressByDate?: Record<string, number>;
   onSelectDay?: (d: Date) => void;
 }) {
@@ -24,7 +23,6 @@ export function WeekStrip({
         const prog = progressByDate[key] ?? 0;
         const complete = prog >= 4;
         const partial = prog > 0 && prog < 4;
-        const dotColor = complete ? "#34C759" : partial ? "#F59E0B" : null;
         return (
           <button
             key={i}
@@ -43,17 +41,20 @@ export function WeekStrip({
               className={cn(
                 "relative flex h-9 w-9 items-center justify-center rounded-full font-display text-sm transition",
                 isToday
-                  ? complete
-                    ? "bg-[#34C759]/15 text-[#1f7a37] font-bold ring-1 ring-[#34C759]/40"
-                    : "bg-[#F4ECE0] text-foreground font-bold"
+                  ? "bg-accent/20 text-foreground font-bold ring-1 ring-accent/40"
                   : "text-foreground/70"
               )}
             >
               {format(d, "d")}
-              {dotColor && (
+              {isToday && (
+                <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-accent" />
+              )}
+              {!isToday && (complete || partial) && (
                 <span
-                  className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full"
-                  style={{ background: dotColor }}
+                  className={cn(
+                    "absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full",
+                    complete ? "bg-success" : "bg-accent"
+                  )}
                 />
               )}
             </div>

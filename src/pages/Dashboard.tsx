@@ -149,8 +149,8 @@ export default function Dashboard() {
       id: "morning",
       title: "Valoración de la mañana",
       subtitle: "Analiza tu sueño y estado de ánimo.",
-      icon: <Sun size={22} className="text-amber-500" />,
-      iconBg: "linear-gradient(135deg,#FFE9C8 0%,#FFD9A3 100%)",
+      icon: <Sun size={22} className="text-accent-foreground" />,
+      iconBg: "hsl(var(--accent) / 0.2)",
       done: morningDone,
       onClick: () => setCheckinOpen("morning"),
     },
@@ -158,8 +158,8 @@ export default function Dashboard() {
       id: "psycho",
       title: "Psicoeducación",
       subtitle: "Aprende sobre distorsiones cognitivas.",
-      icon: <BookOpen size={22} className="text-orange-500" />,
-      iconBg: "linear-gradient(135deg,#FFE3D1 0%,#FFCDAA 100%)",
+      icon: <BookOpen size={22} className="text-primary-foreground" />,
+      iconBg: "hsl(var(--primary) / 0.2)",
       done: psychoDone,
       onClick: () => setPsychoOpen(true),
     },
@@ -167,8 +167,8 @@ export default function Dashboard() {
       id: "practice",
       title: "Tu práctica de hoy",
       subtitle: practiceDone ? `Completaste: ${practiceDone}` : "Elegí un ejercicio para realizar.",
-      icon: <Wind size={22} className="text-amber-600" />,
-      iconBg: "linear-gradient(135deg,#FFE9C8 0%,#FFD9A3 100%)",
+      icon: <Wind size={22} className="text-accent-foreground" />,
+      iconBg: "hsl(var(--accent) / 0.2)",
       done: !!practiceDone,
       onClick: () => {},
       footer: (
@@ -181,7 +181,7 @@ export default function Dashboard() {
                 completePractice(c.name, c.route);
                 setTimeout(() => navigate(c.route), 600);
               }}
-              className="rounded-full bg-[#F4ECE0] px-4 py-2 text-xs font-semibold text-[#101927] transition active:scale-95"
+              className="rounded-full bg-background px-4 py-2 text-xs font-semibold text-foreground transition active:scale-95"
             >
               {c.name}
             </button>
@@ -193,8 +193,8 @@ export default function Dashboard() {
       id: "night",
       title: "Valoración de la noche",
       subtitle: "Cierra el día y prepara tu descanso.",
-      icon: <MoonIcon size={22} className="text-amber-600" />,
-      iconBg: "linear-gradient(135deg,#FFE9C8 0%,#FFD9A3 100%)",
+      icon: <MoonIcon size={22} className="text-primary-foreground" />,
+      iconBg: "hsl(var(--primary) / 0.2)",
       done: nightDone,
       onClick: () => setCheckinOpen("night"),
     },
@@ -208,22 +208,22 @@ export default function Dashboard() {
   }, [allDone]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFB] pb-28 safe-area-top">
+    <div className="min-h-screen bg-transparent pb-28 safe-area-top">
       <div className="mx-auto max-w-md px-5 pt-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="min-w-0">
-            <p className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground/70">
-              {greeting} <Sparkles size={11} className="text-amber-500" />
+            <p className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+              {greeting} <Sparkles size={11} className="text-accent" />
             </p>
-            <h1 className="mt-0.5 truncate font-display text-xl font-semibold text-[#101927]">
+            <h1 className="mt-0.5 truncate font-display text-2xl font-bold text-foreground">
               {name || "Usuario"}
             </h1>
           </div>
           <button
             onClick={() => navigate("/configuracion")}
             aria-label="Ajustes"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F4ECE0] font-display text-sm font-semibold uppercase text-[#101927] transition active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/5 bg-card/80 font-display text-sm font-bold uppercase text-foreground shadow-glass backdrop-blur-xl transition active:scale-95"
           >
             {name ? name[0] : "U"}
           </button>
