@@ -201,20 +201,20 @@ export default function Diario() {
             className="flex items-center justify-between px-6 pt-14 pb-2"
           >
             <div>
-              <h1 className="font-display text-xl font-semibold text-foreground">Diario</h1>
-              <p className="text-xs text-muted-foreground">Tu espacio seguro para escribir.</p>
+              <h1 className="font-display text-3xl font-bold text-foreground">Diario</h1>
+              <p className="mt-0.5 text-xs text-muted-foreground">Tu espacio seguro para escribir.</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate("/diario/herramientas")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 shadow-sm transition-all active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 backdrop-blur-3xl border border-foreground/5 shadow-glass transition-all active:scale-95"
                 aria-label="Herramientas"
               >
                 <Toolbox size={18} weight="duotone" className="text-muted-foreground" />
               </button>
               <button
                 onClick={() => navigate("/diario/historial")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 shadow-sm transition-all active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 backdrop-blur-3xl border border-foreground/5 shadow-glass transition-all active:scale-95"
                 aria-label="Historial"
               >
                 <Clock size={18} className="text-muted-foreground" />
