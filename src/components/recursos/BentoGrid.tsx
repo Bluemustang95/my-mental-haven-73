@@ -1,40 +1,49 @@
 import { useNavigate } from "react-router-dom";
-import { Zap } from "lucide-react";
+import { Zap, Wind, HeartPulse, Waves, Users, Brain, type LucideIcon } from "lucide-react";
 
-const tiles = [
+type Tile = {
+  slug: string;
+  name: string;
+  desc: string;
+  Icon: LucideIcon;
+  tint: "primary" | "accent";
+};
+
+const tiles: Tile[] = [
   {
     slug: "mindfulness",
     name: "Mindfulness",
     desc: "Respiración consciente.",
-    emoji: "🧘",
-    bg: "bg-[#FFE4EC]",
-    fg: "text-[#9B1B2C]",
+    Icon: Wind,
+    tint: "primary",
   },
   {
     slug: "regulacion-emocional",
     name: "Regulación Emocional",
     desc: "Habilidades STOP y TIP.",
-    emoji: "❤️",
-    bg: "bg-[#FFE7CC]",
-    fg: "text-[#9B4A1E]",
+    Icon: HeartPulse,
+    tint: "accent",
   },
   {
     slug: "tolerancia-malestar",
     name: "Tolerancia al Malestar",
     desc: "Sobrevive a crisis.",
-    emoji: "🌊",
-    bg: "bg-[#E6DEFF]",
-    fg: "text-[#3F2A8C]",
+    Icon: Waves,
+    tint: "primary",
   },
   {
     slug: "efectividad-personal",
     name: "Efectividad Personal",
     desc: "Mejorá vínculos.",
-    emoji: "🛡️",
-    bg: "bg-[#D6F3DC]",
-    fg: "text-[#1B5E2D]",
+    Icon: Users,
+    tint: "accent",
   },
 ];
+
+const tintBg: Record<Tile["tint"], string> = {
+  primary: "bg-primary/15 text-primary",
+  accent: "bg-accent/25 text-foreground",
+};
 
 export function BentoGrid() {
   const navigate = useNavigate();
@@ -47,13 +56,14 @@ export function BentoGrid() {
           <button
             key={t.slug}
             onClick={() => navigate(`/diario-inteligente/${t.slug}`)}
-            className={`relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl p-4 text-left ${t.bg}`}
+            className="relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl border border-foreground/5 bg-card/80 p-4 text-left shadow-glass backdrop-blur-3xl transition active:scale-[0.98]"
           >
-            <span className="absolute -top-3 -right-3 text-6xl opacity-30">{t.emoji}</span>
-            <span className="relative text-2xl">{t.emoji}</span>
-            <div className="relative">
-              <h3 className={`font-display text-base font-bold leading-tight ${t.fg}`}>{t.name}</h3>
-              <p className={`mt-1 text-xs ${t.fg} opacity-75`}>{t.desc}</p>
+            <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${tintBg[t.tint]}`}>
+              <t.Icon size={20} strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-bold leading-tight text-foreground">{t.name}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{t.desc}</p>
             </div>
           </button>
         ))}
@@ -62,17 +72,21 @@ export function BentoGrid() {
       {/* Gestion de Pensamientos */}
       <button
         onClick={() => navigate("/diario-inteligente/gestion-pensamientos")}
-        className="relative flex w-full items-center justify-between overflow-hidden rounded-3xl bg-[#E0E9FF] p-5 text-left"
+        className="relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-3xl border border-foreground/5 bg-card/80 p-4 text-left shadow-glass backdrop-blur-3xl transition active:scale-[0.98]"
       >
-        <div>
-          <h3 className="font-display text-base font-bold text-[#1E3A8A]">
-            Gestión de Pensamientos
-          </h3>
-          <p className="mt-1 text-xs text-[#1E3A8A]/75">
-            Identificá distorsiones, frená la rumiación y la preocupación.
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+            <Brain size={20} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="font-display text-base font-bold text-foreground">
+              Gestión de Pensamientos
+            </h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Distorsiones, rumiación y preocupación.
+            </p>
+          </div>
         </div>
-        <span className="text-3xl">🧠</span>
       </button>
 
       {/* Pack Actividades */}

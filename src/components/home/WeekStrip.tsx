@@ -39,7 +39,7 @@ export function WeekStrip({
             </span>
             <div
               className={cn(
-                "relative flex h-9 w-9 items-center justify-center rounded-full font-display text-sm transition",
+                "relative flex h-8 w-8 items-center justify-center rounded-full font-display text-[13px] transition",
                 isToday
                   ? "bg-accent/20 text-foreground font-bold ring-1 ring-accent/40"
                   : "text-foreground/70"
