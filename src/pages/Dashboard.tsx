@@ -208,29 +208,29 @@ export default function Dashboard() {
   }, [allDone]);
 
   return (
-    <div className="min-h-screen bg-transparent pb-28 safe-area-top">
-      <div className="mx-auto max-w-md px-5 pt-8">
+    <div className="min-h-screen bg-transparent pb-24 safe-area-top">
+      <div className="mx-auto max-w-md px-5 pt-5">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="min-w-0">
-            <p className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
-              {greeting} <Sparkles size={11} className="text-accent" />
+            <p className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+              {greeting} <Sparkles size={10} className="text-accent" />
             </p>
-            <h1 className="mt-0.5 truncate font-display text-2xl font-bold text-foreground">
+            <h1 className="mt-0.5 truncate font-display text-xl font-bold text-foreground">
               {name || "Usuario"}
             </h1>
           </div>
           <button
             onClick={() => navigate("/configuracion")}
             aria-label="Ajustes"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foreground/5 bg-card/80 font-display text-sm font-bold uppercase text-foreground shadow-glass backdrop-blur-xl transition active:scale-95"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground/5 bg-card/80 font-display text-sm font-bold uppercase text-foreground shadow-glass backdrop-blur-xl transition active:scale-95"
           >
             {name ? name[0] : "U"}
           </button>
         </div>
 
         {/* Week strip */}
-        <div className="mt-6">
+        <div className="mt-4">
           <WeekStrip
             progressByDate={weekProgress}
             onSelectDay={(d) => {
@@ -241,7 +241,7 @@ export default function Dashboard() {
         </div>
 
         {/* Progress label */}
-        <p className="mt-8 mb-3 px-1 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/70">
+        <p className="mt-4 mb-2 px-1 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/70">
           Tu progreso de hoy
         </p>
 
@@ -251,18 +251,18 @@ export default function Dashboard() {
         {/* Sleep banner */}
         <button
           onClick={() => navigate("/herramientas/sueno")}
-          className="mt-6 flex w-full items-center justify-between gap-4 overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-500 p-5 text-left text-white shadow-[0_15px_40px_-15px_rgba(139,92,246,0.7)] transition active:scale-[0.98]"
+          className="mt-3 flex w-full items-center justify-between gap-3 overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-500 p-3 text-left text-white shadow-[0_15px_40px_-15px_rgba(139,92,246,0.7)] transition active:scale-[0.98]"
         >
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md">
-              <MoonIcon size={22} className="text-white" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md">
+              <MoonIcon size={18} className="text-white" />
             </div>
             <div>
-              <p className="font-display text-base font-bold">Te ayudamos con tu sueño</p>
-              <p className="text-xs text-white/80">Recursos y diarios nocturnos</p>
+              <p className="font-display text-sm font-bold">Te ayudamos con tu sueño</p>
+              <p className="text-[11px] text-white/80">Recursos y diarios nocturnos</p>
             </div>
           </div>
-          <ChevronRight size={20} />
+          <ChevronRight size={18} />
         </button>
       </div>
 
