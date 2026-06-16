@@ -149,7 +149,7 @@ export default function Dashboard() {
       id: "morning",
       title: "Valoración de la mañana",
       subtitle: "Analiza tu sueño y estado de ánimo.",
-      icon: <Sun size={22} className="text-accent-foreground" />,
+      icon: <Sun size={18} className="text-accent-foreground" />,
       iconBg: "hsl(var(--accent) / 0.2)",
       done: morningDone,
       onClick: () => setCheckinOpen("morning"),
@@ -158,7 +158,7 @@ export default function Dashboard() {
       id: "psycho",
       title: "Psicoeducación",
       subtitle: "Aprende sobre distorsiones cognitivas.",
-      icon: <BookOpen size={22} className="text-primary-foreground" />,
+      icon: <BookOpen size={18} className="text-primary-foreground" />,
       iconBg: "hsl(var(--primary) / 0.2)",
       done: psychoDone,
       onClick: () => setPsychoOpen(true),
@@ -167,12 +167,12 @@ export default function Dashboard() {
       id: "practice",
       title: "Tu práctica de hoy",
       subtitle: practiceDone ? `Completaste: ${practiceDone}` : "Elegí un ejercicio para realizar.",
-      icon: <Wind size={22} className="text-accent-foreground" />,
+      icon: <Wind size={18} className="text-accent-foreground" />,
       iconBg: "hsl(var(--accent) / 0.2)",
       done: !!practiceDone,
       onClick: () => {},
       footer: (
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="flex flex-wrap gap-1.5 pt-0.5">
           {chips.map((c) => (
             <button
               key={c.name}
@@ -181,7 +181,7 @@ export default function Dashboard() {
                 completePractice(c.name, c.route);
                 setTimeout(() => navigate(c.route), 600);
               }}
-              className="rounded-full bg-background px-4 py-2 text-xs font-semibold text-foreground transition active:scale-95"
+              className="rounded-full bg-background px-3 py-1.5 text-[11px] font-semibold text-foreground transition active:scale-95"
             >
               {c.name}
             </button>
@@ -193,7 +193,7 @@ export default function Dashboard() {
       id: "night",
       title: "Valoración de la noche",
       subtitle: "Cierra el día y prepara tu descanso.",
-      icon: <MoonIcon size={22} className="text-primary-foreground" />,
+      icon: <MoonIcon size={18} className="text-primary-foreground" />,
       iconBg: "hsl(var(--primary) / 0.2)",
       done: nightDone,
       onClick: () => setCheckinOpen("night"),
