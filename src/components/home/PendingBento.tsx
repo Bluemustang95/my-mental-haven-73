@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Sparkles, Wind, Calendar } from "lucide-react";
@@ -29,21 +29,47 @@ function readMindfulnessDraft(): { exerciseName: string; returnPath: string } | 
   }
 }
 
+function draftHasBienestarProgress(d: any) {
+  return (
+    (d?.selectedValues?.length ?? 0) > 0 ||
+    !!d?.todayGoal ||
+    (d?.selectedActivities?.length ?? 0) > 0
+  );
+}
+
 export function PendingBento() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [items, setItems] = useState<Pending[]>([]);
+  const [tick, setTick] = useState(0);
 
+  // Re-read on focus / visibility change
   useEffect(() => {
+    const refresh = () => setTick((t) => t + 1);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
+
+  const compute = useCallback(async () => {
     const next: Pending[] = [];
 
-    // DBT draft
+    // Cambiar respuestas — sesión en curso
     const d = readDraft();
     if (d && draftHasProgress(d) && d.stage !== "done") {
+      const stageMap: Record<string, string> = {
+        wizard8: "Verificar los hechos",
+        decision9: "Mente Sabia",
+        problem12: "Acción · Resolver",
+        opposite10: "Acción Opuesta",
+      };
       next.push({
         key: "dbt",
         title: "Cambiar respuestas",
-        subtitle: d.selectedEmotion ? `Sesión: ${d.selectedEmotion}` : "Sesión en curso",
+        subtitle: d.selectedEmotion ? `${d.selectedEmotion} · ${stageMap[d.stage] ?? "En curso"}` : "Sesión en curso",
         to: "/herramientas/cambiar-respuestas",
         icon: <Heart size={16} className="text-white" />,
         from: "#7cc2c8",
@@ -51,7 +77,7 @@ export function PendingBento() {
       });
     }
 
-    // Mindfulness draft
+    // Mindfulness
     const m = readMindfulnessDraft();
     if (m) {
       next.push({
@@ -65,25 +91,24 @@ export function PendingBento() {
       });
     }
 
-    // Bienestar — plan de hoy o wizard inconcluso
+    // Bienestar
     const b = readBienestarDraft();
     if (b) {
-      if (b.done || (b.step >= 4 && b.selectedActivities.length >= 3)) {
-        const st = todayStatus(b);
-        if (st.total > 0) {
-          next.push({
-            key: "bienestar-hoy",
-            title: "Tu plan de bienestar",
-            subtitle:
-              st.nextLabel ??
-              `${st.pending} de ${st.total} bloques pendientes hoy`,
-            to: "/herramientas/construir-bienestar?tab=seguimiento&day=hoy",
-            icon: <Calendar size={16} className="text-white" />,
-            from: "#7cc2c8",
-            to2: "#34D399",
-          });
-        }
-      } else if (draftHasBienestarProgress(b)) {
+      const st = todayStatus(b);
+      if (st.total > 0) {
+        next.push({
+          key: "bienestar-hoy",
+          title: "Tu plan de bienestar",
+          subtitle:
+            st.pending > 0
+              ? `${st.pending} de ${st.total} bloques pendientes hoy`
+              : `Todo completado hoy ✓`,
+          to: "/herramientas/construir-bienestar?tab=seguimiento&day=hoy",
+          icon: <Calendar size={16} className="text-white" />,
+          from: "#7cc2c8",
+          to2: "#34D399",
+        });
+      } else if (draftHasBienestarProgress(b) && !b.done) {
         next.push({
           key: "bienestar-wizard",
           title: "Continuá tu plan",
@@ -96,20 +121,8 @@ export function PendingBento() {
       }
     }
 
-    setItems(next);
-
-    function draftHasBienestarProgress(d: any) {
-      return (
-        (d?.selectedValues?.length ?? 0) > 0 ||
-        !!d?.todayGoal ||
-        (d?.selectedActivities?.length ?? 0) > 0
-      );
-    }
-
-
     // BA Pack
-    (async () => {
-      if (!user) return;
+    if (user) {
       const { data } = await supabase
         .from("ba_programs" as any)
         .select("current_day, state")
@@ -117,21 +130,24 @@ export function PendingBento() {
         .maybeSingle();
       const prog: any = data;
       if (prog && prog.state && prog.state !== "completed") {
-        setItems((prev) => [
-          ...prev,
-          {
-            key: "ba",
-            title: "Pack de activación",
-            subtitle: `Día ${prog.current_day ?? 1} en curso`,
-            to: "/herramientas/pack-actividades",
-            icon: <Sparkles size={16} className="text-white" />,
-            from: "#FB923C",
-            to2: "#F472B6",
-          },
-        ]);
+        next.push({
+          key: "ba",
+          title: "Pack de activación",
+          subtitle: `Día ${prog.current_day ?? 1} en curso`,
+          to: "/herramientas/pack-actividades",
+          icon: <Sparkles size={16} className="text-white" />,
+          from: "#FB923C",
+          to2: "#F472B6",
+        });
       }
-    })();
+    }
+
+    setItems(next);
   }, [user]);
+
+  useEffect(() => {
+    compute();
+  }, [compute, tick]);
 
   if (items.length === 0) return null;
 
