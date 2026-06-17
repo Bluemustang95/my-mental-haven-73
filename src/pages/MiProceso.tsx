@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, ClipboardList, FileText, NotebookPen, Pill, ChevronRight, Brain, Phone, Mail, BadgeCheck } from "lucide-react";
+import { Activity, ClipboardList, FileText, NotebookPen, Pill, ChevronRight, Brain, Phone, Mail, BadgeCheck, Sparkles, Crown } from "lucide-react";
+import { usePlan } from "@/hooks/usePlan";
+import { PaywallModal } from "@/components/modals/PaywallModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
@@ -14,12 +16,25 @@ const dayLabels = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
 
 export default function MiProceso() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const { isPremium, realPlan } = usePlan();
   const [bars] = useState<number[]>([35, 50, 28, 65, 72, 60, 80]);
   const [inTherapy, setInTherapy] = useState(false);
   const [openTest, setOpenTest] = useState<null | "symptom" | "personality">(null);
   const [syncOpen, setSyncOpen] = useState(false);
   const [linkedLastName, setLinkedLastName] = useState<string | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.hash === "#suscripcion") {
+      // wait for layout
+      setTimeout(() => {
+        const el = document.getElementById("suscripcion");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, [location.hash]);
 
   useEffect(() => {
     if (!user) return;
@@ -220,7 +235,74 @@ export default function MiProceso() {
             </p>
           </div>
         )}
+
+        {/* Suscripción / Membresía */}
+        <section id="suscripcion" className="mt-10 scroll-mt-24">
+          <h2 className="font-display text-xl font-bold text-foreground">Tu membresía</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Gestioná tu plan y desbloqueá todo el catálogo cuando quieras.
+          </p>
+
+          {isPremium ? (
+            <div className="mt-4 overflow-hidden rounded-[28px] border border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-amber-50 p-5 shadow-glass">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-md">
+                  <Crown size={22} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-display text-base font-bold text-foreground">Plan Premium activo</p>
+                  <p className="text-xs text-muted-foreground">
+                    {realPlan === "premium" ? "Acceso ilimitado a todos los recursos." : "Acceso completo de admin."}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate("/configuracion")}
+                className="mt-4 w-full rounded-2xl border border-foreground/10 bg-white/80 py-3 text-sm font-semibold text-foreground shadow-sm transition active:scale-[0.98]"
+              >
+                Gestionar suscripción
+              </button>
+            </div>
+          ) : (
+            <div className="mt-4 overflow-hidden rounded-[28px] border border-white/60 bg-gradient-to-br from-[#facb60]/20 via-white to-[#7cc2c8]/20 p-5 shadow-glass">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-md">
+                  <Sparkles size={22} />
+                </div>
+                <div className="flex-1">
+                  <p className="font-display text-base font-bold text-foreground">Estás en el plan Gratuito</p>
+                  <p className="text-xs text-muted-foreground">
+                    Pasate a Premium para desbloquear diario, recursos y estadísticas.
+                  </p>
+                </div>
+              </div>
+
+              <ul className="mt-4 space-y-1.5 text-sm text-foreground/80">
+                <li className="flex items-center gap-2"><span className="text-amber-500">✦</span> Recursos clínicos ilimitados</li>
+                <li className="flex items-center gap-2"><span className="text-amber-500">✦</span> Estadísticas de impacto y evaluaciones</li>
+                <li className="flex items-center gap-2"><span className="text-amber-500">✦</span> Herramientas del diario y modo Zen</li>
+              </ul>
+
+              <button
+                onClick={() => setPaywallOpen(true)}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#101927] py-3.5 text-sm font-bold text-white shadow-[0_10px_24px_-8px_rgba(16,25,39,0.4)] transition active:scale-[0.98]"
+              >
+                <Sparkles size={16} className="text-amber-300" />
+                Hazte Premium — USD 0.99/sem
+              </button>
+
+              <button
+                onClick={() => navigate("/configuracion")}
+                className="mt-2 w-full rounded-2xl py-2.5 text-xs font-semibold text-foreground/60 transition hover:text-foreground"
+              >
+                Restaurar compras
+              </button>
+            </div>
+          )}
+        </section>
       </div>
+
+      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} featureName="Premium" />
 
       <SymptomsTestModal
         open={!!openTest}

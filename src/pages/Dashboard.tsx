@@ -163,6 +163,8 @@ export default function Dashboard() {
       iconBg: "hsl(var(--primary) / 0.2)",
       done: psychoDone,
       onClick: () => setPsychoOpen(true),
+      locked: true,
+      lockLabel: "Psicoeducación",
     },
     {
       id: "practice",
@@ -189,6 +191,8 @@ export default function Dashboard() {
           ))}
         </div>
       ),
+      locked: true,
+      lockLabel: "Tu práctica de hoy",
     },
     {
       id: "night",
@@ -198,6 +202,8 @@ export default function Dashboard() {
       iconBg: "hsl(var(--primary) / 0.2)",
       done: nightDone,
       onClick: () => setCheckinOpen("night"),
+      locked: true,
+      lockLabel: "Valoración de la noche",
     },
   ];
 
@@ -232,13 +238,15 @@ export default function Dashboard() {
 
         {/* Week strip */}
         <div className="mt-4">
-          <WeekStrip
-            progressByDate={weekProgress}
-            onSelectDay={(d) => {
-              setHistoryDate(d);
-              setHistoryOpen(true);
-            }}
-          />
+          <PremiumLock featureName="Tu semana" variant="card">
+            <WeekStrip
+              progressByDate={weekProgress}
+              onSelectDay={(d) => {
+                setHistoryDate(d);
+                setHistoryOpen(true);
+              }}
+            />
+          </PremiumLock>
         </div>
 
         {/* Progress label */}
