@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { ArrowRight, Envelope, GoogleLogo } from "@phosphor-icons/react";
+import { ArrowRight, Envelope, GoogleLogo, Fingerprint } from "@phosphor-icons/react";
+import { isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometricAuth";
 
 const TEAL = "#7cc2c8";
 const INK = "#101927";
