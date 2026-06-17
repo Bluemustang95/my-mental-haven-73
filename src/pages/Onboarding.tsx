@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { GoogleLogo } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -8,10 +8,24 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   OnboardingShell,
   GlassInput,
+  GlassSelect,
   GlassChoice,
   GlassPrimaryButton,
+  StickyFooter,
 } from "@/components/onboarding/OnboardingShell";
 import { SplashIntro, ValueSlides } from "@/components/onboarding/IntroScreens";
+import { CountryPicker } from "@/components/onboarding/CountryPicker";
+import { AlgorithmTransition } from "@/components/onboarding/AlgorithmTransition";
+import {
+  computePriority,
+  saveLocalProfile,
+  type SleepQuality,
+  type LearningFormat,
+} from "@/lib/clinicalAlgorithm";
+import { enrollBiometric, isBiometricSupported } from "@/lib/biometricAuth";
+
+const TEAL = "#7cc2c8";
+const INK = "#101927";
 
 const BRUJULA = [
   "Hacer las paces con mi almohada",
@@ -33,15 +47,17 @@ const MALETA = [
   "Perdonarme por el pasado",
 ];
 
-const PAISES = [
-  { code: "AR", label: "Argentina", flag: "🇦🇷" },
-  { code: "MX", label: "México", flag: "🇲🇽" },
-  { code: "ES", label: "España", flag: "🇪🇸" },
-  { code: "CO", label: "Colombia", flag: "🇨🇴" },
-  { code: "CL", label: "Chile", flag: "🇨🇱" },
-  { code: "UY", label: "Uruguay", flag: "🇺🇾" },
-  { code: "PE", label: "Perú", flag: "🇵🇪" },
-  { code: "OT", label: "Otro", flag: "🌎" },
+const SLEEP_OPTIONS: { value: SleepQuality; label: string; hint: string }[] = [
+  { value: "reparador", label: "Reparador", hint: "Me levanto descansado/a" },
+  { value: "interrumpido", label: "Interrumpido", hint: "Me despierto varias veces" },
+  { value: "insomnio", label: "Cuesta dormirme", hint: "Tardo mucho en conciliar" },
+  { value: "pesadillas", label: "Pesadillas", hint: "Sueños intensos o angustia" },
+];
+
+const FORMAT_OPTIONS: { value: LearningFormat; label: string; hint: string }[] = [
+  { value: "lecturas", label: "Lecturas y teoría", hint: "Aprendo leyendo" },
+  { value: "audios", label: "Audios y meditaciones", hint: "Prefiero escuchar" },
+  { value: "practicas", label: "Ejercicios prácticos", hint: "Aprendo haciendo" },
 ];
 
 const PENDING_KEY = "resma:onboarding_pending";
@@ -52,6 +68,10 @@ type Pending = {
   country: string;
   brujula: string[];
   maleta: string[];
+  sleep: SleepQuality | "";
+  format: LearningFormat | "";
+  priority: string;
+  scores: Record<string, number>;
 };
 
 async function persistProfile(userId: string, data: Pending) {
@@ -63,6 +83,10 @@ async function persistProfile(userId: string, data: Pending) {
       country: data.country,
       areas_of_interest: data.brujula,
       recent_feelings: data.maleta,
+      sleep_quality: data.sleep || null,
+      learning_format: data.format || null,
+      priority_module: data.priority || null,
+      module_scores: data.scores ?? null,
       onboarding_completed: true,
     } as any,
     { onConflict: "user_id" }
@@ -72,32 +96,48 @@ async function persistProfile(userId: string, data: Pending) {
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [step, setStep] = useState(-2); // -2: splash, -1: value slides, 0+: wizard
+  // -2: splash, -1: value slides, 0..5: wizard, 6: algorithm, 7: account
+  const [step, setStep] = useState(-2);
 
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [country, setCountry] = useState("");
   const [brujula, setBrujula] = useState<string[]>([]);
   const [maleta, setMaleta] = useState<string[]>([]);
+  const [sleep, setSleep] = useState<SleepQuality | "">("");
+  const [format, setFormat] = useState<LearningFormat | "">("");
 
-  const [authMode, setAuthMode] = useState<"email" | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authMessage, setAuthMessage] = useState("");
 
+  const ageOptions = useMemo(
+    () =>
+      Array.from({ length: 78 }, (_, i) => {
+        const v = String(i + 13);
+        return { value: v, label: v };
+      }).concat([{ value: "90+", label: "90+" }]),
+    []
+  );
+
   // If user is already authed when they reach onboarding, just save & go home
   useEffect(() => {
     if (loading) return;
     if (!user) return;
-    // Flush any pending answers from sessionStorage (post-OAuth)
     const raw = sessionStorage.getItem(PENDING_KEY);
     if (raw) {
       try {
         const pending = JSON.parse(raw) as Pending;
         persistProfile(user.id, pending).finally(() => {
           sessionStorage.removeItem(PENDING_KEY);
+          saveLocalProfile({
+            priority: pending.priority as any,
+            scores: pending.scores as any,
+            sleep: pending.sleep,
+            format: pending.format,
+          });
           navigate("/", { replace: true });
         });
         return;
@@ -105,7 +145,6 @@ export default function Onboarding() {
         sessionStorage.removeItem(PENDING_KEY);
       }
     }
-    // No pending data → check profile completion
     supabase
       .from("patient_app_profiles")
       .select("onboarding_completed")
@@ -119,7 +158,20 @@ export default function Onboarding() {
   const toggle = (list: string[], setter: (v: string[]) => void, item: string) =>
     setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
 
-  const collectPending = (): Pending => ({ name, age, country, brujula, maleta });
+  const collectPending = (): Pending => {
+    const algo = computePriority({ brujula, maleta, sleep, format });
+    return {
+      name,
+      age,
+      country,
+      brujula,
+      maleta,
+      sleep,
+      format,
+      priority: algo.priority,
+      scores: algo.scores,
+    };
+  };
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,10 +184,7 @@ export default function Onboarding() {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: {
-          display_name: pending.name,
-          age: pending.age,
-        },
+        data: { display_name: pending.name, age: pending.age },
       },
     });
     if (error) {
@@ -143,14 +192,21 @@ export default function Onboarding() {
       setSubmitting(false);
       return;
     }
-    // With instant start enabled, a session is returned right away.
     if (data.session?.user) {
       await persistProfile(data.session.user.id, pending);
+      saveLocalProfile({
+        priority: pending.priority as any,
+        scores: pending.scores as any,
+        sleep: pending.sleep,
+        format: pending.format,
+      });
+      if (isBiometricSupported()) {
+        await enrollBiometric(data.session.user.id, pending.name);
+      }
       navigate("/", { replace: true });
     } else {
-      // Fallback for rare delayed-session cases.
       sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-      setAuthMessage("Cuenta creada. Iniciá sesión para entrar y guardar tus respuestas.");
+      setAuthMessage("Cuenta creada. Iniciá sesión para entrar.");
     }
     setSubmitting(false);
   };
@@ -168,217 +224,339 @@ export default function Onboarding() {
     }
   };
 
-  const totalSteps = 5;
+  const totalSteps = 6;
   const canNext =
-    (step === 0 && name.trim().length > 0 && Number(age) > 0) ||
+    (step === 0 && name.trim().length > 0 && age.length > 0) ||
     (step === 1 && country.length > 0) ||
     (step === 2 && brujula.length > 0) ||
-    (step === 3 && maleta.length > 0);
+    (step === 3 && maleta.length > 0) ||
+    (step === 4 && sleep.length > 0) ||
+    (step === 5 && format.length > 0);
+
+  const wizardStep = step < 0 ? 0 : Math.min(step, 5) + 1;
 
   return (
     <OnboardingShell
-      step={step + 1}
-      totalSteps={step < 0 ? 0 : totalSteps}
-      onBack={step > -2 ? () => setStep((s) => s - 1) : undefined}
+      step={wizardStep}
+      totalSteps={step < 0 || step === 6 ? 0 : totalSteps}
+      onBack={step > -2 && step !== 6 ? () => setStep((s) => s - 1) : undefined}
     >
       {step === -2 && <SplashIntro onContinue={() => setStep(-1)} />}
       {step === -1 && <ValueSlides onContinue={() => setStep(0)} />}
 
       {step === 0 && (
         <div className="flex flex-1 flex-col">
-          <h1 className="text-center font-display text-4xl font-semibold leading-tight">
+          <h1
+            className="text-center font-display text-[26px] font-semibold leading-tight"
+            style={{ color: INK }}
+          >
             Rompiendo el hielo
           </h1>
-          <p className="mt-3 text-center text-sm text-white/65">
-            Nos encantaría saber un poco más de vos para personalizar este rincón a tu medida.
+          <p
+            className="mt-2 text-center text-[12.5px]"
+            style={{ color: "rgba(16,25,39,0.6)" }}
+          >
+            Contanos un poco de vos para personalizar tu rincón.
           </p>
 
-          <div className="mt-10 space-y-4">
+          <div className="mt-6 space-y-3">
             <GlassInput
               label="¿Cómo preferís que te llamemos?"
-              placeholder="Tu nombre, apodo o alter ego"
+              placeholder="Tu nombre o apodo"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <GlassInput
-              label="Un número que represente tu edad"
-              type="number"
-              placeholder="Años en este planeta"
+            <GlassSelect
+              label="Tu edad"
               value={age}
-              onChange={(e) => setAge(e.target.value)}
+              onChange={setAge}
+              placeholder="Elegí tu edad"
+              options={ageOptions}
             />
           </div>
 
-          <div className="mt-auto pt-10">
-            <GlassPrimaryButton
-              disabled={!canNext}
-              onClick={() => setStep(1)}
-            >
+          <StickyFooter>
+            <GlassPrimaryButton disabled={!canNext} onClick={() => setStep(1)}>
               Siguiente paso <ArrowRight className="h-4 w-4" />
             </GlassPrimaryButton>
-          </div>
+          </StickyFooter>
         </div>
       )}
 
       {step === 1 && (
         <div className="flex flex-1 flex-col">
-          <h1 className="text-center font-display text-3xl font-semibold leading-tight">
+          <h1
+            className="text-center font-display text-[24px] font-semibold leading-tight"
+            style={{ color: INK }}
+          >
             ¿Desde dónde nos acompañás?
           </h1>
-          <p className="mt-3 text-center text-sm text-white/65">
-            Esto nos ayuda a adaptar el lenguaje y los recursos a tu región.
+          <p
+            className="mt-2 text-center text-[12.5px]"
+            style={{ color: "rgba(16,25,39,0.6)" }}
+          >
+            Adaptamos el lenguaje y los recursos a tu región.
           </p>
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            {PAISES.map((p) => {
-              const selected = country === p.code;
-              return (
-                <button
-                  key={p.code}
-                  type="button"
-                  onClick={() => setCountry(p.code)}
-                  className={`flex items-center gap-3 rounded-2xl border px-4 py-4 text-left text-sm font-medium backdrop-blur-md transition active:scale-[0.98] ${
-                    selected
-                      ? "border-[#7cc2c8]/70 bg-[#7cc2c8]/15 text-white"
-                      : "border-white/10 bg-white/5 text-white/85 hover:border-white/25"
-                  }`}
-                >
-                  <span className="text-xl">{p.flag}</span>
-                  <span>{p.label}</span>
-                </button>
-              );
-            })}
+          <div className="mt-5">
+            <CountryPicker value={country} onChange={setCountry} />
           </div>
-          <div className="mt-8 pt-2">
+          <StickyFooter>
             <GlassPrimaryButton disabled={!canNext} onClick={() => setStep(2)}>
               Siguiente paso <ArrowRight className="h-4 w-4" />
             </GlassPrimaryButton>
-          </div>
+          </StickyFooter>
         </div>
       )}
 
       {step === 2 && (
         <div className="flex flex-1 flex-col">
-          <h1 className="text-center font-display text-3xl font-semibold leading-tight">
-            ¿Qué brújula guía tu viaje hoy?
+          <h1
+            className="text-center font-display text-[24px] font-semibold leading-tight"
+            style={{ color: INK }}
+          >
+            ¿Qué brújula guía tu viaje?
           </h1>
-          <div className="mt-8 space-y-3">
+          <p
+            className="mt-2 text-center text-[12.5px]"
+            style={{ color: "rgba(16,25,39,0.6)" }}
+          >
+            Podés elegir más de una.
+          </p>
+          <div className="mt-4 space-y-2">
             {BRUJULA.map((opt) => (
               <GlassChoice
                 key={opt}
                 label={opt}
                 selected={brujula.includes(opt)}
                 onClick={() => toggle(brujula, setBrujula, opt)}
+                compact
               />
             ))}
           </div>
-          <div className="mt-8 pt-2">
-            <GlassPrimaryButton
-              disabled={!canNext}
-              onClick={() => setStep(3)}
-            >
+          <StickyFooter>
+            <GlassPrimaryButton disabled={!canNext} onClick={() => setStep(3)}>
               Siguiente paso <ArrowRight className="h-4 w-4" />
             </GlassPrimaryButton>
-          </div>
+          </StickyFooter>
         </div>
       )}
 
       {step === 3 && (
         <div className="flex flex-1 flex-col">
-          <h1 className="text-center font-display text-3xl font-semibold leading-tight">
-            ¿Qué maleta te gustaría aligerar?
+          <h1
+            className="text-center font-display text-[24px] font-semibold leading-tight"
+            style={{ color: INK }}
+          >
+            ¿Qué maleta querés aligerar?
           </h1>
-          <div className="mt-8 space-y-3">
+          <p
+            className="mt-2 text-center text-[12.5px]"
+            style={{ color: "rgba(16,25,39,0.6)" }}
+          >
+            Lo que más pesa hoy en tu mochila.
+          </p>
+          <div className="mt-4 space-y-2">
             {MALETA.map((opt) => (
               <GlassChoice
                 key={opt}
                 label={opt}
                 selected={maleta.includes(opt)}
                 onClick={() => toggle(maleta, setMaleta, opt)}
+                compact
               />
             ))}
           </div>
-          <div className="mt-8 pt-2">
+          <StickyFooter>
             <GlassPrimaryButton disabled={!canNext} onClick={() => setStep(4)}>
-              Comenzar mi viaje <ArrowRight className="h-4 w-4" />
+              Siguiente paso <ArrowRight className="h-4 w-4" />
             </GlassPrimaryButton>
-          </div>
+          </StickyFooter>
         </div>
       )}
 
       {step === 4 && (
         <div className="flex flex-1 flex-col">
-          <h1 className="text-center font-display text-3xl font-semibold leading-tight">
+          <h1
+            className="text-center font-display text-[24px] font-semibold leading-tight"
+            style={{ color: INK }}
+          >
+            ¿Cómo dormís últimamente?
+          </h1>
+          <p
+            className="mt-2 text-center text-[12.5px]"
+            style={{ color: "rgba(16,25,39,0.6)" }}
+          >
+            El sueño marca la base de tu bienestar.
+          </p>
+          <div className="mt-5 space-y-2.5">
+            {SLEEP_OPTIONS.map((o) => {
+              const selected = sleep === o.value;
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => setSleep(o.value)}
+                  className="flex w-full items-center justify-between rounded-2xl border bg-white/75 px-4 py-3 text-left shadow-glass backdrop-blur-xl transition active:scale-[0.99]"
+                  style={{
+                    borderColor: selected ? TEAL : "rgba(16,25,39,0.06)",
+                    color: INK,
+                  }}
+                >
+                  <div>
+                    <p className="text-[14px] font-semibold">{o.label}</p>
+                    <p className="text-[11.5px]" style={{ color: "rgba(16,25,39,0.55)" }}>
+                      {o.hint}
+                    </p>
+                  </div>
+                  <span
+                    className="h-4.5 w-4.5 rounded-full border-[1.5px]"
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderColor: selected ? TEAL : "rgba(16,25,39,0.2)",
+                      background: selected ? TEAL : "#fff",
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+          <StickyFooter>
+            <GlassPrimaryButton disabled={!canNext} onClick={() => setStep(5)}>
+              Siguiente paso <ArrowRight className="h-4 w-4" />
+            </GlassPrimaryButton>
+          </StickyFooter>
+        </div>
+      )}
+
+      {step === 5 && (
+        <div className="flex flex-1 flex-col">
+          <h1
+            className="text-center font-display text-[24px] font-semibold leading-tight"
+            style={{ color: INK }}
+          >
+            ¿Cómo te gusta aprender?
+          </h1>
+          <p
+            className="mt-2 text-center text-[12.5px]"
+            style={{ color: "rgba(16,25,39,0.6)" }}
+          >
+            Para servirte el contenido en el formato que más resuena con vos.
+          </p>
+          <div className="mt-5 space-y-2.5">
+            {FORMAT_OPTIONS.map((o) => {
+              const selected = format === o.value;
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => setFormat(o.value)}
+                  className="flex w-full items-center justify-between rounded-2xl border bg-white/75 px-4 py-3 text-left shadow-glass backdrop-blur-xl transition active:scale-[0.99]"
+                  style={{
+                    borderColor: selected ? TEAL : "rgba(16,25,39,0.06)",
+                    color: INK,
+                  }}
+                >
+                  <div>
+                    <p className="text-[14px] font-semibold">{o.label}</p>
+                    <p className="text-[11.5px]" style={{ color: "rgba(16,25,39,0.55)" }}>
+                      {o.hint}
+                    </p>
+                  </div>
+                  <span
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: 9999,
+                      borderWidth: 1.5,
+                      borderStyle: "solid",
+                      borderColor: selected ? TEAL : "rgba(16,25,39,0.2)",
+                      background: selected ? TEAL : "#fff",
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+          <StickyFooter>
+            <GlassPrimaryButton disabled={!canNext} onClick={() => setStep(6)}>
+              Calcular mi plan <ArrowRight className="h-4 w-4" />
+            </GlassPrimaryButton>
+          </StickyFooter>
+        </div>
+      )}
+
+      {step === 6 && <AlgorithmTransition onDone={() => setStep(7)} />}
+
+      {step === 7 && (
+        <div className="flex flex-1 flex-col">
+          <h1
+            className="text-center font-display text-[28px] font-semibold leading-tight"
+            style={{ color: INK }}
+          >
             Creá tu rincón
           </h1>
-          <p className="mt-3 text-center text-sm text-white/65">
-            Guardamos tus respuestas para que tu espacio te espere cada día.
+          <p
+            className="mt-2 text-center text-[12.5px]"
+            style={{ color: "rgba(16,25,39,0.6)" }}
+          >
+            Guardamos tu plan personalizado para que te espere cada día.
           </p>
 
-          {authMode !== "email" && (
-            <div className="mt-10 space-y-3">
-              <button
-                onClick={handleGoogle}
-                disabled={submitting}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/15 bg-white/95 py-4 text-sm font-semibold text-slate-900 transition active:scale-[0.98] disabled:opacity-60"
-              >
-                <GoogleLogo size={18} weight="bold" />
-                Continuar con Google
-              </button>
-              <button
-                onClick={() => setAuthMode("email")}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/15 bg-white/5 py-4 text-sm font-semibold text-white backdrop-blur-md transition active:scale-[0.98]"
-              >
-                <Mail className="h-4 w-4" />
-                Continuar con email
-              </button>
-            </div>
+          <form onSubmit={handleEmailSignup} className="mt-6 space-y-3">
+            <GlassInput
+              label="Email"
+              type="email"
+              required
+              placeholder="vos@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <GlassInput
+              label="Contraseña"
+              type="password"
+              required
+              minLength={6}
+              placeholder="Mínimo 6 caracteres"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            {authError && <p className="text-xs text-rose-500">{authError}</p>}
+            {authMessage && <p className="text-xs text-emerald-600">{authMessage}</p>}
+            <GlassPrimaryButton type="submit" disabled={submitting}>
+              {submitting ? "Creando…" : "Crear mi cuenta"}
+            </GlassPrimaryButton>
+          </form>
+
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#101927]/8" />
+            <span className="text-[11px] font-medium" style={{ color: "rgba(16,25,39,0.45)" }}>
+              o
+            </span>
+            <div className="h-px flex-1 bg-[#101927]/8" />
+          </div>
+
+          <button
+            onClick={handleGoogle}
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-[#101927]/8 bg-white/90 py-3.5 text-[13.5px] font-semibold backdrop-blur-xl transition active:scale-[0.98] disabled:opacity-60"
+            style={{ color: INK }}
+          >
+            <GoogleLogo size={18} weight="bold" />
+            Continuar con Google
+          </button>
+
+          {isBiometricSupported() && (
+            <p className="mt-3 text-center text-[11px]" style={{ color: "rgba(16,25,39,0.5)" }}>
+              Después podrás entrar con Face ID / Touch ID.
+            </p>
           )}
 
-          {authMode === "email" && (
-            <form onSubmit={handleEmailSignup} className="mt-10 space-y-3">
-              <GlassInput
-                label="Email"
-                type="email"
-                required
-                placeholder="vos@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <GlassInput
-                label="Contraseña"
-                type="password"
-                required
-                minLength={6}
-                placeholder="Mínimo 6 caracteres"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              {authError && <p className="text-xs text-rose-300">{authError}</p>}
-              {authMessage && <p className="text-xs text-emerald-300">{authMessage}</p>}
-              <GlassPrimaryButton type="submit" disabled={submitting}>
-                {submitting ? "Creando…" : "Crear cuenta"}
-              </GlassPrimaryButton>
-              <button
-                type="button"
-                onClick={() => navigate("/auth")}
-                className="block w-full text-center text-xs font-semibold text-white/75 underline underline-offset-4"
-              >
-                Iniciar sesión
-              </button>
-              <button
-                type="button"
-                onClick={() => setAuthMode(null)}
-                className="block w-full text-center text-xs text-white/60"
-              >
-                Volver a las opciones
-              </button>
-            </form>
-          )}
-
-          <div className="mt-auto pt-8 text-center">
+          <div className="mt-auto pt-6 text-center">
             <button
               onClick={() => navigate("/auth")}
-              className="text-xs text-white/55 underline"
+              className="text-xs font-semibold underline underline-offset-4"
+              style={{ color: TEAL }}
             >
               Ya tengo cuenta
             </button>
