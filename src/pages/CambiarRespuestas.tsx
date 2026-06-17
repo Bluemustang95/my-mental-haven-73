@@ -372,7 +372,7 @@ export default function CambiarRespuestas() {
 
         <button onClick={next} disabled={state.isEffective === null}
           className="w-full mt-4 rounded-[24px] bg-[#101927] py-4 font-display text-sm font-semibold text-white active:scale-[0.97] disabled:opacity-40">
-          {state.fitsFacts && state.isEffective ? "Iniciar · Resolución de Problemas (Ficha 12)" : "Iniciar · Acción Opuesta (Ficha 10)"}
+          {state.fitsFacts && state.isEffective ? "Iniciar · Resolver el problema" : "Iniciar · Acción Opuesta"}
         </button>
       </motion.section>
     );
