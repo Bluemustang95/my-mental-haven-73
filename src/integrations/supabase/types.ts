@@ -957,10 +957,14 @@ export type Database = {
           in_therapy: boolean | null
           learning_format: string | null
           life_stage: string | null
+          linked_last_name: string | null
+          linked_phone: string | null
           linked_professional_code: string | null
           module_scores: Json | null
           notifications_on: boolean | null
           onboarding_completed: boolean | null
+          plan: string
+          plan_started_at: string | null
           prefers_dark: boolean | null
           priority_module: string | null
           recent_feelings: string[] | null
@@ -978,10 +982,14 @@ export type Database = {
           in_therapy?: boolean | null
           learning_format?: string | null
           life_stage?: string | null
+          linked_last_name?: string | null
+          linked_phone?: string | null
           linked_professional_code?: string | null
           module_scores?: Json | null
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
+          plan?: string
+          plan_started_at?: string | null
           prefers_dark?: boolean | null
           priority_module?: string | null
           recent_feelings?: string[] | null
@@ -999,10 +1007,14 @@ export type Database = {
           in_therapy?: boolean | null
           learning_format?: string | null
           life_stage?: string | null
+          linked_last_name?: string | null
+          linked_phone?: string | null
           linked_professional_code?: string | null
           module_scores?: Json | null
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
+          plan?: string
+          plan_started_at?: string | null
           prefers_dark?: boolean | null
           priority_module?: string | null
           recent_feelings?: string[] | null
