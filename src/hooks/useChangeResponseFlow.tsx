@@ -25,6 +25,7 @@ export interface FlowState {
   opposite: {
     impulses: string;
     bodyPlan: string;
+    actionTaken: boolean;
   };
   startedAt: number;
   updatedAt: number;
