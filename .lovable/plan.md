@@ -1,122 +1,53 @@
-# Plan: Visibilidad + Interactividad del Workspace DBT
 
-## Problema confirmado
+## 1 · Página `/diario-inteligente/regulacion-emocional`
 
-Estás en `/diario-inteligente/regulacion-emocional` (renderizado por `src/pages/DiarioInteligente.tsx`), que muestra un grid genérico de `algo_sub_resources` (fallback: Respiración consciente, Mira el presente, Ver los hechos). El módulo nuevo vive en `src/pages/EmotionalRegulation.tsx` (ruta `/herramientas/regulacion-emocional`), por eso desde el Diario no se ve. Hay que enlazarlo desde acá también.
+Archivo: `src/pages/DiarioInteligente.tsx`
 
----
+- Cambiar el fondo oscuro `bg-[#0F0F12] text-white` por el mismo tono crema que usa Mindfulness (`bg-resource-mindfulness-bg text-foreground`) y quitar los blurs violeta/fucsia. El header y las tarjetas pasan a paleta clara coherente con la identidad calma (acentos en `resource-mindfulness-accent` y `#7cc2c8`).
+- Asegurar que `min-h-screen` cubra todo (sin franja blanca al final) ajustando padding inferior y removiendo el `absolute` que dejaba huecos.
+- **Eliminar la grilla "Otros ejercicios"** (los 3 fallback "Ejercicio" morados/rojos): borrar el bloque `OTROS EJERCICIOS` + `items.map` cuando `slug === "regulacion-emocional"`. Solo quedan: `PatternInsights`, tarjeta **Cambiar respuestas emocionales** y tarjeta **STOP & TIPP**.
+- **FAB "+"**: mostrarlo siempre (no solo cuando `saved`) cuando el usuario ya tiene al menos una sesión registrada (usar `PatternInsights` o un fetch breve a `dbt_emotion_sessions`/`exercise_sessions` para detectar `hasAny`). Al tocarlo se hace scroll a las tarjetas / abre un selector simple igual al patrón de Mindfulness.
 
-## Fase 0 · Fix de visibilidad (rápido, primero)
+## 2 · Página `/herramientas/cambiar-respuestas`
 
-**`src/pages/DiarioInteligente.tsx`**
-- Cuando `slug === "regulacion-emocional"`, inyectar una tarjeta destacada arriba del grid: **"Cambiar respuestas emocionales · DBT Fichas 8–13"** con badge PREMIUM, gradiente teal/gold, que navega a `/herramientas/cambiar-respuestas`.
-- Tarjeta secundaria: **"Habilidades STOP & TIPP"** → `/herramientas/regulacion-emocional`.
-- El grid antiguo (ejercicios sueltos) queda debajo bajo el título "Otros ejercicios".
+Archivo: `src/pages/CambiarRespuestas.tsx`, `src/components/dbt/shared.tsx`, `src/components/dbt/SessionTimeline.tsx`, `src/components/dbt/Ficha8AModal.tsx`.
 
-Sin migraciones; sólo UI condicional por slug.
+### 2.1 · Downbar tapa "Siguiente"
+- Aumentar el padding inferior del contenido (`pb-32` → `pb-44`) y subir el `WizardFooter` fijo (`bottom-0` → `bottom-20` o sumar safe-area + altura del bottom nav) para que el botón "Siguiente" quede visible sobre la barra flotante de navegación.
+- Hacer lo mismo con el FAB socrático (ya está en `bottom-24`, verificar).
 
----
+### 2.2 · Paso 3 (Wizard F8) — recordar el evento
+- Antes del textarea de "interpretaciones", insertar una tarjeta de contexto con `state.eventDescription` (estilo `rounded-[20px] bg-[#f2f2f2] p-4`, con label "Tu evento"). Solo se muestra si hay texto.
 
-## Fase 1 · Microinteracciones de calidad (base sensorial)
+### 2.3 · Paso 6 (Wizard F8) — ejemplos solo de la emoción elegida
+- En `Ficha8AModal`, aceptar prop opcional `emotion?: DbtEmotion`. Cuando viene, renderizar **solo** `FICHA_8A[emotion]` (no el listado completo).
+- Pasar `emotion={state.selectedEmotion}` desde `CambiarRespuestas`.
+- Cambiar la etiqueta del botón a "Ver ejemplo de {emoción}" y quitar la mención "(Ficha 8A)".
 
-Aplican a todo el wizard de `CambiarRespuestas`:
+### 2.4 · Quitar nomenclatura "Ficha N" / "F8 · F9 · F10 · F11 · F12 · F13"
+- **Header (`subtitleByStage`)**: reemplazar por etiquetas limpias:
+  - `wizard8` → "Verificar los hechos"
+  - `decision9` → "Mente Sabia"
+  - `problem12` → "Resolver el problema"
+  - `opposite10` → "Acción Opuesta"
+  - `done` → "Sesión guardada"
+- **`FichaCallout`**: cambiar el `label` en cada paso para que no diga "Ficha 8 · Paso 1" etc. Usar "Paso N" o el título descriptivo (ej. "Empezamos", "Justificación", "Descubrir").
+- **`SessionTimeline`**: quitar el prefijo "F" en los círculos. Usar números/iconos simples (`1`, `2`, `3`, `✓`) o únicamente el label ("Hechos", "Mente Sabia", "Acción Opuesta", "Cierre"). Sin "F10·13".
+- **Tarjeta de la sesión Premium** en `DiarioInteligente`: cambiar "Fichas 8 a 13 · IA guiada · …" por "IA guiada · Verificá los hechos, decidí y actuá".
+- Limpiar otros textos visibles: "Iniciar · Resolución de Problemas (Ficha 12)" → "Iniciar · Resolver el problema"; "Iniciar · Acción Opuesta (Ficha 10)" → "Iniciar · Acción Opuesta"; "Plan corporal (Ficha 13)" → "Plan corporal"; "Usar plan corporal de referencia (Ficha 13)" → "Usar plan corporal de referencia". Conservar la lógica interna intacta (los nombres `wizard8`, `problem12`, etc. se mantienen, solo cambia el copy visible).
 
-- **Framer-motion entre pasos**: wrapper `<AnimatePresence mode="wait">` con slide+fade direccional (+x al avanzar, −x al retroceder). Direction tracked en el reducer.
-- **Auto-save visual**: chip flotante "Guardado ✓" (esquina inf-der, fade 1.5s) cada vez que el reducer persiste a localStorage.
-- **Estado "pensando" en IA**: reemplazar spinner por skeleton shimmer dentro de `AiResponseModal` mientras llega la respuesta.
-- **Haptic mobile**: helper `vibrate(pattern)` en confirmaciones (`navigator.vibrate?.(15)` por paso, `[20,40,20]` al cerrar sesión).
-- **Pulso dorado final**: en pantalla "Sesión guardada", anillo `radial-gradient` gold expandiéndose 1.2s + confetti suave (canvas-confetti dynamic import, sólo en ese momento).
-
-Archivos: `src/hooks/useHaptics.ts` (nuevo), `src/components/dbt/SaveIndicator.tsx` (nuevo), `src/components/dbt/AiSkeleton.tsx` (nuevo), edits en `CambiarRespuestas.tsx` y `AiResponseModal.tsx`.
-
----
-
-## Fase 2 · Visualización del proceso
-
-- **Timeline de la sesión** (`src/components/dbt/SessionTimeline.tsx`):
-  - Barra horizontal sticky bajo el header, nodos = pasos completados.
-  - Tap en un nodo → reducer action `JUMP_TO_STEP` (mantiene datos posteriores, los marca como "necesita revisión" sin borrar).
-  - Estados: completado (teal sólido), actual (gold con halo), futuro (gris).
-
-- **Mapa de decisión animado para Ficha 9** (`src/components/dbt/DecisionTreeSVG.tsx`):
-  - Reemplaza los botones actuales por SVG inline con 2 ramas (Problem Solving / Opposite Action).
-  - Al elegir, la rama seleccionada se ilumina (stroke-dasharray animado) y la otra se atenúa.
-  - Nodo final pulsa antes de auto-avanzar.
-
-- **Comparador antes/después** (`src/components/dbt/BeforeAfterCompare.tsx`):
-  - Nueva pantalla final con dos tarjetas glass lado a lado:
-    - Tarjeta izquierda (rojiza): interpretación inicial + impulso original.
-    - Tarjeta derecha (teal): hecho verificado + acción opuesta / solución elegida.
-  - Botón "Compartir resumen" (genera imagen vía `html-to-image`, opcional fase posterior).
-
----
-
-## Fase 3 · Rueda de emociones Plutchik
-
-`src/components/dbt/EmotionWheelSVG.tsx` reemplaza `EmotionGrid`:
-
-- SVG nativo, 8 sectores primarios (alegría, confianza, miedo, sorpresa, tristeza, asco, ira, anticipación) en 3 anillos de intensidad.
-- Tap en sector primario → anima expansión y revela matices del anillo exterior (ira → frustración, resentimiento, fastidio, furia).
-- Tap en matiz → confirma selección, escribe `selectedEmotion` + `emotionIntensity` (derivado del anillo) al reducer.
-- Animación: `motion.path` con `pathLength` y rotación suave.
-- Dataset estático en `src/lib/dbt/emotionWheel.ts` (~24 emociones con color HSL teal-to-coral).
-
----
-
-## Fase 4 · Interacción guiada por IA
-
-### 4.1 Sugerencias inline (hechos vs. juicios)
-- Hook `src/hooks/useFactJudgmentHighlight.ts`: debounce 800ms sobre el textarea de "Descripción del evento" e "Interpretaciones".
-- Llama a `dbt-ai` con nueva task `highlight-judgments` (devuelve array `{start, end, kind: "judgment"|"interpretation", reason}`).
-- Render: overlay div con mismo line-height, spans con `bg-yellow-200/40 underline decoration-dotted`, tooltip on hover/tap mostrando `reason`.
-
-### 4.2 Reformulación de un toque
-- Junto a cada span destacado: botón flotante `✨ Reformular como hecho`.
-- Llama task `rephrase-as-fact` → reemplaza el span en el textarea con la versión neutra; queda en undo stack 5s.
-
-### 4.3 Chat socrático lateral
-- `src/components/dbt/SocraticDrawer.tsx`: panel deslizable derecha (Sheet de shadcn), trigger "Hablar con la guía" disponible en pasos clave (descripción, interpretaciones, elección de solución).
-- Edge function nueva `dbt-socratic` con `streamText` (AI SDK + Lovable Gateway, `google/gemini-3-flash-preview`) que conduce 2–3 turnos de preguntas antes de devolver un cierre estructurado (`{question?, summary?}` por turno).
-- Al cerrar el drawer, opción "Usar este resumen" inserta el texto destilado en el campo del paso.
-
-**Backend**: actualizar `supabase/functions/dbt-ai/index.ts` para los 2 tasks nuevos. Nueva función `dbt-socratic` para streaming.
-
----
-
-## Fase 5 · Continuidad entre sesiones
-
-### 5.1 Reabrir borrador
-- En `CambiarRespuestas` al montar: si existe `localStorage["dbt-change-response-draft"]` con `updatedAt` > 1h y < 30d, mostrar banner sticky "Tenés una sesión sin terminar de hace X, ¿continuar?" con [Continuar] [Empezar nueva].
-
-### 5.2 Patrones detectados
-- Query agregada en `EmotionalRegulation` (sólo si user premium y completed_sessions % 5 === 0):
-  - Lee últimas 5 filas de `dbt_emotion_sessions`.
-  - Llama task `detect-patterns` en `dbt-ai`.
-  - Render: tarjeta "Resmita observa…" con el insight (ej. "En 4 de 5 sesiones la emoción fue ira ante crítica de pareja").
-- Persiste el insight en columna nueva `insight_text` de `patient_app_profiles` (o tabla `dbt_insights` simple) para no recalcular.
-
-**Migración**: tabla nueva `dbt_insights (id, user_id, generated_at, insight_text, session_ids jsonb)` con RLS + GRANTs estándar.
-
----
-
-## Orden de implementación sugerido
-
-```text
-F0 (fix visibilidad)           ← 1 archivo, 5 min
-F1 (microinteracciones)        ← base sensorial, mejora todo
-F2 (timeline + decision tree + before/after)
-F3 (rueda Plutchik)            ← reemplaza grid actual
-F4 (IA inline + socrático)     ← edge functions nuevas
-F5 (borrador + patrones)       ← migración + insight
-```
-
-Podés aprobar todo el plan o pedirme avanzar sólo por fases (ej. "F0 + F1 primero").
+### 2.5 · Acción Opuesta como "tarea pendiente"
+- Insertar un nuevo paso/bloque antes del cierre (entre el paso 6 plan corporal y el paso 7 cierre): tarjeta "Tu tarea" con un resumen (`acción opuesta sugerida` + `plan corporal`) y un botón **"Listo, ya lo hice"**. Funciona igual que el paso 6 de `problem12` ("Ya actué, pasar a evaluar"): hasta que el usuario confirme no se avanza al guardado. Persistimos `opposite.actionTaken: boolean` en el reducer (`useChangeResponseFlow.tsx`) y bloqueamos `Guardar` hasta `actionTaken === true`.
+- En `problem12` paso 6 ya existe ese patrón — solo unificar el copy.
 
 ## Detalles técnicos
 
-- **AI SDK**: `streamText` con Lovable Gateway provider para el chat socrático; `generateText` + `Output.object` (Zod) para `highlight-judgments`, `rephrase-as-fact`, `detect-patterns`. Schemas mínimos (Gemini odia enums largos).
-- **Reducer**: agregar acciones `JUMP_TO_STEP`, `SET_DIRECTION`, `SET_EMOTION_INTENSITY`, `APPLY_REPHRASE`.
-- **Sin lucide para los nuevos íconos clínicos** (mantengo regla previa): SVG inline en `dbt/icons.tsx`.
-- **Confetti**: `canvas-confetti` lazy-import sólo en pantalla final.
-- **Premium gating**: ya cubierto por `PremiumLock` en la ruta; las nuevas tarjetas en Diario muestran candado para free.
-- **No tocar**: `client.ts`, `types.ts`, `.env`, `config.toml`.
+- `useChangeResponseFlow.tsx`: añadir `actionTaken: boolean` dentro de `opposite` (default `false`). Soporte en `PATCH_OPPOSITE`.
+- `SessionTimeline`: aceptar etiquetas sin prefijo F; reducir tamaño del círculo si hace falta.
+- `WorkspaceHeader`: el subtitle ya viene parametrizado, no requiere cambios estructurales.
+- `Ficha8AModal`: prop `emotion?: DbtEmotion` opcional para retro-compatibilidad.
+- Sin cambios de schema en Supabase.
+
+## Fuera de alcance
+- No se tocan los flujos de IA, ni `PatternInsights`, ni `EmotionWheelSVG`.
+- No se modifica `EmotionalRegulation.tsx` (STOP & TIPP) ni `Mindfulness.tsx`.

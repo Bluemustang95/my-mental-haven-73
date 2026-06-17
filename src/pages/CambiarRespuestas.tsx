@@ -144,10 +144,10 @@ export default function CambiarRespuestas() {
 
   const subtitleByStage = useMemo(() => {
     switch (state.stage) {
-      case "wizard8": return "Ficha 8 · Verificar los Hechos";
-      case "decision9": return "Ficha 9 · Mente Sabia";
-      case "problem12": return "Ficha 12 · Resolución de Problemas";
-      case "opposite10": return "Fichas 10 & 13 · Acción Opuesta";
+      case "wizard8": return "Verificar los hechos";
+      case "decision9": return "Mente Sabia";
+      case "problem12": return "Resolver el problema";
+      case "opposite10": return "Acción Opuesta";
       case "done": return "Sesión guardada";
     }
   }, [state.stage]);
@@ -203,11 +203,11 @@ export default function CambiarRespuestas() {
   const renderWizard8 = () => {
     const step = state.step;
     return (
-      <motion.section key={`w8-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.25 }} className="px-4 pb-32 pt-4 space-y-5">
+      <motion.section key={`w8-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.25 }} className="px-4 pb-48 pt-4 space-y-5">
         <ProgressIndicator step={step} total={6} />
 
         {step === 1 && (<>
-          <FichaCallout label="Ficha 8 · Paso 1">Empezamos identificando con claridad qué emoción querés trabajar hoy.</FichaCallout>
+          <FichaCallout label="Paso 1 · Empezamos">Empezamos identificando con claridad qué emoción querés trabajar hoy.</FichaCallout>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">1. ¿Cuál es la emoción que querés cambiar?</h2>
           <EmotionWheelSVG
             selected={state.selectedEmotion}
@@ -247,6 +247,12 @@ export default function CambiarRespuestas() {
 
         {step === 3 && (<>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">3. ¿Qué interpretaciones, suposiciones y conclusiones tenés?</h2>
+          {state.eventDescription.trim() && (
+            <div className="rounded-[20px] bg-[#f7f7f8] border border-[#101927]/5 p-4">
+              <p className="font-display text-[10px] uppercase tracking-wide text-[#101927]/45 mb-1">Tu evento</p>
+              <p className="font-body text-[14px] leading-6 text-[#101927]/80">{state.eventDescription}</p>
+            </div>
+          )}
           <p className="font-body text-[14px] leading-6 text-[#101927]/70">Registrá tus pensamientos subjetivos sobre el evento.</p>
           <DbtTextarea value={state.interpretations} onChange={(v) => dispatch({ type: "PATCH", patch: { interpretations: v } })}
             placeholder="¿Qué pensás que pasa? ¿Qué leés entre líneas? ¿Qué asumís?" />
@@ -270,7 +276,7 @@ export default function CambiarRespuestas() {
           <h2 className="font-display text-[18px] font-bold text-[#101927]">6. ¿Tu emoción y su intensidad se ajustan a los hechos?</h2>
           <p className="font-body text-[14px] leading-6 text-[#101927]/70">Consultá los hechos objetivos. Preguntale a tu Mente Sabia si la intensidad se justifica.</p>
           <button onClick={() => setShowFicha8A(true)} className="w-full rounded-[20px] border border-[#7cc2c8]/30 bg-[#7cc2c8]/5 px-4 py-3 flex items-center justify-center gap-2 font-display text-[13px] font-semibold text-[#7cc2c8] active:scale-[0.98]">
-            <Ic.Info /> Ver ejemplos (Ficha 8A)
+            <Ic.Info /> Ver ejemplo de {state.selectedEmotion ?? "tu emoción"}
           </button>
           <div className="grid grid-cols-2 gap-2.5 mt-2">
             {[{ v: true, l: "Sí se ajusta" }, { v: false, l: "No se ajusta" }].map((opt) => {
@@ -290,7 +296,7 @@ export default function CambiarRespuestas() {
             interpretations: state.interpretations,
             threat: state.threat,
             catastrophe: state.catastropheCoping,
-          }, { title: "Evaluación clínica (Ficha 8A)" })} />
+          }, { title: "Evaluación clínica" })} />
         </>)}
       </motion.section>
     );
@@ -325,8 +331,8 @@ export default function CambiarRespuestas() {
     };
 
     return (
-      <motion.section key="d9" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-32 pt-4 space-y-5">
-        <FichaCallout label="Ficha 9 · Mente Sabia">Ya verificaste los hechos. Ahora decidimos el camino: ¿actuar bajo este impulso te acerca a lo que querés?</FichaCallout>
+      <motion.section key="d9" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-48 pt-4 space-y-5">
+        <FichaCallout label="Mente Sabia">Ya verificaste los hechos. Ahora decidimos el camino: ¿actuar bajo este impulso te acerca a lo que querés?</FichaCallout>
 
         <div className="rounded-[24px] bg-[#f7f7f8] p-4 space-y-2">
           <div className="flex items-center justify-between text-[12px]">
@@ -366,7 +372,7 @@ export default function CambiarRespuestas() {
 
         <button onClick={next} disabled={state.isEffective === null}
           className="w-full mt-4 rounded-[24px] bg-[#101927] py-4 font-display text-sm font-semibold text-white active:scale-[0.97] disabled:opacity-40">
-          {state.fitsFacts && state.isEffective ? "Iniciar · Resolución de Problemas (Ficha 12)" : "Iniciar · Acción Opuesta (Ficha 10)"}
+          {state.fitsFacts && state.isEffective ? "Iniciar · Resolver el problema" : "Iniciar · Acción Opuesta"}
         </button>
       </motion.section>
     );
@@ -389,11 +395,11 @@ export default function CambiarRespuestas() {
     const goToStep5 = () => dispatch({ type: "GOTO", stage: "problem12", step: 5 });
 
     return (
-      <motion.section key={`p12-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-32 pt-4 space-y-5">
+      <motion.section key={`p12-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-48 pt-4 space-y-5">
         <ProgressIndicator step={step} total={7} />
 
         {step === 1 && (<>
-          <FichaCallout label="Ficha 12 · Descubrir">Vas a resolver esta situación con un plan estructurado. Tu emoción se ajusta a los hechos y actuar es efectivo.</FichaCallout>
+          <FichaCallout label="Descubrir">Vas a resolver esta situación con un plan estructurado. Tu emoción se ajusta a los hechos y actuar es efectivo.</FichaCallout>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">Situación que vas a resolver</h2>
           <div className="rounded-[24px] bg-[#f2f2f2] p-5 font-body text-[15px] leading-7 text-[#101927]">{state.eventDescription}</div>
         </>)}
@@ -480,6 +486,7 @@ export default function CambiarRespuestas() {
     const canAdv = () => {
       if (step === 3) return state.opposite.impulses.trim().length > 0;
       if (step === 6) return state.opposite.bodyPlan.trim().length > 0;
+      if (step === 7) return state.opposite.actionTaken === true;
       return true;
     };
     const applyFallback = () => {
@@ -488,7 +495,7 @@ export default function CambiarRespuestas() {
     };
 
     return (
-      <motion.section key={`o10-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-32 pt-4 space-y-5">
+      <motion.section key={`o10-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-48 pt-4 space-y-5">
         <ProgressIndicator step={step} total={7} />
 
         {step === 1 && (
@@ -500,7 +507,7 @@ export default function CambiarRespuestas() {
         )}
 
         {step === 2 && (
-          <FichaCallout label="Ficha 10 · Justificación">
+          <FichaCallout label="Justificación">
             Las emociones generan impulsos. Actuar sobre el impulso refuerza la emoción. La <strong>Acción Opuesta</strong> interrumpe ese circuito. Es una intervención clínica DBT validada.
           </FichaCallout>
         )}
@@ -544,22 +551,42 @@ export default function CambiarRespuestas() {
           <AiAssistButton label="Planificar gestos y postura con IA" onClick={() => callAi("body-plan", {
             emotion,
             impulses: state.opposite.impulses,
-          }, { title: "Plan corporal (Ficha 13)", onApply: (t) => dispatch({ type: "PATCH_OPPOSITE", patch: { bodyPlan: t } }) })} />
+          }, { title: "Plan corporal", onApply: (t) => dispatch({ type: "PATCH_OPPOSITE", patch: { bodyPlan: t } }) })} />
           <button onClick={applyFallback} className="w-full rounded-[20px] border border-[#7cc2c8]/30 bg-white px-4 py-2.5 font-display text-[12px] font-semibold text-[#7cc2c8] active:scale-[0.98]">
-            Usar plan corporal de referencia (Ficha 13)
+            Usar plan corporal de referencia
           </button>
         </>)}
 
-        {step === 7 && (
+        {step === 7 && (<>
+          <div className="rounded-[24px] bg-[#facb60]/10 border border-[#facb60]/40 p-5 space-y-3">
+            <p className="font-display text-[10px] uppercase tracking-[0.12em] text-[#facb60] font-bold">Tu tarea</p>
+            <p className="font-display text-base font-bold text-[#101927]">Practicá la Acción Opuesta para {emotion.toLowerCase()}</p>
+            <div className="rounded-[18px] bg-white/70 p-3">
+              <p className="font-display text-[10px] uppercase tracking-wide text-[#101927]/45 mb-1">Hacé lo opuesto</p>
+              <p className="font-body text-[14px] leading-6 text-[#101927]/85">{oa.action}</p>
+            </div>
+            {state.opposite.bodyPlan.trim() && (
+              <div className="rounded-[18px] bg-white/70 p-3">
+                <p className="font-display text-[10px] uppercase tracking-wide text-[#101927]/45 mb-1">Tu plan corporal</p>
+                <p className="font-body text-[13px] leading-6 text-[#101927]/80 whitespace-pre-line">{state.opposite.bodyPlan}</p>
+              </div>
+            )}
+            <button
+              onClick={() => { haptic("confirm"); dispatch({ type: "PATCH_OPPOSITE", patch: { actionTaken: !state.opposite.actionTaken } }); }}
+              className={`w-full rounded-[20px] py-3 font-display text-sm font-semibold flex items-center justify-center gap-2 transition ${state.opposite.actionTaken ? "bg-[#7cc2c8] text-white" : "bg-[#101927] text-white"} active:scale-[0.97]`}
+            >
+              {state.opposite.actionTaken ? <><Ic.Check color="#fff" size={16} /> ¡Listo, ya lo hice!</> : "Listo, ya lo hice"}
+            </button>
+          </div>
           <WiseMindCard title="La plasticidad neuronal está de tu lado" tone="gold">
             Tu amígdala aprendió a reaccionar así con repeticiones pasadas. Para reprogramarla, repetí la Acción Opuesta una y otra vez. No es magia: es neurociencia. <strong>Sostené la acción opuesta hasta que la emoción baje.</strong>
           </WiseMindCard>
-        )}
+        </>)}
 
         <WizardFooter
           onPrev={step > 1 ? () => dispatch({ type: "PREV" }) : undefined}
           onNext={advance}
-          nextLabel={step === 7 ? "Completar y guardar" : "Siguiente"}
+          nextLabel={step === 7 ? "Guardar sesión" : "Siguiente"}
           canNext={canAdv()}
         />
       </motion.section>
@@ -568,7 +595,7 @@ export default function CambiarRespuestas() {
 
   // ============ STAGE: done ============
   const renderDone = () => (
-    <motion.section key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="px-4 pb-32 pt-12 space-y-6 text-center relative">
+    <motion.section key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="px-4 pb-48 pt-12 space-y-6 text-center relative">
       <motion.div
         aria-hidden
         initial={{ scale: 0.4, opacity: 0.55 }}
@@ -638,7 +665,7 @@ export default function CambiarRespuestas() {
         />
       )}
 
-      <Ficha8AModal open={showFicha8A} onClose={() => setShowFicha8A(false)} />
+      <Ficha8AModal open={showFicha8A} onClose={() => setShowFicha8A(false)} emotion={state.selectedEmotion} />
       <AiResponseModal
         open={aiModal.open}
         title={aiModal.title}
@@ -662,7 +689,7 @@ export default function CambiarRespuestas() {
         <button
           onClick={() => { haptic("tick"); setSocraticOpen(true); }}
           aria-label="Hablar con la guía socrática"
-          className="fixed right-4 bottom-24 z-40 h-12 w-12 rounded-full bg-[#facb60] shadow-lg shadow-[#facb60]/40 flex items-center justify-center active:scale-95"
+          className="fixed right-4 bottom-44 z-40 h-12 w-12 rounded-full bg-[#facb60] shadow-lg shadow-[#facb60]/40 flex items-center justify-center active:scale-95"
         >
           <Ic.Bulb size={20} />
         </button>

@@ -4,8 +4,8 @@ import type { Stage } from "@/hooks/useChangeResponseFlow";
 type Node = { key: Stage; label: string; ficha: string };
 
 const ORDER_BASE: Node[] = [
-  { key: "wizard8", label: "Hechos", ficha: "F8" },
-  { key: "decision9", label: "Mente Sabia", ficha: "F9" },
+  { key: "wizard8", label: "Hechos", ficha: "1" },
+  { key: "decision9", label: "Mente Sabia", ficha: "2" },
 ];
 
 interface Props {
@@ -16,15 +16,15 @@ interface Props {
 }
 
 /**
- * Timeline horizontal compacta que muestra el avance por las fichas DBT.
+ * Timeline horizontal compacta que muestra el avance por las etapas DBT.
  * Permite saltar hacia atrás a etapas ya visitadas (no hacia adelante).
  */
 export function SessionTimeline({ stage, path, visited, onJump }: Props) {
   const branch: Node | null =
     stage === "opposite10" || path === "opposite"
-      ? { key: "opposite10", label: "Acción Opuesta", ficha: "F10·13" }
+      ? { key: "opposite10", label: "Acción Opuesta", ficha: "3" }
       : stage === "problem12" || path === "problem"
-        ? { key: "problem12", label: "Resolver", ficha: "F12" }
+        ? { key: "problem12", label: "Resolver", ficha: "3" }
         : null;
 
   const done: Node = { key: "done", label: "Cierre", ficha: "✓" };
