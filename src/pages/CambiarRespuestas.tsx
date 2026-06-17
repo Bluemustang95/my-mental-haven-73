@@ -534,6 +534,8 @@ export default function CambiarRespuestas() {
         onConfirm={reset}
         onCancel={() => setConfirmReset(false)}
       />
+      <SaveIndicator trigger={saveTick} />
+
     </main>
   );
 }
