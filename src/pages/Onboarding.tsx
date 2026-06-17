@@ -11,6 +11,7 @@ import {
   GlassChoice,
   GlassPrimaryButton,
 } from "@/components/onboarding/OnboardingShell";
+import { SplashIntro, ValueSlides } from "@/components/onboarding/IntroScreens";
 
 const BRUJULA = [
   "Hacer las paces con mi almohada",
@@ -71,7 +72,7 @@ async function persistProfile(userId: string, data: Pending) {
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(-2); // -2: splash, -1: value slides, 0+: wizard
 
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -177,9 +178,12 @@ export default function Onboarding() {
   return (
     <OnboardingShell
       step={step + 1}
-      totalSteps={totalSteps}
-      onBack={step > 0 ? () => setStep((s) => s - 1) : undefined}
+      totalSteps={step < 0 ? 0 : totalSteps}
+      onBack={step > -2 ? () => setStep((s) => s - 1) : undefined}
     >
+      {step === -2 && <SplashIntro onContinue={() => setStep(-1)} />}
+      {step === -1 && <ValueSlides onContinue={() => setStep(0)} />}
+
       {step === 0 && (
         <div className="flex flex-1 flex-col">
           <h1 className="text-center font-display text-4xl font-semibold leading-tight">

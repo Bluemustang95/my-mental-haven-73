@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    /* Brand palette: #7cc2c8 teal · #facb60 oro · #101927 azul noche · #f2f2f2 fondo · #d8d9db muted */
-    --background: 0 0% 95%;
+    /* Brand palette: #7cc2c8 teal · #facb60 oro · #101927 azul noche · #FFFFFF fondo · #d8d9db muted */
+    --background: 0 0% 100%;
     --foreground: 220 43% 11%;
 
     --card: 0 0% 100%;
