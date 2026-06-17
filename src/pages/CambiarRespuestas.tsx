@@ -26,9 +26,40 @@ export default function CambiarRespuestas() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { state, dispatch, clearDraft } = useChangeResponseFlow();
+  const haptic = useHapticPulse();
   const [showFicha8A, setShowFicha8A] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [saveTick, setSaveTick] = useState(0);
   const [aiModal, setAiModal] = useState<{ open: boolean; title: string; loading: boolean; content?: string; error?: string; onApply?: (t: string) => void }>({ open: false, title: "", loading: false });
+
+  // Auto-save indicator: pulse whenever the persisted state changes (debounced via key).
+  const stateKey = `${state.stage}:${state.step}`;
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    setSaveTick(Date.now());
+  }, [stateKey]);
+
+  // Celebrate when reaching the final stage: gold pulse + confetti + haptic.
+  useEffect(() => {
+    if (state.stage !== "done") return;
+    haptic("celebrate");
+    let cancelled = false;
+    import("canvas-confetti").then((m) => {
+      if (cancelled) return;
+      const confetti = m.default;
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        startVelocity: 35,
+        ticks: 200,
+        origin: { y: 0.35 },
+        colors: ["#facb60", "#7cc2c8", "#101927"],
+      });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [state.stage, haptic]);
+
 
   const subtitleByStage = useMemo(() => {
     switch (state.stage) {
