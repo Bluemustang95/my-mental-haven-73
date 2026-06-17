@@ -203,7 +203,7 @@ export default function CambiarRespuestas() {
   const renderWizard8 = () => {
     const step = state.step;
     return (
-      <motion.section key={`w8-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.25 }} className="px-4 pb-32 pt-4 space-y-5">
+      <motion.section key={`w8-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.25 }} className="px-4 pb-48 pt-4 space-y-5">
         <ProgressIndicator step={step} total={6} />
 
         {step === 1 && (<>
@@ -331,7 +331,7 @@ export default function CambiarRespuestas() {
     };
 
     return (
-      <motion.section key="d9" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-32 pt-4 space-y-5">
+      <motion.section key="d9" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-48 pt-4 space-y-5">
         <FichaCallout label="Mente Sabia">Ya verificaste los hechos. Ahora decidimos el camino: ¿actuar bajo este impulso te acerca a lo que querés?</FichaCallout>
 
         <div className="rounded-[24px] bg-[#f7f7f8] p-4 space-y-2">
@@ -395,7 +395,7 @@ export default function CambiarRespuestas() {
     const goToStep5 = () => dispatch({ type: "GOTO", stage: "problem12", step: 5 });
 
     return (
-      <motion.section key={`p12-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-32 pt-4 space-y-5">
+      <motion.section key={`p12-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-48 pt-4 space-y-5">
         <ProgressIndicator step={step} total={7} />
 
         {step === 1 && (<>
@@ -495,7 +495,7 @@ export default function CambiarRespuestas() {
     };
 
     return (
-      <motion.section key={`o10-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-32 pt-4 space-y-5">
+      <motion.section key={`o10-${step}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-48 pt-4 space-y-5">
         <ProgressIndicator step={step} total={7} />
 
         {step === 1 && (
@@ -595,7 +595,7 @@ export default function CambiarRespuestas() {
 
   // ============ STAGE: done ============
   const renderDone = () => (
-    <motion.section key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="px-4 pb-32 pt-12 space-y-6 text-center relative">
+    <motion.section key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="px-4 pb-48 pt-12 space-y-6 text-center relative">
       <motion.div
         aria-hidden
         initial={{ scale: 0.4, opacity: 0.55 }}
