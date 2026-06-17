@@ -1,53 +1,68 @@
+# Plan: Regulación Emocional + Sesiones abiertas + Inicio
 
-## 1 · Página `/diario-inteligente/regulacion-emocional`
+## 1. `DiarioInteligente.tsx` (regulacion-emocional) — estilo igual a Mindfulness
 
-Archivo: `src/pages/DiarioInteligente.tsx`
+Reescribir la vista para que copie la estética de `MindfulnessHub.tsx`:
 
-- Cambiar el fondo oscuro `bg-[#0F0F12] text-white` por el mismo tono crema que usa Mindfulness (`bg-resource-mindfulness-bg text-foreground`) y quitar los blurs violeta/fucsia. El header y las tarjetas pasan a paleta clara coherente con la identidad calma (acentos en `resource-mindfulness-accent` y `#7cc2c8`).
-- Asegurar que `min-h-screen` cubra todo (sin franja blanca al final) ajustando padding inferior y removiendo el `absolute` que dejaba huecos.
-- **Eliminar la grilla "Otros ejercicios"** (los 3 fallback "Ejercicio" morados/rojos): borrar el bloque `OTROS EJERCICIOS` + `items.map` cuando `slug === "regulacion-emocional"`. Solo quedan: `PatternInsights`, tarjeta **Cambiar respuestas emocionales** y tarjeta **STOP & TIPP**.
-- **FAB "+"**: mostrarlo siempre (no solo cuando `saved`) cuando el usuario ya tiene al menos una sesión registrada (usar `PatternInsights` o un fetch breve a `dbt_emotion_sessions`/`exercise_sessions` para detectar `hasAny`). Al tocarlo se hace scroll a las tarjetas / abre un selector simple igual al patrón de Mindfulness.
+- Fondo plano `bg-[#FDFCFB]`, sin gradientes oscuros ni glass.
+- Header igual a Mindfulness: botón redondo blanco con back, h1 `font-serif text-3xl font-bold text-[#101927]` ("Regulación Emocional"), subtítulo gris ("Equilibrá tus emociones con DBT").
+- `WeekStrip` directo (sin contenedor card extra).
+- **Quitar el badge "PREMIUM"** de la tarjeta "Cambiar respuestas emocionales".
+- Convertir las tarjetas (Cambiar respuestas / STOP & TIPP) al mismo formato de Mindfulness: row blanca `rounded-2xl bg-white p-3 shadow-sm`, ícono cuadrado con gradiente a la izquierda, título + descripción.
+- Mantener `PatternInsights` arriba, pero con los mismos tokens claros (texto `#101927`, sin pinks translúcidos).
+- FAB "+" igual al de Mindfulness (`bottom-24 right-5`, `bg-[#101927]`), visible si `hasAnySession`.
 
-## 2 · Página `/herramientas/cambiar-respuestas`
+## 2. Sesiones abiertas — sección desplegable debajo de los recursos
 
-Archivo: `src/pages/CambiarRespuestas.tsx`, `src/components/dbt/shared.tsx`, `src/components/dbt/SessionTimeline.tsx`, `src/components/dbt/Ficha8AModal.tsx`.
+Nuevo componente `src/components/dbt/OpenSessionsList.tsx`:
 
-### 2.1 · Downbar tapa "Siguiente"
-- Aumentar el padding inferior del contenido (`pb-32` → `pb-44`) y subir el `WizardFooter` fijo (`bottom-0` → `bottom-20` o sumar safe-area + altura del bottom nav) para que el botón "Siguiente" quede visible sobre la barra flotante de navegación.
-- Hacer lo mismo con el FAB socrático (ya está en `bottom-24`, verificar).
+- Lee `localStorage` key del flow DBT (`useChangeResponseFlow`) → si `draftHasProgress(state)` hay 1 sesión abierta DBT.
+- (Extensible) también lee otros drafts existentes si los hubiera (psicoeducación / pack), pero por ahora solo DBT.
+- Render: card colapsable blanca con título "Sesiones abiertas · N", al expandir muestra filas con: emoción, etapa actual (`subtitleByStage`), tiempo relativo.
+- Cada fila tiene dos acciones:
+  - **Continuar** → navega a `/herramientas/cambiar-respuestas` (mantiene el draft).
+  - **Marcar como completada** → llama a `saveSession`-equivalente liviano: inserta en `dbt_emotion_sessions` con los datos del draft + `action_completed: true` (si la columna no existe, simplemente guarda con el path actual y limpia draft), luego limpia el draft y refresca.
+- Se monta en `DiarioInteligente` (regulacion-emocional) justo debajo de las cards de recursos.
 
-### 2.2 · Paso 3 (Wizard F8) — recordar el evento
-- Antes del textarea de "interpretaciones", insertar una tarjeta de contexto con `state.eventDescription` (estilo `rounded-[20px] bg-[#f2f2f2] p-4`, con label "Tu evento"). Solo se muestra si hay texto.
+## 3. Quitar el "confeti final" al re-entrar a Cambiar Respuestas
 
-### 2.3 · Paso 6 (Wizard F8) — ejemplos solo de la emoción elegida
-- En `Ficha8AModal`, aceptar prop opcional `emotion?: DbtEmotion`. Cuando viene, renderizar **solo** `FICHA_8A[emotion]` (no el listado completo).
-- Pasar `emotion={state.selectedEmotion}` desde `CambiarRespuestas`.
-- Cambiar la etiqueta del botón a "Ver ejemplo de {emoción}" y quitar la mención "(Ficha 8A)".
+En `CambiarRespuestas.tsx`:
 
-### 2.4 · Quitar nomenclatura "Ficha N" / "F8 · F9 · F10 · F11 · F12 · F13"
-- **Header (`subtitleByStage`)**: reemplazar por etiquetas limpias:
-  - `wizard8` → "Verificar los hechos"
-  - `decision9` → "Mente Sabia"
-  - `problem12` → "Resolver el problema"
-  - `opposite10` → "Acción Opuesta"
-  - `done` → "Sesión guardada"
-- **`FichaCallout`**: cambiar el `label` en cada paso para que no diga "Ficha 8 · Paso 1" etc. Usar "Paso N" o el título descriptivo (ej. "Empezamos", "Justificación", "Descubrir").
-- **`SessionTimeline`**: quitar el prefijo "F" en los círculos. Usar números/iconos simples (`1`, `2`, `3`, `✓`) o únicamente el label ("Hechos", "Mente Sabia", "Acción Opuesta", "Cierre"). Sin "F10·13".
-- **Tarjeta de la sesión Premium** en `DiarioInteligente`: cambiar "Fichas 8 a 13 · IA guiada · …" por "IA guiada · Verificá los hechos, decidí y actuá".
-- Limpiar otros textos visibles: "Iniciar · Resolución de Problemas (Ficha 12)" → "Iniciar · Resolver el problema"; "Iniciar · Acción Opuesta (Ficha 10)" → "Iniciar · Acción Opuesta"; "Plan corporal (Ficha 13)" → "Plan corporal"; "Usar plan corporal de referencia (Ficha 13)" → "Usar plan corporal de referencia". Conservar la lógica interna intacta (los nombres `wizard8`, `problem12`, etc. se mantienen, solo cambia el copy visible).
+- Al montar, si `state.stage === "done"`, hacer `dispatch({ type: "RESET" })` + `clearDraft()` automáticamente → la próxima visita arranca en `wizard8` paso 1.
+- En `saveSession`, después del `toast.success` y del confeti, agendar `setTimeout(() => navigate("/diario-inteligente/regulacion-emocional"), 1800)` y limpiar el draft (el usuario ya no queda atrapado en la pantalla de "done").
+- La pantalla "done" actual queda como transición corta (confeti + saludo) antes del redirect, no como vista persistente.
 
-### 2.5 · Acción Opuesta como "tarea pendiente"
-- Insertar un nuevo paso/bloque antes del cierre (entre el paso 6 plan corporal y el paso 7 cierre): tarjeta "Tu tarea" con un resumen (`acción opuesta sugerida` + `plan corporal`) y un botón **"Listo, ya lo hice"**. Funciona igual que el paso 6 de `problem12` ("Ya actué, pasar a evaluar"): hasta que el usuario confirme no se avanza al guardado. Persistimos `opposite.actionTaken: boolean` en el reducer (`useChangeResponseFlow.tsx`) y bloqueamos `Guardar` hasta `actionTaken === true`.
-- En `problem12` paso 6 ya existe ese patrón — solo unificar el copy.
+## 4. Botón "Completado" en `PatternInsights` (TUS PATRONES · N SESIONES)
+
+Cuando exista al menos una sesión abierta detectada por `OpenSessionsList`:
+
+- Agregar un pill en el header de `PatternInsights`: "1 sesión pendiente · Marcar como hecha" que dispara la misma acción de "Marcar como completada" de la sección de sesiones abiertas.
+- Si no hay sesiones abiertas, el pill no se renderiza.
+
+## 5. Pendientes en Inicio (`Dashboard.tsx`)
+
+Nuevo bloque "Pendientes" entre el Timeline y el card de sueño:
+
+- Componente `src/components/home/PendingBento.tsx` (grid 2 columnas, cards chicos `rounded-2xl bg-white shadow-sm`).
+- Fuentes:
+  - **DBT abierto**: lee draft de `useChangeResponseFlow` (sin hook completo, parsea localStorage). Muestra "Cambiar respuestas · {emoción}" → click navega al wizard.
+  - **Psicoeducación inconclusa**: query a `psycho_progress` (o tabla equivalente; si no existe, lee localStorage de `PsychoModal`). Muestra "Seguir leyendo: {título}".
+  - **Pack de actividades en curso**: query a `pack_progress` / `behavioral_activation_progress` (lo que ya esté implementado). Muestra "Día N · {pack}".
+- Si no hay pendientes, el bloque no se renderiza.
+
+## 6. Separación visual en Inicio: "Te ayudamos con tu sueño"
+
+En `Dashboard.tsx`, el `PremiumLock` que envuelve el botón de sueño actualmente usa `mt-3`. Aumentar a `mt-8` (o `mt-10`) para despegarlo de "Valoración de la noche".
 
 ## Detalles técnicos
 
-- `useChangeResponseFlow.tsx`: añadir `actionTaken: boolean` dentro de `opposite` (default `false`). Soporte en `PATCH_OPPOSITE`.
-- `SessionTimeline`: aceptar etiquetas sin prefijo F; reducir tamaño del círculo si hace falta.
-- `WorkspaceHeader`: el subtitle ya viene parametrizado, no requiere cambios estructurales.
-- `Ficha8AModal`: prop `emotion?: DbtEmotion` opcional para retro-compatibilidad.
-- Sin cambios de schema en Supabase.
+- No tocar `useChangeResponseFlow.tsx` salvo exponer un helper `readDraftFromStorage()` (o reusar el ya existente) para leer el draft fuera del provider en `OpenSessionsList` y `PendingBento` sin instanciar el reducer dos veces.
+- `dbt_emotion_sessions` ya existe; al "marcar como completada" se inserta con los campos disponibles del draft (los faltantes quedan `null`). No requiere migración.
+- Sin cambios en edge functions, RLS ni AI.
+- Tipografía: respetar `font-serif`/`font-display`/`font-body` ya definidos. No introducir colores hardcodeados nuevos fuera de los que ya usa Mindfulness (`#FDFCFB`, `#101927`).
 
 ## Fuera de alcance
-- No se tocan los flujos de IA, ni `PatternInsights`, ni `EmotionWheelSVG`.
-- No se modifica `EmotionalRegulation.tsx` (STOP & TIPP) ni `Mindfulness.tsx`.
+
+- Rediseño de STOP & TIPP, EmotionWheel o el wizard interno.
+- Cambios en `Mindfulness.tsx` / `MindfulnessHub.tsx`.
+- Nuevas tablas o columnas en Supabase.
