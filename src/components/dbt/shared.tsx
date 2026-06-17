@@ -64,7 +64,7 @@ export function FichaCallout({ label, children }: { label: string; children: Rea
 /* ---------- Wizard Footer ---------- */
 export function WizardFooter({ onPrev, onNext, nextLabel = "Siguiente", canPrev = true, canNext = true }: { onPrev?: () => void; onNext: () => void; nextLabel?: string; canPrev?: boolean; canNext?: boolean }) {
   return (
-    <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+    <div className="fixed left-0 right-0 z-30 bg-gradient-to-t from-white via-white to-transparent pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)]" style={{ bottom: "5.5rem" }}>
       <div className="mx-auto max-w-md px-4 flex gap-2">
         {onPrev && (
           <button onClick={onPrev} disabled={!canPrev} className="flex-1 rounded-[24px] bg-[#f2f2f2] py-3.5 font-display text-sm font-semibold text-[#101927] active:scale-[0.97] disabled:opacity-40">
