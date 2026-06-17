@@ -178,9 +178,12 @@ export default function Onboarding() {
   return (
     <OnboardingShell
       step={step + 1}
-      totalSteps={totalSteps}
-      onBack={step > 0 ? () => setStep((s) => s - 1) : undefined}
+      totalSteps={step < 0 ? 0 : totalSteps}
+      onBack={step > -2 ? () => setStep((s) => s - 1) : undefined}
     >
+      {step === -2 && <SplashIntro onContinue={() => setStep(-1)} />}
+      {step === -1 && <ValueSlides onContinue={() => setStep(0)} />}
+
       {step === 0 && (
         <div className="flex flex-1 flex-col">
           <h1 className="text-center font-display text-4xl font-semibold leading-tight">
