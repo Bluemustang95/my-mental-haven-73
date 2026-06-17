@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PremiumLock } from "@/components/PremiumLock";
 
 export type TimelineNode = {
   id: string;
@@ -12,6 +13,9 @@ export type TimelineNode = {
   done: boolean;
   onClick?: () => void;
   footer?: ReactNode;
+  /** If true, the node is wrapped in a PremiumLock overlay for free users. */
+  locked?: boolean;
+  lockLabel?: string;
 };
 
 export function Timeline({ nodes, allDone }: { nodes: TimelineNode[]; allDone: boolean }) {
@@ -24,21 +28,8 @@ export function Timeline({ nodes, allDone }: { nodes: TimelineNode[]; allDone: b
         )}
       />
       <div className="space-y-2">
-        {nodes.map((n) => (
-          <div key={n.id} className="relative">
-            <div className="absolute -left-7 top-3.5">
-              <motion.div
-                className={cn(
-                  "flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors",
-                  n.done
-                    ? "border-success bg-success"
-                    : "border-muted bg-card"
-                )}
-              >
-                {n.done && <Check size={12} className="text-white" strokeWidth={3.5} />}
-              </motion.div>
-            </div>
-
+        {nodes.map((n) => {
+          const card = (
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={n.onClick}
@@ -58,8 +49,33 @@ export function Timeline({ nodes, allDone }: { nodes: TimelineNode[]; allDone: b
               </div>
               {n.footer && <div className="mt-2">{n.footer}</div>}
             </motion.button>
-          </div>
-        ))}
+          );
+
+          return (
+            <div key={n.id} className="relative">
+              <div className="absolute -left-7 top-3.5 z-10">
+                <motion.div
+                  className={cn(
+                    "flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors",
+                    n.done
+                      ? "border-success bg-success"
+                      : "border-muted bg-card"
+                  )}
+                >
+                  {n.done && <Check size={12} className="text-white" strokeWidth={3.5} />}
+                </motion.div>
+              </div>
+
+              {n.locked ? (
+                <PremiumLock featureName={n.lockLabel ?? n.title} variant="card">
+                  {card}
+                </PremiumLock>
+              ) : (
+                card
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
