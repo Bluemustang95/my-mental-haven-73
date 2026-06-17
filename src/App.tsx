@@ -174,7 +174,7 @@ const App = () => (
               <Route path="/herramientas/rumiacion" element={<Rumination />} />
               <Route path="/herramientas/recuperacion" element={<Recovery />} />
               <Route path="/herramientas/regulacion-emocional" element={<EmotionalRegulation />} />
-              <Route path="/herramientas/cambiar-respuestas" element={<CambiarRespuestas />} />
+              <Route path="/herramientas/cambiar-respuestas" element={<PremiumLock featureName="Cambiar respuestas emocionales" variant="section"><CambiarRespuestas /></PremiumLock>} />
               <Route path="/herramientas/alimentacion-consciente" element={<MindfulEating />} />
               <Route path="/herramientas/mis-valores" element={<MyValues />} />
               <Route path="/herramientas/plan-seguridad" element={<SafetyPlan />} />
