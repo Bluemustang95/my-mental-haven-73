@@ -689,7 +689,7 @@ export default function CambiarRespuestas() {
         <button
           onClick={() => { haptic("tick"); setSocraticOpen(true); }}
           aria-label="Hablar con la guía socrática"
-          className="fixed right-4 bottom-24 z-40 h-12 w-12 rounded-full bg-[#facb60] shadow-lg shadow-[#facb60]/40 flex items-center justify-center active:scale-95"
+          className="fixed right-4 bottom-44 z-40 h-12 w-12 rounded-full bg-[#facb60] shadow-lg shadow-[#facb60]/40 flex items-center justify-center active:scale-95"
         >
           <Ic.Bulb size={20} />
         </button>
