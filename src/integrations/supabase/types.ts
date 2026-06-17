@@ -766,6 +766,7 @@ export type Database = {
           music_track: string | null
           pattern: string | null
           sub_mode: string | null
+          takeaway: string | null
           user_id: string
           voice_enabled: boolean | null
         }
@@ -781,6 +782,7 @@ export type Database = {
           music_track?: string | null
           pattern?: string | null
           sub_mode?: string | null
+          takeaway?: string | null
           user_id: string
           voice_enabled?: boolean | null
         }
@@ -796,6 +798,7 @@ export type Database = {
           music_track?: string | null
           pattern?: string | null
           sub_mode?: string | null
+          takeaway?: string | null
           user_id?: string
           voice_enabled?: boolean | null
         }

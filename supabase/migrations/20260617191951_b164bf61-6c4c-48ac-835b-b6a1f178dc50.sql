@@ -1,0 +1,1 @@
+ALTER TABLE public.exercise_sessions ADD COLUMN IF NOT EXISTS takeaway text;
