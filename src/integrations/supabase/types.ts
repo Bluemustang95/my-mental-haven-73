@@ -955,12 +955,16 @@ export type Database = {
           display_name: string | null
           id: string
           in_therapy: boolean | null
+          learning_format: string | null
           life_stage: string | null
           linked_professional_code: string | null
+          module_scores: Json | null
           notifications_on: boolean | null
           onboarding_completed: boolean | null
           prefers_dark: boolean | null
+          priority_module: string | null
           recent_feelings: string[] | null
+          sleep_quality: string | null
           treatment_status: string | null
           updated_at: string | null
           user_id: string
@@ -972,12 +976,16 @@ export type Database = {
           display_name?: string | null
           id?: string
           in_therapy?: boolean | null
+          learning_format?: string | null
           life_stage?: string | null
           linked_professional_code?: string | null
+          module_scores?: Json | null
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
           prefers_dark?: boolean | null
+          priority_module?: string | null
           recent_feelings?: string[] | null
+          sleep_quality?: string | null
           treatment_status?: string | null
           updated_at?: string | null
           user_id: string
@@ -989,12 +997,16 @@ export type Database = {
           display_name?: string | null
           id?: string
           in_therapy?: boolean | null
+          learning_format?: string | null
           life_stage?: string | null
           linked_professional_code?: string | null
+          module_scores?: Json | null
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
           prefers_dark?: boolean | null
+          priority_module?: string | null
           recent_feelings?: string[] | null
+          sleep_quality?: string | null
           treatment_status?: string | null
           updated_at?: string | null
           user_id?: string

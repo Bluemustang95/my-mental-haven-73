@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { ArrowRight, Envelope, GoogleLogo } from "@phosphor-icons/react";
+import { ArrowRight, Envelope, GoogleLogo, Fingerprint } from "@phosphor-icons/react";
+import { isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometricAuth";
 
 const TEAL = "#7cc2c8";
 const INK = "#101927";
@@ -15,6 +16,36 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [bioReady, setBioReady] = useState(false);
+
+  useEffect(() => {
+    setBioReady(isBiometricSupported() && isBiometricEnabled());
+  }, []);
+
+  // Auto-prompt biometric on mount if enabled and a Supabase session already exists
+  useEffect(() => {
+    (async () => {
+      if (!isBiometricSupported() || !isBiometricEnabled()) return;
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        const ok = await verifyBiometric();
+        if (ok) navigate("/", { replace: true });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleBiometric = async () => {
+    setError("");
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      setError("Iniciá sesión con tu email una vez para activar el acceso biométrico.");
+      return;
+    }
+    const ok = await verifyBiometric();
+    if (ok) navigate("/", { replace: true });
+    else setError("No pudimos verificar tu identidad biométrica.");
+  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +130,16 @@ export default function Auth() {
 
         {mode !== "forgot" && (
           <>
+            {bioReady && (
+              <button
+                onClick={handleBiometric}
+                className="mb-3 flex w-full items-center justify-center gap-2 rounded-full border border-[#7cc2c8]/40 bg-[#7cc2c8]/10 py-3.5 font-display text-[14px] font-bold transition active:scale-[0.98]"
+                style={{ color: INK }}
+              >
+                <Fingerprint size={18} weight="bold" />
+                Entrar con Face / Touch ID
+              </button>
+            )}
             <button
               onClick={handleGoogle}
               disabled={loading}
