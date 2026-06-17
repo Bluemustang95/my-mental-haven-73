@@ -92,6 +92,8 @@ const getEmotionTheme = (emotion: string) => emotionThemes[emotion] ?? "bg-resou
 export default function Diario() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isPremium } = usePlan();
+  const [paywallOpen, setPaywallOpen] = useState(false);
   const [content, setContent] = useState("");
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -208,11 +210,15 @@ export default function Diario() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigate("/diario/herramientas")}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-card/80 backdrop-blur-3xl border border-foreground/5 shadow-glass transition-all active:scale-95"
+                onClick={() => (isPremium ? navigate("/diario/herramientas") : setPaywallOpen(true))}
+                className="relative flex h-10 w-10 items-center justify-center rounded-full bg-card/80 backdrop-blur-3xl border border-foreground/5 shadow-glass transition-all active:scale-95"
                 aria-label="Herramientas"
               >
-                <Toolbox size={18} weight="duotone" className="text-muted-foreground" />
+                <Toolbox size={18} weight="duotone" className={isPremium ? "text-muted-foreground" : "text-muted-foreground/60 blur-[1px]"} />
+                {!isPremium && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-500 text-[8px] font-bold text-white shadow ring-1 ring-white">★</span>
+                )}
+              </button>
               </button>
               <button
                 onClick={() => navigate("/diario/historial")}
