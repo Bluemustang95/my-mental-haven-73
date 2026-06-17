@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import type { DbtEmotion } from "@/lib/dbt/data";
 
 export type Stage =
@@ -26,6 +26,8 @@ export interface FlowState {
     impulses: string;
     bodyPlan: string;
   };
+  startedAt: number;
+  updatedAt: number;
 }
 
 const INITIAL: FlowState = {
@@ -41,6 +43,8 @@ const INITIAL: FlowState = {
   isEffective: null,
   problem: { goal: "", brainstorm: "", chosenSolution: "", prosCons: "", outcome: null },
   opposite: { impulses: "", bodyPlan: "" },
+  startedAt: 0,
+  updatedAt: 0,
 };
 
 type Action =
@@ -54,13 +58,19 @@ type Action =
   | { type: "HYDRATE"; state: FlowState };
 
 function reducer(state: FlowState, action: Action): FlowState {
+  const now = Date.now();
+  const stamped = (s: FlowState): FlowState => ({
+    ...s,
+    startedAt: s.startedAt || now,
+    updatedAt: now,
+  });
   switch (action.type) {
-    case "PATCH": return { ...state, ...action.patch };
-    case "PATCH_PROBLEM": return { ...state, problem: { ...state.problem, ...action.patch } };
-    case "PATCH_OPPOSITE": return { ...state, opposite: { ...state.opposite, ...action.patch } };
-    case "GOTO": return { ...state, stage: action.stage, step: action.step ?? 1 };
-    case "NEXT": return { ...state, step: state.step + 1 };
-    case "PREV": return { ...state, step: Math.max(1, state.step - 1) };
+    case "PATCH": return stamped({ ...state, ...action.patch });
+    case "PATCH_PROBLEM": return stamped({ ...state, problem: { ...state.problem, ...action.patch } });
+    case "PATCH_OPPOSITE": return stamped({ ...state, opposite: { ...state.opposite, ...action.patch } });
+    case "GOTO": return stamped({ ...state, stage: action.stage, step: action.step ?? 1 });
+    case "NEXT": return stamped({ ...state, step: state.step + 1 });
+    case "PREV": return stamped({ ...state, step: Math.max(1, state.step - 1) });
     case "RESET": return INITIAL;
     case "HYDRATE": return action.state;
     default: return state;
@@ -69,22 +79,42 @@ function reducer(state: FlowState, action: Action): FlowState {
 
 const STORAGE_KEY = "dbt-change-response-draft";
 
+/** Returns true if the persisted draft has meaningful progress worth resuming. */
+export function draftHasProgress(s: FlowState | null | undefined): boolean {
+  if (!s) return false;
+  if (s.stage !== "wizard8" || s.step > 1) return true;
+  return Boolean(
+    s.selectedEmotion ||
+    s.eventDescription.trim() ||
+    s.interpretations.trim() ||
+    s.threat.trim() ||
+    s.catastropheCoping.trim()
+  );
+}
+
+export function readDraft(): FlowState | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as FlowState;
+    return parsed && parsed.stage ? parsed : null;
+  } catch { return null; }
+}
+
 export function useChangeResponseFlow() {
   const [state, dispatch] = useReducer(reducer, INITIAL);
+  const hydrated = useRef(false);
 
   // Hydrate
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as FlowState;
-        if (parsed && parsed.stage) dispatch({ type: "HYDRATE", state: parsed });
-      }
-    } catch {}
+    const parsed = readDraft();
+    if (parsed) dispatch({ type: "HYDRATE", state: parsed });
+    hydrated.current = true;
   }, []);
 
-  // Persist
+  // Persist (skip until hydration to avoid clobbering stored draft on mount)
   useEffect(() => {
+    if (!hydrated.current) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   }, [state]);
 
