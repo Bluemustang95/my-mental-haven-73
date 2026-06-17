@@ -23,6 +23,9 @@ import { DecisionTreeSVG } from "@/components/dbt/DecisionTreeSVG";
 import { BeforeAfterCompare } from "@/components/dbt/BeforeAfterCompare";
 import type { Stage } from "@/hooks/useChangeResponseFlow";
 import { EmotionWheelSVG } from "@/components/dbt/EmotionWheelSVG";
+import { JudgmentHighlightPanel } from "@/components/dbt/JudgmentHighlightPanel";
+import { SocraticDrawer } from "@/components/dbt/SocraticDrawer";
+
 
 
 
