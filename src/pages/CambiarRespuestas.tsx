@@ -144,10 +144,10 @@ export default function CambiarRespuestas() {
 
   const subtitleByStage = useMemo(() => {
     switch (state.stage) {
-      case "wizard8": return "Ficha 8 · Verificar los Hechos";
-      case "decision9": return "Ficha 9 · Mente Sabia";
-      case "problem12": return "Ficha 12 · Resolución de Problemas";
-      case "opposite10": return "Fichas 10 & 13 · Acción Opuesta";
+      case "wizard8": return "Verificar los hechos";
+      case "decision9": return "Mente Sabia";
+      case "problem12": return "Resolver el problema";
+      case "opposite10": return "Acción Opuesta";
       case "done": return "Sesión guardada";
     }
   }, [state.stage]);
