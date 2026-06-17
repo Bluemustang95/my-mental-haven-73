@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, Sparkles } from "lucide-react";
+import { Heart, Sparkles, Wind } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { readDraft, draftHasProgress } from "@/hooks/useChangeResponseFlow";
@@ -15,6 +15,18 @@ type Pending = {
   from: string;
   to2: string;
 };
+
+function readMindfulnessDraft(): { exerciseName: string; returnPath: string } | null {
+  try {
+    const raw = localStorage.getItem("mindfulness-current-draft");
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (!p?.exerciseName || !p?.returnPath) return null;
+    return { exerciseName: p.exerciseName, returnPath: p.returnPath };
+  } catch {
+    return null;
+  }
+}
 
 export function PendingBento() {
   const navigate = useNavigate();
@@ -35,6 +47,20 @@ export function PendingBento() {
         icon: <Heart size={16} className="text-white" />,
         from: "#7cc2c8",
         to2: "#facb60",
+      });
+    }
+
+    // Mindfulness draft
+    const m = readMindfulnessDraft();
+    if (m) {
+      next.push({
+        key: "mindfulness",
+        title: "Práctica de mindfulness",
+        subtitle: m.exerciseName,
+        to: m.returnPath,
+        icon: <Wind size={16} className="text-white" />,
+        from: "#FB923C",
+        to2: "#FCD34D",
       });
     }
 

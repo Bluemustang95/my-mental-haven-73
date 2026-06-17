@@ -9,6 +9,8 @@ import { localDateStr } from "@/lib/utils";
 import { addDays, startOfWeek } from "date-fns";
 import { DayHistorySheet } from "@/components/mindfulness/DayHistorySheet";
 import { QuickAddSheet } from "@/components/mindfulness/QuickAddSheet";
+import { OpenMindfulnessList } from "@/components/mindfulness/OpenMindfulnessList";
+
 
 export default function MindfulnessHub() {
   const navigate = useNavigate();
@@ -109,7 +111,12 @@ export default function MindfulnessHub() {
             </div>
           </motion.button>
         ))}
+
+        <div className="pt-2">
+          <OpenMindfulnessList />
+        </div>
       </div>
+
 
       {didSomethingToday && (
         <motion.button
