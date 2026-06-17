@@ -43,7 +43,7 @@ const INITIAL: FlowState = {
   fitsFacts: null,
   isEffective: null,
   problem: { goal: "", brainstorm: "", chosenSolution: "", prosCons: "", outcome: null },
-  opposite: { impulses: "", bodyPlan: "" },
+  opposite: { impulses: "", bodyPlan: "", actionTaken: false },
   startedAt: 0,
   updatedAt: 0,
 };
