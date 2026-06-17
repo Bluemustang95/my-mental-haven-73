@@ -45,10 +45,32 @@ function summarize(rows: Row[]): Insights {
   };
 }
 
-export function PatternInsights() {
+const DISMISS_KEY = "dbt-pattern-dismissed-v1";
+
+function readDismissed(): string[] {
+  try {
+    const raw = localStorage.getItem(DISMISS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function dismissId(id: string) {
+  const next = Array.from(new Set([...readDismissed(), id]));
+  try { localStorage.setItem(DISMISS_KEY, JSON.stringify(next)); } catch {}
+  return next;
+}
+
+interface Props {
+  embedded?: boolean;
+}
+
+export function PatternInsights({ embedded = false }: Props) {
   const { user } = useAuth();
   const [data, setData] = useState<Insights | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dismissed, setDismissed] = useState<string[]>(() => readDismissed());
 
   useEffect(() => {
     let cancelled = false;
@@ -67,71 +89,90 @@ export function PatternInsights() {
     return () => { cancelled = true; };
   }, [user]);
 
-  if (loading || !data || data.total === 0) return null;
+  if (loading) return null;
+  if (!data || data.total === 0) {
+    if (embedded) {
+      return (
+        <p className="px-2 py-3 text-center text-[12px] text-[#101927]/55">
+          Sin patrones aún. Hacé una sesión para empezar a verlos.
+        </p>
+      );
+    }
+    return null;
+  }
 
   const pathLabel =
     data.dominantPath === "problem" ? "Resolución de Problemas" :
     data.dominantPath === "opposite" ? "Acción Opuesta" : null;
 
+  const cards: { id: string; label: string; value: string; sub?: string }[] = [];
+  if (data.topEmotion) cards.push({
+    id: `emo-${data.topEmotion.name}`,
+    label: "Emoción frecuente",
+    value: data.topEmotion.name,
+    sub: `${data.topEmotion.count} ${data.topEmotion.count === 1 ? "vez" : "veces"}`,
+  });
+  if (pathLabel) cards.push({ id: `path-${data.dominantPath}`, label: "Camino dominante", value: pathLabel });
+  if (data.effectiveRate !== null) cards.push({
+    id: "effectiveness",
+    label: "Efectividad percibida",
+    value: `${Math.round(data.effectiveRate * 100)}%`,
+  });
+  cards.push({
+    id: "last30",
+    label: "Últimos 30 días",
+    value: `${data.last30} ${data.last30 === 1 ? "sesión" : "sesiones"}`,
+  });
+
+  const visible = cards.filter((c) => !dismissed.includes(c.id));
+
+  if (visible.length === 0) {
+    return (
+      <p className="px-2 py-3 text-center text-[12px] text-[#101927]/55">
+        Sin patrones pendientes. ¡Bien hecho!
+      </p>
+    );
+  }
+
+  const Wrapper: any = embedded ? "div" : motion.div;
+  const wrapperProps = embedded
+    ? { className: "" }
+    : {
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        className: "rounded-2xl bg-white shadow-sm p-4",
+      };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-white shadow-sm p-4"
-    >
-      <div className="mb-3 flex items-center gap-2">
-        <Sparkles size={14} className="text-[#facb60]" />
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-[#101927]/55">
-          Tus patrones · {data.total} {data.total === 1 ? "sesión" : "sesiones"}
-        </span>
-      </div>
+    <Wrapper {...wrapperProps}>
+      {!embedded && (
+        <div className="mb-3 flex items-center gap-2">
+          <Sparkles size={14} className="text-[#facb60]" />
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-[#101927]/55">
+            Tus patrones · {data.total} {data.total === 1 ? "sesión" : "sesiones"}
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2">
-        {data.topEmotion && (
-          <div className="rounded-xl bg-[#FDFCFB] p-3">
+        {visible.map((c) => (
+          <div key={c.id} className="relative rounded-xl bg-[#FDFCFB] p-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[#101927]/45">
-              Emoción frecuente
+              {c.label}
             </p>
             <p className="mt-1 font-display text-base font-bold capitalize text-[#101927]">
-              {data.topEmotion.name}
+              {c.value}
             </p>
-            <p className="mt-0.5 text-[11px] text-[#101927]/55">
-              {data.topEmotion.count} {data.topEmotion.count === 1 ? "vez" : "veces"}
-            </p>
+            {c.sub && <p className="mt-0.5 text-[11px] text-[#101927]/55">{c.sub}</p>}
+            <button
+              onClick={() => setDismissed(dismissId(c.id))}
+              className="mt-2 w-full rounded-lg bg-[#7cc2c8]/15 py-1 text-[10px] font-semibold text-[#0c5b62] active:scale-[0.97]"
+            >
+              ✓ Marcar como visto
+            </button>
           </div>
-        )}
-
-        {pathLabel && (
-          <div className="rounded-xl bg-[#FDFCFB] p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#101927]/45">
-              Camino dominante
-            </p>
-            <p className="mt-1 font-display text-sm font-bold leading-tight text-[#101927]">
-              {pathLabel}
-            </p>
-          </div>
-        )}
-
-        {data.effectiveRate !== null && (
-          <div className="rounded-xl bg-[#FDFCFB] p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#101927]/45">
-              Efectividad percibida
-            </p>
-            <p className="mt-1 font-display text-base font-bold text-[#101927]">
-              {Math.round(data.effectiveRate * 100)}%
-            </p>
-          </div>
-        )}
-
-        <div className="rounded-xl bg-[#FDFCFB] p-3">
-          <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[#101927]/45">
-            <TrendingUp size={10} /> Últimos 30 días
-          </div>
-          <p className="mt-1 font-display text-base font-bold text-[#101927]">
-            {data.last30} {data.last30 === 1 ? "sesión" : "sesiones"}
-          </p>
-        </div>
+        ))}
       </div>
-    </motion.div>
+    </Wrapper>
   );
 }

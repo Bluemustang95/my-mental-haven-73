@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, Sparkles, Wind } from "lucide-react";
+import { Heart, Sparkles, Wind, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { readDraft, draftHasProgress } from "@/hooks/useChangeResponseFlow";
+import { readDraft as readBienestarDraft, todayStatus } from "@/components/bienestar/useBienestarDraft";
 
 type Pending = {
   key: string;
@@ -64,7 +65,47 @@ export function PendingBento() {
       });
     }
 
+    // Bienestar — plan de hoy o wizard inconcluso
+    const b = readBienestarDraft();
+    if (b) {
+      if (b.done || (b.step >= 4 && b.selectedActivities.length >= 3)) {
+        const st = todayStatus(b);
+        if (st.total > 0) {
+          next.push({
+            key: "bienestar-hoy",
+            title: "Tu plan de bienestar",
+            subtitle:
+              st.nextLabel ??
+              `${st.pending} de ${st.total} bloques pendientes hoy`,
+            to: "/herramientas/construir-bienestar?tab=seguimiento&day=hoy",
+            icon: <Calendar size={16} className="text-white" />,
+            from: "#7cc2c8",
+            to2: "#34D399",
+          });
+        }
+      } else if (draftHasBienestarProgress(b)) {
+        next.push({
+          key: "bienestar-wizard",
+          title: "Continuá tu plan",
+          subtitle: `Paso ${b.step} de 4`,
+          to: "/herramientas/construir-bienestar",
+          icon: <Sparkles size={16} className="text-white" />,
+          from: "#7cc2c8",
+          to2: "#facb60",
+        });
+      }
+    }
+
     setItems(next);
+
+    function draftHasBienestarProgress(d: any) {
+      return (
+        (d?.selectedValues?.length ?? 0) > 0 ||
+        !!d?.todayGoal ||
+        (d?.selectedActivities?.length ?? 0) > 0
+      );
+    }
+
 
     // BA Pack
     (async () => {
