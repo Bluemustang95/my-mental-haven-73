@@ -205,10 +205,14 @@ export default function CambiarRespuestas() {
       clearDraft();
       dispatch({ type: "GOTO", stage: "done", step: 1 });
       toast.success("Sesión guardada");
+      setTimeout(() => {
+        dispatch({ type: "RESET" });
+        navigate("/diario-inteligente/regulacion-emocional");
+      }, 1800);
     } catch (e: any) {
       toast.error(e?.message || "No se pudo guardar la sesión");
     }
-  }, [user, state, clearDraft, dispatch]);
+  }, [user, state, clearDraft, dispatch, navigate]);
 
   // ============ STAGE: wizard8 (6 pasos) ============
   const renderWizard8 = () => {
