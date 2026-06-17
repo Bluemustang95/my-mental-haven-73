@@ -16,6 +16,36 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [bioReady, setBioReady] = useState(false);
+
+  useEffect(() => {
+    setBioReady(isBiometricSupported() && isBiometricEnabled());
+  }, []);
+
+  // Auto-prompt biometric on mount if enabled and a Supabase session already exists
+  useEffect(() => {
+    (async () => {
+      if (!isBiometricSupported() || !isBiometricEnabled()) return;
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        const ok = await verifyBiometric();
+        if (ok) navigate("/", { replace: true });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleBiometric = async () => {
+    setError("");
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      setError("Iniciá sesión con tu email una vez para activar el acceso biométrico.");
+      return;
+    }
+    const ok = await verifyBiometric();
+    if (ok) navigate("/", { replace: true });
+    else setError("No pudimos verificar tu identidad biométrica.");
+  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
