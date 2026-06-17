@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHapticPulse } from "@/hooks/useHaptics";
 import { toast } from "sonner";
 
-import { useChangeResponseFlow } from "@/hooks/useChangeResponseFlow";
+import { useChangeResponseFlow, draftHasProgress } from "@/hooks/useChangeResponseFlow";
+import { ResumeSessionBanner } from "@/components/dbt/ResumeSessionBanner";
 import {
   EMOTIONS, FICHA_8A, OPPOSITE_ACTIONS, BODY_PLAN_FALLBACK,
   EMOTION_TINT, type DbtEmotion,
