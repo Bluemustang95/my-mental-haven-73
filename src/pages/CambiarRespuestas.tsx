@@ -247,6 +247,12 @@ export default function CambiarRespuestas() {
 
         {step === 3 && (<>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">3. ¿Qué interpretaciones, suposiciones y conclusiones tenés?</h2>
+          {state.eventDescription.trim() && (
+            <div className="rounded-[20px] bg-[#f7f7f8] border border-[#101927]/5 p-4">
+              <p className="font-display text-[10px] uppercase tracking-wide text-[#101927]/45 mb-1">Tu evento</p>
+              <p className="font-body text-[14px] leading-6 text-[#101927]/80">{state.eventDescription}</p>
+            </div>
+          )}
           <p className="font-body text-[14px] leading-6 text-[#101927]/70">Registrá tus pensamientos subjetivos sobre el evento.</p>
           <DbtTextarea value={state.interpretations} onChange={(v) => dispatch({ type: "PATCH", patch: { interpretations: v } })}
             placeholder="¿Qué pensás que pasa? ¿Qué leés entre líneas? ¿Qué asumís?" />
