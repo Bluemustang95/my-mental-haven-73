@@ -181,11 +181,20 @@ export default function CambiarRespuestas() {
           <p className="font-body text-[14px] leading-6 text-[#101927]/70">Describí los hechos como los registraría una cámara: qué, quién, cuándo, dónde. Sin juicios.</p>
           <DbtTextarea value={state.eventDescription} onChange={(v) => dispatch({ type: "PATCH", patch: { eventDescription: v } })}
             placeholder="¿Qué pasó concretamente? Sé factual (en blanco y negro)." />
+          <JudgmentHighlightPanel
+            text={state.eventDescription}
+            enabled={state.eventDescription.trim().length > 24}
+            onApplyReformulation={(t) => {
+              haptic("confirm");
+              dispatch({ type: "PATCH", patch: { eventDescription: t } });
+            }}
+          />
           <AiAssistButton label="¿Querés que te ayude a separar hechos de juicios?" onClick={() => callAi("separate-facts", { text: state.eventDescription }, {
             title: "Hechos vs. juicios",
             onApply: (t) => dispatch({ type: "PATCH", patch: { eventDescription: t } }),
           })} />
         </>)}
+
 
         {step === 3 && (<>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">3. ¿Qué interpretaciones, suposiciones y conclusiones tenés?</h2>
