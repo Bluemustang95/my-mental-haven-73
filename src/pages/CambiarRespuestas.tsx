@@ -609,6 +609,16 @@ export default function CambiarRespuestas() {
       <SessionTimeline stage={state.stage} path={chosenPath} visited={visited} onJump={handleTimelineJump} />
 
       <div className="mx-auto max-w-md">
+        <ResumeSessionBanner
+          open={resumeBanner.open}
+          hoursAgo={resumeBanner.hoursAgo}
+          emotion={state.selectedEmotion}
+          stageLabel={subtitleByStage}
+          onResume={() => setResumeBanner((b) => ({ ...b, open: false }))}
+          onDiscard={() => { setResumeBanner((b) => ({ ...b, open: false })); reset(); }}
+        />
+
+
 
         <AnimatePresence mode="wait">
           {state.stage === "wizard8" && renderWizard8()}
