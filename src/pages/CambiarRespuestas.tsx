@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useHapticPulse } from "@/hooks/useHaptics";
 import { toast } from "sonner";
 
 import { useChangeResponseFlow } from "@/hooks/useChangeResponseFlow";
@@ -16,6 +17,8 @@ import {
 } from "@/components/dbt/shared";
 import { AiResponseModal } from "@/components/dbt/AiResponseModal";
 import { Ficha8AModal } from "@/components/dbt/Ficha8AModal";
+import { SaveIndicator } from "@/components/dbt/SaveIndicator";
+
 
 type AiTask = "separate-facts" | "evaluate-fit" | "evaluate-effectiveness" | "suggest-solutions" | "body-plan";
 
@@ -23,9 +26,40 @@ export default function CambiarRespuestas() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { state, dispatch, clearDraft } = useChangeResponseFlow();
+  const haptic = useHapticPulse();
   const [showFicha8A, setShowFicha8A] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [saveTick, setSaveTick] = useState(0);
   const [aiModal, setAiModal] = useState<{ open: boolean; title: string; loading: boolean; content?: string; error?: string; onApply?: (t: string) => void }>({ open: false, title: "", loading: false });
+
+  // Auto-save indicator: pulse whenever the persisted state changes (debounced via key).
+  const stateKey = `${state.stage}:${state.step}`;
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    setSaveTick(Date.now());
+  }, [stateKey]);
+
+  // Celebrate when reaching the final stage: gold pulse + confetti + haptic.
+  useEffect(() => {
+    if (state.stage !== "done") return;
+    haptic("celebrate");
+    let cancelled = false;
+    import("canvas-confetti").then((m) => {
+      if (cancelled) return;
+      const confetti = m.default;
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        startVelocity: 35,
+        ticks: 200,
+        origin: { y: 0.35 },
+        colors: ["#facb60", "#7cc2c8", "#101927"],
+      });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [state.stage, haptic]);
+
 
   const subtitleByStage = useMemo(() => {
     switch (state.stage) {
@@ -182,17 +216,21 @@ export default function CambiarRespuestas() {
   };
 
   const advanceW8 = () => {
+    haptic("confirm");
     if (state.step < 6) dispatch({ type: "NEXT" });
     else dispatch({ type: "GOTO", stage: "decision9", step: 1 });
   };
+
 
   // ============ STAGE: decision9 ============
   const renderDecision9 = () => {
     const next = () => {
       if (state.isEffective === null) return;
+      haptic("confirm");
       const path: "problem" | "opposite" = (state.fitsFacts && state.isEffective) ? "problem" : "opposite";
       dispatch({ type: "GOTO", stage: path === "problem" ? "problem12" : "opposite10", step: 1 });
     };
+
     return (
       <motion.section key="d9" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-32 pt-4 space-y-5">
         <FichaCallout label="Ficha 9 · Mente Sabia">Ya verificaste los hechos. Ahora decidimos el camino: ¿actuar bajo este impulso te acerca a lo que querés?</FichaCallout>
@@ -241,7 +279,8 @@ export default function CambiarRespuestas() {
   // ============ STAGE: problem12 (7 pasos) ============
   const renderProblem12 = () => {
     const step = state.step;
-    const advance = () => { if (step < 7) dispatch({ type: "NEXT" }); else saveSession(); };
+    const advance = () => { haptic("confirm"); if (step < 7) dispatch({ type: "NEXT" }); else saveSession(); };
+
     const canAdv = () => {
       switch (step) {
         case 3: return state.problem.goal.trim().length > 0;
@@ -341,7 +380,7 @@ export default function CambiarRespuestas() {
     const emotion = (state.selectedEmotion || "Tristeza") as DbtEmotion;
     const oa = OPPOSITE_ACTIONS[emotion];
     const tint = EMOTION_TINT[emotion];
-    const advance = () => { if (step < 7) dispatch({ type: "NEXT" }); else saveSession(); };
+    const advance = () => { haptic("confirm"); if (step < 7) dispatch({ type: "NEXT" }); else saveSession(); };
     const canAdv = () => {
       if (step === 3) return state.opposite.impulses.trim().length > 0;
       if (step === 6) return state.opposite.bodyPlan.trim().length > 0;
@@ -433,8 +472,16 @@ export default function CambiarRespuestas() {
 
   // ============ STAGE: done ============
   const renderDone = () => (
-    <motion.section key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="px-4 pb-32 pt-12 space-y-6 text-center">
-      <div className="mx-auto h-20 w-20 rounded-full bg-[#7cc2c8]/15 flex items-center justify-center">
+    <motion.section key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="px-4 pb-32 pt-12 space-y-6 text-center relative">
+      <motion.div
+        aria-hidden
+        initial={{ scale: 0.4, opacity: 0.55 }}
+        animate={{ scale: 2.4, opacity: 0 }}
+        transition={{ duration: 1.4, ease: "easeOut" }}
+        className="pointer-events-none absolute left-1/2 top-16 -translate-x-1/2 h-32 w-32 rounded-full"
+        style={{ background: "radial-gradient(closest-side, rgba(250,203,96,0.55), rgba(250,203,96,0))" }}
+      />
+      <div className="relative mx-auto h-20 w-20 rounded-full bg-[#7cc2c8]/15 flex items-center justify-center">
         <Ic.Check size={36} color="#7cc2c8" />
       </div>
       <div>
@@ -447,6 +494,7 @@ export default function CambiarRespuestas() {
       </div>
     </motion.section>
   );
+
 
   return (
     <main className="min-h-screen bg-white text-[#101927]" style={{ backgroundImage: "linear-gradient(180deg, rgba(124,194,200,0.04) 0%, rgba(255,255,255,1) 30%)" }}>
@@ -489,6 +537,8 @@ export default function CambiarRespuestas() {
         onConfirm={reset}
         onCancel={() => setConfirmReset(false)}
       />
+      <SaveIndicator trigger={saveTick} />
+
     </main>
   );
 }
