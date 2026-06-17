@@ -550,9 +550,9 @@ export default function CambiarRespuestas() {
           <AiAssistButton label="Planificar gestos y postura con IA" onClick={() => callAi("body-plan", {
             emotion,
             impulses: state.opposite.impulses,
-          }, { title: "Plan corporal (Ficha 13)", onApply: (t) => dispatch({ type: "PATCH_OPPOSITE", patch: { bodyPlan: t } }) })} />
+          }, { title: "Plan corporal", onApply: (t) => dispatch({ type: "PATCH_OPPOSITE", patch: { bodyPlan: t } }) })} />
           <button onClick={applyFallback} className="w-full rounded-[20px] border border-[#7cc2c8]/30 bg-white px-4 py-2.5 font-display text-[12px] font-semibold text-[#7cc2c8] active:scale-[0.98]">
-            Usar plan corporal de referencia (Ficha 13)
+            Usar plan corporal de referencia
           </button>
         </>)}
 
