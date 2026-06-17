@@ -273,6 +273,9 @@ export default function CambiarRespuestas() {
           <p className="font-body text-[13px] text-[#101927]/75"><strong>{state.selectedEmotion}:</strong> {state.eventDescription.slice(0, 110)}{state.eventDescription.length > 110 ? "…" : ""}</p>
         </div>
 
+        <DecisionTreeSVG fitsFacts={state.fitsFacts} isEffective={state.isEffective} />
+
+
         <h2 className="font-display text-[18px] font-bold text-[#101927]">¿Actuar según esta emoción es efectivo?</h2>
 
         <WiseMindCard title="Criterios de efectividad (DBT)" tone="gold">
