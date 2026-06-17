@@ -16,12 +16,25 @@ const dayLabels = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
 
 export default function MiProceso() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const { isPremium, realPlan } = usePlan();
   const [bars] = useState<number[]>([35, 50, 28, 65, 72, 60, 80]);
   const [inTherapy, setInTherapy] = useState(false);
   const [openTest, setOpenTest] = useState<null | "symptom" | "personality">(null);
   const [syncOpen, setSyncOpen] = useState(false);
   const [linkedLastName, setLinkedLastName] = useState<string | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.hash === "#suscripcion") {
+      // wait for layout
+      setTimeout(() => {
+        const el = document.getElementById("suscripcion");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, [location.hash]);
 
   useEffect(() => {
     if (!user) return;
