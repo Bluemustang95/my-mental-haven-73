@@ -1,12 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 export type Plan = "free" | "premium";
 
 export function usePlan() {
   const { user } = useAuth();
-  const [plan, setPlan] = useState<Plan>("free");
+  const { isAdmin } = useAdminRole();
+  const [realPlan, setRealPlan] = useState<Plan>("free");
   const [planStartedAt, setPlanStartedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +22,7 @@ export function usePlan() {
       .select("plan, plan_started_at")
       .eq("user_id", user.id)
       .maybeSingle();
-    setPlan(((data?.plan as Plan) ?? "free") as Plan);
+    setRealPlan(((data?.plan as Plan) ?? "free") as Plan);
     setPlanStartedAt(data?.plan_started_at ?? null);
     setLoading(false);
   }, [user]);
@@ -32,7 +34,7 @@ export function usePlan() {
   const setUserPlan = useCallback(
     async (next: Plan) => {
       if (!user) return;
-      setPlan(next);
+      setRealPlan(next);
       const startedAt = next === "premium" ? new Date().toISOString() : null;
       setPlanStartedAt(startedAt);
       await supabase
@@ -45,5 +47,9 @@ export function usePlan() {
     [user]
   );
 
-  return { plan, planStartedAt, loading, setPlan: setUserPlan, refresh };
+  // Admins effectively have premium access everywhere
+  const plan: Plan = isAdmin ? "premium" : realPlan;
+  const isPremium = plan === "premium";
+
+  return { plan, realPlan, isAdmin, isPremium, planStartedAt, loading, setPlan: setUserPlan, refresh };
 }
