@@ -1,18 +1,21 @@
-export function useHaptics(enabled: boolean) {
-  const vibrate = (pattern: number | number[]) => {
-    if (!enabled) return;
-    if (typeof navigator === "undefined" || !navigator.vibrate) return;
-    try {
-      navigator.vibrate(pattern);
-    } catch {
-      // noop
-    }
-  };
+import { useCallback } from "react";
 
-  return {
-    inhale: () => vibrate([20, 40, 20]),
-    hold: () => vibrate(0),
-    exhale: () => vibrate(180),
-    tap: () => vibrate(10),
-  };
+type Pattern = "tick" | "confirm" | "celebrate" | "warn";
+
+const PATTERNS: Record<Pattern, number | number[]> = {
+  tick: 12,
+  confirm: 18,
+  celebrate: [20, 40, 20, 40, 30],
+  warn: [30, 60, 30],
+};
+
+export function useHaptics() {
+  return useCallback((pattern: Pattern = "tick") => {
+    try {
+      if (typeof navigator === "undefined") return;
+      navigator.vibrate?.(PATTERNS[pattern]);
+    } catch {
+      // no-op
+    }
+  }, []);
 }
