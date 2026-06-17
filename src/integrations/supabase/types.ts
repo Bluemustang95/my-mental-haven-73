@@ -964,6 +964,7 @@ export type Database = {
           notifications_on: boolean | null
           onboarding_completed: boolean | null
           plan: string
+          plan_expires_at: string | null
           plan_started_at: string | null
           prefers_dark: boolean | null
           priority_module: string | null
@@ -972,6 +973,7 @@ export type Database = {
           treatment_status: string | null
           updated_at: string | null
           user_id: string
+          voice_id: string | null
         }
         Insert: {
           areas_of_interest?: string[] | null
@@ -989,6 +991,7 @@ export type Database = {
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
           plan?: string
+          plan_expires_at?: string | null
           plan_started_at?: string | null
           prefers_dark?: boolean | null
           priority_module?: string | null
@@ -997,6 +1000,7 @@ export type Database = {
           treatment_status?: string | null
           updated_at?: string | null
           user_id: string
+          voice_id?: string | null
         }
         Update: {
           areas_of_interest?: string[] | null
@@ -1014,6 +1018,7 @@ export type Database = {
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
           plan?: string
+          plan_expires_at?: string | null
           plan_started_at?: string | null
           prefers_dark?: boolean | null
           priority_module?: string | null
@@ -1022,6 +1027,7 @@ export type Database = {
           treatment_status?: string | null
           updated_at?: string | null
           user_id?: string
+          voice_id?: string | null
         }
         Relationships: []
       }
@@ -1799,6 +1805,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_patients: {
+        Args: never
+        Returns: {
+          country: string
+          created_at: string
+          display_name: string
+          email: string
+          is_admin: boolean
+          life_stage: string
+          onboarding_completed: boolean
+          plan: string
+          plan_expires_at: string
+          plan_started_at: string
+          treatment_status: string
+          user_id: string
+        }[]
+      }
+      admin_set_admin_role: {
+        Args: { _is_admin: boolean; _user_id: string }
+        Returns: undefined
+      }
+      admin_set_plan: {
+        Args: { _expires_at: string; _plan: string; _user_id: string }
+        Returns: undefined
+      }
       get_daily_recommendations: {
         Args: { _limit?: number; _user_id: string }
         Returns: {
