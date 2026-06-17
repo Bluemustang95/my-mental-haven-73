@@ -226,9 +226,11 @@ export default function CambiarRespuestas() {
   const renderDecision9 = () => {
     const next = () => {
       if (state.isEffective === null) return;
+      haptic("confirm");
       const path: "problem" | "opposite" = (state.fitsFacts && state.isEffective) ? "problem" : "opposite";
       dispatch({ type: "GOTO", stage: path === "problem" ? "problem12" : "opposite10", step: 1 });
     };
+
     return (
       <motion.section key="d9" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="px-4 pb-32 pt-4 space-y-5">
         <FichaCallout label="Ficha 9 · Mente Sabia">Ya verificaste los hechos. Ahora decidimos el camino: ¿actuar bajo este impulso te acerca a lo que querés?</FichaCallout>
