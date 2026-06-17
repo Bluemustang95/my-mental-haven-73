@@ -97,8 +97,10 @@ async function persistProfile(userId: string, data: Pending) {
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  // -2: splash, -1: value slides, 0..5: wizard, 6: algorithm, 7: account
+  // -2: splash, -1: value slides, 0..5: wizard, 6: algorithm, 7: account, 8: plan picker
   const [step, setStep] = useState(-2);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
 
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
