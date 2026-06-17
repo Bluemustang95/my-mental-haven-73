@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useHapticPulse } from "@/hooks/useHaptics";
 import { toast } from "sonner";
 
 import { useChangeResponseFlow } from "@/hooks/useChangeResponseFlow";
@@ -16,6 +17,8 @@ import {
 } from "@/components/dbt/shared";
 import { AiResponseModal } from "@/components/dbt/AiResponseModal";
 import { Ficha8AModal } from "@/components/dbt/Ficha8AModal";
+import { SaveIndicator } from "@/components/dbt/SaveIndicator";
+
 
 type AiTask = "separate-facts" | "evaluate-fit" | "evaluate-effectiveness" | "suggest-solutions" | "body-plan";
 
