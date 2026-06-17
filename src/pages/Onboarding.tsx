@@ -142,7 +142,7 @@ export default function Onboarding() {
             sleep: pending.sleep,
             format: pending.format,
           });
-          navigate("/", { replace: true });
+          setStep(8);
         });
         return;
       } catch {
