@@ -486,6 +486,7 @@ export default function CambiarRespuestas() {
     const canAdv = () => {
       if (step === 3) return state.opposite.impulses.trim().length > 0;
       if (step === 6) return state.opposite.bodyPlan.trim().length > 0;
+      if (step === 7) return state.opposite.actionTaken === true;
       return true;
     };
     const applyFallback = () => {
