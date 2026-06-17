@@ -1,68 +1,96 @@
-# Plan: Regulación Emocional + Sesiones abiertas + Inicio
+## Resumen
 
-## 1. `DiarioInteligente.tsx` (regulacion-emocional) — estilo igual a Mindfulness
+Construir el módulo **Construir Bienestar** + limpieza del hub + las 4 mejoras aprobadas + continuidad en Inicio (estilo Cambiar Respuestas / Mindfulness).
 
-Reescribir la vista para que copie la estética de `MindfulnessHub.tsx`:
+---
 
-- Fondo plano `bg-[#FDFCFB]`, sin gradientes oscuros ni glass.
-- Header igual a Mindfulness: botón redondo blanco con back, h1 `font-serif text-3xl font-bold text-[#101927]` ("Regulación Emocional"), subtítulo gris ("Equilibrá tus emociones con DBT").
-- `WeekStrip` directo (sin contenedor card extra).
-- **Quitar el badge "PREMIUM"** de la tarjeta "Cambiar respuestas emocionales".
-- Convertir las tarjetas (Cambiar respuestas / STOP & TIPP) al mismo formato de Mindfulness: row blanca `rounded-2xl bg-white p-3 shadow-sm`, ícono cuadrado con gradiente a la izquierda, título + descripción.
-- Mantener `PatternInsights` arriba, pero con los mismos tokens claros (texto `#101927`, sin pinks translúcidos).
-- FAB "+" igual al de Mindfulness (`bottom-24 right-5`, `bg-[#101927]`), visible si `hasAnySession`.
+## A) Módulo Construir Bienestar
 
-## 2. Sesiones abiertas — sección desplegable debajo de los recursos
+**Ruta:** `/herramientas/construir-bienestar`
+**Persistencia:** `localStorage` (`bienestar-draft-v1`) — valores, metas, pool de actividades, agenda semanal y registros de seguimiento. Si recarga o sale, retoma exactamente donde quedó. Sin tablas nuevas.
 
-Nuevo componente `src/components/dbt/OpenSessionsList.tsx`:
+### Estética (glass premium claro)
+- Fondo `#FDFCFB` con dos orbes (`#7cc2c8` y `#facb60`, `opacity-20`, `blur-3xl`) animados con `framer-motion`.
+- Tarjetas `bg-white/60 backdrop-blur-xl border border-white/55 rounded-[32px]`.
+- `font-serif` para títulos, Montserrat mayúsculas para kickers. Acentos teal/oro, texto `#101927`.
+- Header con kicker "DESARROLLO PERSONAL" + título del paso + botón circular de reinicio (con confirm).
+- Footer fijo con "Continuar" deshabilitado hasta cumplir el mínimo.
 
-- Lee `localStorage` key del flow DBT (`useChangeResponseFlow`) → si `draftHasProgress(state)` hay 1 sesión abierta DBT.
-- (Extensible) también lee otros drafts existentes si los hubiera (psicoeducación / pack), pero por ahora solo DBT.
-- Render: card colapsable blanca con título "Sesiones abiertas · N", al expandir muestra filas con: emoción, etapa actual (`subtitleByStage`), tiempo relativo.
-- Cada fila tiene dos acciones:
-  - **Continuar** → navega a `/herramientas/cambiar-respuestas` (mantiene el draft).
-  - **Marcar como completada** → llama a `saveSession`-equivalente liviano: inserta en `dbt_emotion_sessions` con los datos del draft + `action_completed: true` (si la columna no existe, simplemente guarda con el path actual y limpia draft), luego limpia el draft y refresca.
-- Se monta en `DiarioInteligente` (regulacion-emocional) justo debajo de las cards de recursos.
+### Paso 1 · Brújula de Valores
+14 acordeones con los **58 sub-ítems exactos** del briefing. Multi-selección entre categorías, múltiples abiertos. Cápsula flotante: "Seleccionados: X ítems · Elegí al menos uno". Bloquea si X=0.
 
-## 3. Quitar el "confeti final" al re-entrar a Cambiar Respuestas
+### Paso 2 · Embudo de Acción (pirámide invertida)
+Header con cápsula read-only listando los valores tildados. Pirámide CSS: 3 inputs píldora para metas + 1 input oro destacado "Meta de Enfoque para HOY". Botón **"¿Necesitás ideas? Preguntale a la IA"** que llama a `lovable-chat` con los valores seleccionados y devuelve 3 sugerencias clickeables.
 
-En `CambiarRespuestas.tsx`:
+### Paso 3 · Catálogo de Actividades
+Array hardcoded con las **72 actividades exactas** + buscador con lupa (filtra por nombre/categoría). Lista con `+` para sumar; chips oscuros con `×` para quitar. Continuar requiere **≥ 3** actividades.
 
-- Al montar, si `state.stage === "done"`, hacer `dispatch({ type: "RESET" })` + `clearDraft()` automáticamente → la próxima visita arranca en `wizard8` paso 1.
-- En `saveSession`, después del `toast.success` y del confeti, agendar `setTimeout(() => navigate("/diario-inteligente/regulacion-emocional"), 1800)` y limpiar el draft (el usuario ya no queda atrapado en la pantalla de "done").
-- La pantalla "done" actual queda como transición corta (confeti + saludo) antes del redirect, no como vista persistente.
+**(Favoritos — mejora #3):** cada actividad tiene una estrella; las favoritas se persisten en `localStorage` (`bienestar-favs-v1`) y aparecen en una sección **"⭐ Tus favoritas"** arriba del catálogo, precargadas en futuras semanas.
 
-## 4. Botón "Completado" en `PatternInsights` (TUS PATRONES · N SESIONES)
+### Paso 4 · Planificador Semanal
+Tabs **Armado** / **Seguimiento** + tab **Vista Semanal** (nueva — mejora #4).
 
-Cuando exista al menos una sesión abierta detectada por `OpenSessionsList`:
+- **Navegador Lun–Dom** con contador por día.
+- **Grilla diaria** con bloques 08/10/12/14/16/18/20/22.
+- **Armado:** click en bloque vacío → modal con actividades del Paso 3 → asignar pinta teal claro; eliminar libera el bloque.
+- **Seguimiento:** checkbox por bloque agendado → modal de registro (sliders 0–5 de agrado, atención plena, dejar ir + notas). Guardar pinta verde esmeralda con mini-resumen.
+- **Vista Semanal (mejora #4):** heatmap **7 días × 8 horarios** con colores por estado — gris vacío, teal agendado, verde completado. Tap en celda salta al día/hora correspondiente.
 
-- Agregar un pill en el header de `PatternInsights`: "1 sesión pendiente · Marcar como hecha" que dispara la misma acción de "Marcar como completada" de la sección de sesiones abiertas.
-- Si no hay sesiones abiertas, el pill no se renderiza.
+### Finalización
+Check animado verde + tarjeta resumen (3 valores, meta de hoy, total actividades, total bloques) + CTA "Volver al inicio".
 
-## 5. Pendientes en Inicio (`Dashboard.tsx`)
+---
 
-Nuevo bloque "Pendientes" entre el Timeline y el card de sueño:
+## B) Limpieza del hub `/diario-inteligente/regulacion-emocional`
 
-- Componente `src/components/home/PendingBento.tsx` (grid 2 columnas, cards chicos `rounded-2xl bg-white shadow-sm`).
-- Fuentes:
-  - **DBT abierto**: lee draft de `useChangeResponseFlow` (sin hook completo, parsea localStorage). Muestra "Cambiar respuestas · {emoción}" → click navega al wizard.
-  - **Psicoeducación inconclusa**: query a `psycho_progress` (o tabla equivalente; si no existe, lee localStorage de `PsychoModal`). Muestra "Seguir leyendo: {título}".
-  - **Pack de actividades en curso**: query a `pack_progress` / `behavioral_activation_progress` (lo que ya esté implementado). Muestra "Día N · {pack}".
-- Si no hay pendientes, el bloque no se renderiza.
+En `DiarioInteligente.tsx`:
+- Eliminar la card **STOP & TIPP** del hub (la página sigue accesible por deep-link).
+- Sumar nueva card **Construir Bienestar** debajo de Cambiar Respuestas (icon Sparkles, gradiente teal→oro).
+- Mover `<PatternInsights />` **debajo** de los recursos y del `OpenSessionsList`, envuelto en dropdown cerrado por defecto ("Tus patrones · N hallazgos" + chevron animado).
 
-## 6. Separación visual en Inicio: "Te ayudamos con tu sueño"
+En `PatternInsights.tsx`:
+- Botón **"Marcar como completado"** por insight, persistido en `localStorage` (`dbt-pattern-dismissed-v1`).
+- Estado vacío "Sin patrones pendientes" cuando todo está completado.
 
-En `Dashboard.tsx`, el `PremiumLock` que envuelve el botón de sueño actualmente usa `mt-3`. Aumentar a `mt-8` (o `mt-10`) para despegarlo de "Valoración de la noche".
+---
 
-## Detalles técnicos
+## C) Continuidad y avisos suaves
 
-- No tocar `useChangeResponseFlow.tsx` salvo exponer un helper `readDraftFromStorage()` (o reusar el ya existente) para leer el draft fuera del provider en `OpenSessionsList` y `PendingBento` sin instanciar el reducer dos veces.
-- `dbt_emotion_sessions` ya existe; al "marcar como completada" se inserta con los campos disponibles del draft (los faltantes quedan `null`). No requiere migración.
-- Sin cambios en edge functions, RLS ni AI.
-- Tipografía: respetar `font-serif`/`font-display`/`font-body` ya definidos. No introducir colores hardcodeados nuevos fuera de los que ya usa Mindfulness (`#FDFCFB`, `#101927`).
+### C.1 Reanudar sesión (igual que Cambiar Respuestas / Mindfulness)
+- Si hay un `bienestar-draft-v1` activo y el wizard no llegó a Finalización:
+  - En `OpenSessionsList` aparece la card "Construir Bienestar · Paso X de 4" con **Continuar** / **Descartar**.
+  - En el FAB "+" del hub aparece la opción "Retomar plan en curso".
+  - Al entrar al wizard, salta directo al último paso guardado.
 
-## Fuera de alcance
+### C.2 Bento en Inicio (mejora #1)
+- En `PendingBento` (Dashboard) sumar card **"Tu plan de bienestar de hoy"** cuando hay agenda para el día actual:
+  - Texto: "Tenés **N** bloques programados para hoy".
+  - Sub-texto con el próximo bloque ("Próximo: 10:00 · Caminar por el parque").
+  - Tap → abre `/herramientas/construir-bienestar?tab=seguimiento&day=hoy`.
+- Si en cambio hay un draft del wizard sin terminar, muestra "Continuá tu plan · Paso X de 4".
 
-- Rediseño de STOP & TIPP, EmotionWheel o el wizard interno.
-- Cambios en `Mindfulness.tsx` / `MindfulnessHub.tsx`.
-- Nuevas tablas o columnas en Supabase.
+### C.3 Badge suave en el FAB (mejora #2)
+- Al final del día (≥ 20:00 hora local), si quedan bloques agendados del día actual **sin registrar**, el FAB "+" del hub `/diario-inteligente/regulacion-emocional` muestra un **punto oro** + tooltip "Tenés N bloques de hoy sin registrar". Tap directo al Seguimiento del día. Sin notificaciones push.
+
+---
+
+## Archivos
+
+**Nuevos**
+- `src/pages/ConstruirBienestar.tsx`
+- `src/components/bienestar/ValuesAccordion.tsx`
+- `src/components/bienestar/GoalFunnel.tsx`
+- `src/components/bienestar/ActivityCatalog.tsx` (incluye favoritos)
+- `src/components/bienestar/WeeklyPlanner.tsx` (Armado + Seguimiento + Vista Semanal)
+- `src/components/bienestar/FinishScreen.tsx`
+- `src/components/bienestar/data.ts` (58 valores + 72 actividades)
+- `src/components/bienestar/useBienestarDraft.ts` (draft + favoritos + helpers de "bloques pendientes hoy")
+
+**Editados**
+- `src/App.tsx` (ruta nueva)
+- `src/pages/DiarioInteligente.tsx` (quitar STOP&TIPP, agregar Construir Bienestar, mover PatternInsights a dropdown abajo, badge en FAB)
+- `src/components/dbt/PatternInsights.tsx` (dropdown + dismiss persistente)
+- `src/components/dbt/OpenSessionsList.tsx` (detectar draft de bienestar)
+- `src/components/home/PendingBento.tsx` (card "Plan de hoy" + "Continuá tu plan")
+
+**Sin tocar:** schema DB, Mindfulness, CambiarRespuestas, página `/herramientas/regulacion-emocional`.
