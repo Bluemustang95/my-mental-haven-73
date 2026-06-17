@@ -8,6 +8,7 @@ export interface FlowState {
   stage: Stage;
   step: number;
   selectedEmotion: DbtEmotion | null;
+  emotionNuance: string | null;
   eventDescription: string;
   interpretations: string;
   threat: string;
@@ -31,6 +32,7 @@ const INITIAL: FlowState = {
   stage: "wizard8",
   step: 1,
   selectedEmotion: null,
+  emotionNuance: null,
   eventDescription: "",
   interpretations: "",
   threat: "",
