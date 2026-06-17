@@ -277,7 +277,8 @@ export default function CambiarRespuestas() {
   // ============ STAGE: problem12 (7 pasos) ============
   const renderProblem12 = () => {
     const step = state.step;
-    const advance = () => { if (step < 7) dispatch({ type: "NEXT" }); else saveSession(); };
+    const advance = () => { haptic("confirm"); if (step < 7) dispatch({ type: "NEXT" }); else saveSession(); };
+
     const canAdv = () => {
       switch (step) {
         case 3: return state.problem.goal.trim().length > 0;
