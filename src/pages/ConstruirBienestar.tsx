@@ -9,10 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
-  VALUE_CATEGORIES, ACTIVITIES, DAYS, DAY_LABELS, HOURS,
+  VALUE_CATEGORIES, ACTIVITIES, DAYS, DAY_LABELS, HOURS, activityCatsForValues,
 } from "@/components/bienestar/data";
 import {
-  useBienestarDraft, readFavs, toggleFav, type BienestarDraft, type BlockLog,
+  useBienestarDraft, readFavs, toggleFav, type BienestarDraft, type BlockLog, type CustomActivity,
 } from "@/components/bienestar/useBienestarDraft";
 
 // ─────────────────────────────────────────────────────────────
