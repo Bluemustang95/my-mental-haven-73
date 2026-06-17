@@ -18,6 +18,11 @@ import {
 import { AiResponseModal } from "@/components/dbt/AiResponseModal";
 import { Ficha8AModal } from "@/components/dbt/Ficha8AModal";
 import { SaveIndicator } from "@/components/dbt/SaveIndicator";
+import { SessionTimeline } from "@/components/dbt/SessionTimeline";
+import { DecisionTreeSVG } from "@/components/dbt/DecisionTreeSVG";
+import { BeforeAfterCompare } from "@/components/dbt/BeforeAfterCompare";
+import type { Stage } from "@/hooks/useChangeResponseFlow";
+
 
 
 type AiTask = "separate-facts" | "evaluate-fit" | "evaluate-effectiveness" | "suggest-solutions" | "body-plan";
@@ -30,7 +35,32 @@ export default function CambiarRespuestas() {
   const [showFicha8A, setShowFicha8A] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [saveTick, setSaveTick] = useState(0);
+  const [visited, setVisited] = useState<Set<Stage>>(() => new Set([state.stage]));
   const [aiModal, setAiModal] = useState<{ open: boolean; title: string; loading: boolean; content?: string; error?: string; onApply?: (t: string) => void }>({ open: false, title: "", loading: false });
+
+  // Track visited stages for the timeline back-navigation.
+  useEffect(() => {
+    setVisited((prev) => {
+      if (prev.has(state.stage)) return prev;
+      const next = new Set(prev);
+      next.add(state.stage);
+      return next;
+    });
+  }, [state.stage]);
+
+  const chosenPath: "problem" | "opposite" | null =
+    state.stage === "problem12"
+      ? "problem"
+      : state.stage === "opposite10"
+        ? "opposite"
+        : state.fitsFacts !== null && state.isEffective !== null
+          ? (state.fitsFacts && state.isEffective ? "problem" : "opposite")
+          : null;
+
+  const handleTimelineJump = (s: Stage) => {
+    haptic("tick");
+    dispatch({ type: "GOTO", stage: s, step: 1 });
+  };
 
   // Auto-save indicator: pulse whenever the persisted state changes (debounced via key).
   const stateKey = `${state.stage}:${state.step}`;
