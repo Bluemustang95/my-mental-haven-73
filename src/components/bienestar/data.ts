@@ -244,3 +244,32 @@ export const ACTIVITIES: Activity[] = [
 export const DAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"] as const;
 export const DAY_LABELS = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
 export const HOURS = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"] as const;
+
+// Mapeo de categorías de valores → categorías de actividades sugeridas
+export const VALUE_CAT_TO_ACTIVITY_CATS: Record<string, string[]> = {
+  relaciones: ["Social"],
+  grupo: ["Social"],
+  poder: ["Logro"],
+  metas: ["Logro", "Orden"],
+  placer: ["Ocio", "Autocuidado"],
+  estimulos: ["Ocio", "Naturaleza", "Creativo"],
+  respeto: ["Autocuidado"],
+  independiente: ["Creativo", "Logro"],
+  espiritual: ["Autocuidado", "Naturaleza"],
+  seguridad: ["Autocuidado", "Deportes"],
+  bondad: ["Naturaleza", "Social"],
+  comunidad: ["Social"],
+  desarrollo: ["Creativo", "Logro"],
+  integridad: ["Autocuidado", "Logro"],
+};
+
+export function activityCatsForValues(selectedValueIds: number[]): Set<string> {
+  const cats = new Set<string>();
+  for (const cat of VALUE_CATEGORIES) {
+    const has = cat.items.some((it) => selectedValueIds.includes(it.id));
+    if (has) {
+      (VALUE_CAT_TO_ACTIVITY_CATS[cat.id] ?? []).forEach((c) => cats.add(c));
+    }
+  }
+  return cats;
+}

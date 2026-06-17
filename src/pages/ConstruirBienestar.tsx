@@ -9,10 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
-  VALUE_CATEGORIES, ACTIVITIES, DAYS, DAY_LABELS, HOURS,
+  VALUE_CATEGORIES, ACTIVITIES, DAYS, DAY_LABELS, HOURS, activityCatsForValues,
 } from "@/components/bienestar/data";
 import {
-  useBienestarDraft, readFavs, toggleFav, type BienestarDraft, type BlockLog,
+  useBienestarDraft, readFavs, toggleFav, type BienestarDraft, type BlockLog, type CustomActivity,
 } from "@/components/bienestar/useBienestarDraft";
 
 // ─────────────────────────────────────────────────────────────
@@ -170,6 +170,15 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
       .filter(Boolean) as string[];
   }, [draft.selectedValues]);
 
+  const fallbackSuggestions = (vals: string[]): string[] => {
+    const base = vals[0]?.toLowerCase() || "tu bienestar";
+    return [
+      `Dedicar 15 minutos diarios a ${base.slice(0, 40)}.`,
+      `Sumar una actividad placentera concreta esta semana.`,
+      `Compartir un momento de calidad con alguien importante.`,
+    ];
+  };
+
   const askAI = async () => {
     setLoading(true);
     setSuggestions(null);
@@ -181,16 +190,34 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
         },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       const text = (data?.result as string) || "";
-      // Parse bullet/numbered list into 3 items
       const lines = text
         .split("\n")
         .map((l) => l.replace(/^[\-\*\d\.\)\s]+/, "").trim())
         .filter((l) => l.length > 6)
         .slice(0, 3);
-      setSuggestions(lines.length ? lines : [text.trim()]);
+      const final = lines.length ? lines : fallbackSuggestions(selectedValueTexts);
+      setSuggestions(final);
+      // Auto-aplicar la primera como Meta 1 y como Meta de hoy si están vacías
+      update((d: BienestarDraft) => {
+        const g = [...d.goals] as [string, string, string];
+        const patch: Partial<BienestarDraft> = {};
+        if (!g[0].trim()) { g[0] = final[0]; patch.goals = g; }
+        if (!d.todayGoal.trim()) patch.todayGoal = final[0];
+        return patch;
+      });
     } catch (e: any) {
-      toast.error(e?.message || "No se pudo consultar la IA");
+      const fb = fallbackSuggestions(selectedValueTexts);
+      setSuggestions(fb);
+      toast.message("Usamos sugerencias locales", { description: "La IA no respondió, pero podés trabajar con estas ideas." });
+      update((d: BienestarDraft) => {
+        const g = [...d.goals] as [string, string, string];
+        const patch: Partial<BienestarDraft> = {};
+        if (!g[0].trim()) { g[0] = fb[0]; patch.goals = g; }
+        if (!d.todayGoal.trim()) patch.todayGoal = fb[0];
+        return patch;
+      });
     } finally {
       setLoading(false);
     }
@@ -200,14 +227,23 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
     update((d: BienestarDraft) => {
       const g = [...d.goals] as [string, string, string];
       g[idx] = val;
+      // Si el usuario escribe en todayGoal y meta1 vacía, espejar (manejado abajo)
       return { goals: g };
+    });
+
+  const setTodayGoal = (val: string) =>
+    update((d: BienestarDraft) => {
+      const patch: Partial<BienestarDraft> = { todayGoal: val };
+      if (!d.goals[0].trim() && val.trim()) {
+        patch.goals = [val, d.goals[1], d.goals[2]];
+      }
+      return patch;
     });
 
   const useSuggestion = (s: string) => {
     const emptyIdx = draft.goals.findIndex((g) => !g.trim());
     if (emptyIdx >= 0) setGoal(emptyIdx, s);
     else setGoal(0, s);
-    setSuggestions(null);
   };
 
   return (
@@ -292,7 +328,7 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
             </p>
             <input
               value={draft.todayGoal}
-              onChange={(e) => update({ todayGoal: e.target.value })}
+              onChange={(e) => setTodayGoal(e.target.value)}
               placeholder="¿Qué vas a trabajar hoy?"
               className="w-full rounded-full border-2 border-[#facb60] bg-gradient-to-br from-[#facb60]/20 to-white/70 px-5 py-3 text-center text-sm font-semibold text-[#101927] shadow-inner placeholder:text-[#8a6a14]/60 focus:outline-none focus:ring-2 focus:ring-[#facb60]/50"
             />
@@ -309,18 +345,39 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
 function Step3Activities({ draft, update }: { draft: BienestarDraft; update: any }) {
   const [q, setQ] = useState("");
   const [favs, setFavs] = useState<number[]>(() => readFavs());
+  const [customName, setCustomName] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const allActs = useMemo(() => [...ACTIVITIES, ...draft.customActivities], [draft.customActivities]);
+
+  const recommendedCats = useMemo(() => activityCatsForValues(draft.selectedValues), [draft.selectedValues]);
+
+  const sorted = useMemo(() => {
+    const arr = [...allActs];
+    arr.sort((a, b) => {
+      const ar = recommendedCats.has(a.category) ? 0 : 1;
+      const br = recommendedCats.has(b.category) ? 0 : 1;
+      return ar - br;
+    });
+    return arr;
+  }, [allActs, recommendedCats]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return ACTIVITIES;
-    return ACTIVITIES.filter(
+    if (!term) return sorted;
+    return sorted.filter(
       (a) => a.name.toLowerCase().includes(term) || a.category.toLowerCase().includes(term)
     );
-  }, [q]);
+  }, [q, sorted]);
+
+  const recommended = useMemo(
+    () => sorted.filter((a) => recommendedCats.has(a.category)).slice(0, 8),
+    [sorted, recommendedCats]
+  );
 
   const favActivities = useMemo(
-    () => favs.map((id) => ACTIVITIES.find((a) => a.id === id)).filter(Boolean) as typeof ACTIVITIES,
-    [favs]
+    () => favs.map((id) => allActs.find((a) => a.id === id)).filter(Boolean) as typeof ACTIVITIES,
+    [favs, allActs]
   );
 
   const isSel = (id: number) => draft.selectedActivities.includes(id);
@@ -333,8 +390,51 @@ function Step3Activities({ draft, update }: { draft: BienestarDraft; update: any
 
   const togFav = (id: number) => setFavs(toggleFav(id));
 
+  const addCustom = (name: string, category = "Personal") => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    update((d: BienestarDraft) => {
+      const nextId = 10000 + d.customActivities.length + Math.floor(Math.random() * 1000);
+      const newAct: CustomActivity = { id: nextId, name: trimmed, category };
+      return {
+        customActivities: [...d.customActivities, newAct],
+        selectedActivities: [...d.selectedActivities, nextId],
+      };
+    });
+  };
+
+  const askAIActivities = async () => {
+    const valTexts = VALUE_CATEGORIES.flatMap((c) => c.items)
+      .filter((i) => draft.selectedValues.includes(i.id))
+      .map((i) => i.text);
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("dbt-ai", {
+        body: {
+          task: "bienestar-activities",
+          payload: { values: valTexts.join(" · "), goal: draft.todayGoal || "" },
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const text = (data?.result as string) || "";
+      const lines = text
+        .split("\n")
+        .map((l) => l.replace(/^[\-\*\d\.\)\s]+/, "").trim())
+        .filter((l) => l.length > 4)
+        .slice(0, 5);
+      if (lines.length === 0) throw new Error("Sin sugerencias");
+      lines.forEach((l) => addCustom(l, "IA"));
+      toast.success(`${lines.length} ideas agregadas`);
+    } catch (e: any) {
+      toast.error("La IA no respondió. Probá agregar la tuya manualmente.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const selected = draft.selectedActivities
-    .map((id) => ACTIVITIES.find((a) => a.id === id))
+    .map((id) => allActs.find((a) => a.id === id))
     .filter(Boolean) as typeof ACTIVITIES;
 
   return (
@@ -357,6 +457,37 @@ function Step3Activities({ draft, update }: { draft: BienestarDraft; update: any
         />
       </div>
 
+      {/* Crear propia + IA */}
+      <div className={cn("space-y-2 rounded-[24px] p-3", glass)}>
+        <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-[#7cc2c8]">
+          Crear actividad propia
+        </p>
+        <div className="flex gap-2">
+          <input
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { addCustom(customName); setCustomName(""); } }}
+            placeholder="Ej: Tomar mate con mi hermana"
+            className="flex-1 rounded-full border border-white/60 bg-white/70 px-4 py-2 text-[13px] text-[#101927] placeholder:text-[#101927]/35 focus:outline-none focus:ring-2 focus:ring-[#7cc2c8]/40"
+          />
+          <button
+            onClick={() => { addCustom(customName); setCustomName(""); }}
+            disabled={!customName.trim()}
+            className="rounded-full bg-[#101927] px-3 py-2 text-[12px] font-semibold text-white disabled:opacity-40"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+        <button
+          onClick={askAIActivities}
+          disabled={aiLoading || draft.selectedValues.length === 0}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#facb60]/25 px-4 py-2.5 text-[12px] font-semibold text-[#8a6a14] disabled:opacity-50"
+        >
+          {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+          Pedir 5 ideas a la IA según tus valores
+        </button>
+      </div>
+
       {favActivities.length > 0 && (
         <div className={cn("rounded-[24px] p-3", glass)}>
           <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-[#facb60]">
@@ -364,30 +495,32 @@ function Step3Activities({ draft, update }: { draft: BienestarDraft; update: any
           </p>
           <div className="space-y-1">
             {favActivities.map((a) => (
-              <ActivityRow
-                key={a.id}
-                a={a}
-                selected={isSel(a.id)}
-                fav
-                onAdd={() => togSel(a.id)}
-                onFav={() => togFav(a.id)}
-              />
+              <ActivityRow key={a.id} a={a} selected={isSel(a.id)} fav onAdd={() => togSel(a.id)} onFav={() => togFav(a.id)} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!q && recommended.length > 0 && (
+        <div className={cn("rounded-[24px] p-3", glass)}>
+          <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-[#7cc2c8]">
+            Recomendadas para tus valores
+          </p>
+          <div className="space-y-1">
+            {recommended.map((a) => (
+              <ActivityRow key={"rec-" + a.id} a={a} selected={isSel(a.id)} fav={favs.includes(a.id)} onAdd={() => togSel(a.id)} onFav={() => togFav(a.id)} />
             ))}
           </div>
         </div>
       )}
 
       <div className={cn("rounded-[24px] p-3", glass)}>
-        <div className="max-h-[55vh] space-y-1 overflow-y-auto pr-1">
+        <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-[#101927]/55">
+          Catálogo completo
+        </p>
+        <div className="max-h-[45vh] space-y-1 overflow-y-auto pr-1">
           {filtered.map((a) => (
-            <ActivityRow
-              key={a.id}
-              a={a}
-              selected={isSel(a.id)}
-              fav={favs.includes(a.id)}
-              onAdd={() => togSel(a.id)}
-              onFav={() => togFav(a.id)}
-            />
+            <ActivityRow key={a.id} a={a} selected={isSel(a.id)} fav={favs.includes(a.id)} onAdd={() => togSel(a.id)} onFav={() => togFav(a.id)} />
           ))}
         </div>
       </div>
@@ -954,6 +1087,129 @@ function FinishScreen({ draft, onReset }: { draft: BienestarDraft; onReset: () =
 }
 
 // ─────────────────────────────────────────────────────────────
+// PORTADA BENTO INTERACTIVA
+// ─────────────────────────────────────────────────────────────
+type BentoKey = "core" | "valores" | "plan" | "mind";
+const BENTO_TEXTS: Record<BentoKey, { emoji: string; label: string; text: string }> = {
+  core: {
+    emoji: "🌱",
+    label: "La Filosofía del Bienestar",
+    text: "Las emociones agradables no son casuales: las construimos activamente. Al programar intencionalmente experiencias placenteras a corto y largo plazo, creamos reservas cognitivas que reducen el malestar y elevan nuestra calidad de vida.",
+  },
+  valores: {
+    emoji: "🧭",
+    label: "Fase 1 · Tu Brújula de Valores",
+    text: "Un valor es una dirección vital interminable. Para que el disfrute no sea esporádico, aprenderás a elegir tus prioridades fácticas y a traducirlas en metas lógicas cotidianas orientadas a la acción.",
+  },
+  plan: {
+    emoji: "📅",
+    label: "Fase 2 · Planificación Horaria",
+    text: "No dependas de 'estar de humor' para pasar un buen momento. Agendar fácticamente bloques horarios de agrado y compromiso en un diario semanal te permite sostener el hábito clínicamente.",
+  },
+  mind: {
+    emoji: "🧠",
+    label: "Atención Plena (Savoring)",
+    text: "Entrenar la consciencia para anclarse en la experiencia placentera. De nada sirve estar de vacaciones si tu mente sigue rumiando problemas del trabajo o planificando qué hacer después.",
+  },
+};
+
+function BentoIntro({ onStart, onReset }: { onStart: () => void; onReset: () => void }) {
+  const [active, setActive] = useState<BentoKey>("core");
+  const cards: { key: BentoKey; cat: string; title: string; resume: string; span: 2 | 1; emoji: string }[] = [
+    { key: "core", cat: "Estilo de vida", title: "Emociones Positivas", resume: "No surgen por azar; las construimos conscientemente en la vida diaria.", span: 2, emoji: "🌱" },
+    { key: "valores", cat: "Fase 1", title: "Brújula", resume: "Valores profundos y metas lógicas.", span: 1, emoji: "🧭" },
+    { key: "plan", cat: "Fase 2", title: "Planificación", resume: "Sostener la agenda fáctica.", span: 1, emoji: "📅" },
+    { key: "mind", cat: "Atención plena", title: "Saborizar (Savoring)", resume: "Evitar que la mente divague hacia preocupaciones o pendientes mientras disfrutás.", span: 2, emoji: "🧠" },
+  ];
+  const dyn = BENTO_TEXTS[active];
+
+  return (
+    <div className="relative min-h-screen bg-gradient-to-b from-[#f9f9fb] to-[#f2f2f2] pb-40">
+      <AmbientBG />
+
+      <div className="mx-auto max-w-md px-4 pt-12">
+        <div className="flex items-center justify-between">
+          <p className="font-display text-[10px] font-bold uppercase tracking-[0.22em] text-[#7cc2c8]">
+            Crecimiento vital
+          </p>
+          <button
+            onClick={() => { setActive("core"); toast("Selección restablecida"); }}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-[#101927]/70 shadow-sm active:scale-95"
+            aria-label="Reset"
+          >
+            <RotateCcw size={14} />
+          </button>
+        </div>
+        <h1 className="mt-1 font-serif text-3xl font-bold text-[#101927]">Acumular Emociones</h1>
+
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          {cards.map((c) => {
+            const isActive = active === c.key;
+            return (
+              <button
+                key={c.key}
+                onClick={() => setActive(c.key)}
+                className={cn(
+                  "relative overflow-hidden rounded-[28px] p-4 text-left transition-all",
+                  c.span === 2 ? "col-span-2" : "col-span-1",
+                  "bg-white/55 backdrop-blur-[28px] border border-white/60 shadow-[0_10px_30px_-10px_rgba(16,25,39,0.06)]",
+                  isActive && "bg-white/90 border-[#7cc2c8] shadow-[0_0_0_3px_rgba(124,194,200,0.22)] -translate-y-0.5"
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">{c.cat}</p>
+                  <span className="text-xl leading-none">{c.emoji}</span>
+                </div>
+                <p className="mt-2 font-serif text-lg font-bold leading-tight text-[#101927]">{c.title}</p>
+                <p className="mt-1.5 text-[11px] leading-snug text-[#101927]/65">{c.resume}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Panel oscuro dinámico */}
+        <div className="mt-4 rounded-[28px] border border-white/12 bg-[#101927]/85 p-5 backdrop-blur-[30px] shadow-xl">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={active}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.15 }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">{dyn.emoji}</span>
+                <p className="font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">
+                  {dyn.label}
+                </p>
+              </div>
+              <p className="mt-2 text-[13px] leading-6 text-white/85">{dyn.text}</p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* CTA fijo */}
+      <div
+        className="fixed inset-x-0 z-20 px-4"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}
+      >
+        <div className="mx-auto max-w-md">
+          <button
+            onClick={() => { toast("Iniciando planificador"); onStart(); }}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#101927] py-4 font-display text-sm font-bold text-white shadow-2xl shadow-black/30 active:scale-[0.98]"
+          >
+            Comenzar mi construcción <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ─────────────────────────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────────────────────────
 export default function ConstruirBienestar() {
@@ -1001,8 +1257,24 @@ export default function ConstruirBienestar() {
     else update({ step: 5, done: true });
   };
 
+  const hasProgress =
+    draft.selectedValues.length > 0 ||
+    !!draft.todayGoal ||
+    draft.selectedActivities.length > 0;
+
+  const showIntro = !draft.introSeen && !hasProgress && draft.step === 1 && !qsTab;
+
+  if (showIntro) {
+    return (
+      <BentoIntro
+        onStart={() => update({ introSeen: true })}
+        onReset={() => setConfirmReset(true)}
+      />
+    );
+  }
+
   return (
-    <div className="relative min-h-screen bg-[#FDFCFB] pb-36">
+    <div className="relative min-h-screen bg-[#FDFCFB] pb-44">
       <AmbientBG />
 
       <div className="mx-auto max-w-md px-4 pt-10">
@@ -1037,9 +1309,9 @@ export default function ConstruirBienestar() {
         </div>
       </div>
 
-      {/* Floating selection counter (step 1) */}
+      {/* Floating selection counter (step 1) — ubicado encima del footer */}
       {draft.step === 1 && (
-        <div className="fixed bottom-24 left-1/2 z-30 -translate-x-1/2">
+        <div className="fixed left-1/2 z-30 -translate-x-1/2" style={{ bottom: "calc(env(safe-area-inset-bottom) + 9.5rem)" }}>
           <div className="rounded-full bg-[#101927] px-5 py-2.5 text-[12px] font-semibold text-white shadow-xl">
             Seleccionados: <span className="text-[#7cc2c8]">{draft.selectedValues.length}</span> ítems
             {draft.selectedValues.length === 0 && (
@@ -1049,9 +1321,12 @@ export default function ConstruirBienestar() {
         </div>
       )}
 
-      {/* Footer continue */}
+      {/* Footer continue — encima de la bottom nav (5.5rem) */}
       {draft.step < 5 && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-white/60 bg-white/80 px-4 py-3 backdrop-blur-xl">
+        <div
+          className="fixed inset-x-0 z-20 border-t border-white/60 bg-white/85 px-4 py-3 backdrop-blur-xl"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}
+        >
           <div className="mx-auto flex max-w-md items-center gap-2">
             {draft.step > 1 && (
               <button

@@ -1,96 +1,58 @@
-## Resumen
+Plan de implementación
 
-Construir el módulo **Construir Bienestar** + limpieza del hub + las 4 mejoras aprobadas + continuidad en Inicio (estilo Cambiar Respuestas / Mindfulness).
+1. Corregir problemas visibles del módulo Construir Bienestar
+- Subir el footer fijo de “Continuar/Siguiente” por encima de la bottom bar de la app, con espacio seguro inferior para que nunca quede tapado.
+- Revisar los paddings inferiores del contenido y del contador flotante del Paso 1 para que no se superpongan con navegación ni CTA.
+- Mejorar el Paso 2 de IA:
+  - Si la función devuelve error, mostrar un mensaje claro y dejar sugerencias locales de respaldo para que el usuario pueda avanzar.
+  - Si la IA devuelve sugerencias, aplicar automáticamente la primera como “Meta 1” y, si “Meta de enfoque · HOY” está vacía, también cargarla allí.
+  - Si el usuario escribe primero en “Meta de enfoque · HOY” y no hay metas cargadas, completar automáticamente la primera meta con ese texto.
 
----
+2. Actividades relacionadas con valores
+- En el Paso 3, ordenar el catálogo para que primero aparezcan actividades recomendadas según los valores elegidos.
+- Agregar una etiqueta/sección “Recomendadas para tus valores” antes del catálogo general.
+- Mantener favoritas arriba cuando existan, pero sin duplicar tarjetas.
+- Permitir crear actividades propias desde el Paso 3:
+  - Input “Crear actividad propia”.
+  - Se guarda en el draft local.
+  - Se puede seleccionar, agendar y marcar como favorita igual que una actividad base.
+- Agregar botón de IA para crear ideas de actividades según valores + meta de hoy:
+  - Si responde bien, se agregan como actividades propias sugeridas.
+  - Si falla, aparecen ideas locales coherentes con los valores seleccionados.
 
-## A) Módulo Construir Bienestar
+3. Portada Bento interactiva para Construir Bienestar
+- Agregar una portada inicial ultra-premium antes del wizard cuando no haya un plan en curso.
+- Estructura Bento de 4 tarjetas:
+  - Emociones Positivas.
+  - Brújula.
+  - Planificación.
+  - Saborizar.
+- Panel inferior dinámico oscuro que cambia icono, label y explicación clínica al tocar cada tarjeta.
+- Estado activo para la tarjeta seleccionada y transición breve del texto.
+- Header con reset de selección y toast elegante.
+- CTA “Comenzar mi construcción” que inicia el Paso 1.
+- Si ya hay progreso guardado, mostrar acceso directo “Continuar mi construcción” y entrar al paso guardado, sin obligar a ver la portada.
 
-**Ruta:** `/herramientas/construir-bienestar`
-**Persistencia:** `localStorage` (`bienestar-draft-v1`) — valores, metas, pool de actividades, agenda semanal y registros de seguimiento. Si recarga o sale, retoma exactamente donde quedó. Sin tablas nuevas.
+4. Mis patrones en Regulación Emocional
+- Cambiar “Tus patrones” para que deje de ser solo estadísticas agregadas y pase a ser continuidad clínica accionable.
+- Para Cambiar respuestas emocionales:
+  - Mostrar una tarjeta simple con un único checkbox de completado cuando exista una tarea de “Resolver el problema” o “Acción opuesta”.
+  - Un toque en el cuerpo de la tarjeta despliega qué tenía que hacer; un toque en el checkbox marca completado.
+  - Evitar múltiples métricas tipo “emoción frecuente / últimos 30 días” como elemento principal.
+- Para Construir Bienestar:
+  - Mostrar una tarjeta de proceso a largo plazo con valores elegidos y calendario/semana compacta.
+  - Al tocarla, abrir el seguimiento del día actual o el calendario semanal del módulo.
+  - Los bloques se completan desde el planificador diario/semanal.
 
-### Estética (glass premium claro)
-- Fondo `#FDFCFB` con dos orbes (`#7cc2c8` y `#facb60`, `opacity-20`, `blur-3xl`) animados con `framer-motion`.
-- Tarjetas `bg-white/60 backdrop-blur-xl border border-white/55 rounded-[32px]`.
-- `font-serif` para títulos, Montserrat mayúsculas para kickers. Acentos teal/oro, texto `#101927`.
-- Header con kicker "DESARROLLO PERSONAL" + título del paso + botón circular de reinicio (con confirm).
-- Footer fijo con "Continuar" deshabilitado hasta cumplir el mínimo.
+5. Inicio / Home
+- Asegurar que ambos procesos aparezcan en Inicio:
+  - Cambiar respuestas emocionales: si hay una tarea pendiente o sesión abierta, card “Tenés una acción pendiente” con checkbox rápido o acceso a detalle.
+  - Construir Bienestar: si hay plan en curso o bloques agendados hoy, card “Tenés N bloques programados para hoy” con acceso a seguimiento del día.
+- Hacer que Inicio se actualice correctamente al volver desde Regulación Emocional o Construir Bienestar, leyendo el estado local cada vez que la pantalla gana foco.
+- Mantener el tono calmo: sin alarmas ni push, solo cards suaves.
 
-### Paso 1 · Brújula de Valores
-14 acordeones con los **58 sub-ítems exactos** del briefing. Multi-selección entre categorías, múltiples abiertos. Cápsula flotante: "Seleccionados: X ítems · Elegí al menos uno". Bloquea si X=0.
-
-### Paso 2 · Embudo de Acción (pirámide invertida)
-Header con cápsula read-only listando los valores tildados. Pirámide CSS: 3 inputs píldora para metas + 1 input oro destacado "Meta de Enfoque para HOY". Botón **"¿Necesitás ideas? Preguntale a la IA"** que llama a `lovable-chat` con los valores seleccionados y devuelve 3 sugerencias clickeables.
-
-### Paso 3 · Catálogo de Actividades
-Array hardcoded con las **72 actividades exactas** + buscador con lupa (filtra por nombre/categoría). Lista con `+` para sumar; chips oscuros con `×` para quitar. Continuar requiere **≥ 3** actividades.
-
-**(Favoritos — mejora #3):** cada actividad tiene una estrella; las favoritas se persisten en `localStorage` (`bienestar-favs-v1`) y aparecen en una sección **"⭐ Tus favoritas"** arriba del catálogo, precargadas en futuras semanas.
-
-### Paso 4 · Planificador Semanal
-Tabs **Armado** / **Seguimiento** + tab **Vista Semanal** (nueva — mejora #4).
-
-- **Navegador Lun–Dom** con contador por día.
-- **Grilla diaria** con bloques 08/10/12/14/16/18/20/22.
-- **Armado:** click en bloque vacío → modal con actividades del Paso 3 → asignar pinta teal claro; eliminar libera el bloque.
-- **Seguimiento:** checkbox por bloque agendado → modal de registro (sliders 0–5 de agrado, atención plena, dejar ir + notas). Guardar pinta verde esmeralda con mini-resumen.
-- **Vista Semanal (mejora #4):** heatmap **7 días × 8 horarios** con colores por estado — gris vacío, teal agendado, verde completado. Tap en celda salta al día/hora correspondiente.
-
-### Finalización
-Check animado verde + tarjeta resumen (3 valores, meta de hoy, total actividades, total bloques) + CTA "Volver al inicio".
-
----
-
-## B) Limpieza del hub `/diario-inteligente/regulacion-emocional`
-
-En `DiarioInteligente.tsx`:
-- Eliminar la card **STOP & TIPP** del hub (la página sigue accesible por deep-link).
-- Sumar nueva card **Construir Bienestar** debajo de Cambiar Respuestas (icon Sparkles, gradiente teal→oro).
-- Mover `<PatternInsights />` **debajo** de los recursos y del `OpenSessionsList`, envuelto en dropdown cerrado por defecto ("Tus patrones · N hallazgos" + chevron animado).
-
-En `PatternInsights.tsx`:
-- Botón **"Marcar como completado"** por insight, persistido en `localStorage` (`dbt-pattern-dismissed-v1`).
-- Estado vacío "Sin patrones pendientes" cuando todo está completado.
-
----
-
-## C) Continuidad y avisos suaves
-
-### C.1 Reanudar sesión (igual que Cambiar Respuestas / Mindfulness)
-- Si hay un `bienestar-draft-v1` activo y el wizard no llegó a Finalización:
-  - En `OpenSessionsList` aparece la card "Construir Bienestar · Paso X de 4" con **Continuar** / **Descartar**.
-  - En el FAB "+" del hub aparece la opción "Retomar plan en curso".
-  - Al entrar al wizard, salta directo al último paso guardado.
-
-### C.2 Bento en Inicio (mejora #1)
-- En `PendingBento` (Dashboard) sumar card **"Tu plan de bienestar de hoy"** cuando hay agenda para el día actual:
-  - Texto: "Tenés **N** bloques programados para hoy".
-  - Sub-texto con el próximo bloque ("Próximo: 10:00 · Caminar por el parque").
-  - Tap → abre `/herramientas/construir-bienestar?tab=seguimiento&day=hoy`.
-- Si en cambio hay un draft del wizard sin terminar, muestra "Continuá tu plan · Paso X de 4".
-
-### C.3 Badge suave en el FAB (mejora #2)
-- Al final del día (≥ 20:00 hora local), si quedan bloques agendados del día actual **sin registrar**, el FAB "+" del hub `/diario-inteligente/regulacion-emocional` muestra un **punto oro** + tooltip "Tenés N bloques de hoy sin registrar". Tap directo al Seguimiento del día. Sin notificaciones push.
-
----
-
-## Archivos
-
-**Nuevos**
-- `src/pages/ConstruirBienestar.tsx`
-- `src/components/bienestar/ValuesAccordion.tsx`
-- `src/components/bienestar/GoalFunnel.tsx`
-- `src/components/bienestar/ActivityCatalog.tsx` (incluye favoritos)
-- `src/components/bienestar/WeeklyPlanner.tsx` (Armado + Seguimiento + Vista Semanal)
-- `src/components/bienestar/FinishScreen.tsx`
-- `src/components/bienestar/data.ts` (58 valores + 72 actividades)
-- `src/components/bienestar/useBienestarDraft.ts` (draft + favoritos + helpers de "bloques pendientes hoy")
-
-**Editados**
-- `src/App.tsx` (ruta nueva)
-- `src/pages/DiarioInteligente.tsx` (quitar STOP&TIPP, agregar Construir Bienestar, mover PatternInsights a dropdown abajo, badge en FAB)
-- `src/components/dbt/PatternInsights.tsx` (dropdown + dismiss persistente)
-- `src/components/dbt/OpenSessionsList.tsx` (detectar draft de bienestar)
-- `src/components/home/PendingBento.tsx` (card "Plan de hoy" + "Continuá tu plan")
-
-**Sin tocar:** schema DB, Mindfulness, CambiarRespuestas, página `/herramientas/regulacion-emocional`.
+6. Ajustes técnicos
+- Mantener persistencia local existente (`bienestar-draft-v1`, favoritos y draft de Cambiar respuestas), ampliándola para actividades propias y tareas accionables.
+- Actualizar la función de IA `dbt-ai` para actividades de bienestar, además de metas, con manejo robusto de errores en frontend.
+- No crear tablas nuevas salvo que sea estrictamente necesario; esta corrección puede resolverse con el almacenamiento local y las tablas existentes de sesiones.
+- Verificar en mobile que footer, bottom bar, portada Bento, Paso 2, Paso 3, Mis patrones e Inicio no se superpongan.

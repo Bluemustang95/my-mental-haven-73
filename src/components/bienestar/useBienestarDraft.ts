@@ -19,12 +19,16 @@ export type ScheduledBlock = {
 export type Agenda = Record<string, Record<string, ScheduledBlock | undefined>>;
 // agenda[day][hour] = ScheduledBlock
 
+export type CustomActivity = { id: number; name: string; category: string };
+
 export type BienestarDraft = {
   step: 1 | 2 | 3 | 4 | 5; // 5 = finish
+  introSeen: boolean;
   selectedValues: number[]; // value item ids
   goals: [string, string, string];
   todayGoal: string;
   selectedActivities: number[];
+  customActivities: CustomActivity[];
   agenda: Agenda;
   updatedAt: number;
   done: boolean;
@@ -32,10 +36,12 @@ export type BienestarDraft = {
 
 export const emptyDraft = (): BienestarDraft => ({
   step: 1,
+  introSeen: false,
   selectedValues: [],
   goals: ["", "", ""],
   todayGoal: "",
   selectedActivities: [],
+  customActivities: [],
   agenda: {},
   updatedAt: 0,
   done: false,
