@@ -49,27 +49,47 @@ const tintBg: Record<Tile["tint"], string> = {
 
 export function BentoGrid() {
   const navigate = useNavigate();
+  const profile = useMemo(() => readLocalProfile(), []);
+  const priority = profile?.priority;
+
+  const orderedTiles = useMemo(() => {
+    if (!priority) return tiles;
+    const idx = tiles.findIndex((t) => t.slug === priority);
+    if (idx < 0) return tiles;
+    return [tiles[idx], ...tiles.filter((_, i) => i !== idx)];
+  }, [priority]);
 
   return (
     <div className="space-y-3">
       {/* 2x2 grid */}
       <div className="grid grid-cols-2 gap-3">
-        {tiles.map((t) => (
-          <button
-            key={t.slug}
-            onClick={() => navigate(`/diario-inteligente/${t.slug}`)}
-            className="relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl border border-foreground/5 bg-card/80 p-4 text-left shadow-glass backdrop-blur-3xl transition active:scale-[0.98]"
-          >
-            <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${tintBg[t.tint]}`}>
-              <t.Icon size={20} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="font-display text-base font-bold leading-tight text-foreground">{t.name}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">{t.desc}</p>
-            </div>
-          </button>
-        ))}
+        {orderedTiles.map((t) => {
+          const isPriority = t.slug === priority;
+          return (
+            <button
+              key={t.slug}
+              onClick={() => navigate(`/diario-inteligente/${t.slug}`)}
+              className="relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl border border-foreground/5 bg-card/80 p-4 text-left shadow-glass backdrop-blur-3xl transition active:scale-[0.98]"
+              style={isPriority ? { borderColor: "#7cc2c8", boxShadow: "0 12px 28px -12px rgba(124,194,200,0.45)" } : undefined}
+            >
+              {isPriority && (
+                <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#7cc2c8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                  <Sparkles size={9} /> Tu foco
+                </span>
+              )}
+              <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${tintBg[t.tint]}`}>
+                <t.Icon size={20} strokeWidth={2} />
+              </div>
+              <div>
+                <h3 className="font-display text-base font-bold leading-tight text-foreground">{t.name}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">{t.desc}</p>
+              </div>
+            </button>
+          );
+        })}
       </div>
+
+
 
       {/* Gestion de Pensamientos */}
       <button
