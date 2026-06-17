@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { GoogleLogo } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -109,6 +109,7 @@ export default function Onboarding() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authMessage, setAuthMessage] = useState("");
@@ -512,15 +513,25 @@ export default function Onboarding() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <GlassInput
-              label="Contraseña"
-              type="password"
-              required
-              minLength={6}
-              placeholder="Mínimo 6 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <GlassInput
+                label="Contraseña"
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={6}
+                placeholder="Mínimo 6 caracteres"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                className="absolute right-4 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full text-[#101927]/55 transition hover:bg-[#101927]/5"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {authError && <p className="text-xs text-rose-500">{authError}</p>}
             {authMessage && <p className="text-xs text-emerald-600">{authMessage}</p>}
             <GlassPrimaryButton type="submit" disabled={submitting}>
