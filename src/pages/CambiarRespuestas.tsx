@@ -506,7 +506,7 @@ export default function CambiarRespuestas() {
         )}
 
         {step === 2 && (
-          <FichaCallout label="Ficha 10 · Justificación">
+          <FichaCallout label="Justificación">
             Las emociones generan impulsos. Actuar sobre el impulso refuerza la emoción. La <strong>Acción Opuesta</strong> interrumpe ese circuito. Es una intervención clínica DBT validada.
           </FichaCallout>
         )}
