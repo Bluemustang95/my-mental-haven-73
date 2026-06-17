@@ -23,6 +23,9 @@ import { DecisionTreeSVG } from "@/components/dbt/DecisionTreeSVG";
 import { BeforeAfterCompare } from "@/components/dbt/BeforeAfterCompare";
 import type { Stage } from "@/hooks/useChangeResponseFlow";
 import { EmotionWheelSVG } from "@/components/dbt/EmotionWheelSVG";
+import { JudgmentHighlightPanel } from "@/components/dbt/JudgmentHighlightPanel";
+import { SocraticDrawer } from "@/components/dbt/SocraticDrawer";
+
 
 
 
@@ -38,7 +41,38 @@ export default function CambiarRespuestas() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [saveTick, setSaveTick] = useState(0);
   const [visited, setVisited] = useState<Set<Stage>>(() => new Set([state.stage]));
+  const [socraticOpen, setSocraticOpen] = useState(false);
   const [aiModal, setAiModal] = useState<{ open: boolean; title: string; loading: boolean; content?: string; error?: string; onApply?: (t: string) => void }>({ open: false, title: "", loading: false });
+
+  // Contexto enviado a la guía socrática según etapa/paso.
+  const socraticContext = useMemo(() => {
+    const e = state.selectedEmotion || "—";
+    if (state.stage === "wizard8") {
+      const stepMap: Record<number, string> = {
+        1: `El usuario está eligiendo qué emoción quiere trabajar (Ficha 8 · paso 1). Emoción tentativa: ${e}.`,
+        2: `Ficha 8 · paso 2: el usuario describe el evento como una cámara (hechos sin juicios). Emoción: ${e}.`,
+        3: `Ficha 8 · paso 3: el usuario registra sus interpretaciones y suposiciones sobre el evento. Emoción: ${e}.`,
+        4: `Ficha 8 · paso 4: el usuario evalúa amenazas físicas o sociales percibidas. Emoción: ${e}.`,
+        5: `Ficha 8 · paso 5: el usuario imagina la peor catástrofe y cómo afrontarla con Mente Sabia. Emoción: ${e}.`,
+        6: `Ficha 8 · paso 6: el usuario decide si su emoción se ajusta a los hechos. Emoción: ${e}.`,
+      };
+      return stepMap[state.step] || `Ficha 8. Emoción: ${e}.`;
+    }
+    if (state.stage === "decision9") return `Ficha 9 · Mente Sabia: el usuario evalúa si actuar bajo su impulso es efectivo. Emoción: ${e}. Se ajusta a los hechos: ${state.fitsFacts ? "sí" : "no"}.`;
+    if (state.stage === "problem12") return `Ficha 12 · Resolución de Problemas: el usuario está en el paso ${state.step}. Objetivo declarado: "${state.problem.goal}".`;
+    if (state.stage === "opposite10") return `Fichas 10 y 13 · Acción Opuesta para ${e}, paso ${state.step}.`;
+    return "Sesión DBT finalizada.";
+  }, [state]);
+
+  const socraticDraft = useMemo(() => {
+    if (state.stage === "wizard8") {
+      return [state.eventDescription, state.interpretations, state.threat, state.catastropheCoping][state.step - 2] || "";
+    }
+    if (state.stage === "problem12") return [state.problem.goal, state.problem.brainstorm, state.problem.chosenSolution].join(" · ");
+    if (state.stage === "opposite10") return [state.opposite.impulses, state.opposite.bodyPlan].join(" · ");
+    return "";
+  }, [state]);
+
 
   // Track visited stages for the timeline back-navigation.
   useEffect(() => {
@@ -181,11 +215,20 @@ export default function CambiarRespuestas() {
           <p className="font-body text-[14px] leading-6 text-[#101927]/70">Describí los hechos como los registraría una cámara: qué, quién, cuándo, dónde. Sin juicios.</p>
           <DbtTextarea value={state.eventDescription} onChange={(v) => dispatch({ type: "PATCH", patch: { eventDescription: v } })}
             placeholder="¿Qué pasó concretamente? Sé factual (en blanco y negro)." />
+          <JudgmentHighlightPanel
+            text={state.eventDescription}
+            enabled={state.eventDescription.trim().length > 24}
+            onApplyReformulation={(t) => {
+              haptic("confirm");
+              dispatch({ type: "PATCH", patch: { eventDescription: t } });
+            }}
+          />
           <AiAssistButton label="¿Querés que te ayude a separar hechos de juicios?" onClick={() => callAi("separate-facts", { text: state.eventDescription }, {
             title: "Hechos vs. juicios",
             onApply: (t) => dispatch({ type: "PATCH", patch: { eventDescription: t } }),
           })} />
         </>)}
+
 
         {step === 3 && (<>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">3. ¿Qué interpretaciones, suposiciones y conclusiones tenés?</h2>
@@ -589,6 +632,23 @@ export default function CambiarRespuestas() {
         onCancel={() => setConfirmReset(false)}
       />
       <SaveIndicator trigger={saveTick} />
+
+      {state.stage !== "done" && (
+        <button
+          onClick={() => { haptic("tick"); setSocraticOpen(true); }}
+          aria-label="Hablar con la guía socrática"
+          className="fixed right-4 bottom-24 z-40 h-12 w-12 rounded-full bg-[#facb60] shadow-lg shadow-[#facb60]/40 flex items-center justify-center active:scale-95"
+        >
+          <Ic.Bulb size={20} />
+        </button>
+      )}
+
+      <SocraticDrawer
+        open={socraticOpen}
+        onClose={() => setSocraticOpen(false)}
+        context={socraticContext}
+        draftText={socraticDraft}
+      />
 
     </main>
   );
