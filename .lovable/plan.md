@@ -1,58 +1,122 @@
-# Plan: Selección de plan al registrarse + bloqueos visuales completos
+# Plan: Visibilidad + Interactividad del Workspace DBT
 
-## 1. Selección de plan en el Onboarding
+## Problema confirmado
 
-Agregar un paso nuevo **antes del último** (después de crear cuenta o como paso final del wizard, justo antes de `navigate("/")`), llamado `step = 8: choose-plan`.
+Estás en `/diario-inteligente/regulacion-emocional` (renderizado por `src/pages/DiarioInteligente.tsx`), que muestra un grid genérico de `algo_sub_resources` (fallback: Respiración consciente, Mira el presente, Ver los hechos). El módulo nuevo vive en `src/pages/EmotionalRegulation.tsx` (ruta `/herramientas/regulacion-emocional`), por eso desde el Diario no se ve. Hay que enlazarlo desde acá también.
 
-**UI:** dos tarjetas grandes estilo glass:
-- **Gratuita** — "Empezá tu camino" (chip básico, sin estrella). Acceso a check-ins, diario básico, 1 categoría de psicoeducación.
-- **Premium** — "Acceso completo" (estrella dorada). Lista de beneficios.
+---
 
-Botón inferior: `Continuar`.
+## Fase 0 · Fix de visibilidad (rápido, primero)
 
-**Lógica:**
-- Si elige **Premium** → abrir `PaywallModal` (existente). Tras éxito (mock) → `navigate("/")`.
-- Si elige **Gratuita** → guardar `plan = 'free'` en `patient_app_profiles` (o tabla `user_plans` ya existente) y `navigate("/mi-proceso#suscripcion")` para que aterrice en la **última sección de Mi Proceso** (gestión de suscripción / "Hazte Premium").
+**`src/pages/DiarioInteligente.tsx`**
+- Cuando `slug === "regulacion-emocional"`, inyectar una tarjeta destacada arriba del grid: **"Cambiar respuestas emocionales · DBT Fichas 8–13"** con badge PREMIUM, gradiente teal/gold, que navega a `/herramientas/cambiar-respuestas`.
+- Tarjeta secundaria: **"Habilidades STOP & TIPP"** → `/herramientas/regulacion-emocional`.
+- El grid antiguo (ejercicios sueltos) queda debajo bajo el título "Otros ejercicios".
 
-**Integración:**
-- Modificar `handleEmailSignup` y el handler de Google en `src/pages/Onboarding.tsx`: tras `persistProfile`, en vez de `navigate("/")` setear `step = 8`.
-- También para usuarios OAuth que vuelven con `pending`, mostrar el paso de plan antes de cerrar.
+Sin migraciones; sólo UI condicional por slug.
 
-## 2. Anclaje en Mi Proceso
+---
 
-En `src/pages/MiProceso.tsx`:
-- Agregar `id="suscripcion"` al bloque inferior de gestión/suscripción (o crear uno si no existe usando el patrón premium ya presente).
-- `useEffect` que detecte `location.hash === "#suscripcion"` y haga `scrollIntoView({ behavior: "smooth" })`.
+## Fase 1 · Microinteracciones de calidad (base sensorial)
 
-## 3. Bloqueos visuales (PremiumLock) en TODO el Inicio
+Aplican a todo el wizard de `CambiarRespuestas`:
 
-Hoy en `src/pages/Dashboard.tsx` solo está blurreado el banner "Recursos de sueño avanzados". El usuario quiere que **todo el dashboard** se vea bloqueado para Free salvo los elementos verdaderamente gratuitos.
+- **Framer-motion entre pasos**: wrapper `<AnimatePresence mode="wait">` con slide+fade direccional (+x al avanzar, −x al retroceder). Direction tracked en el reducer.
+- **Auto-save visual**: chip flotante "Guardado ✓" (esquina inf-der, fade 1.5s) cada vez que el reducer persiste a localStorage.
+- **Estado "pensando" en IA**: reemplazar spinner por skeleton shimmer dentro de `AiResponseModal` mientras llega la respuesta.
+- **Haptic mobile**: helper `vibrate(pattern)` en confirmaciones (`navigator.vibrate?.(15)` por paso, `[20,40,20]` al cerrar sesión).
+- **Pulso dorado final**: en pantalla "Sesión guardada", anillo `radial-gradient` gold expandiéndose 1.2s + confetti suave (canvas-confetti dynamic import, sólo en ese momento).
 
-Aplicar `PremiumLock` (variant card/section) en:
-- **WeekStrip** (calendario semanal) → lock.
-- **Timeline completo** salvo el primer nodo "Valoración de la mañana" (check-in básico queda libre):
-  - "Psicoeducación" → lock
-  - "Tu práctica de hoy" + chips → lock
-  - "Valoración de la noche" → lock
-- Banner "Recursos de sueño avanzados" → ya está, mantener.
+Archivos: `src/hooks/useHaptics.ts` (nuevo), `src/components/dbt/SaveIndicator.tsx` (nuevo), `src/components/dbt/AiSkeleton.tsx` (nuevo), edits en `CambiarRespuestas.tsx` y `AiResponseModal.tsx`.
 
-Implementación: envolver cada `TimelineNode` premium con `PremiumLock` o pasar prop `locked` al Timeline y renderizar overlay por nodo.
+---
 
-## 4. Confirmar bloqueos ya existentes (no tocar lógica, solo verificar visualmente)
+## Fase 2 · Visualización del proceso
 
-- Diario: botón Herramientas ya con star — OK.
-- Psicoeducación: categorías 2+ y podcasts — OK.
-- MiProceso: Estadísticas + Evaluaciones — OK.
-- Recursos: BentoGrid — OK.
+- **Timeline de la sesión** (`src/components/dbt/SessionTimeline.tsx`):
+  - Barra horizontal sticky bajo el header, nodos = pasos completados.
+  - Tap en un nodo → reducer action `JUMP_TO_STEP` (mantiene datos posteriores, los marca como "necesita revisión" sin borrar).
+  - Estados: completado (teal sólido), actual (gold con halo), futuro (gris).
 
-## Detalle técnico
+- **Mapa de decisión animado para Ficha 9** (`src/components/dbt/DecisionTreeSVG.tsx`):
+  - Reemplaza los botones actuales por SVG inline con 2 ramas (Problem Solving / Opposite Action).
+  - Al elegir, la rama seleccionada se ilumina (stroke-dasharray animado) y la otra se atenúa.
+  - Nodo final pulsa antes de auto-avanzar.
 
-**Archivos a editar:**
-- `src/pages/Onboarding.tsx` — nuevo step `choose-plan`, ruteo condicional.
-- `src/pages/MiProceso.tsx` — `id="suscripcion"` + scroll por hash.
-- `src/pages/Dashboard.tsx` — envolver WeekStrip y nodos premium del Timeline con `PremiumLock`.
-- `src/components/home/Timeline.tsx` — soportar prop `locked` por nodo (renderizar overlay blur sobre el item sin romper el track lateral).
+- **Comparador antes/después** (`src/components/dbt/BeforeAfterCompare.tsx`):
+  - Nueva pantalla final con dos tarjetas glass lado a lado:
+    - Tarjeta izquierda (rojiza): interpretación inicial + impulso original.
+    - Tarjeta derecha (teal): hecho verificado + acción opuesta / solución elegida.
+  - Botón "Compartir resumen" (genera imagen vía `html-to-image`, opcional fase posterior).
 
-**Sin cambios de schema.** El plan free queda registrado en la tabla existente `user_plans` con `plan='free'` (insert vía supabase desde el paso del onboarding).
+---
 
-**Admin / Premium real:** `usePlan` ya devuelve `premium` para admins, por lo que `redsaludmentalarg@gmail.com` no verá ningún blur. Free users verán todo bloqueado excepto el check-in matinal.
+## Fase 3 · Rueda de emociones Plutchik
+
+`src/components/dbt/EmotionWheelSVG.tsx` reemplaza `EmotionGrid`:
+
+- SVG nativo, 8 sectores primarios (alegría, confianza, miedo, sorpresa, tristeza, asco, ira, anticipación) en 3 anillos de intensidad.
+- Tap en sector primario → anima expansión y revela matices del anillo exterior (ira → frustración, resentimiento, fastidio, furia).
+- Tap en matiz → confirma selección, escribe `selectedEmotion` + `emotionIntensity` (derivado del anillo) al reducer.
+- Animación: `motion.path` con `pathLength` y rotación suave.
+- Dataset estático en `src/lib/dbt/emotionWheel.ts` (~24 emociones con color HSL teal-to-coral).
+
+---
+
+## Fase 4 · Interacción guiada por IA
+
+### 4.1 Sugerencias inline (hechos vs. juicios)
+- Hook `src/hooks/useFactJudgmentHighlight.ts`: debounce 800ms sobre el textarea de "Descripción del evento" e "Interpretaciones".
+- Llama a `dbt-ai` con nueva task `highlight-judgments` (devuelve array `{start, end, kind: "judgment"|"interpretation", reason}`).
+- Render: overlay div con mismo line-height, spans con `bg-yellow-200/40 underline decoration-dotted`, tooltip on hover/tap mostrando `reason`.
+
+### 4.2 Reformulación de un toque
+- Junto a cada span destacado: botón flotante `✨ Reformular como hecho`.
+- Llama task `rephrase-as-fact` → reemplaza el span en el textarea con la versión neutra; queda en undo stack 5s.
+
+### 4.3 Chat socrático lateral
+- `src/components/dbt/SocraticDrawer.tsx`: panel deslizable derecha (Sheet de shadcn), trigger "Hablar con la guía" disponible en pasos clave (descripción, interpretaciones, elección de solución).
+- Edge function nueva `dbt-socratic` con `streamText` (AI SDK + Lovable Gateway, `google/gemini-3-flash-preview`) que conduce 2–3 turnos de preguntas antes de devolver un cierre estructurado (`{question?, summary?}` por turno).
+- Al cerrar el drawer, opción "Usar este resumen" inserta el texto destilado en el campo del paso.
+
+**Backend**: actualizar `supabase/functions/dbt-ai/index.ts` para los 2 tasks nuevos. Nueva función `dbt-socratic` para streaming.
+
+---
+
+## Fase 5 · Continuidad entre sesiones
+
+### 5.1 Reabrir borrador
+- En `CambiarRespuestas` al montar: si existe `localStorage["dbt-change-response-draft"]` con `updatedAt` > 1h y < 30d, mostrar banner sticky "Tenés una sesión sin terminar de hace X, ¿continuar?" con [Continuar] [Empezar nueva].
+
+### 5.2 Patrones detectados
+- Query agregada en `EmotionalRegulation` (sólo si user premium y completed_sessions % 5 === 0):
+  - Lee últimas 5 filas de `dbt_emotion_sessions`.
+  - Llama task `detect-patterns` en `dbt-ai`.
+  - Render: tarjeta "Resmita observa…" con el insight (ej. "En 4 de 5 sesiones la emoción fue ira ante crítica de pareja").
+- Persiste el insight en columna nueva `insight_text` de `patient_app_profiles` (o tabla `dbt_insights` simple) para no recalcular.
+
+**Migración**: tabla nueva `dbt_insights (id, user_id, generated_at, insight_text, session_ids jsonb)` con RLS + GRANTs estándar.
+
+---
+
+## Orden de implementación sugerido
+
+```text
+F0 (fix visibilidad)           ← 1 archivo, 5 min
+F1 (microinteracciones)        ← base sensorial, mejora todo
+F2 (timeline + decision tree + before/after)
+F3 (rueda Plutchik)            ← reemplaza grid actual
+F4 (IA inline + socrático)     ← edge functions nuevas
+F5 (borrador + patrones)       ← migración + insight
+```
+
+Podés aprobar todo el plan o pedirme avanzar sólo por fases (ej. "F0 + F1 primero").
+
+## Detalles técnicos
+
+- **AI SDK**: `streamText` con Lovable Gateway provider para el chat socrático; `generateText` + `Output.object` (Zod) para `highlight-judgments`, `rephrase-as-fact`, `detect-patterns`. Schemas mínimos (Gemini odia enums largos).
+- **Reducer**: agregar acciones `JUMP_TO_STEP`, `SET_DIRECTION`, `SET_EMOTION_INTENSITY`, `APPLY_REPHRASE`.
+- **Sin lucide para los nuevos íconos clínicos** (mantengo regla previa): SVG inline en `dbt/icons.tsx`.
+- **Confetti**: `canvas-confetti` lazy-import sólo en pantalla final.
+- **Premium gating**: ya cubierto por `PremiumLock` en la ruta; las nuevas tarjetas en Diario muestran candado para free.
+- **No tocar**: `client.ts`, `types.ts`, `.env`, `config.toml`.
