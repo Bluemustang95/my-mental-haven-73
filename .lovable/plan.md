@@ -1,48 +1,58 @@
-## 1. Home Screen — caber sin scroll (390×741)
+# Plan: Selección de plan al registrarse + bloqueos visuales completos
 
-Reducir paddings, tipografía y nodos del timeline para que el plan diario completo (header + week strip + 4 nodos + banner sueño) entre en una pantalla mobile sin scroll.
+## 1. Selección de plan en el Onboarding
 
-**`src/pages/Dashboard.tsx`**
-- `pt-8` → `pt-5`, `pb-28` → `pb-24`.
-- Header H1: `text-2xl` → `text-xl`; avatar `h-10 w-10` → `h-9 w-9`.
-- WeekStrip wrapper: `mt-6` → `mt-4`.
-- Label "Tu progreso de hoy": `mt-8 mb-3` → `mt-4 mb-2`.
-- Banner sueño: `mt-6 p-5` → `mt-3 p-3`, ícono `h-12 w-12` → `h-10 w-10`, título `text-base` → `text-sm`.
+Agregar un paso nuevo **antes del último** (después de crear cuenta o como paso final del wizard, justo antes de `navigate("/")`), llamado `step = 8: choose-plan`.
 
-**`src/components/home/Timeline.tsx`**
-- `space-y-4` → `space-y-2`.
-- Card `p-4` → `px-3 py-2.5`, `rounded-[28px]` → `rounded-[22px]`.
-- Ícono `h-12 w-12 rounded-2xl` → `h-10 w-10 rounded-xl`; tamaño lucide 22 → 18.
-- Title `text-[15px]` → `text-[14px]`; subtitle `text-[13px]` → `text-[12px] leading-snug`.
-- Nodo check: `h-6 w-6` → `h-5 w-5`, posición `top-5` → `top-3.5`, rail `left-3` → `left-2.5`, padre `pl-9` → `pl-7`, offset check `-left-9` → `-left-7`.
-- Chips de práctica: `px-4 py-2 text-xs` → `px-3 py-1.5 text-[11px]`, `gap-2` → `gap-1.5`, `pt-1` → `pt-0.5`.
+**UI:** dos tarjetas grandes estilo glass:
+- **Gratuita** — "Empezá tu camino" (chip básico, sin estrella). Acceso a check-ins, diario básico, 1 categoría de psicoeducación.
+- **Premium** — "Acceso completo" (estrella dorada). Lista de beneficios.
 
-**`src/components/home/WeekStrip.tsx`** (revisar al editar)
-- Reducir altura de celda y tipografía del día (~10–15% más chico) para ahorrar ~16px.
+Botón inferior: `Continuar`.
 
-Resultado esperado: ahorro de ~120–140px verticales, lo justo para que en 390×741 entre todo hasta el banner sueño.
+**Lógica:**
+- Si elige **Premium** → abrir `PaywallModal` (existente). Tras éxito (mock) → `navigate("/")`.
+- Si elige **Gratuita** → guardar `plan = 'free'` en `patient_app_profiles` (o tabla `user_plans` ya existente) y `navigate("/mi-proceso#suscripcion")` para que aterrice en la **última sección de Mi Proceso** (gestión de suscripción / "Hazte Premium").
 
-## 2. /herramientas — reemplazar emojis por íconos
+**Integración:**
+- Modificar `handleEmailSignup` y el handler de Google en `src/pages/Onboarding.tsx`: tras `persistProfile`, en vez de `navigate("/")` setear `step = 8`.
+- También para usuarios OAuth que vuelven con `pending`, mostrar el paso de plan antes de cerrar.
 
-**Recomendación:** usar **íconos lucide-react monocromáticos dentro de un círculo teal claro**, alineados con el lenguaje visual que ya tiene la Home (mismos círculos `rounded-2xl` con `hsl(var(--primary)/0.2)` o `hsl(var(--accent)/0.2)`). Limpio, propio, no genérico.
+## 2. Anclaje en Mi Proceso
 
-Mapeo propuesto (lucide):
-- Mindfulness → `Wind` (respiración consciente)
-- Regulación Emocional → `HeartPulse`
-- Tolerancia al Malestar → `Waves`
-- Efectividad Personal → `Users` (vínculos)
-- Gestión de Pensamientos → `Brain`
+En `src/pages/MiProceso.tsx`:
+- Agregar `id="suscripcion"` al bloque inferior de gestión/suscripción (o crear uno si no existe usando el patrón premium ya presente).
+- `useEffect` que detecte `location.hash === "#suscripcion"` y haga `scrollIntoView({ behavior: "smooth" })`.
 
-**`src/components/recursos/BentoGrid.tsx`**
-- Quitar campo `emoji`, agregar `icon: LucideIcon`.
-- Reemplazar fondos crudos (`bg-[#FFE4EC]`, etc.) por **tokens semánticos** unificados: card glass (`bg-card/80 backdrop-blur-3xl border border-foreground/5 shadow-glass`) + círculo de ícono con tinte teal (`bg-primary/15 text-primary`) y dos variantes alternadas con accent (`bg-accent/20 text-foreground`) para no perder ritmo de color.
-- Eliminar el ícono gigante decorativo (`-top-3 -right-3 text-6xl opacity-30`).
-- Card de Gestión de Pensamientos: misma estética (glass + círculo con `Brain`), reemplazar `bg-[#E0E9FF]` y `text-[#1E3A8A]`.
-- Pack de Actividades queda igual (ya usa teal).
+## 3. Bloqueos visuales (PremiumLock) en TODO el Inicio
 
-Resultado: una grilla coherente con el resto de la app (light glass + teal/gold), sin emojis y sin colores hardcoded.
+Hoy en `src/pages/Dashboard.tsx` solo está blurreado el banner "Recursos de sueño avanzados". El usuario quiere que **todo el dashboard** se vea bloqueado para Free salvo los elementos verdaderamente gratuitos.
 
-## Notas técnicas
-- Sin cambios de lógica/rutas/datos.
-- Sólo CSS Tailwind + tokens semánticos ya definidos.
-- Íconos lucide-react ya está en deps; no agregar nada.
+Aplicar `PremiumLock` (variant card/section) en:
+- **WeekStrip** (calendario semanal) → lock.
+- **Timeline completo** salvo el primer nodo "Valoración de la mañana" (check-in básico queda libre):
+  - "Psicoeducación" → lock
+  - "Tu práctica de hoy" + chips → lock
+  - "Valoración de la noche" → lock
+- Banner "Recursos de sueño avanzados" → ya está, mantener.
+
+Implementación: envolver cada `TimelineNode` premium con `PremiumLock` o pasar prop `locked` al Timeline y renderizar overlay por nodo.
+
+## 4. Confirmar bloqueos ya existentes (no tocar lógica, solo verificar visualmente)
+
+- Diario: botón Herramientas ya con star — OK.
+- Psicoeducación: categorías 2+ y podcasts — OK.
+- MiProceso: Estadísticas + Evaluaciones — OK.
+- Recursos: BentoGrid — OK.
+
+## Detalle técnico
+
+**Archivos a editar:**
+- `src/pages/Onboarding.tsx` — nuevo step `choose-plan`, ruteo condicional.
+- `src/pages/MiProceso.tsx` — `id="suscripcion"` + scroll por hash.
+- `src/pages/Dashboard.tsx` — envolver WeekStrip y nodos premium del Timeline con `PremiumLock`.
+- `src/components/home/Timeline.tsx` — soportar prop `locked` por nodo (renderizar overlay blur sobre el item sin romper el track lateral).
+
+**Sin cambios de schema.** El plan free queda registrado en la tabla existente `user_plans` con `plan='free'` (insert vía supabase desde el paso del onboarding).
+
+**Admin / Premium real:** `usePlan` ya devuelve `premium` para admins, por lo que `redsaludmentalarg@gmail.com` no verá ningún blur. Free users verán todo bloqueado excepto el check-in matinal.
