@@ -24,18 +24,31 @@ export default function MiProceso() {
     if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("in_therapy")
+      .select("in_therapy, linked_last_name")
       .eq("user_id", user.id)
       .maybeSingle()
-      .then(({ data }) => setInTherapy(!!data?.in_therapy));
+      .then(({ data }) => {
+        setInTherapy(!!data?.in_therapy);
+        setLinkedLastName(data?.linked_last_name ?? null);
+      });
   }, [user]);
 
   const updateTherapy = async (v: boolean) => {
-    setInTherapy(v);
+    if (v) {
+      // Abre modal de sincronización en vez de activar directamente
+      setSyncOpen(true);
+      return;
+    }
+    setInTherapy(false);
     if (!user) return;
     await supabase
       .from("patient_app_profiles")
-      .upsert({ user_id: user.id, in_therapy: v }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, in_therapy: false }, { onConflict: "user_id" });
+  };
+
+  const handleSynced = (data: { lastName: string; phone: string }) => {
+    setInTherapy(true);
+    setLinkedLastName(data.lastName);
   };
 
   return (
