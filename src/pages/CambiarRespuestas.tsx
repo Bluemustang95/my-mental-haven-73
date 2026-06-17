@@ -207,7 +207,7 @@ export default function CambiarRespuestas() {
         <ProgressIndicator step={step} total={6} />
 
         {step === 1 && (<>
-          <FichaCallout label="Ficha 8 · Paso 1">Empezamos identificando con claridad qué emoción querés trabajar hoy.</FichaCallout>
+          <FichaCallout label="Paso 1 · Empezamos">Empezamos identificando con claridad qué emoción querés trabajar hoy.</FichaCallout>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">1. ¿Cuál es la emoción que querés cambiar?</h2>
           <EmotionWheelSVG
             selected={state.selectedEmotion}
