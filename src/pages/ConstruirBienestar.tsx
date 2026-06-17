@@ -170,6 +170,15 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
       .filter(Boolean) as string[];
   }, [draft.selectedValues]);
 
+  const fallbackSuggestions = (vals: string[]): string[] => {
+    const base = vals[0]?.toLowerCase() || "tu bienestar";
+    return [
+      `Dedicar 15 minutos diarios a ${base.slice(0, 40)}.`,
+      `Sumar una actividad placentera concreta esta semana.`,
+      `Compartir un momento de calidad con alguien importante.`,
+    ];
+  };
+
   const askAI = async () => {
     setLoading(true);
     setSuggestions(null);
@@ -181,16 +190,34 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
         },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       const text = (data?.result as string) || "";
-      // Parse bullet/numbered list into 3 items
       const lines = text
         .split("\n")
         .map((l) => l.replace(/^[\-\*\d\.\)\s]+/, "").trim())
         .filter((l) => l.length > 6)
         .slice(0, 3);
-      setSuggestions(lines.length ? lines : [text.trim()]);
+      const final = lines.length ? lines : fallbackSuggestions(selectedValueTexts);
+      setSuggestions(final);
+      // Auto-aplicar la primera como Meta 1 y como Meta de hoy si están vacías
+      update((d: BienestarDraft) => {
+        const g = [...d.goals] as [string, string, string];
+        const patch: Partial<BienestarDraft> = {};
+        if (!g[0].trim()) { g[0] = final[0]; patch.goals = g; }
+        if (!d.todayGoal.trim()) patch.todayGoal = final[0];
+        return patch;
+      });
     } catch (e: any) {
-      toast.error(e?.message || "No se pudo consultar la IA");
+      const fb = fallbackSuggestions(selectedValueTexts);
+      setSuggestions(fb);
+      toast.message("Usamos sugerencias locales", { description: "La IA no respondió, pero podés trabajar con estas ideas." });
+      update((d: BienestarDraft) => {
+        const g = [...d.goals] as [string, string, string];
+        const patch: Partial<BienestarDraft> = {};
+        if (!g[0].trim()) { g[0] = fb[0]; patch.goals = g; }
+        if (!d.todayGoal.trim()) patch.todayGoal = fb[0];
+        return patch;
+      });
     } finally {
       setLoading(false);
     }
@@ -200,14 +227,23 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
     update((d: BienestarDraft) => {
       const g = [...d.goals] as [string, string, string];
       g[idx] = val;
+      // Si el usuario escribe en todayGoal y meta1 vacía, espejar (manejado abajo)
       return { goals: g };
+    });
+
+  const setTodayGoal = (val: string) =>
+    update((d: BienestarDraft) => {
+      const patch: Partial<BienestarDraft> = { todayGoal: val };
+      if (!d.goals[0].trim() && val.trim()) {
+        patch.goals = [val, d.goals[1], d.goals[2]];
+      }
+      return patch;
     });
 
   const useSuggestion = (s: string) => {
     const emptyIdx = draft.goals.findIndex((g) => !g.trim());
     if (emptyIdx >= 0) setGoal(emptyIdx, s);
     else setGoal(0, s);
-    setSuggestions(null);
   };
 
   return (
