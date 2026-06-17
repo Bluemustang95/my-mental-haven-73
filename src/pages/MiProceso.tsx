@@ -8,6 +8,7 @@ import { IOSToggle } from "@/components/ui/IOSToggle";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 import { WellbeingCard } from "@/components/proceso/WellbeingCard";
 import { TherapySyncModal } from "@/components/modals/TherapySyncModal";
+import { PremiumLock } from "@/components/PremiumLock";
 
 const dayLabels = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
 
@@ -65,73 +66,77 @@ export default function MiProceso() {
           <Activity size={14} /> Estadísticas de impacto
         </p>
 
-        <WellbeingCard />
+        <PremiumLock featureName="Estadísticas de impacto" variant="section">
+          <WellbeingCard />
 
-        <div className="mt-6 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-5 shadow-glass">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h3 className="font-display text-base font-bold text-foreground">Calidad de Sueño</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">Uso de estrategias nocturnas</p>
+          <div className="mt-6 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-5 shadow-glass">
+            <div className="mb-4 flex items-start justify-between">
+              <div>
+                <h3 className="font-display text-base font-bold text-foreground">Calidad de Sueño</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">Uso de estrategias nocturnas</p>
+              </div>
+              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                ↗ +12%
+              </span>
             </div>
-            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
-              ↗ +12%
-            </span>
+            <div className="flex h-32 items-end justify-between gap-2">
+              {bars.map((h, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ height: 0 }}
+                  animate={{ height: `${h}%` }}
+                  transition={{ delay: i * 0.05, type: "spring", stiffness: 80 }}
+                  className="flex-1 rounded-t-lg bg-gradient-to-t from-indigo-200 to-indigo-400"
+                />
+              ))}
+            </div>
+            <div className="mt-2 flex justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {dayLabels.map((d) => (
+                <span key={d}>{d}</span>
+              ))}
+            </div>
           </div>
-          <div className="flex h-32 items-end justify-between gap-2">
-            {bars.map((h, i) => (
-              <motion.div
-                key={i}
-                initial={{ height: 0 }}
-                animate={{ height: `${h}%` }}
-                transition={{ delay: i * 0.05, type: "spring", stiffness: 80 }}
-                className="flex-1 rounded-t-lg bg-gradient-to-t from-indigo-200 to-indigo-400"
-              />
-            ))}
-          </div>
-          <div className="mt-2 flex justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {dayLabels.map((d) => (
-              <span key={d}>{d}</span>
-            ))}
-          </div>
-        </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <MiniBar label="Habilidades vs Síntomas" pct={66} status="Buen uso" color="#F97316" />
-          <MiniBar label="Actividades vs Síntomas" pct={45} status="Regular" color="#3B82F6" />
-        </div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <MiniBar label="Habilidades vs Síntomas" pct={66} status="Buen uso" color="#F97316" />
+            <MiniBar label="Actividades vs Síntomas" pct={45} status="Regular" color="#3B82F6" />
+          </div>
+        </PremiumLock>
 
         {/* Evaluaciones */}
         <p className="mt-8 mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           <ClipboardList size={14} /> Evaluaciones
         </p>
 
-        <button
-          onClick={() => setOpenTest("symptom")}
-          className="flex w-full items-center gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100">
-            <Activity size={22} className="text-violet-600" />
-          </div>
-          <div className="flex-1">
-            <p className="font-display text-base font-bold text-foreground">Test de Síntomas</p>
-            <p className="text-xs text-muted-foreground">Completa tu evaluación semanal</p>
-          </div>
-          <ChevronRight size={18} className="text-muted-foreground" />
-        </button>
+        <PremiumLock featureName="Evaluaciones clínicas" variant="section">
+          <button
+            onClick={() => setOpenTest("symptom")}
+            className="flex w-full items-center gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100">
+              <Activity size={22} className="text-violet-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-display text-base font-bold text-foreground">Test de Síntomas</p>
+              <p className="text-xs text-muted-foreground">Completa tu evaluación semanal</p>
+            </div>
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </button>
 
-        <button
-          onClick={() => setOpenTest("personality")}
-          className="mt-3 flex w-full items-center gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100">
-            <Brain size={22} className="text-rose-600" />
-          </div>
-          <div className="flex-1">
-            <p className="font-display text-base font-bold text-foreground">Test de Personalidad</p>
-            <p className="text-xs text-muted-foreground">Conócete a mayor profundidad</p>
-          </div>
-          <ChevronRight size={18} className="text-muted-foreground" />
-        </button>
+          <button
+            onClick={() => setOpenTest("personality")}
+            className="mt-3 flex w-full items-center gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100">
+              <Brain size={22} className="text-rose-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-display text-base font-bold text-foreground">Test de Personalidad</p>
+              <p className="text-xs text-muted-foreground">Conócete a mayor profundidad</p>
+            </div>
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </button>
+        </PremiumLock>
 
         {/* Terapia */}
         <div className="my-8 h-px bg-black/[0.08]" />

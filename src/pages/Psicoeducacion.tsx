@@ -4,6 +4,7 @@ import { ArrowLeft, Play, Headphones } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PremiumLock } from "@/components/PremiumLock";
 
 type Category = {
   id: string;
@@ -143,10 +144,10 @@ export default function Psicoeducacion() {
             <div className="mt-8">
               <h3 className="mb-3 px-1 font-display text-base font-semibold text-white">Seguir conociendo</h3>
               <div className="space-y-3">
-                {courseCats.map((cat) => {
+                {courseCats.map((cat, idx) => {
                   const accent = cat.accent_color ?? "#A78BFA";
                   const prog = progressByCat[cat.id] ?? 0;
-                  return (
+                  const card = (
                     <motion.button
                       key={cat.id}
                       onClick={() => openCategory(cat.id)}
@@ -166,6 +167,12 @@ export default function Psicoeducacion() {
                       <div className="text-4xl">{cat.emoji ?? "📘"}</div>
                     </motion.button>
                   );
+                  if (idx === 0) return card;
+                  return (
+                    <PremiumLock key={cat.id} featureName={cat.title} variant="card">
+                      {card}
+                    </PremiumLock>
+                  );
                 })}
                 {courseCats.length === 0 && (
                   <p className="py-6 text-center text-sm text-white/55">Pronto sumaremos categorías.</p>
@@ -178,26 +185,28 @@ export default function Psicoeducacion() {
                 <h3 className="mb-3 flex items-center gap-2 px-1 font-display text-base font-semibold text-white">
                   <Headphones size={18} className="text-[#E8A365]" /> Podcasts
                 </h3>
-                <div className="space-y-2">
-                  {podcasts.map((p) => (
-                    <motion.button
-                      key={p.id}
-                      onClick={() => openLesson(p.id)}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.04] p-3 text-left"
-                    >
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-500/20 text-[#E8A365]">
-                        <Play size={18} fill="currentColor" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-display text-sm font-semibold text-white line-clamp-1">{p.title}</p>
-                        <p className="text-xs text-white/55">
-                          {p.duration_minutes ? `${p.duration_minutes} min.` : p.duration ?? ""}
-                        </p>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
+                <PremiumLock featureName="Podcasts Premium" variant="section">
+                  <div className="space-y-2">
+                    {podcasts.map((p) => (
+                      <motion.button
+                        key={p.id}
+                        onClick={() => openLesson(p.id)}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.04] p-3 text-left"
+                      >
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-500/20 text-[#E8A365]">
+                          <Play size={18} fill="currentColor" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-display text-sm font-semibold text-white line-clamp-1">{p.title}</p>
+                          <p className="text-xs text-white/55">
+                            {p.duration_minutes ? `${p.duration_minutes} min.` : p.duration ?? ""}
+                          </p>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                </PremiumLock>
               </div>
             )}
           </>

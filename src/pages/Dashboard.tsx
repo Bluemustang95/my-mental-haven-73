@@ -10,6 +10,7 @@ import { Timeline, TimelineNode } from "@/components/home/Timeline";
 import { CheckinModal } from "@/components/modals/CheckinModal";
 import { PsychoModal } from "@/components/modals/PsychoModal";
 import { DayHistorySheet } from "@/components/mindfulness/DayHistorySheet";
+import { PremiumLock } from "@/components/PremiumLock";
 import { toast } from "sonner";
 
 function getGreeting() {
@@ -248,22 +249,23 @@ export default function Dashboard() {
         {/* Timeline */}
         <Timeline nodes={nodes} allDone={allDone} />
 
-        {/* Sleep banner */}
-        <button
-          onClick={() => navigate("/herramientas/sueno")}
-          className="mt-3 flex w-full items-center justify-between gap-3 overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-500 p-3 text-left text-white shadow-[0_15px_40px_-15px_rgba(139,92,246,0.7)] transition active:scale-[0.98]"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md">
-              <MoonIcon size={18} className="text-white" />
+        <PremiumLock featureName="Recursos de sueño avanzados" variant="card" className="mt-3">
+          <button
+            onClick={() => navigate("/herramientas/sueno")}
+            className="flex w-full items-center justify-between gap-3 overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-500 p-3 text-left text-white shadow-[0_15px_40px_-15px_rgba(139,92,246,0.7)] transition active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md">
+                <MoonIcon size={18} className="text-white" />
+              </div>
+              <div>
+                <p className="font-display text-sm font-bold">Te ayudamos con tu sueño</p>
+                <p className="text-[11px] text-white/80">Recursos y diarios nocturnos</p>
+              </div>
             </div>
-            <div>
-              <p className="font-display text-sm font-bold">Te ayudamos con tu sueño</p>
-              <p className="text-[11px] text-white/80">Recursos y diarios nocturnos</p>
-            </div>
-          </div>
-          <ChevronRight size={18} />
-        </button>
+            <ChevronRight size={18} />
+          </button>
+        </PremiumLock>
       </div>
 
       <CheckinModal
