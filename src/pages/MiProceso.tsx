@@ -1,21 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, ClipboardList, FileText, NotebookPen, Pill, ChevronRight, Brain } from "lucide-react";
+import { Activity, ClipboardList, FileText, NotebookPen, Pill, ChevronRight, Brain, Phone, Mail, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 import { WellbeingCard } from "@/components/proceso/WellbeingCard";
+import { TherapySyncModal } from "@/components/modals/TherapySyncModal";
 
 const dayLabels = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
 
 export default function MiProceso() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [bars, setBars] = useState<number[]>([35, 50, 28, 65, 72, 60, 80]);
+  const [bars] = useState<number[]>([35, 50, 28, 65, 72, 60, 80]);
   const [inTherapy, setInTherapy] = useState(false);
   const [openTest, setOpenTest] = useState<null | "symptom" | "personality">(null);
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [linkedLastName, setLinkedLastName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
