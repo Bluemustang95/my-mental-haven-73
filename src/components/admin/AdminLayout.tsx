@@ -1,9 +1,10 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, Sparkles, Brain, ArrowLeft, ShieldCheck, Settings, Zap } from "lucide-react";
+import { LayoutDashboard, BookOpen, ClipboardList, Users, LogOut, Sparkles, Brain, ArrowLeft, ShieldCheck, Settings, Zap, BarChart3 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { title: "Usuarios", url: "/admin/pacientes", icon: Users },
+  { title: "Estadísticas", url: "/admin/estadisticas", icon: BarChart3 },
   { title: "Psicoeducación", url: "/admin/contenido", icon: BookOpen },
   { title: "Recursos", url: "/admin/recursos", icon: Sparkles },
   { title: "Pack de Actividades", url: "/admin/pack", icon: Zap },

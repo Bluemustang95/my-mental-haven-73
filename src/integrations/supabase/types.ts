@@ -1830,6 +1830,7 @@ export type Database = {
         Args: { _expires_at: string; _plan: string; _user_id: string }
         Returns: undefined
       }
+      admin_stats_overview: { Args: never; Returns: Json }
       get_daily_recommendations: {
         Args: { _limit?: number; _user_id: string }
         Returns: {
