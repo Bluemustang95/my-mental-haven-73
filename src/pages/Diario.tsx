@@ -488,6 +488,8 @@ export default function Diario() {
 
       {/* Bottom padding for nav */}
       <div className={zenMode ? "h-16" : "h-24"} />
+
+      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} featureName="Herramientas avanzadas del Diario" />
     </div>
   );
 }
