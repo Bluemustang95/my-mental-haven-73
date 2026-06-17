@@ -557,16 +557,36 @@ export default function CambiarRespuestas() {
           </button>
         </>)}
 
-        {step === 7 && (
+        {step === 7 && (<>
+          <div className="rounded-[24px] bg-[#facb60]/10 border border-[#facb60]/40 p-5 space-y-3">
+            <p className="font-display text-[10px] uppercase tracking-[0.12em] text-[#facb60] font-bold">Tu tarea</p>
+            <p className="font-display text-base font-bold text-[#101927]">Practicá la Acción Opuesta para {emotion.toLowerCase()}</p>
+            <div className="rounded-[18px] bg-white/70 p-3">
+              <p className="font-display text-[10px] uppercase tracking-wide text-[#101927]/45 mb-1">Hacé lo opuesto</p>
+              <p className="font-body text-[14px] leading-6 text-[#101927]/85">{oa.action}</p>
+            </div>
+            {state.opposite.bodyPlan.trim() && (
+              <div className="rounded-[18px] bg-white/70 p-3">
+                <p className="font-display text-[10px] uppercase tracking-wide text-[#101927]/45 mb-1">Tu plan corporal</p>
+                <p className="font-body text-[13px] leading-6 text-[#101927]/80 whitespace-pre-line">{state.opposite.bodyPlan}</p>
+              </div>
+            )}
+            <button
+              onClick={() => { haptic("confirm"); dispatch({ type: "PATCH_OPPOSITE", patch: { actionTaken: !state.opposite.actionTaken } }); }}
+              className={`w-full rounded-[20px] py-3 font-display text-sm font-semibold flex items-center justify-center gap-2 transition ${state.opposite.actionTaken ? "bg-[#7cc2c8] text-white" : "bg-[#101927] text-white"} active:scale-[0.97]`}
+            >
+              {state.opposite.actionTaken ? <><Ic.Check color="#fff" size={16} /> ¡Listo, ya lo hice!</> : "Listo, ya lo hice"}
+            </button>
+          </div>
           <WiseMindCard title="La plasticidad neuronal está de tu lado" tone="gold">
             Tu amígdala aprendió a reaccionar así con repeticiones pasadas. Para reprogramarla, repetí la Acción Opuesta una y otra vez. No es magia: es neurociencia. <strong>Sostené la acción opuesta hasta que la emoción baje.</strong>
           </WiseMindCard>
-        )}
+        </>)}
 
         <WizardFooter
           onPrev={step > 1 ? () => dispatch({ type: "PREV" }) : undefined}
           onNext={advance}
-          nextLabel={step === 7 ? "Completar y guardar" : "Siguiente"}
+          nextLabel={step === 7 ? "Guardar sesión" : "Siguiente"}
           canNext={canAdv()}
         />
       </motion.section>
