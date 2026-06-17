@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Wind, HeartPulse, Waves, Users, Brain, type LucideIcon } from "lucide-react";
+import { Zap, Wind, HeartPulse, Waves, Users, Brain, Sparkles, type LucideIcon } from "lucide-react";
+import { readLocalProfile } from "@/lib/clinicalAlgorithm";
 
 type Tile = {
   slug: string;
