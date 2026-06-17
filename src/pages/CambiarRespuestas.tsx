@@ -521,10 +521,21 @@ export default function CambiarRespuestas() {
         <h2 className="font-display text-2xl font-bold text-[#101927]">¡Sesión guardada!</h2>
         <p className="font-body text-[15px] leading-7 text-[#101927]/70 mt-2 px-4">Tu recorrido de Regulación Emocional quedó registrado. Podés volver a revisarlo cuando quieras.</p>
       </div>
+
+      <div className="text-left">
+        <BeforeAfterCompare
+          emotion={state.selectedEmotion || "Tu emoción"}
+          before={[state.eventDescription, state.opposite.impulses].filter(Boolean).join(" · ")}
+          afterLabel={state.problem.chosenSolution ? "Plan · Resolver" : "Acción Opuesta"}
+          after={state.problem.chosenSolution || state.opposite.bodyPlan}
+        />
+      </div>
+
       <div className="space-y-2 px-2">
         <button onClick={() => navigate("/")} className="w-full rounded-[24px] bg-[#101927] py-4 font-display text-sm font-semibold text-white active:scale-[0.97]">Volver al inicio</button>
         <button onClick={reset} className="w-full rounded-[24px] bg-[#f2f2f2] py-4 font-display text-sm font-semibold text-[#101927] active:scale-[0.97]">Hacer otra sesión</button>
       </div>
+
     </motion.section>
   );
 
@@ -532,8 +543,10 @@ export default function CambiarRespuestas() {
   return (
     <main className="min-h-screen bg-white text-[#101927]" style={{ backgroundImage: "linear-gradient(180deg, rgba(124,194,200,0.04) 0%, rgba(255,255,255,1) 30%)" }}>
       <WorkspaceHeader subtitle={subtitleByStage} onReset={() => setConfirmReset(true)} onBack={handleBack} />
+      <SessionTimeline stage={state.stage} path={chosenPath} visited={visited} onJump={handleTimelineJump} />
 
       <div className="mx-auto max-w-md">
+
         <AnimatePresence mode="wait">
           {state.stage === "wizard8" && renderWizard8()}
           {state.stage === "decision9" && renderDecision9()}
