@@ -222,6 +222,13 @@ export default function Settings() {
           )}
         </div>
       </div>
+
+      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />
+      <ManageSubscriptionModal
+        open={manageOpen !== null}
+        variant={manageOpen ?? "manage"}
+        onClose={() => setManageOpen(null)}
+      />
     </div>
   );
 }
