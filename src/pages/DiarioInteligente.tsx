@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Heart, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Plus, Heart, Sparkles, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { PatternInsights } from "@/components/dbt/PatternInsights";
 import { OpenSessionsList } from "@/components/dbt/OpenSessionsList";
+import { readDraft as readBienestarDraft, todayStatus } from "@/components/bienestar/useBienestarDraft";
 
 type Sub = {
   id: string;
@@ -51,6 +52,17 @@ export default function DiarioInteligente() {
   const [subs, setSubs] = useState<Sub[]>([]);
   const [hasAnySession, setHasAnySession] = useState(false);
   const [openSessionsTick, setOpenSessionsTick] = useState(0);
+  const [patternsOpen, setPatternsOpen] = useState(false);
+
+  // Soft FAB badge: pending today blocks after 20:00
+  const [fabPending, setFabPending] = useState(0);
+  useEffect(() => {
+    const d = readBienestarDraft();
+    const st = todayStatus(d);
+    const hh = new Date().getHours();
+    if (hh >= 20 && st.pending > 0) setFabPending(st.pending);
+    else setFabPending(0);
+  }, []);
 
   const meta = CATEGORY_LABELS[slug] ?? { label: slug, subtitle: "" };
   const isRegulacion = slug === "regulacion-emocional";
@@ -97,12 +109,12 @@ export default function DiarioInteligente() {
               to2: "#facb60",
             },
             {
-              to: "/herramientas/regulacion-emocional",
-              icon: Zap,
-              title: "STOP & TIPP",
-              desc: "Frená el impulso · Cambio químico en minutos.",
-              from: "#FB923C",
-              to2: "#F472B6",
+              to: "/herramientas/construir-bienestar",
+              icon: Sparkles,
+              title: "Construir Bienestar",
+              desc: "Valores → metas → actividades en tu semana.",
+              from: "#7cc2c8",
+              to2: "#34D399",
             },
           ]
         : subs.map((s, i) => ({
@@ -133,13 +145,7 @@ export default function DiarioInteligente() {
         </div>
       </div>
 
-      {isRegulacion && (
-        <div className="mt-5 px-5">
-          <PatternInsights />
-        </div>
-      )}
-
-      <div className="mt-3 space-y-2 px-5">
+      <div className="mt-5 space-y-2 px-5">
         {modules.map((m) => (
           <motion.button
             key={m.to + m.title}
@@ -174,16 +180,60 @@ export default function DiarioInteligente() {
         </div>
       )}
 
+      {isRegulacion && (
+        <div className="mt-3 px-5">
+          <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+            <button
+              onClick={() => setPatternsOpen((o) => !o)}
+              className="flex w-full items-center justify-between px-4 py-3"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className="text-[#facb60]" />
+                <span className="font-display text-sm font-semibold text-[#101927]">
+                  Tus patrones
+                </span>
+              </div>
+              <motion.div animate={{ rotate: patternsOpen ? 180 : 0 }}>
+                <ChevronDown size={18} className="text-[#101927]/60" />
+              </motion.div>
+            </button>
+            <AnimatePresence initial={false}>
+              {patternsOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="border-t border-[#101927]/5 px-3 py-3">
+                    <PatternInsights embedded />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
       {isRegulacion && hasAnySession && (
         <motion.button
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           whileTap={{ scale: 0.92 }}
-          onClick={() => navigate("/herramientas/cambiar-respuestas")}
+          onClick={() =>
+            fabPending > 0
+              ? navigate("/herramientas/construir-bienestar?tab=seguimiento&day=hoy")
+              : navigate("/herramientas/cambiar-respuestas")
+          }
           aria-label="Sumar otra sesión"
           className="fixed bottom-24 right-5 z-40 h-14 w-14 rounded-full bg-[#101927] text-white shadow-lg flex items-center justify-center"
         >
           <Plus size={24} />
+          {fabPending > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#facb60] px-1 text-[10px] font-bold text-[#101927] ring-2 ring-[#FDFCFB]">
+              {fabPending}
+            </span>
+          )}
         </motion.button>
       )}
     </div>
