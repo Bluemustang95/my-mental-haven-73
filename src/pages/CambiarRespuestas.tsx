@@ -296,7 +296,7 @@ export default function CambiarRespuestas() {
             interpretations: state.interpretations,
             threat: state.threat,
             catastrophe: state.catastropheCoping,
-          }, { title: "Evaluación clínica (Ficha 8A)" })} />
+          }, { title: "Evaluación clínica" })} />
         </>)}
       </motion.section>
     );
