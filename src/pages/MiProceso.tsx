@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, ClipboardList, FileText, NotebookPen, Pill, ChevronRight, Brain, Phone, Mail, BadgeCheck } from "lucide-react";
+import { Activity, ClipboardList, FileText, NotebookPen, Pill, ChevronRight, Brain, Phone, Mail, BadgeCheck, Sparkles, Crown } from "lucide-react";
+import { usePlan } from "@/hooks/usePlan";
+import { PaywallModal } from "@/components/modals/PaywallModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
