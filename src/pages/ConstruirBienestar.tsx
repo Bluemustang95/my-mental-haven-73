@@ -345,18 +345,39 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
 function Step3Activities({ draft, update }: { draft: BienestarDraft; update: any }) {
   const [q, setQ] = useState("");
   const [favs, setFavs] = useState<number[]>(() => readFavs());
+  const [customName, setCustomName] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const allActs = useMemo(() => [...ACTIVITIES, ...draft.customActivities], [draft.customActivities]);
+
+  const recommendedCats = useMemo(() => activityCatsForValues(draft.selectedValues), [draft.selectedValues]);
+
+  const sorted = useMemo(() => {
+    const arr = [...allActs];
+    arr.sort((a, b) => {
+      const ar = recommendedCats.has(a.category) ? 0 : 1;
+      const br = recommendedCats.has(b.category) ? 0 : 1;
+      return ar - br;
+    });
+    return arr;
+  }, [allActs, recommendedCats]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return ACTIVITIES;
-    return ACTIVITIES.filter(
+    if (!term) return sorted;
+    return sorted.filter(
       (a) => a.name.toLowerCase().includes(term) || a.category.toLowerCase().includes(term)
     );
-  }, [q]);
+  }, [q, sorted]);
+
+  const recommended = useMemo(
+    () => sorted.filter((a) => recommendedCats.has(a.category)).slice(0, 8),
+    [sorted, recommendedCats]
+  );
 
   const favActivities = useMemo(
-    () => favs.map((id) => ACTIVITIES.find((a) => a.id === id)).filter(Boolean) as typeof ACTIVITIES,
-    [favs]
+    () => favs.map((id) => allActs.find((a) => a.id === id)).filter(Boolean) as typeof ACTIVITIES,
+    [favs, allActs]
   );
 
   const isSel = (id: number) => draft.selectedActivities.includes(id);
@@ -369,8 +390,51 @@ function Step3Activities({ draft, update }: { draft: BienestarDraft; update: any
 
   const togFav = (id: number) => setFavs(toggleFav(id));
 
+  const addCustom = (name: string, category = "Personal") => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    update((d: BienestarDraft) => {
+      const nextId = 10000 + d.customActivities.length + Math.floor(Math.random() * 1000);
+      const newAct: CustomActivity = { id: nextId, name: trimmed, category };
+      return {
+        customActivities: [...d.customActivities, newAct],
+        selectedActivities: [...d.selectedActivities, nextId],
+      };
+    });
+  };
+
+  const askAIActivities = async () => {
+    const valTexts = VALUE_CATEGORIES.flatMap((c) => c.items)
+      .filter((i) => draft.selectedValues.includes(i.id))
+      .map((i) => i.text);
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("dbt-ai", {
+        body: {
+          task: "bienestar-activities",
+          payload: { values: valTexts.join(" · "), goal: draft.todayGoal || "" },
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const text = (data?.result as string) || "";
+      const lines = text
+        .split("\n")
+        .map((l) => l.replace(/^[\-\*\d\.\)\s]+/, "").trim())
+        .filter((l) => l.length > 4)
+        .slice(0, 5);
+      if (lines.length === 0) throw new Error("Sin sugerencias");
+      lines.forEach((l) => addCustom(l, "IA"));
+      toast.success(`${lines.length} ideas agregadas`);
+    } catch (e: any) {
+      toast.error("La IA no respondió. Probá agregar la tuya manualmente.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const selected = draft.selectedActivities
-    .map((id) => ACTIVITIES.find((a) => a.id === id))
+    .map((id) => allActs.find((a) => a.id === id))
     .filter(Boolean) as typeof ACTIVITIES;
 
   return (
@@ -393,6 +457,37 @@ function Step3Activities({ draft, update }: { draft: BienestarDraft; update: any
         />
       </div>
 
+      {/* Crear propia + IA */}
+      <div className={cn("space-y-2 rounded-[24px] p-3", glass)}>
+        <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-[#7cc2c8]">
+          Crear actividad propia
+        </p>
+        <div className="flex gap-2">
+          <input
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { addCustom(customName); setCustomName(""); } }}
+            placeholder="Ej: Tomar mate con mi hermana"
+            className="flex-1 rounded-full border border-white/60 bg-white/70 px-4 py-2 text-[13px] text-[#101927] placeholder:text-[#101927]/35 focus:outline-none focus:ring-2 focus:ring-[#7cc2c8]/40"
+          />
+          <button
+            onClick={() => { addCustom(customName); setCustomName(""); }}
+            disabled={!customName.trim()}
+            className="rounded-full bg-[#101927] px-3 py-2 text-[12px] font-semibold text-white disabled:opacity-40"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+        <button
+          onClick={askAIActivities}
+          disabled={aiLoading || draft.selectedValues.length === 0}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#facb60]/25 px-4 py-2.5 text-[12px] font-semibold text-[#8a6a14] disabled:opacity-50"
+        >
+          {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+          Pedir 5 ideas a la IA según tus valores
+        </button>
+      </div>
+
       {favActivities.length > 0 && (
         <div className={cn("rounded-[24px] p-3", glass)}>
           <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-[#facb60]">
@@ -400,30 +495,32 @@ function Step3Activities({ draft, update }: { draft: BienestarDraft; update: any
           </p>
           <div className="space-y-1">
             {favActivities.map((a) => (
-              <ActivityRow
-                key={a.id}
-                a={a}
-                selected={isSel(a.id)}
-                fav
-                onAdd={() => togSel(a.id)}
-                onFav={() => togFav(a.id)}
-              />
+              <ActivityRow key={a.id} a={a} selected={isSel(a.id)} fav onAdd={() => togSel(a.id)} onFav={() => togFav(a.id)} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!q && recommended.length > 0 && (
+        <div className={cn("rounded-[24px] p-3", glass)}>
+          <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-[#7cc2c8]">
+            Recomendadas para tus valores
+          </p>
+          <div className="space-y-1">
+            {recommended.map((a) => (
+              <ActivityRow key={"rec-" + a.id} a={a} selected={isSel(a.id)} fav={favs.includes(a.id)} onAdd={() => togSel(a.id)} onFav={() => togFav(a.id)} />
             ))}
           </div>
         </div>
       )}
 
       <div className={cn("rounded-[24px] p-3", glass)}>
-        <div className="max-h-[55vh] space-y-1 overflow-y-auto pr-1">
+        <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-widest text-[#101927]/55">
+          Catálogo completo
+        </p>
+        <div className="max-h-[45vh] space-y-1 overflow-y-auto pr-1">
           {filtered.map((a) => (
-            <ActivityRow
-              key={a.id}
-              a={a}
-              selected={isSel(a.id)}
-              fav={favs.includes(a.id)}
-              onAdd={() => togSel(a.id)}
-              onFav={() => togFav(a.id)}
-            />
+            <ActivityRow key={a.id} a={a} selected={isSel(a.id)} fav={favs.includes(a.id)} onAdd={() => togSel(a.id)} onFav={() => togFav(a.id)} />
           ))}
         </div>
       </div>
