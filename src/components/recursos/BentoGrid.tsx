@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Wind, HeartPulse, Waves, Users, Brain, Sparkles, type LucideIcon } from "lucide-react";
+import { Zap, Wind, HeartPulse, Waves, Users, Brain, Sparkles, Lock, type LucideIcon } from "lucide-react";
 import { readLocalProfile } from "@/lib/clinicalAlgorithm";
+import { usePlan } from "@/hooks/usePlan";
+import { PaywallModal } from "@/components/modals/PaywallModal";
 
 type Tile = {
   slug: string;
@@ -12,34 +14,10 @@ type Tile = {
 };
 
 const tiles: Tile[] = [
-  {
-    slug: "mindfulness",
-    name: "Mindfulness",
-    desc: "Respiración consciente.",
-    Icon: Wind,
-    tint: "primary",
-  },
-  {
-    slug: "regulacion-emocional",
-    name: "Regulación Emocional",
-    desc: "Habilidades STOP y TIP.",
-    Icon: HeartPulse,
-    tint: "accent",
-  },
-  {
-    slug: "tolerancia-malestar",
-    name: "Tolerancia al Malestar",
-    desc: "Sobrevive a crisis.",
-    Icon: Waves,
-    tint: "primary",
-  },
-  {
-    slug: "efectividad-personal",
-    name: "Efectividad Personal",
-    desc: "Mejorá vínculos.",
-    Icon: Users,
-    tint: "accent",
-  },
+  { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary" },
+  { slug: "regulacion-emocional", name: "Regulación Emocional", desc: "Habilidades STOP y TIP.", Icon: HeartPulse, tint: "accent" },
+  { slug: "tolerancia-malestar", name: "Tolerancia al Malestar", desc: "Sobrevive a crisis.", Icon: Waves, tint: "primary" },
+  { slug: "efectividad-personal", name: "Efectividad Personal", desc: "Mejorá vínculos.", Icon: Users, tint: "accent" },
 ];
 
 const tintBg: Record<Tile["tint"], string> = {
@@ -51,6 +29,17 @@ export function BentoGrid() {
   const navigate = useNavigate();
   const profile = useMemo(() => readLocalProfile(), []);
   const priority = profile?.priority;
+  const { plan } = usePlan();
+  const isPremium = plan === "premium";
+  const [paywall, setPaywall] = useState<{ open: boolean; name?: string }>({ open: false });
+
+  const open = (slug: string, name: string, target: string) => {
+    if (!isPremium) {
+      setPaywall({ open: true, name });
+      return;
+    }
+    navigate(target);
+  };
 
   const orderedTiles = useMemo(() => {
     if (!priority) return tiles;
@@ -61,20 +50,25 @@ export function BentoGrid() {
 
   return (
     <div className="space-y-3">
-      {/* 2x2 grid */}
       <div className="grid grid-cols-2 gap-3">
         {orderedTiles.map((t) => {
           const isPriority = t.slug === priority;
+          const locked = !isPremium;
           return (
             <button
               key={t.slug}
-              onClick={() => navigate(`/diario-inteligente/${t.slug}`)}
+              onClick={() => open(t.slug, t.name, `/diario-inteligente/${t.slug}`)}
               className="relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl border border-foreground/5 bg-card/80 p-4 text-left shadow-glass backdrop-blur-3xl transition active:scale-[0.98]"
               style={isPriority ? { borderColor: "#7cc2c8", boxShadow: "0 12px 28px -12px rgba(124,194,200,0.45)" } : undefined}
             >
               {isPriority && (
                 <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#7cc2c8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
                   <Sparkles size={9} /> Tu foco
+                </span>
+              )}
+              {locked && !isPriority && (
+                <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-foreground/85 text-white">
+                  <Lock size={11} strokeWidth={2.6} />
                 </span>
               )}
               <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${tintBg[t.tint]}`}>
@@ -89,11 +83,9 @@ export function BentoGrid() {
         })}
       </div>
 
-
-
       {/* Gestion de Pensamientos */}
       <button
-        onClick={() => navigate("/diario-inteligente/gestion-pensamientos")}
+        onClick={() => open("gestion-pensamientos", "Gestión de Pensamientos", "/diario-inteligente/gestion-pensamientos")}
         className="relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-3xl border border-foreground/5 bg-card/80 p-4 text-left shadow-glass backdrop-blur-3xl transition active:scale-[0.98]"
       >
         <div className="flex items-center gap-3">
@@ -101,19 +93,20 @@ export function BentoGrid() {
             <Brain size={20} strokeWidth={2} />
           </div>
           <div>
-            <h3 className="font-display text-base font-bold text-foreground">
-              Gestión de Pensamientos
-            </h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Distorsiones, rumiación y preocupación.
-            </p>
+            <h3 className="font-display text-base font-bold text-foreground">Gestión de Pensamientos</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">Distorsiones, rumiación y preocupación.</p>
           </div>
         </div>
+        {!isPremium && (
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground/85 text-white">
+            <Lock size={11} strokeWidth={2.6} />
+          </span>
+        )}
       </button>
 
       {/* Pack Actividades */}
       <button
-        onClick={() => navigate("/herramientas/pack")}
+        onClick={() => open("pack", "Pack de Actividades", "/herramientas/pack")}
         className="relative flex w-full items-center justify-between overflow-hidden rounded-3xl bg-primary p-5 text-left text-primary-foreground shadow-primary-glow"
       >
         <div>
@@ -121,9 +114,15 @@ export function BentoGrid() {
           <p className="mt-1 text-xs font-medium opacity-80">Abrí el kit con ejercicios de la app.</p>
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-          <Zap size={20} fill="currentColor" />
+          {isPremium ? <Zap size={20} fill="currentColor" /> : <Lock size={18} strokeWidth={2.6} />}
         </div>
       </button>
+
+      <PaywallModal
+        open={paywall.open}
+        featureName={paywall.name}
+        onClose={() => setPaywall({ open: false })}
+      />
     </div>
   );
 }

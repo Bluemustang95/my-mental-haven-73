@@ -1,38 +1,54 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, ClipboardList, FileText, NotebookPen, Pill, ChevronRight, Brain } from "lucide-react";
+import { Activity, ClipboardList, FileText, NotebookPen, Pill, ChevronRight, Brain, Phone, Mail, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 import { WellbeingCard } from "@/components/proceso/WellbeingCard";
+import { TherapySyncModal } from "@/components/modals/TherapySyncModal";
 
 const dayLabels = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
 
 export default function MiProceso() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [bars, setBars] = useState<number[]>([35, 50, 28, 65, 72, 60, 80]);
+  const [bars] = useState<number[]>([35, 50, 28, 65, 72, 60, 80]);
   const [inTherapy, setInTherapy] = useState(false);
   const [openTest, setOpenTest] = useState<null | "symptom" | "personality">(null);
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [linkedLastName, setLinkedLastName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("in_therapy")
+      .select("in_therapy, linked_last_name")
       .eq("user_id", user.id)
       .maybeSingle()
-      .then(({ data }) => setInTherapy(!!data?.in_therapy));
+      .then(({ data }) => {
+        setInTherapy(!!data?.in_therapy);
+        setLinkedLastName(data?.linked_last_name ?? null);
+      });
   }, [user]);
 
   const updateTherapy = async (v: boolean) => {
-    setInTherapy(v);
+    if (v) {
+      // Abre modal de sincronización en vez de activar directamente
+      setSyncOpen(true);
+      return;
+    }
+    setInTherapy(false);
     if (!user) return;
     await supabase
       .from("patient_app_profiles")
-      .upsert({ user_id: user.id, in_therapy: v }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, in_therapy: false }, { onConflict: "user_id" });
+  };
+
+  const handleSynced = (data: { lastName: string; phone: string }) => {
+    setInTherapy(true);
+    setLinkedLastName(data.lastName);
   };
 
   return (
@@ -130,6 +146,46 @@ export default function MiProceso() {
 
         {inTherapy ? (
           <div className="mt-4 space-y-3">
+            {/* Profesional asignado */}
+            <div className="rounded-[24px] border border-white/70 bg-white/75 p-4 shadow-glass backdrop-blur-2xl">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#7cc2c8] to-[#0e8a92] font-display text-base font-bold text-white">
+                  CP
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-display text-[15px] font-bold text-foreground">Lic. Claudio Pereyra</p>
+                    <BadgeCheck size={14} className="text-[#7cc2c8]" />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">M.N. 48.293 · Especialista Clínico</p>
+                </div>
+                <button
+                  aria-label="Contactar"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#101927] text-white transition active:scale-95"
+                >
+                  <Phone size={16} />
+                </button>
+              </div>
+              {linkedLastName && (
+                <p className="mt-3 border-t border-foreground/[0.06] pt-2.5 text-[11px] text-muted-foreground">
+                  Vinculado a paciente <span className="font-semibold text-foreground/80">{linkedLastName}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Soporte RESMA */}
+            <div className="flex items-center gap-3 rounded-2xl bg-[#101927] px-4 py-3 text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
+                <Mail size={16} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/55">Soporte RESMA</p>
+                <a href="mailto:support@resma.com.ar" className="text-[13px] font-semibold text-white">
+                  support@resma.com.ar
+                </a>
+              </div>
+            </div>
+
             <TherapyRow
               icon={<NotebookPen size={20} className="text-violet-600" />}
               bg="bg-violet-100"
@@ -153,8 +209,8 @@ export default function MiProceso() {
             />
           </div>
         ) : (
-          <div className="mt-4 rounded-3xl border-2 border-dashed border-muted-foreground/30 bg-white/40 p-6 text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-4 rounded-[24px] border-2 border-dashed border-neutral-300 bg-white/40 p-6 text-center">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Activá el seguimiento si estás en terapia para ver notas, resúmenes y medicación.
             </p>
           </div>
@@ -165,6 +221,12 @@ export default function MiProceso() {
         open={!!openTest}
         kind={openTest ?? "symptom"}
         onClose={() => setOpenTest(null)}
+      />
+
+      <TherapySyncModal
+        open={syncOpen}
+        onClose={() => setSyncOpen(false)}
+        onSynced={handleSynced}
       />
     </div>
   );
