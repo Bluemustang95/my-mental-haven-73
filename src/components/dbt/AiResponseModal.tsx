@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { AiSkeleton } from "./AiSkeleton";
+
 
 interface Props {
   open: boolean;
