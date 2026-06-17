@@ -328,7 +328,7 @@ function Step2Goals({ draft, update }: { draft: BienestarDraft; update: any }) {
             </p>
             <input
               value={draft.todayGoal}
-              onChange={(e) => update({ todayGoal: e.target.value })}
+              onChange={(e) => setTodayGoal(e.target.value)}
               placeholder="¿Qué vas a trabajar hoy?"
               className="w-full rounded-full border-2 border-[#facb60] bg-gradient-to-br from-[#facb60]/20 to-white/70 px-5 py-3 text-center text-sm font-semibold text-[#101927] shadow-inner placeholder:text-[#8a6a14]/60 focus:outline-none focus:ring-2 focus:ring-[#facb60]/50"
             />
