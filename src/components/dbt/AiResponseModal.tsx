@@ -39,12 +39,8 @@ export function AiResponseModal({ open, title, loading, content, error, onClose,
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          {loading && (
-            <div className="flex flex-col items-center gap-3 py-10">
-              <span className="h-8 w-8 rounded-full border-2 border-[#7cc2c8] border-t-transparent animate-spin" />
-              <p className="text-xs text-[#101927]/60 font-display">Pensando con IA clínica…</p>
-            </div>
-          )}
+          {loading && <AiSkeleton />}
+
           {error && !loading && (
             <div className="rounded-[20px] bg-red-50 border border-red-200 p-4 text-sm text-red-800">{error}</div>
           )}
