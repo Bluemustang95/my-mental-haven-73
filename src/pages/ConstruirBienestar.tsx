@@ -1134,8 +1134,24 @@ export default function ConstruirBienestar() {
     else update({ step: 5, done: true });
   };
 
+  const hasProgress =
+    draft.selectedValues.length > 0 ||
+    !!draft.todayGoal ||
+    draft.selectedActivities.length > 0;
+
+  const showIntro = !draft.introSeen && !hasProgress && draft.step === 1 && !qsTab;
+
+  if (showIntro) {
+    return (
+      <BentoIntro
+        onStart={() => update({ introSeen: true })}
+        onReset={() => setConfirmReset(true)}
+      />
+    );
+  }
+
   return (
-    <div className="relative min-h-screen bg-[#FDFCFB] pb-36">
+    <div className="relative min-h-screen bg-[#FDFCFB] pb-44">
       <AmbientBG />
 
       <div className="mx-auto max-w-md px-4 pt-10">
@@ -1170,9 +1186,9 @@ export default function ConstruirBienestar() {
         </div>
       </div>
 
-      {/* Floating selection counter (step 1) */}
+      {/* Floating selection counter (step 1) — ubicado encima del footer */}
       {draft.step === 1 && (
-        <div className="fixed bottom-24 left-1/2 z-30 -translate-x-1/2">
+        <div className="fixed left-1/2 z-30 -translate-x-1/2" style={{ bottom: "calc(env(safe-area-inset-bottom) + 9.5rem)" }}>
           <div className="rounded-full bg-[#101927] px-5 py-2.5 text-[12px] font-semibold text-white shadow-xl">
             Seleccionados: <span className="text-[#7cc2c8]">{draft.selectedValues.length}</span> ítems
             {draft.selectedValues.length === 0 && (
@@ -1182,9 +1198,12 @@ export default function ConstruirBienestar() {
         </div>
       )}
 
-      {/* Footer continue */}
+      {/* Footer continue — encima de la bottom nav (5.5rem) */}
       {draft.step < 5 && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-white/60 bg-white/80 px-4 py-3 backdrop-blur-xl">
+        <div
+          className="fixed inset-x-0 z-20 border-t border-white/60 bg-white/85 px-4 py-3 backdrop-blur-xl"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}
+        >
           <div className="mx-auto flex max-w-md items-center gap-2">
             {draft.step > 1 && (
               <button
