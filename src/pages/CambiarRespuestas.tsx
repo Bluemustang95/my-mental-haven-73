@@ -469,8 +469,16 @@ export default function CambiarRespuestas() {
 
   // ============ STAGE: done ============
   const renderDone = () => (
-    <motion.section key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="px-4 pb-32 pt-12 space-y-6 text-center">
-      <div className="mx-auto h-20 w-20 rounded-full bg-[#7cc2c8]/15 flex items-center justify-center">
+    <motion.section key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="px-4 pb-32 pt-12 space-y-6 text-center relative">
+      <motion.div
+        aria-hidden
+        initial={{ scale: 0.4, opacity: 0.55 }}
+        animate={{ scale: 2.4, opacity: 0 }}
+        transition={{ duration: 1.4, ease: "easeOut" }}
+        className="pointer-events-none absolute left-1/2 top-16 -translate-x-1/2 h-32 w-32 rounded-full"
+        style={{ background: "radial-gradient(closest-side, rgba(250,203,96,0.55), rgba(250,203,96,0))" }}
+      />
+      <div className="relative mx-auto h-20 w-20 rounded-full bg-[#7cc2c8]/15 flex items-center justify-center">
         <Ic.Check size={36} color="#7cc2c8" />
       </div>
       <div>
@@ -483,6 +491,7 @@ export default function CambiarRespuestas() {
       </div>
     </motion.section>
   );
+
 
   return (
     <main className="min-h-screen bg-white text-[#101927]" style={{ backgroundImage: "linear-gradient(180deg, rgba(124,194,200,0.04) 0%, rgba(255,255,255,1) 30%)" }}>
