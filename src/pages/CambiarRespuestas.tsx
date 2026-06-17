@@ -644,7 +644,7 @@ export default function CambiarRespuestas() {
         />
       )}
 
-      <Ficha8AModal open={showFicha8A} onClose={() => setShowFicha8A(false)} />
+      <Ficha8AModal open={showFicha8A} onClose={() => setShowFicha8A(false)} emotion={state.selectedEmotion} />
       <AiResponseModal
         open={aiModal.open}
         title={aiModal.title}
