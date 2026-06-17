@@ -160,18 +160,21 @@ export default function CambiarRespuestas() {
         {step === 1 && (<>
           <FichaCallout label="Ficha 8 · Paso 1">Empezamos identificando con claridad qué emoción querés trabajar hoy.</FichaCallout>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">1. ¿Cuál es la emoción que querés cambiar?</h2>
-          <div className="grid grid-cols-2 gap-2.5">
-            {EMOTIONS.map((e) => {
-              const active = state.selectedEmotion === e;
-              return (
-                <button key={e} onClick={() => dispatch({ type: "PATCH", patch: { selectedEmotion: e } })}
-                  className={`min-h-[56px] rounded-[24px] border px-4 py-3 font-display text-sm font-semibold transition ${active ? "bg-[#7cc2c8]/15 border-[#7cc2c8] text-[#101927]" : "bg-white border-[#d8d9db] text-[#101927]/80"}`}>
-                  {e}
-                </button>
-              );
-            })}
-          </div>
+          <EmotionWheelSVG
+            selected={state.selectedEmotion}
+            onSelect={(em, nuance) => {
+              haptic("tick");
+              dispatch({ type: "PATCH", patch: { selectedEmotion: em, emotionNuance: nuance ?? null } });
+            }}
+          />
+          {state.selectedEmotion && (
+            <div className="text-center font-body text-[13px] text-[#101927]/70">
+              Trabajando con <strong className="text-[#101927]">{state.selectedEmotion}</strong>
+              {state.emotionNuance && <> · <em>{state.emotionNuance}</em></>}
+            </div>
+          )}
         </>)}
+
 
         {step === 2 && (<>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">2. ¿Cuál es el evento que provoca tu emoción?</h2>
