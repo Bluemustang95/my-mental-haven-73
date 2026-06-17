@@ -1087,6 +1087,129 @@ function FinishScreen({ draft, onReset }: { draft: BienestarDraft; onReset: () =
 }
 
 // ─────────────────────────────────────────────────────────────
+// PORTADA BENTO INTERACTIVA
+// ─────────────────────────────────────────────────────────────
+type BentoKey = "core" | "valores" | "plan" | "mind";
+const BENTO_TEXTS: Record<BentoKey, { emoji: string; label: string; text: string }> = {
+  core: {
+    emoji: "🌱",
+    label: "La Filosofía del Bienestar",
+    text: "Las emociones agradables no son casuales: las construimos activamente. Al programar intencionalmente experiencias placenteras a corto y largo plazo, creamos reservas cognitivas que reducen el malestar y elevan nuestra calidad de vida.",
+  },
+  valores: {
+    emoji: "🧭",
+    label: "Fase 1 · Tu Brújula de Valores",
+    text: "Un valor es una dirección vital interminable. Para que el disfrute no sea esporádico, aprenderás a elegir tus prioridades fácticas y a traducirlas en metas lógicas cotidianas orientadas a la acción.",
+  },
+  plan: {
+    emoji: "📅",
+    label: "Fase 2 · Planificación Horaria",
+    text: "No dependas de 'estar de humor' para pasar un buen momento. Agendar fácticamente bloques horarios de agrado y compromiso en un diario semanal te permite sostener el hábito clínicamente.",
+  },
+  mind: {
+    emoji: "🧠",
+    label: "Atención Plena (Savoring)",
+    text: "Entrenar la consciencia para anclarse en la experiencia placentera. De nada sirve estar de vacaciones si tu mente sigue rumiando problemas del trabajo o planificando qué hacer después.",
+  },
+};
+
+function BentoIntro({ onStart, onReset }: { onStart: () => void; onReset: () => void }) {
+  const [active, setActive] = useState<BentoKey>("core");
+  const cards: { key: BentoKey; cat: string; title: string; resume: string; span: 2 | 1; emoji: string }[] = [
+    { key: "core", cat: "Estilo de vida", title: "Emociones Positivas", resume: "No surgen por azar; las construimos conscientemente en la vida diaria.", span: 2, emoji: "🌱" },
+    { key: "valores", cat: "Fase 1", title: "Brújula", resume: "Valores profundos y metas lógicas.", span: 1, emoji: "🧭" },
+    { key: "plan", cat: "Fase 2", title: "Planificación", resume: "Sostener la agenda fáctica.", span: 1, emoji: "📅" },
+    { key: "mind", cat: "Atención plena", title: "Saborizar (Savoring)", resume: "Evitar que la mente divague hacia preocupaciones o pendientes mientras disfrutás.", span: 2, emoji: "🧠" },
+  ];
+  const dyn = BENTO_TEXTS[active];
+
+  return (
+    <div className="relative min-h-screen bg-gradient-to-b from-[#f9f9fb] to-[#f2f2f2] pb-40">
+      <AmbientBG />
+
+      <div className="mx-auto max-w-md px-4 pt-12">
+        <div className="flex items-center justify-between">
+          <p className="font-display text-[10px] font-bold uppercase tracking-[0.22em] text-[#7cc2c8]">
+            Crecimiento vital
+          </p>
+          <button
+            onClick={() => { setActive("core"); toast("Selección restablecida"); }}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-[#101927]/70 shadow-sm active:scale-95"
+            aria-label="Reset"
+          >
+            <RotateCcw size={14} />
+          </button>
+        </div>
+        <h1 className="mt-1 font-serif text-3xl font-bold text-[#101927]">Acumular Emociones</h1>
+
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          {cards.map((c) => {
+            const isActive = active === c.key;
+            return (
+              <button
+                key={c.key}
+                onClick={() => setActive(c.key)}
+                className={cn(
+                  "relative overflow-hidden rounded-[28px] p-4 text-left transition-all",
+                  c.span === 2 ? "col-span-2" : "col-span-1",
+                  "bg-white/55 backdrop-blur-[28px] border border-white/60 shadow-[0_10px_30px_-10px_rgba(16,25,39,0.06)]",
+                  isActive && "bg-white/90 border-[#7cc2c8] shadow-[0_0_0_3px_rgba(124,194,200,0.22)] -translate-y-0.5"
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">{c.cat}</p>
+                  <span className="text-xl leading-none">{c.emoji}</span>
+                </div>
+                <p className="mt-2 font-serif text-lg font-bold leading-tight text-[#101927]">{c.title}</p>
+                <p className="mt-1.5 text-[11px] leading-snug text-[#101927]/65">{c.resume}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Panel oscuro dinámico */}
+        <div className="mt-4 rounded-[28px] border border-white/12 bg-[#101927]/85 p-5 backdrop-blur-[30px] shadow-xl">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={active}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.15 }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">{dyn.emoji}</span>
+                <p className="font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">
+                  {dyn.label}
+                </p>
+              </div>
+              <p className="mt-2 text-[13px] leading-6 text-white/85">{dyn.text}</p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* CTA fijo */}
+      <div
+        className="fixed inset-x-0 z-20 px-4"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)" }}
+      >
+        <div className="mx-auto max-w-md">
+          <button
+            onClick={() => { toast("Iniciando planificador"); onStart(); }}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#101927] py-4 font-display text-sm font-bold text-white shadow-2xl shadow-black/30 active:scale-[0.98]"
+          >
+            Comenzar mi construcción <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ─────────────────────────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────────────────────────
 export default function ConstruirBienestar() {
