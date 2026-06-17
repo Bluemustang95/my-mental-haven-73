@@ -399,7 +399,7 @@ export default function CambiarRespuestas() {
         <ProgressIndicator step={step} total={7} />
 
         {step === 1 && (<>
-          <FichaCallout label="Ficha 12 · Descubrir">Vas a resolver esta situación con un plan estructurado. Tu emoción se ajusta a los hechos y actuar es efectivo.</FichaCallout>
+          <FichaCallout label="Descubrir">Vas a resolver esta situación con un plan estructurado. Tu emoción se ajusta a los hechos y actuar es efectivo.</FichaCallout>
           <h2 className="font-display text-[18px] font-bold text-[#101927]">Situación que vas a resolver</h2>
           <div className="rounded-[24px] bg-[#f2f2f2] p-5 font-body text-[15px] leading-7 text-[#101927]">{state.eventDescription}</div>
         </>)}
