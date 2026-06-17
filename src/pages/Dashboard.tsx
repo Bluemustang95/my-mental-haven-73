@@ -11,6 +11,7 @@ import { CheckinModal } from "@/components/modals/CheckinModal";
 import { PsychoModal } from "@/components/modals/PsychoModal";
 import { DayHistorySheet } from "@/components/mindfulness/DayHistorySheet";
 import { PremiumLock } from "@/components/PremiumLock";
+import { PendingBento } from "@/components/home/PendingBento";
 import { toast } from "sonner";
 
 function getGreeting() {
@@ -257,7 +258,9 @@ export default function Dashboard() {
         {/* Timeline */}
         <Timeline nodes={nodes} allDone={allDone} />
 
-        <PremiumLock featureName="Recursos de sueño avanzados" variant="card" className="mt-3">
+        <PendingBento />
+
+        <PremiumLock featureName="Recursos de sueño avanzados" variant="card" className="mt-8">
           <button
             onClick={() => navigate("/herramientas/sueno")}
             className="flex w-full items-center justify-between gap-3 overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-500 p-3 text-left text-white shadow-[0_15px_40px_-15px_rgba(139,92,246,0.7)] transition active:scale-[0.98]"

@@ -77,57 +77,57 @@ export function PatternInsights() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#7cc2c8]/15 via-white/5 to-[#facb60]/10 p-4 backdrop-blur-md"
+      className="rounded-2xl bg-white shadow-sm p-4"
     >
       <div className="mb-3 flex items-center gap-2">
         <Sparkles size={14} className="text-[#facb60]" />
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-white/55">
-          Tus patrones · {data.total} sesiones
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-[#101927]/55">
+          Tus patrones · {data.total} {data.total === 1 ? "sesión" : "sesiones"}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         {data.topEmotion && (
-          <div className="rounded-2xl bg-white/5 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+          <div className="rounded-xl bg-[#FDFCFB] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#101927]/45">
               Emoción frecuente
             </p>
-            <p className="mt-1 font-display text-base font-bold capitalize">
+            <p className="mt-1 font-display text-base font-bold capitalize text-[#101927]">
               {data.topEmotion.name}
             </p>
-            <p className="mt-0.5 text-[11px] text-white/55">
+            <p className="mt-0.5 text-[11px] text-[#101927]/55">
               {data.topEmotion.count} {data.topEmotion.count === 1 ? "vez" : "veces"}
             </p>
           </div>
         )}
 
         {pathLabel && (
-          <div className="rounded-2xl bg-white/5 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+          <div className="rounded-xl bg-[#FDFCFB] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#101927]/45">
               Camino dominante
             </p>
-            <p className="mt-1 font-display text-sm font-bold leading-tight">
+            <p className="mt-1 font-display text-sm font-bold leading-tight text-[#101927]">
               {pathLabel}
             </p>
           </div>
         )}
 
         {data.effectiveRate !== null && (
-          <div className="rounded-2xl bg-white/5 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+          <div className="rounded-xl bg-[#FDFCFB] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#101927]/45">
               Efectividad percibida
             </p>
-            <p className="mt-1 font-display text-base font-bold">
+            <p className="mt-1 font-display text-base font-bold text-[#101927]">
               {Math.round(data.effectiveRate * 100)}%
             </p>
           </div>
         )}
 
-        <div className="rounded-2xl bg-white/5 p-3">
-          <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white/45">
+        <div className="rounded-xl bg-[#FDFCFB] p-3">
+          <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[#101927]/45">
             <TrendingUp size={10} /> Últimos 30 días
           </div>
-          <p className="mt-1 font-display text-base font-bold">
+          <p className="mt-1 font-display text-base font-bold text-[#101927]">
             {data.last30} {data.last30 === 1 ? "sesión" : "sesiones"}
           </p>
         </div>
