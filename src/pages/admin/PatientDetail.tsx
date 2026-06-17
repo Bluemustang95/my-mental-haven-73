@@ -5,7 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Crown, Shield, Mic } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { voiceForCountry } from "@/lib/voiceByCountry";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"patient_app_profiles">;
@@ -17,26 +20,63 @@ export default function PatientDetail() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [tests, setTests] = useState<TestResult[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
     if (!userId) return;
     Promise.all([
       supabase.from("patient_app_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
       supabase.from("daily_checkins").select("*").eq("user_id", userId).order("checkin_date", { ascending: false }).limit(30),
       supabase.from("test_results").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       supabase.from("exercise_sessions").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
-    ]).then(([profileRes, checkinsRes, testsRes, exercisesRes]) => {
+    ]).then(([profileRes, roleRes, checkinsRes, testsRes, exercisesRes]) => {
       setProfile(profileRes.data);
+      setIsAdmin(!!roleRes.data);
       setCheckins(checkinsRes.data ?? []);
       setTests(testsRes.data ?? []);
       setExercises(exercisesRes.data ?? []);
       setLoading(false);
     });
-  }, [userId]);
+  };
+
+  useEffect(load, [userId]);
+
+  const setPlan = async (plan: "free" | "premium", days?: number) => {
+    if (!userId) return;
+    setSaving(true);
+    const expires = plan === "premium" && days
+      ? new Date(Date.now() + days * 86400000).toISOString()
+      : null;
+    const { error } = await supabase.rpc("admin_set_plan", {
+      _user_id: userId,
+      _plan: plan,
+      _expires_at: expires,
+    });
+    setSaving(false);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else {
+      toast({ title: `Plan actualizado a ${plan}` });
+      load();
+    }
+  };
+
+  const toggleAdmin = async (next: boolean) => {
+    if (!userId) return;
+    setSaving(true);
+    const { error } = await supabase.rpc("admin_set_admin_role", { _user_id: userId, _is_admin: next });
+    setSaving(false);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else {
+      toast({ title: next ? "Rol admin otorgado" : "Rol admin removido" });
+      setIsAdmin(next);
+    }
+  };
 
   if (loading) {
     return (
@@ -55,6 +95,12 @@ export default function PatientDetail() {
     );
   }
 
+  const voice = voiceForCountry(profile.country);
+  const isPremium = profile.plan === "premium";
+  const expiresIn = profile.plan_expires_at
+    ? Math.ceil((new Date(profile.plan_expires_at).getTime() - Date.now()) / 86400000)
+    : null;
+
   return (
     <div>
       <div className="mb-6 flex items-center gap-3">
@@ -62,9 +108,15 @@ export default function PatientDetail() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="font-display text-2xl font-bold">{profile.display_name ?? "Sin nombre"}</h1>
+        {isAdmin && <Badge className="gap-1 bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/30"><Shield className="h-3 w-3" /> Admin</Badge>}
+        {isPremium && <Badge className="gap-1 bg-gradient-to-r from-amber-200 to-amber-400 text-amber-900 border-0"><Crown className="h-3 w-3" /> Premium</Badge>}
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">País</CardTitle></CardHeader>
+          <CardContent><p className="font-medium">{profile.country ?? "—"}</p></CardContent>
+        </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Etapa de vida</CardTitle></CardHeader>
           <CardContent><p className="font-medium">{profile.life_stage ?? "—"}</p></CardContent>
@@ -73,11 +125,66 @@ export default function PatientDetail() {
           <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Tratamiento</CardTitle></CardHeader>
           <CardContent><p className="font-medium">{profile.treatment_status ?? "none"}</p></CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Profesional vinculado</CardTitle></CardHeader>
-          <CardContent><p className="font-medium">{profile.linked_professional_code ?? "Ninguno"}</p></CardContent>
-        </Card>
       </div>
+
+      {/* Membresía y acceso */}
+      <Card className="mb-6 border-amber-200/40 bg-gradient-to-br from-amber-50/40 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Crown className="h-4 w-4 text-amber-600" /> Membresía y acceso
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm text-muted-foreground">Plan actual:</span>
+            {isPremium ? (
+              <Badge className="bg-gradient-to-r from-amber-200 to-amber-400 text-amber-900 border-0">Premium</Badge>
+            ) : (
+              <Badge variant="outline">Free</Badge>
+            )}
+            {expiresIn !== null && (
+              <span className="text-xs text-muted-foreground">
+                · expira en {expiresIn} {expiresIn === 1 ? "día" : "días"}
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => setPlan("premium", 30)}>
+              Otorgar Premium 30 días
+            </Button>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => setPlan("premium", 365)}>
+              Premium 1 año
+            </Button>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => setPlan("premium")}>
+              Premium sin vencimiento
+            </Button>
+            <Button size="sm" variant="ghost" disabled={saving || !isPremium} onClick={() => setPlan("free")}>
+              Revocar
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border bg-background/50 p-3">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-[#6366f1]" />
+              <div>
+                <p className="text-sm font-medium">Rol administrador</p>
+                <p className="text-xs text-muted-foreground">Acceso al panel y a todas las funciones premium</p>
+              </div>
+            </div>
+            <Switch checked={isAdmin} disabled={saving} onCheckedChange={toggleAdmin} />
+          </div>
+
+          <div className="flex items-center gap-3 rounded-lg border bg-background/50 p-3">
+            <Mic className="h-4 w-4 text-foreground/60" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Voz asignada (ElevenLabs)</p>
+              <p className="text-xs text-muted-foreground">{voice.label}</p>
+            </div>
+            <Badge variant="outline" className="text-[10px]">{voice.region.toUpperCase()}</Badge>
+          </div>
+        </CardContent>
+      </Card>
 
       {profile.areas_of_interest && profile.areas_of_interest.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
