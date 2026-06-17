@@ -216,9 +216,11 @@ export default function CambiarRespuestas() {
   };
 
   const advanceW8 = () => {
+    haptic("confirm");
     if (state.step < 6) dispatch({ type: "NEXT" });
     else dispatch({ type: "GOTO", stage: "decision9", step: 1 });
   };
+
 
   // ============ STAGE: decision9 ============
   const renderDecision9 = () => {
