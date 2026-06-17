@@ -70,11 +70,17 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
     }
     setSubmitting(true);
     if (user) {
+      const parts = fullName.trim().split(/\s+/);
+      const first = parts.shift() ?? fullName.trim();
+      const last = parts.join(" ") || "—";
       await supabase.from("patients_intake").insert({
         user_id: user.id,
-        full_name: fullName.trim(),
-        contact_phone: intakePhone.trim(),
-        consultation_reason: reason.trim(),
+        first_name: first,
+        last_name: last,
+        phone: intakePhone.trim(),
+        email: user.email ?? null,
+        reason: reason.trim(),
+        status: "pending",
       } as any);
     }
     setSubmitting(false);
