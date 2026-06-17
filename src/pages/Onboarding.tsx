@@ -228,6 +228,22 @@ export default function Onboarding() {
     }
   };
 
+  const selectFreePlan = async () => {
+    if (!user) {
+      navigate("/", { replace: true });
+      return;
+    }
+    setSavingPlan(true);
+    await supabase
+      .from("patient_app_profiles")
+      .upsert(
+        { user_id: user.id, plan: "free", plan_started_at: null } as any,
+        { onConflict: "user_id" }
+      );
+    setSavingPlan(false);
+    navigate("/mi-proceso#suscripcion", { replace: true });
+  };
+
   const totalSteps = 6;
   const canNext =
     (step === 0 && name.trim().length > 0 && age.length > 0) ||
@@ -242,8 +258,8 @@ export default function Onboarding() {
   return (
     <OnboardingShell
       step={wizardStep}
-      totalSteps={step < 0 || step === 6 ? 0 : totalSteps}
-      onBack={step > -2 && step !== 6 ? () => setStep((s) => s - 1) : undefined}
+      totalSteps={step < 0 || step === 6 || step === 8 ? 0 : totalSteps}
+      onBack={step > -2 && step !== 6 && step !== 8 ? () => setStep((s) => s - 1) : undefined}
     >
       {step === -2 && <SplashIntro onContinue={() => setStep(-1)} />}
       {step === -1 && <ValueSlides onContinue={() => setStep(0)} />}
