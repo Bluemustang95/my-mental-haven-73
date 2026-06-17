@@ -5,6 +5,8 @@ import { Clock, Users, Calendar, MessageCircle, Brain, Mail, Moon, Mic, Square, 
 import { Flower, Toolbox } from "@phosphor-icons/react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlan } from "@/hooks/usePlan";
+import { PaywallModal } from "@/components/modals/PaywallModal";
 import { toast } from "sonner";
 
 /* ── Keyword triggers for dynamic recommendations ── */
