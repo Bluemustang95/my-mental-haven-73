@@ -84,6 +84,7 @@ import SettingsHistory from "@/pages/SettingsHistory";
 import DiarioInteligente from "@/pages/DiarioInteligente";
 import Psicoeducacion from "@/pages/Psicoeducacion";
 import SystemSettings from "@/pages/admin/SystemSettings";
+import AdminStats from "@/pages/admin/AdminStats";
 import CategoryDetail from "@/pages/psicoeducacion/CategoryDetail";
 import LessonView from "@/pages/psicoeducacion/LessonView";
 import PracticeView from "@/pages/psicoeducacion/PracticeView";
@@ -209,6 +210,7 @@ const App = () => (
               <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
               <Route path="/admin/cuestionario" element={<QuestionnaireManager />} />
               <Route path="/admin/configuracion" element={<SystemSettings />} />
+              <Route path="/admin/estadisticas" element={<AdminStats />} />
               <Route path="/admin/pack" element={<PackOverview />} />
               <Route path="/admin/pack/ba" element={<BAContentEditor />} />
             </Route>
