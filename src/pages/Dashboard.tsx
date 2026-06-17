@@ -238,13 +238,15 @@ export default function Dashboard() {
 
         {/* Week strip */}
         <div className="mt-4">
-          <WeekStrip
-            progressByDate={weekProgress}
-            onSelectDay={(d) => {
-              setHistoryDate(d);
-              setHistoryOpen(true);
-            }}
-          />
+          <PremiumLock featureName="Tu semana" variant="card">
+            <WeekStrip
+              progressByDate={weekProgress}
+              onSelectDay={(d) => {
+                setHistoryDate(d);
+                setHistoryOpen(true);
+              }}
+            />
+          </PremiumLock>
         </div>
 
         {/* Progress label */}
