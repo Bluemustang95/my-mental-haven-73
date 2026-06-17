@@ -117,27 +117,76 @@ export default function DiarioInteligente() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
-              className="grid grid-cols-2 gap-3"
+              className="space-y-5"
             >
-              {items.map((s, i) => (
-                <motion.button
-                  key={s.id}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => pick(s)}
-                  className={`relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br ${SUB_COLORS[i % SUB_COLORS.length]} p-4 text-left backdrop-blur-md`}
-                >
-                  <span className="absolute -bottom-4 -right-4 select-none text-[7rem] opacity-15">
-                    {meta.emoji}
-                  </span>
-                  <span className="text-xs font-semibold uppercase tracking-widest text-white/60">
-                    Ejercicio
-                  </span>
-                  <p className="relative font-display text-base font-bold leading-tight">
-                    {s.name}
+              {slug === "regulacion-emocional" && (
+                <div className="space-y-3">
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => navigate("/herramientas/cambiar-respuestas")}
+                    className="relative w-full overflow-hidden rounded-3xl border border-[#7cc2c8]/40 bg-gradient-to-br from-[#7cc2c8]/25 via-[#7cc2c8]/10 to-[#facb60]/15 p-5 text-left backdrop-blur-md"
+                  >
+                    <span className="absolute right-3 top-3 rounded-full bg-[#facb60]/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#facb60]">
+                      Premium
+                    </span>
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-[#7cc2c8]">
+                      Workspace clínico DBT
+                    </span>
+                    <p className="mt-2 font-display text-lg font-bold leading-tight">
+                      Cambiar respuestas emocionales
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-white/65">
+                      Fichas 8 a 13 · IA guiada · Verificá los hechos, decidí y actuá
+                    </p>
+                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#7cc2c8]">
+                      Empezar sesión →
+                    </span>
+                  </motion.button>
+
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => navigate("/herramientas/regulacion-emocional")}
+                    className="relative w-full overflow-hidden rounded-3xl border border-white/15 bg-white/5 p-4 text-left backdrop-blur-md"
+                  >
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-white/55">
+                      Habilidades rápidas
+                    </span>
+                    <p className="mt-1 font-display text-base font-bold leading-tight">
+                      STOP & TIPP
+                    </p>
+                    <p className="mt-1 text-xs text-white/60">
+                      Frená el impulso · Cambio químico en minutos
+                    </p>
+                  </motion.button>
+
+                  <p className="pt-2 text-[11px] font-semibold uppercase tracking-widest text-white/40">
+                    Otros ejercicios
                   </p>
-                </motion.button>
-              ))}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                {items.map((s, i) => (
+                  <motion.button
+                    key={s.id}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => pick(s)}
+                    className={`relative flex aspect-[3/4] flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br ${SUB_COLORS[i % SUB_COLORS.length]} p-4 text-left backdrop-blur-md`}
+                  >
+                    <span className="absolute -bottom-4 -right-4 select-none text-[7rem] opacity-15">
+                      {meta.emoji}
+                    </span>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-white/60">
+                      Ejercicio
+                    </span>
+                    <p className="relative font-display text-base font-bold leading-tight">
+                      {s.name}
+                    </p>
+                  </motion.button>
+                ))}
+              </div>
             </motion.div>
+
           ) : (
             <motion.div
               key="saved"
