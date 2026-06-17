@@ -130,6 +130,16 @@ export default function Auth() {
 
         {mode !== "forgot" && (
           <>
+            {bioReady && (
+              <button
+                onClick={handleBiometric}
+                className="mb-3 flex w-full items-center justify-center gap-2 rounded-full border border-[#7cc2c8]/40 bg-[#7cc2c8]/10 py-3.5 font-display text-[14px] font-bold transition active:scale-[0.98]"
+                style={{ color: INK }}
+              >
+                <Fingerprint size={18} weight="bold" />
+                Entrar con Face / Touch ID
+              </button>
+            )}
             <button
               onClick={handleGoogle}
               disabled={loading}
