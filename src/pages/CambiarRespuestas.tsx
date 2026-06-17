@@ -18,6 +18,11 @@ import {
 import { AiResponseModal } from "@/components/dbt/AiResponseModal";
 import { Ficha8AModal } from "@/components/dbt/Ficha8AModal";
 import { SaveIndicator } from "@/components/dbt/SaveIndicator";
+import { SessionTimeline } from "@/components/dbt/SessionTimeline";
+import { DecisionTreeSVG } from "@/components/dbt/DecisionTreeSVG";
+import { BeforeAfterCompare } from "@/components/dbt/BeforeAfterCompare";
+import type { Stage } from "@/hooks/useChangeResponseFlow";
+
 
 
 type AiTask = "separate-facts" | "evaluate-fit" | "evaluate-effectiveness" | "suggest-solutions" | "body-plan";
@@ -30,7 +35,32 @@ export default function CambiarRespuestas() {
   const [showFicha8A, setShowFicha8A] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [saveTick, setSaveTick] = useState(0);
+  const [visited, setVisited] = useState<Set<Stage>>(() => new Set([state.stage]));
   const [aiModal, setAiModal] = useState<{ open: boolean; title: string; loading: boolean; content?: string; error?: string; onApply?: (t: string) => void }>({ open: false, title: "", loading: false });
+
+  // Track visited stages for the timeline back-navigation.
+  useEffect(() => {
+    setVisited((prev) => {
+      if (prev.has(state.stage)) return prev;
+      const next = new Set(prev);
+      next.add(state.stage);
+      return next;
+    });
+  }, [state.stage]);
+
+  const chosenPath: "problem" | "opposite" | null =
+    state.stage === "problem12"
+      ? "problem"
+      : state.stage === "opposite10"
+        ? "opposite"
+        : state.fitsFacts !== null && state.isEffective !== null
+          ? (state.fitsFacts && state.isEffective ? "problem" : "opposite")
+          : null;
+
+  const handleTimelineJump = (s: Stage) => {
+    haptic("tick");
+    dispatch({ type: "GOTO", stage: s, step: 1 });
+  };
 
   // Auto-save indicator: pulse whenever the persisted state changes (debounced via key).
   const stateKey = `${state.stage}:${state.step}`;
@@ -242,6 +272,9 @@ export default function CambiarRespuestas() {
           </div>
           <p className="font-body text-[13px] text-[#101927]/75"><strong>{state.selectedEmotion}:</strong> {state.eventDescription.slice(0, 110)}{state.eventDescription.length > 110 ? "…" : ""}</p>
         </div>
+
+        <DecisionTreeSVG fitsFacts={state.fitsFacts} isEffective={state.isEffective} />
+
 
         <h2 className="font-display text-[18px] font-bold text-[#101927]">¿Actuar según esta emoción es efectivo?</h2>
 
@@ -488,10 +521,21 @@ export default function CambiarRespuestas() {
         <h2 className="font-display text-2xl font-bold text-[#101927]">¡Sesión guardada!</h2>
         <p className="font-body text-[15px] leading-7 text-[#101927]/70 mt-2 px-4">Tu recorrido de Regulación Emocional quedó registrado. Podés volver a revisarlo cuando quieras.</p>
       </div>
+
+      <div className="text-left">
+        <BeforeAfterCompare
+          emotion={state.selectedEmotion || "Tu emoción"}
+          before={[state.eventDescription, state.opposite.impulses].filter(Boolean).join(" · ")}
+          afterLabel={state.problem.chosenSolution ? "Plan · Resolver" : "Acción Opuesta"}
+          after={state.problem.chosenSolution || state.opposite.bodyPlan}
+        />
+      </div>
+
       <div className="space-y-2 px-2">
         <button onClick={() => navigate("/")} className="w-full rounded-[24px] bg-[#101927] py-4 font-display text-sm font-semibold text-white active:scale-[0.97]">Volver al inicio</button>
         <button onClick={reset} className="w-full rounded-[24px] bg-[#f2f2f2] py-4 font-display text-sm font-semibold text-[#101927] active:scale-[0.97]">Hacer otra sesión</button>
       </div>
+
     </motion.section>
   );
 
@@ -499,8 +543,10 @@ export default function CambiarRespuestas() {
   return (
     <main className="min-h-screen bg-white text-[#101927]" style={{ backgroundImage: "linear-gradient(180deg, rgba(124,194,200,0.04) 0%, rgba(255,255,255,1) 30%)" }}>
       <WorkspaceHeader subtitle={subtitleByStage} onReset={() => setConfirmReset(true)} onBack={handleBack} />
+      <SessionTimeline stage={state.stage} path={chosenPath} visited={visited} onJump={handleTimelineJump} />
 
       <div className="mx-auto max-w-md">
+
         <AnimatePresence mode="wait">
           {state.stage === "wizard8" && renderWizard8()}
           {state.stage === "decision9" && renderDecision9()}
