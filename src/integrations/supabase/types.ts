@@ -663,6 +663,60 @@ export type Database = {
         }
         Relationships: []
       }
+      dbt_emotion_sessions: {
+        Row: {
+          catastrophe_coping: string | null
+          completed_at: string | null
+          created_at: string
+          emotion: string
+          event_description: string | null
+          fits_facts: boolean | null
+          id: string
+          interpretations: string | null
+          is_effective: boolean | null
+          opposite_payload: Json | null
+          path: string | null
+          problem_payload: Json | null
+          threat: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          catastrophe_coping?: string | null
+          completed_at?: string | null
+          created_at?: string
+          emotion: string
+          event_description?: string | null
+          fits_facts?: boolean | null
+          id?: string
+          interpretations?: string | null
+          is_effective?: boolean | null
+          opposite_payload?: Json | null
+          path?: string | null
+          problem_payload?: Json | null
+          threat?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          catastrophe_coping?: string | null
+          completed_at?: string | null
+          created_at?: string
+          emotion?: string
+          event_description?: string | null
+          fits_facts?: boolean | null
+          id?: string
+          interpretations?: string | null
+          is_effective?: boolean | null
+          opposite_payload?: Json | null
+          path?: string | null
+          problem_payload?: Json | null
+          threat?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dream_log: {
         Row: {
           created_at: string | null
