@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History } from "lucide-react";
+import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History, Crown, RefreshCw, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { usePlan } from "@/hooks/usePlan";
 import { IOSToggle } from "@/components/ui/IOSToggle";
+import { PaywallModal } from "@/components/modals/PaywallModal";
+import { ManageSubscriptionModal } from "@/components/modals/ManageSubscriptionModal";
 import { toast } from "sonner";
 
 export default function Settings() {
