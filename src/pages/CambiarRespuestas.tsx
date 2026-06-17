@@ -276,7 +276,7 @@ export default function CambiarRespuestas() {
           <h2 className="font-display text-[18px] font-bold text-[#101927]">6. ¿Tu emoción y su intensidad se ajustan a los hechos?</h2>
           <p className="font-body text-[14px] leading-6 text-[#101927]/70">Consultá los hechos objetivos. Preguntale a tu Mente Sabia si la intensidad se justifica.</p>
           <button onClick={() => setShowFicha8A(true)} className="w-full rounded-[20px] border border-[#7cc2c8]/30 bg-[#7cc2c8]/5 px-4 py-3 flex items-center justify-center gap-2 font-display text-[13px] font-semibold text-[#7cc2c8] active:scale-[0.98]">
-            <Ic.Info /> Ver ejemplos (Ficha 8A)
+            <Ic.Info /> Ver ejemplo de {state.selectedEmotion ?? "tu emoción"}
           </button>
           <div className="grid grid-cols-2 gap-2.5 mt-2">
             {[{ v: true, l: "Sí se ajusta" }, { v: false, l: "No se ajusta" }].map((opt) => {
