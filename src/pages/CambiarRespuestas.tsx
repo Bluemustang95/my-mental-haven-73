@@ -45,7 +45,18 @@ export default function CambiarRespuestas() {
   const [socraticOpen, setSocraticOpen] = useState(false);
   const [resumeBanner, setResumeBanner] = useState<{ open: boolean; hoursAgo: number }>({ open: false, hoursAgo: 0 });
   const resumePromptedRef = useRef(false);
+  const resetIfDoneRef = useRef(false);
   const [aiModal, setAiModal] = useState<{ open: boolean; title: string; loading: boolean; content?: string; error?: string; onApply?: (t: string) => void }>({ open: false, title: "", loading: false });
+
+  // If we land on the page with a "done" state lingering from a previous run, reset it.
+  useEffect(() => {
+    if (resetIfDoneRef.current) return;
+    if (state.stage === "done") {
+      resetIfDoneRef.current = true;
+      clearDraft();
+      dispatch({ type: "RESET" });
+    }
+  }, [state.stage, clearDraft, dispatch]);
 
   // Resume detection: once hydrated, if draft is >2h old and has progress, prompt.
   useEffect(() => {
