@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHapticPulse } from "@/hooks/useHaptics";
 import { toast } from "sonner";
 
-import { useChangeResponseFlow } from "@/hooks/useChangeResponseFlow";
+import { useChangeResponseFlow, draftHasProgress } from "@/hooks/useChangeResponseFlow";
+import { ResumeSessionBanner } from "@/components/dbt/ResumeSessionBanner";
 import {
   EMOTIONS, FICHA_8A, OPPOSITE_ACTIONS, BODY_PLAN_FALLBACK,
   EMOTION_TINT, type DbtEmotion,
@@ -42,7 +43,21 @@ export default function CambiarRespuestas() {
   const [saveTick, setSaveTick] = useState(0);
   const [visited, setVisited] = useState<Set<Stage>>(() => new Set([state.stage]));
   const [socraticOpen, setSocraticOpen] = useState(false);
+  const [resumeBanner, setResumeBanner] = useState<{ open: boolean; hoursAgo: number }>({ open: false, hoursAgo: 0 });
+  const resumePromptedRef = useRef(false);
   const [aiModal, setAiModal] = useState<{ open: boolean; title: string; loading: boolean; content?: string; error?: string; onApply?: (t: string) => void }>({ open: false, title: "", loading: false });
+
+  // Resume detection: once hydrated, if draft is >2h old and has progress, prompt.
+  useEffect(() => {
+    if (resumePromptedRef.current) return;
+    if (!state.updatedAt) return;
+    resumePromptedRef.current = true;
+    const hoursAgo = (Date.now() - state.updatedAt) / 3_600_000;
+    if (hoursAgo >= 2 && draftHasProgress(state)) {
+      setResumeBanner({ open: true, hoursAgo });
+    }
+  }, [state]);
+
 
   // Contexto enviado a la guía socrática según etapa/paso.
   const socraticContext = useMemo(() => {
@@ -594,6 +609,16 @@ export default function CambiarRespuestas() {
       <SessionTimeline stage={state.stage} path={chosenPath} visited={visited} onJump={handleTimelineJump} />
 
       <div className="mx-auto max-w-md">
+        <ResumeSessionBanner
+          open={resumeBanner.open}
+          hoursAgo={resumeBanner.hoursAgo}
+          emotion={state.selectedEmotion}
+          stageLabel={subtitleByStage}
+          onResume={() => setResumeBanner((b) => ({ ...b, open: false }))}
+          onDiscard={() => { setResumeBanner((b) => ({ ...b, open: false })); reset(); }}
+        />
+
+
 
         <AnimatePresence mode="wait">
           {state.stage === "wizard8" && renderWizard8()}

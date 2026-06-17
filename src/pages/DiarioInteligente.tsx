@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { toast } from "sonner";
+import { PatternInsights } from "@/components/dbt/PatternInsights";
 
 type Sub = {
   id: string;
@@ -121,6 +122,8 @@ export default function DiarioInteligente() {
             >
               {slug === "regulacion-emocional" && (
                 <div className="space-y-3">
+                  <PatternInsights />
+
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={() => navigate("/herramientas/cambiar-respuestas")}
