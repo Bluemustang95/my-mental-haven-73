@@ -378,7 +378,7 @@ export default function CambiarRespuestas() {
     const emotion = (state.selectedEmotion || "Tristeza") as DbtEmotion;
     const oa = OPPOSITE_ACTIONS[emotion];
     const tint = EMOTION_TINT[emotion];
-    const advance = () => { if (step < 7) dispatch({ type: "NEXT" }); else saveSession(); };
+    const advance = () => { haptic("confirm"); if (step < 7) dispatch({ type: "NEXT" }); else saveSession(); };
     const canAdv = () => {
       if (step === 3) return state.opposite.impulses.trim().length > 0;
       if (step === 6) return state.opposite.bodyPlan.trim().length > 0;
