@@ -207,7 +207,7 @@ export default function Onboarding() {
       if (isBiometricSupported()) {
         await enrollBiometric(data.session.user.id, pending.name);
       }
-      navigate("/", { replace: true });
+      setStep(8);
     } else {
       sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
       setAuthMessage("Cuenta creada. Iniciá sesión para entrar.");
