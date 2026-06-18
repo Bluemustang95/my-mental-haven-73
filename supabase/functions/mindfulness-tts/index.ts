@@ -1,4 +1,9 @@
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
 const DEFAULT_VOICE_ID = "9rvdnhrYoXoUt4igKpBw"; // Argentina (Nadia)
 
@@ -61,6 +66,7 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       const errText = await res.text();
+      console.error("[mindfulness-tts] ElevenLabs error", res.status, errText);
       return new Response(
         JSON.stringify({ error: `ElevenLabs ${res.status}: ${errText}` }),
         { status: res.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -77,7 +83,8 @@ Deno.serve(async (req) => {
       },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e?.message ?? e) }), {
+    console.error("[mindfulness-tts] error", e);
+    return new Response(JSON.stringify({ error: String((e as Error)?.message ?? e) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

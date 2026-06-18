@@ -9,6 +9,14 @@ import { TimeSetupScreen } from "@/components/mindfulness/breathing/TimeSetupScr
 import { BreathingOnboarding } from "@/components/mindfulness/breathing/BreathingOnboarding";
 import { primeAudio } from "@/lib/elevenLabsTTS";
 import { primeAmbientAudio } from "@/hooks/useAmbientPlayer";
+import { supabase } from "@/integrations/supabase/client";
+
+const PATTERN_TO_SUBKEY: Record<string, string> = {
+  "478": "dormir",
+  sigh: "ansiedad",
+  box: "concentrarme",
+  coherence: "equilibrar",
+};
 
 type Visual = "orb" | "bodyscan";
 type Step = "setup_intention" | "setup_time" | "playing";
@@ -33,12 +41,42 @@ export default function BreathingHome() {
   );
   const [step, setStep] = useState<Step>(urlIntention ? "setup_time" : "setup_intention");
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [narrationText, setNarrationText] = useState<string>("");
 
   useEffect(() => {
     try {
       if (!localStorage.getItem(ONBOARDED_KEY)) setShowOnboarding(true);
     } catch {}
   }, []);
+
+  // Fetch the long-form script from the DB once we know what's being played.
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const category = visual === "orb" ? "respiracion" : "body_scan";
+      const subKey = visual === "orb" ? (PATTERN_TO_SUBKEY[patternId] ?? null) : null;
+      let q = supabase
+        .from("mindfulness_scripts")
+        .select("script,duration_min")
+        .eq("category", category);
+      if (subKey === null) q = q.is("sub_key", null);
+      else q = q.eq("sub_key", subKey);
+      const { data } = await q;
+      if (cancelled || !data || data.length === 0) { if (!cancelled) setNarrationText(""); return; }
+      // Pick the row whose duration is closest to the chosen minutes (or exact match).
+      const exact = data.find((r) => r.duration_min === minutes);
+      const pick = exact ?? data.reduce((best, r) => {
+        const db = Math.abs((best.duration_min ?? 9999) - minutes);
+        const dr = Math.abs((r.duration_min ?? 9999) - minutes);
+        return dr < db ? r : best;
+      }, data[0]);
+      setNarrationText(pick?.script ?? "");
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [visual, patternId, minutes]);
+
+
 
   function finishOnboarding() {
     try {
@@ -121,6 +159,7 @@ export default function BreathingHome() {
             initialVoice
             initialMusic="rain_soft"
             hapticsEnabled
+            narrationText={narrationText}
             onComplete={onComplete}
             onAbort={onAbort}
           />
@@ -129,6 +168,7 @@ export default function BreathingHome() {
             totalSeconds={minutes * 60}
             initialVoice
             initialMusic="rain_soft"
+            narrationText={narrationText}
             onComplete={onComplete}
             onAbort={onAbort}
           />

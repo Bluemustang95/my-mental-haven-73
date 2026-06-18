@@ -20,11 +20,12 @@ interface Props {
   totalSeconds: number;
   initialVoice: boolean;
   initialMusic: MusicTrack;
+  narrationText?: string;
   onComplete: () => void;
   onAbort: () => void;
 }
 
-export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onComplete, onAbort }: Props) {
+export function BodyScanView({ totalSeconds, initialVoice, initialMusic, narrationText, onComplete, onAbort }: Props) {
   const [zoneIdx, setZoneIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
   const [running, setRunning] = useState(true);
@@ -64,8 +65,21 @@ export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onCompl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft]);
 
+  // Narration: prefer the full DB script (spoken once). Fallback to zone cues.
+  const narratedRef = useRef(false);
   useEffect(() => {
-    if (voice && running) audio.speak(ZONES[zoneIdx].speech);
+    if (!voice || !running || narratedRef.current) return;
+    if (narrationText && narrationText.trim().length > 0) {
+      narratedRef.current = true;
+      audio.speak(narrationText);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice, running, narrationText]);
+
+  useEffect(() => {
+    if (!voice || !running) return;
+    if (narrationText && narrationText.trim().length > 0) return;
+    audio.speak(ZONES[zoneIdx].speech);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoneIdx]);
 

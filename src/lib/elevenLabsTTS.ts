@@ -5,7 +5,7 @@
  */
 import { getGlobalVoice } from "@/lib/globalVoice";
 
-const DB_NAME = "resma_tts_cache_v2";
+const DB_NAME = "resma_tts_cache_v3";
 const STORE = "audio";
 const DB_VERSION = 1;
 
@@ -13,13 +13,24 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 const TTS_URL = `${SUPABASE_URL}/functions/v1/mindfulness-tts`;
 
-// Best-effort wipe of the legacy cache that may contain corrupted/error blobs.
+// Best-effort wipe of legacy caches that may contain corrupted/error blobs.
 try { indexedDB.deleteDatabase("resma_tts_cache"); } catch { /* noop */ }
+try { indexedDB.deleteDatabase("resma_tts_cache_v2"); } catch { /* noop */ }
 
 function isAudioBlob(b: Blob | null): b is Blob {
-  if (!b || b.size < 200) return false;
+  if (!b || b.size < 1000) return false;
   const t = (b.type || "").toLowerCase();
+  // Reject anything that looks like JSON/text (likely an error envelope).
+  if (t.includes("json") || t.includes("text/")) return false;
   return t.includes("audio") || t.includes("mpeg") || t === "" || t === "application/octet-stream";
+}
+
+async function cacheDelete(key: string) {
+  try {
+    const db = await openDb();
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).delete(key);
+  } catch { /* noop */ }
 }
 
 function openDb(): Promise<IDBDatabase> {
@@ -134,20 +145,36 @@ export function primeAudio() {
 
 export async function speak(text: string, voiceId?: string): Promise<void> {
   stopSpeak();
-  const blob = await synthesize(text, voiceId);
+  const vid = voiceId ?? getGlobalVoice().voiceId;
+  const blob = await synthesize(text, vid);
   if (!blob) {
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "es-AR";
-      u.rate = 0.92;
-      u.volume = currentVolume;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    } catch {
-      /* noop */
-    }
+    fallbackBrowserSpeak(text);
     return;
   }
+  const ok = await tryPlayBlob(blob);
+  if (ok) return;
+
+  // Cached blob is probably corrupted: invalidate and retry once with a fresh fetch.
+  console.warn("[TTS] playback failed, invalidating cache and retrying");
+  await cacheDelete(makeKey(text, vid));
+  const fresh = await synthesize(text, vid);
+  if (fresh && (await tryPlayBlob(fresh))) return;
+
+  fallbackBrowserSpeak(text);
+}
+
+function fallbackBrowserSpeak(text: string) {
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "es-AR";
+    u.rate = 0.92;
+    u.volume = currentVolume;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch { /* noop */ }
+}
+
+async function tryPlayBlob(blob: Blob): Promise<boolean> {
   const url = URL.createObjectURL(blob);
   const audio = new Audio();
   audio.preload = "auto";
@@ -164,24 +191,21 @@ export async function speak(text: string, voiceId?: string): Promise<void> {
   });
   try {
     await audio.play();
+    audio.onended = () => {
+      if (currentUrl === url) {
+        URL.revokeObjectURL(url);
+        currentUrl = null;
+        currentAudio = null;
+      }
+    };
+    return true;
   } catch (e) {
     console.error("[TTS] audio.play failed", e);
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "es-AR";
-      u.rate = 0.92;
-      u.volume = currentVolume;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    } catch { /* noop */ }
+    try { audio.pause(); audio.src = ""; } catch { /* noop */ }
+    URL.revokeObjectURL(url);
+    if (currentUrl === url) { currentUrl = null; currentAudio = null; }
+    return false;
   }
-  audio.onended = () => {
-    if (currentUrl === url) {
-      URL.revokeObjectURL(url);
-      currentUrl = null;
-      currentAudio = null;
-    }
-  };
 }
 
 export function stopSpeak() {
