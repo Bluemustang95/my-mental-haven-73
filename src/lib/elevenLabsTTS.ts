@@ -5,13 +5,22 @@
  */
 import { getGlobalVoice } from "@/lib/globalVoice";
 
-const DB_NAME = "resma_tts_cache";
+const DB_NAME = "resma_tts_cache_v2";
 const STORE = "audio";
 const DB_VERSION = 1;
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 const TTS_URL = `${SUPABASE_URL}/functions/v1/mindfulness-tts`;
+
+// Best-effort wipe of the legacy cache that may contain corrupted/error blobs.
+try { indexedDB.deleteDatabase("resma_tts_cache"); } catch { /* noop */ }
+
+function isAudioBlob(b: Blob | null): b is Blob {
+  if (!b || b.size < 200) return false;
+  const t = (b.type || "").toLowerCase();
+  return t.includes("audio") || t.includes("mpeg") || t === "" || t === "application/octet-stream";
+}
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
