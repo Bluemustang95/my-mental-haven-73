@@ -20,11 +20,12 @@ interface Props {
   totalSeconds: number;
   initialVoice: boolean;
   initialMusic: MusicTrack;
+  narrationText?: string;
   onComplete: () => void;
   onAbort: () => void;
 }
 
-export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onComplete, onAbort }: Props) {
+export function BodyScanView({ totalSeconds, initialVoice, initialMusic, narrationText, onComplete, onAbort }: Props) {
   const [zoneIdx, setZoneIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
   const [running, setRunning] = useState(true);
