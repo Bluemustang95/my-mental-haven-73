@@ -310,10 +310,20 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
 
 /* ====== ThoughtBubble: 3 random visual variants ====== */
 
-function ThoughtBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
-  if (thought.variant === "leaf") return <LeafBubble thought={thought} paused={paused} />;
-  if (thought.variant === "train") return <TrainBubble thought={thought} paused={paused} />;
-  return <CloudBubble thought={thought} paused={paused} />;
+function ThoughtBubble({
+  thought,
+  paused,
+  onTap,
+}: {
+  thought: Thought;
+  paused: boolean;
+  onTap?: () => void;
+}) {
+  if (thought.variant === "leaf")
+    return <LeafBubble thought={thought} paused={paused} onTap={onTap} />;
+  if (thought.variant === "train")
+    return <TrainBubble thought={thought} paused={paused} onTap={onTap} />;
+  return <CloudBubble thought={thought} paused={paused} onTap={onTap} />;
 }
 
 function bubbleSize(size: Thought["size"]) {
