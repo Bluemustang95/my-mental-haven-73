@@ -408,7 +408,7 @@ function LeafBubble({ thought, paused, onTap }: { thought: Thought; paused: bool
 }
 
 
-function TrainBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
+function TrainBubble({ thought, paused, onTap }: { thought: Thought; paused: boolean; onTap?: () => void }) {
   // Rectangular wagon with wheels, linear horizontal motion
   const duration = thought.speed * 0.7;
   return (
@@ -422,6 +422,7 @@ function TrainBubble({ thought, paused }: { thought: Thought; paused: boolean })
       }}
       style={{ top: `${25 + thought.lane * 50}%`, animationPlayState: paused ? "paused" : "running" }}
       className="absolute left-0"
+      onClick={onTap}
     >
       <div className="relative">
         <div className={`relative rounded-md border-2 border-[#0F172A]/70 bg-amber-200/95 text-[#0F172A] ${bubbleSize(thought.size)} font-serif leading-snug shadow-[0_6px_16px_rgba(0,0,0,0.25)]`}>
