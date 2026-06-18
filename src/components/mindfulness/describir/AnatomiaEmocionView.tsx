@@ -239,9 +239,16 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete, onAbort }
               className="min-h-[140px] w-full rounded-2xl border border-white/10 bg-white/5 p-4 font-serif text-sm text-white placeholder:text-white/30 focus:outline-none"
               style={{ borderColor: undefined }}
             />
-            <PrimaryBtn onClick={save} disabled={saving} accent={accent}>
+            <PrimaryBtn onClick={() => save(false)} disabled={saving} accent={accent}>
               {saving ? "Guardando…" : "Guardar mapa"}
             </PrimaryBtn>
+            <button
+              onClick={() => save(true)}
+              disabled={saving}
+              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 py-3 text-sm font-medium text-white/85 disabled:opacity-40"
+            >
+              Guardar y enviar al Diario
+            </button>
           </Frame>
         )}
       </AnimatePresence>
