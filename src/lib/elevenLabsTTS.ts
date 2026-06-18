@@ -5,13 +5,22 @@
  */
 import { getGlobalVoice } from "@/lib/globalVoice";
 
-const DB_NAME = "resma_tts_cache";
+const DB_NAME = "resma_tts_cache_v2";
 const STORE = "audio";
 const DB_VERSION = 1;
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 const TTS_URL = `${SUPABASE_URL}/functions/v1/mindfulness-tts`;
+
+// Best-effort wipe of the legacy cache that may contain corrupted/error blobs.
+try { indexedDB.deleteDatabase("resma_tts_cache"); } catch { /* noop */ }
+
+function isAudioBlob(b: Blob | null): b is Blob {
+  if (!b || b.size < 200) return false;
+  const t = (b.type || "").toLowerCase();
+  return t.includes("audio") || t.includes("mpeg") || t === "" || t === "application/octet-stream";
+}
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -57,7 +66,7 @@ export async function synthesize(text: string, voiceId?: string): Promise<Blob |
   const vid = voiceId ?? getGlobalVoice().voiceId;
   const key = makeKey(text, vid);
   const cached = await cacheGet(key);
-  if (cached && cached.size > 0) return cached;
+  if (isAudioBlob(cached)) return cached;
 
   try {
     const res = await fetch(TTS_URL, {
@@ -74,12 +83,17 @@ export async function synthesize(text: string, voiceId?: string): Promise<Blob |
       console.error("[TTS] edge function error", res.status, errText);
       return null;
     }
-    const blob = await res.blob();
-    if (blob.size > 0) {
-      cachePut(key, blob);
-      return blob;
+    const ct = res.headers.get("Content-Type") || "audio/mpeg";
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength < 200) {
+      console.error("[TTS] response too small", buf.byteLength);
+      return null;
     }
-    return null;
+    // Force a known good audio MIME so HTMLAudioElement can decode reliably.
+    const blob = new Blob([buf], { type: "audio/mpeg" });
+    void ct;
+    cachePut(key, blob);
+    return blob;
   } catch (e) {
     console.error("[TTS] fetch failed", e);
     return null;
@@ -106,14 +120,33 @@ export async function speak(text: string, voiceId?: string): Promise<void> {
     return;
   }
   const url = URL.createObjectURL(blob);
-  const audio = new Audio(url);
+  const audio = new Audio();
+  audio.preload = "auto";
+  audio.src = url;
   audio.volume = 1;
   currentAudio = audio;
   currentUrl = url;
+  // Wait for the browser to recognize the data before playing — avoids
+  // NotSupportedError that can happen when calling play() before decode.
+  await new Promise<void>((resolve) => {
+    const done = () => resolve();
+    audio.addEventListener("canplaythrough", done, { once: true });
+    audio.addEventListener("loadeddata", done, { once: true });
+    audio.addEventListener("error", done, { once: true });
+    setTimeout(done, 1500);
+  });
   try {
     await audio.play();
   } catch (e) {
     console.error("[TTS] audio.play failed", e);
+    // Fallback to browser TTS if the MP3 cannot be played in this environment.
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "es-AR";
+      u.rate = 0.92;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch { /* noop */ }
   }
   audio.onended = () => {
     if (currentUrl === url) {
