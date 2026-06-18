@@ -103,6 +103,18 @@ export async function synthesize(text: string, voiceId?: string): Promise<Blob |
 // Singleton audio element for playback so we don't overlap takes.
 let currentAudio: HTMLAudioElement | null = null;
 let currentUrl: string | null = null;
+let currentVolume = 1;
+
+export function setSpeechVolume(v: number) {
+  currentVolume = Math.min(1, Math.max(0, v));
+  if (currentAudio) {
+    try { currentAudio.volume = currentVolume; } catch { /* noop */ }
+  }
+}
+
+export function getSpeechVolume() {
+  return currentVolume;
+}
 
 export async function speak(text: string, voiceId?: string): Promise<void> {
   stopSpeak();
@@ -112,6 +124,7 @@ export async function speak(text: string, voiceId?: string): Promise<void> {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "es-AR";
       u.rate = 0.92;
+      u.volume = currentVolume;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
     } catch {
@@ -123,11 +136,9 @@ export async function speak(text: string, voiceId?: string): Promise<void> {
   const audio = new Audio();
   audio.preload = "auto";
   audio.src = url;
-  audio.volume = 1;
+  audio.volume = currentVolume;
   currentAudio = audio;
   currentUrl = url;
-  // Wait for the browser to recognize the data before playing — avoids
-  // NotSupportedError that can happen when calling play() before decode.
   await new Promise<void>((resolve) => {
     const done = () => resolve();
     audio.addEventListener("canplaythrough", done, { once: true });
@@ -139,11 +150,11 @@ export async function speak(text: string, voiceId?: string): Promise<void> {
     await audio.play();
   } catch (e) {
     console.error("[TTS] audio.play failed", e);
-    // Fallback to browser TTS if the MP3 cannot be played in this environment.
     try {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "es-AR";
       u.rate = 0.92;
+      u.volume = currentVolume;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
     } catch { /* noop */ }
