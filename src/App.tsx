@@ -29,6 +29,8 @@ import InternalDialogue from "@/components/journal/InternalDialogue";
 import JournalTimeline from "@/components/journal/JournalTimeline";
 import DiarioHuellas from "@/pages/DiarioHuellas";
 import ThoughtRecord from "@/pages/ThoughtRecord";
+import PensamientosHome from "@/pages/pensamientos/PensamientosHome";
+import PensamientosAutomaticos from "@/pages/pensamientos/PensamientosAutomaticos";
 import DreamLog from "@/pages/DreamLog";
 import DiarioTools from "@/pages/DiarioTools";
 import Grounding from "@/pages/Grounding";
