@@ -10,7 +10,7 @@ function readVolume(): number {
   } catch {
     /* noop */
   }
-  return 0.5;
+  return 0.8;
 }
 
 /**

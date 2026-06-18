@@ -1,13 +1,17 @@
 /**
  * ElevenLabs TTS client with IndexedDB cache.
- * Falls back to speechSynthesis if the edge function is unavailable.
+ * Calls the `mindfulness-tts` edge function via direct fetch so the
+ * binary audio/mpeg body is always returned as a Blob.
  */
-import { supabase } from "@/integrations/supabase/client";
 import { getGlobalVoice } from "@/lib/globalVoice";
 
 const DB_NAME = "resma_tts_cache";
 const STORE = "audio";
 const DB_VERSION = 1;
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+const TTS_URL = `${SUPABASE_URL}/functions/v1/mindfulness-tts`;
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -53,21 +57,31 @@ export async function synthesize(text: string, voiceId?: string): Promise<Blob |
   const vid = voiceId ?? getGlobalVoice().voiceId;
   const key = makeKey(text, vid);
   const cached = await cacheGet(key);
-  if (cached) return cached;
+  if (cached && cached.size > 0) return cached;
 
   try {
-    const { data, error } = await supabase.functions.invoke("mindfulness-tts", {
-      body: { text, voiceId: vid },
+    const res = await fetch(TTS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_ANON,
+        Authorization: `Bearer ${SUPABASE_ANON}`,
+      },
+      body: JSON.stringify({ text, voiceId: vid }),
     });
-    if (error) throw error;
-    // supabase-js returns Blob for audio/* responses
-    const blob: Blob = data instanceof Blob ? data : new Blob([data as ArrayBuffer], { type: "audio/mpeg" });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      console.error("[TTS] edge function error", res.status, errText);
+      return null;
+    }
+    const blob = await res.blob();
     if (blob.size > 0) {
       cachePut(key, blob);
       return blob;
     }
     return null;
-  } catch {
+  } catch (e) {
+    console.error("[TTS] fetch failed", e);
     return null;
   }
 }
@@ -80,7 +94,6 @@ export async function speak(text: string, voiceId?: string): Promise<void> {
   stopSpeak();
   const blob = await synthesize(text, voiceId);
   if (!blob) {
-    // Fallback to browser synth so the UI never goes silent.
     try {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "es-AR";
@@ -97,7 +110,11 @@ export async function speak(text: string, voiceId?: string): Promise<void> {
   audio.volume = 1;
   currentAudio = audio;
   currentUrl = url;
-  audio.play().catch(() => {});
+  try {
+    await audio.play();
+  } catch (e) {
+    console.error("[TTS] audio.play failed", e);
+  }
   audio.onended = () => {
     if (currentUrl === url) {
       URL.revokeObjectURL(url);

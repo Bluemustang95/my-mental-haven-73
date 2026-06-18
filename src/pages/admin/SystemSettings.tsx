@@ -1,53 +1,73 @@
 import { useState } from "react";
-import { Mic, Settings as SettingsIcon, Save, Play, Music } from "lucide-react";
+import { Mic, Settings as SettingsIcon, Save, Play, Music, Square, Volume2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { VOICE_PRESETS, getGlobalVoice, setGlobalVoice } from "@/lib/globalVoice";
+import {
+  VOICE_PRESETS,
+  getGlobalVoice,
+  setGlobalVoice,
+  getVoicesByCountry,
+  type GlobalVoice,
+} from "@/lib/globalVoice";
 import { speak as ttsSpeak } from "@/lib/elevenLabsTTS";
 import { AMBIENT_SOUNDS, CATEGORY_LABELS, type AmbientCategory } from "@/lib/ambientLibrary";
 import { useAmbientPlayer } from "@/hooks/useAmbientPlayer";
 
 const CATEGORIES: AmbientCategory[] = ["lluvia", "viento", "agua", "naturaleza", "abstractos"];
+const COUNTRY_FLAG: Record<string, string> = {
+  Argentina: "🇦🇷",
+  España: "🇪🇸",
+  México: "🇲🇽",
+  Neutral: "🌐",
+};
 
 export default function SystemSettings() {
   const initial = getGlobalVoice();
-  const [presetIdx, setPresetIdx] = useState<number>(() => {
-    const i = VOICE_PRESETS.findIndex((p) => p.voiceId === initial.voiceId);
-    return i >= 0 ? i : -1;
-  });
-  const [customId, setCustomId] = useState<string>(presetIdx === -1 ? initial.voiceId : "");
-  const [customLabel, setCustomLabel] = useState<string>(presetIdx === -1 ? initial.label : "");
+  const grouped = getVoicesByCountry();
+
+  const isPreset = VOICE_PRESETS.some((p) => p.voiceId === initial.voiceId);
+  const [mode, setMode] = useState<"preset" | "custom">(isPreset ? "preset" : "custom");
+  const [selectedId, setSelectedId] = useState<string>(initial.voiceId);
+  const [customId, setCustomId] = useState<string>(!isPreset ? initial.voiceId : "");
+  const [customLabel, setCustomLabel] = useState<string>(!isPreset ? initial.label : "");
   const [testing, setTesting] = useState(false);
 
   const player = useAmbientPlayer();
   const [previewing, setPreviewing] = useState<string>("off");
+  const [volume, setVolume] = useState<number>(() => player.getVolume());
+
+  const resolveVoice = (): GlobalVoice | null => {
+    if (mode === "preset") {
+      return VOICE_PRESETS.find((p) => p.voiceId === selectedId) ?? null;
+    }
+    if (!customId.trim()) return null;
+    return { label: customLabel.trim() || "Custom", voiceId: customId.trim(), country: "Custom" };
+  };
 
   const save = () => {
-    if (presetIdx >= 0) {
-      setGlobalVoice(VOICE_PRESETS[presetIdx]);
-    } else {
-      if (!customId.trim()) {
-        toast.error("Ingresá un voiceId válido");
-        return;
-      }
-      setGlobalVoice({ label: customLabel.trim() || "Custom", voiceId: customId.trim() });
+    const v = resolveVoice();
+    if (!v) {
+      toast.error("Elegí una voz o ingresá un voiceId válido");
+      return;
     }
-    toast.success("Voz global guardada");
+    setGlobalVoice(v);
+    toast.success(`Voz global guardada: ${v.label}`);
   };
 
   const testVoice = async () => {
-    const v = presetIdx >= 0 ? VOICE_PRESETS[presetIdx].voiceId : customId.trim();
+    const v = resolveVoice();
     if (!v) {
       toast.error("Elegí o ingresá un voiceId");
       return;
     }
     setTesting(true);
+    toast.info("Generando audio…");
     try {
       await ttsSpeak(
         "Hola, soy tu voz guía. Vamos a respirar juntos. Inhalá despacio… y exhalá soltando todo lo que no necesitás.",
-        v,
+        v.voiceId,
       );
-      toast.success("Reproduciendo prueba…");
+      toast.success("Reproduciendo prueba");
     } catch {
       toast.error("No se pudo generar el audio");
     } finally {
@@ -63,6 +83,16 @@ export default function SystemSettings() {
       player.setSound(id);
       setPreviewing(id);
     }
+  };
+
+  const stopPreview = () => {
+    player.setSound("off");
+    setPreviewing("off");
+  };
+
+  const onVolumeChange = (v: number) => {
+    setVolume(v);
+    player.setVolume(v);
   };
 
   return (
@@ -89,30 +119,57 @@ export default function SystemSettings() {
               Voz Global del Sistema (ElevenLabs)
             </h2>
             <p className="text-xs text-slate-500">
-              Esta voz se usa en <strong>todos</strong> los ejercicios guiados: respiración (Orbe), body scan,
-              5-4-3-2-1 (Observar) y Describir.
+              Esta voz se usa en <strong>todos</strong> los ejercicios guiados.
             </p>
           </div>
         </div>
 
         <div className="space-y-4">
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-600">Preset</label>
-            <select
-              value={presetIdx}
-              onChange={(e) => setPresetIdx(Number(e.target.value))}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setMode("preset")}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                mode === "preset"
+                  ? "bg-[#6B4EFF] text-white"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+              }`}
             >
-              {VOICE_PRESETS.map((p, i) => (
-                <option key={p.voiceId} value={i}>
-                  {p.label} — {p.voiceId.slice(0, 10)}…
-                </option>
-              ))}
-              <option value={-1}>Custom (voiceId manual)</option>
-            </select>
+              Por país
+            </button>
+            <button
+              onClick={() => setMode("custom")}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                mode === "custom"
+                  ? "bg-[#6B4EFF] text-white"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              voiceId manual
+            </button>
           </div>
 
-          {presetIdx === -1 && (
+          {mode === "preset" && (
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-600">Voz</label>
+              <select
+                value={selectedId}
+                onChange={(e) => setSelectedId(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+              >
+                {grouped.map((g) => (
+                  <optgroup key={g.country} label={`${COUNTRY_FLAG[g.country] ?? ""} ${g.country}`}>
+                    {g.voices.map((v) => (
+                      <option key={v.voiceId} value={v.voiceId}>
+                        {v.label} {v.gender ? `(${v.gender})` : ""}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {mode === "custom" && (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_2fr]">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600">Etiqueta</label>
@@ -152,8 +209,8 @@ export default function SystemSettings() {
           </div>
 
           <p className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] text-emerald-800 ring-1 ring-emerald-200">
-            La voz por defecto es <strong>Nadia (Argentina)</strong>. Se sintetiza con ElevenLabs y se cachea
-            localmente para que no se regenere en cada sesión.
+            La voz por defecto es <strong>Nadia (Argentina)</strong>. Se sintetiza con ElevenLabs y
+            se cachea localmente para que no se regenere en cada sesión.
           </p>
         </div>
       </section>
@@ -163,14 +220,38 @@ export default function SystemSettings() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3B82F6]/15 text-[#1D4ED8]">
             <Music size={18} />
           </div>
-          <div>
+          <div className="flex-1">
             <h2 className="font-display text-lg font-semibold text-slate-800">
               Biblioteca de sonidos ambientales
             </h2>
             <p className="text-xs text-slate-500">
-              Estos sonidos están disponibles dentro de los ejercicios. Tocá uno para previsualizarlo.
+              Tocá un sonido para escucharlo. Ajustá el volumen con la barra.
             </p>
           </div>
+          {previewing !== "off" && (
+            <button
+              onClick={stopPreview}
+              className="flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100"
+            >
+              <Square size={12} /> Detener
+            </button>
+          )}
+        </div>
+
+        <div className="mb-5 flex items-center gap-3 rounded-2xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-200">
+          <Volume2 size={16} className="text-slate-500" />
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={volume}
+            onChange={(e) => onVolumeChange(Number(e.target.value))}
+            className="flex-1 accent-[#6B4EFF]"
+          />
+          <span className="w-10 text-right text-xs font-semibold tabular-nums text-slate-600">
+            {Math.round(volume * 100)}%
+          </span>
         </div>
 
         <div className="space-y-5">
@@ -193,7 +274,11 @@ export default function SystemSettings() {
                       }`}
                     >
                       <span className="truncate">{s.label}</span>
-                      <Play size={12} className="shrink-0 opacity-60" />
+                      {active ? (
+                        <Square size={12} className="shrink-0" />
+                      ) : (
+                        <Play size={12} className="shrink-0 opacity-60" />
+                      )}
                     </button>
                   );
                 })}
