@@ -44,7 +44,26 @@ export function EscanerNeutralView({ music, onComplete, onAbort }: Props) {
     }
   }
 
-  function reset() { setText(""); setResult(null); }
+  function reset() { setText(""); setResult(null); setHighlight(true); }
+
+  // Construye el texto original con las palabras "removidas" resaltadas
+  const originalHighlighted = useMemo(() => {
+    if (!result || !highlight) return null;
+    const removed = (result.removed ?? []).filter(Boolean);
+    if (removed.length === 0) return null;
+    const escaped = removed.map((r) => r.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const regex = new RegExp(`(${escaped.join("|")})`, "gi");
+    const parts = text.split(regex);
+    return parts.map((p, i) =>
+      regex.test(p)
+        ? (
+          <span key={i} className="rounded bg-[#F87171]/25 px-1 text-[#FCA5A5] line-through decoration-[#FCA5A5]/60">
+            {p}
+          </span>
+        )
+        : <span key={i}>{p}</span>
+    );
+  }, [result, highlight, text]);
 
   return (
     <div className="absolute inset-0 flex flex-col px-5 pt-12 pb-8 overflow-y-auto">
