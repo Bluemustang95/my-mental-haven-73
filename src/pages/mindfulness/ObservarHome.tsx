@@ -92,7 +92,7 @@ export default function ObservarHome() {
         subtitle={SUB[sub].subtitle}
         minutes={minutes}
         onMinutesChange={setMinutes}
-        onStart={() => setStep("playing")}
+        onStart={() => { primeAudio(); primeAmbientAudio(); setStep("playing"); }}
         onClose={close}
         onBack={() => setStep("setup_mode")}
         accent={ACCENT}
