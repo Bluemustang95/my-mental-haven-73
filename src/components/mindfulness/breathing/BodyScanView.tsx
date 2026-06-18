@@ -69,6 +69,22 @@ export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onCompl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoneIdx]);
 
+  useEffect(() => {
+    if (running) {
+      audio.resumeMusic();
+    } else {
+      audio.stopSpeech();
+      audio.pauseMusic();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running]);
+
+  const handleFinish = () => {
+    audio.stopSpeech();
+    audio.stopMusic();
+    onAbort();
+  };
+
   const zone = ZONES[zoneIdx];
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -183,7 +199,9 @@ export function BodyScanView({ totalSeconds, initialVoice, initialMusic, onCompl
             onMusicChange={setMusic}
             volume={audio.getMusicVolume()}
             onVolumeChange={(v) => audio.setMusicVolume(v)}
-            onFinish={onAbort}
+            voiceVolume={audio.getVoiceVolume()}
+            onVoiceVolumeChange={(v) => audio.setVoiceVolume(v)}
+            onFinish={handleFinish}
           />
         </div>
       </OrganicStage>
