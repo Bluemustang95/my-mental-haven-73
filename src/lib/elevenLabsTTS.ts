@@ -104,6 +104,7 @@ export async function synthesize(text: string, voiceId?: string): Promise<Blob |
 let currentAudio: HTMLAudioElement | null = null;
 let currentUrl: string | null = null;
 let currentVolume = 1;
+let primedAudio: HTMLAudioElement | null = null;
 
 export function setSpeechVolume(v: number) {
   currentVolume = Math.min(1, Math.max(0, v));
@@ -114,6 +115,21 @@ export function setSpeechVolume(v: number) {
 
 export function getSpeechVolume() {
   return currentVolume;
+}
+
+/** Call from a user gesture to unlock the HTMLAudioElement autoplay channel. */
+export function primeAudio() {
+  try {
+    if (!primedAudio) {
+      primedAudio = new Audio();
+      primedAudio.muted = true;
+      primedAudio.src =
+        "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+    }
+    primedAudio.play().catch((e) => console.warn("[TTS] primeAudio play failed", e));
+  } catch (e) {
+    console.warn("[TTS] primeAudio failed", e);
+  }
 }
 
 export async function speak(text: string, voiceId?: string): Promise<void> {
