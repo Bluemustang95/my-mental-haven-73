@@ -5,9 +5,9 @@ import { ArrowLeft, Plus, Heart, Sparkles, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { WeekStrip } from "@/components/home/WeekStrip";
-import { PatternInsights } from "@/components/dbt/PatternInsights";
 import { OpenSessionsList } from "@/components/dbt/OpenSessionsList";
-import { readDraft as readBienestarDraft, todayStatus } from "@/components/bienestar/useBienestarDraft";
+import { BienestarProcessCard } from "@/components/bienestar/BienestarProcessCard";
+import { readDraft as readBienestarDraft, todayStatus, draftHasProgress } from "@/components/bienestar/useBienestarDraft";
 
 type Sub = {
   id: string;
