@@ -50,10 +50,12 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
   const [pile, setPile] = useState<Array<{ id: string; x: number; rotation: number; hue: number }>>([]);
   const [composing, setComposing] = useState(false);
 
-  // When a thought finishes its trip, move it to the pile (only leaf variants get visually piled,
-  // but all variants increment the counter so the user sees their releases).
+  // When a thought finishes its trip (o lo soltás con un tap), va al pile.
   function settleThought(thought: Thought) {
-    setThoughts((prev) => prev.filter((t) => t.id !== thought.id));
+    setThoughts((prev) => {
+      if (!prev.some((t) => t.id === thought.id)) return prev;
+      return prev.filter((t) => t.id !== thought.id);
+    });
     setPile((prev) => [
       ...prev.slice(-39), // keep at most 40 in the pile
       {
@@ -63,6 +65,11 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
         hue: Math.floor(Math.random() * 5),
       },
     ]);
+  }
+
+  function releaseThought(thought: Thought) {
+    // Tap-to-release: soltar el pensamiento antes de que termine su trayecto
+    settleThought(thought);
   }
 
   const speakRef = useRef(audio.speak);
