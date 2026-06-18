@@ -159,6 +159,7 @@ export default function BreathingHome() {
             initialVoice
             initialMusic="rain_soft"
             hapticsEnabled
+            narrationText={narrationText}
             onComplete={onComplete}
             onAbort={onAbort}
           />
@@ -167,6 +168,7 @@ export default function BreathingHome() {
             totalSeconds={minutes * 60}
             initialVoice
             initialMusic="rain_soft"
+            narrationText={narrationText}
             onComplete={onComplete}
             onAbort={onAbort}
           />
