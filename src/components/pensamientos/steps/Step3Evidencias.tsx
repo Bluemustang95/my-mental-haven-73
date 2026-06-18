@@ -62,8 +62,9 @@ export default function Step3Evidencias({ draft, patch }: Props) {
         },
       });
       if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
       if (data?.suggestions?.length) setSuggestions({ side, items: data.suggestions });
-      else if (data?.error) toast.error(data.error);
+      else toast.error("La IA no devolvió sugerencias. Probá de nuevo.");
     } catch {
       toast.error("No pudimos sugerir evidencias ahora. Probá de nuevo.");
     } finally {
@@ -79,12 +80,12 @@ export default function Step3Evidencias({ draft, patch }: Props) {
   };
 
   return (
-    <div className="space-y-3.5">
-      <div className="text-center">
-        <h2 className="font-serif text-2xl font-bold text-[#101927]">
+    <div className="space-y-3">
+      <div className="text-center px-2">
+        <h2 className="font-display text-[20px] font-semibold text-[#101927] leading-tight">
           Evidencias fácticas
         </h2>
-        <p className="mt-1.5 text-[13px] text-[#101927]/65 leading-relaxed px-2">
+        <p className="mt-1 text-[12px] text-[#101927]/65 leading-relaxed">
           Listá pruebas observables a favor y en contra. El medidor se mueve solo.
         </p>
       </div>
@@ -99,21 +100,21 @@ export default function Step3Evidencias({ draft, patch }: Props) {
       {distortion && (
         <button
           onClick={() => setOpenDistortion((v) => !v)}
-          className="w-full rounded-2xl border border-[#facb60]/40 bg-gradient-to-br from-[#facb60]/20 to-white/50 p-3.5 text-left active:scale-[0.99] transition"
+          className="w-full rounded-3xl border border-[#facb60]/40 bg-gradient-to-br from-[#facb60]/20 to-white/60 p-3 text-left shadow-glass active:scale-[0.99] transition"
         >
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#92561a]">
             Patrón cognitivo detectado
           </p>
-          <p className="mt-0.5 font-display text-[14px] font-bold text-[#101927]">
+          <p className="mt-0.5 font-display text-[13px] font-semibold text-[#101927]">
             {distortion.label}
           </p>
           <AnimatePresence>
             {openDistortion && (
               <motion.p
                 initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                animate={{ opacity: 1, height: "auto", marginTop: 8 }}
+                animate={{ opacity: 1, height: "auto", marginTop: 6 }}
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                className="text-[12.5px] text-[#101927]/75 leading-relaxed"
+                className="text-[11.5px] text-[#101927]/75 leading-relaxed"
               >
                 {distortion.description}
               </motion.p>
@@ -122,18 +123,18 @@ export default function Step3Evidencias({ draft, patch }: Props) {
         </button>
       )}
 
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#9b1c1c]">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2 px-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#9b1c1c]">
             A favor del pensamiento
           </p>
           <button
             onClick={() => askAi("for")}
             disabled={loadingSide !== null}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-[#101927] shadow-sm active:scale-95 transition disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#101927] shadow-glass active:scale-95 transition disabled:opacity-50"
           >
-            {loadingSide === "for" ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            Sugerirme con IA
+            {loadingSide === "for" ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+            IA
           </button>
         </div>
         <EvidenceList
@@ -147,18 +148,18 @@ export default function Step3Evidencias({ draft, patch }: Props) {
         />
       </div>
 
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#065f46]">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2 px-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[#065f46]">
             En contra del pensamiento
           </p>
           <button
             onClick={() => askAi("against")}
             disabled={loadingSide !== null}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-[#101927] shadow-sm active:scale-95 transition disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#101927] shadow-glass active:scale-95 transition disabled:opacity-50"
           >
-            {loadingSide === "against" ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            Sugerirme con IA
+            {loadingSide === "against" ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+            IA
           </button>
         </div>
         <EvidenceList
@@ -179,26 +180,26 @@ export default function Step3Evidencias({ draft, patch }: Props) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            <GlassCard tone="gold" className="p-4">
+            <GlassCard tone="gold" className="p-3">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#92561a]">
                   Sugerencias IA · {suggestions.side === "for" ? "a favor" : "en contra"}
                 </p>
                 <button onClick={() => setSuggestions(null)} className="text-[#101927]/50">
-                  <X size={14} />
+                  <X size={13} />
                 </button>
               </div>
-              <p className="mt-1 text-[11.5px] text-[#101927]/65">
-                Tocá una para agregarla. Después podés editarla en la lista.
+              <p className="mt-1 text-[11px] text-[#101927]/65">
+                Tocá una para sumarla.
               </p>
-              <div className="mt-3 space-y-2">
+              <div className="mt-2.5 space-y-1.5">
                 {suggestions.items.map((s, i) => (
                   <button
                     key={i}
                     onClick={() => acceptSuggestion(s)}
-                    className="flex w-full items-start gap-2 rounded-xl border border-white/70 bg-white/80 p-3 text-left text-[13px] text-[#101927] leading-relaxed active:scale-[0.99] transition"
+                    className="flex w-full items-start gap-2 rounded-2xl border border-white/70 bg-white/85 p-2.5 text-left text-[12px] text-[#101927] leading-relaxed active:scale-[0.99] transition"
                   >
-                    <Plus size={14} className="mt-0.5 shrink-0 text-[#7cc2c8]" />
+                    <Plus size={12} className="mt-0.5 shrink-0 text-[#7cc2c8]" />
                     <span>{s}</span>
                   </button>
                 ))}
