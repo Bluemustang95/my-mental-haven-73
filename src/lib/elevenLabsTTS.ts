@@ -5,7 +5,7 @@
  */
 import { getGlobalVoice } from "@/lib/globalVoice";
 
-const DB_NAME = "resma_tts_cache_v2";
+const DB_NAME = "resma_tts_cache_v3";
 const STORE = "audio";
 const DB_VERSION = 1;
 
@@ -13,13 +13,24 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 const TTS_URL = `${SUPABASE_URL}/functions/v1/mindfulness-tts`;
 
-// Best-effort wipe of the legacy cache that may contain corrupted/error blobs.
+// Best-effort wipe of legacy caches that may contain corrupted/error blobs.
 try { indexedDB.deleteDatabase("resma_tts_cache"); } catch { /* noop */ }
+try { indexedDB.deleteDatabase("resma_tts_cache_v2"); } catch { /* noop */ }
 
 function isAudioBlob(b: Blob | null): b is Blob {
-  if (!b || b.size < 200) return false;
+  if (!b || b.size < 1000) return false;
   const t = (b.type || "").toLowerCase();
+  // Reject anything that looks like JSON/text (likely an error envelope).
+  if (t.includes("json") || t.includes("text/")) return false;
   return t.includes("audio") || t.includes("mpeg") || t === "" || t === "application/octet-stream";
+}
+
+async function cacheDelete(key: string) {
+  try {
+    const db = await openDb();
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).delete(key);
+  } catch { /* noop */ }
 }
 
 function openDb(): Promise<IDBDatabase> {
