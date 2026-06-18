@@ -247,25 +247,52 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
 
               {/* Inputs */}
               <div className="mt-6 space-y-2">
-                {stepEntries.map((value, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex items-center gap-3 rounded-2xl border bg-white/5 px-4 py-3 transition",
-                      value.trim() ? "border-white/25" : i === activeInput ? "border-white/40" : "border-white/10"
-                    )}
-                  >
-                    <span className="font-display text-xs font-semibold text-white/40 w-4">{i + 1}</span>
-                    <input
-                      value={value}
-                      onChange={(e) => updateEntry(i, e.target.value)}
-                      onFocus={() => setActiveInput(i)}
-                      placeholder={step.placeholder}
-                      maxLength={80}
-                      className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
-                    />
-                  </div>
-                ))}
+                {stepEntries.map((value, i) => {
+                  const listening = listeningIdx === i;
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex items-center gap-3 rounded-2xl border bg-white/5 px-4 py-3 transition",
+                        listening
+                          ? "border-[#34D399]/60"
+                          : value.trim()
+                          ? "border-white/25"
+                          : i === activeInput
+                          ? "border-white/40"
+                          : "border-white/10"
+                      )}
+                    >
+                      <span className="w-4 font-display text-xs font-semibold text-white/40">
+                        {i + 1}
+                      </span>
+                      <input
+                        value={value}
+                        onChange={(e) => updateEntry(i, e.target.value)}
+                        onFocus={() => setActiveInput(i)}
+                        placeholder={step.placeholder}
+                        maxLength={80}
+                        className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => (listening ? stopListening() : startListening(i))}
+                        aria-label={listening ? "Detener dictado" : "Dictar por voz"}
+                        className={cn(
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition",
+                          listening
+                            ? "bg-[#34D399]/30 text-[#34D399]"
+                            : "bg-white/10 text-white/55"
+                        )}
+                      >
+                        {listening ? <MicOff size={14} /> : <Mic size={14} />}
+                      </button>
+                    </div>
+                  );
+                })}
+                <p className="text-center text-[10px] text-white/35">
+                  Escribir es opcional · podés dictar con el 🎤
+                </p>
               </div>
             </motion.div>
           ) : (
