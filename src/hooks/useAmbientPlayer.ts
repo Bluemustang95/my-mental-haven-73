@@ -15,7 +15,7 @@ function readVolume(): number {
 
 /**
  * Play/stop ambient sounds from the library.
- * Returns a stable API: setSound(id), stop(), setVolume(n)
+ * Returns a stable API: setSound(id), stop(), setVolume(n), pause(), resume()
  */
 export function useAmbientPlayer() {
   const ctxRef = useRef<AudioContext | null>(null);
@@ -54,7 +54,6 @@ export function useAmbientPlayer() {
   const setVolume = useCallback((v: number) => {
     volumeRef.current = Math.min(1, Math.max(0, v));
     try { localStorage.setItem(STORAGE_KEY, String(volumeRef.current)); } catch { /* noop */ }
-    // Re-trigger current sound to apply new volume
     if (currentIdRef.current !== "off") {
       const id = currentIdRef.current;
       stop();
@@ -63,6 +62,14 @@ export function useAmbientPlayer() {
       currentIdRef.current = id;
     }
   }, [ensureCtx, stop]);
+
+  const pause = useCallback(() => {
+    try { ctxRef.current?.suspend(); } catch { /* noop */ }
+  }, []);
+
+  const resume = useCallback(() => {
+    try { ctxRef.current?.resume(); } catch { /* noop */ }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -75,6 +82,8 @@ export function useAmbientPlayer() {
   return {
     setSound,
     stop,
+    pause,
+    resume,
     setVolume,
     getVolume: () => volumeRef.current,
     getCurrent: () => currentIdRef.current,

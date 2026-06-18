@@ -1,49 +1,85 @@
 ## Objetivo
 
-Unificar toda la gestión de scripts de mindfulness bajo **/admin/recursos → Mindfulness**, eliminar la sección "Sonidos de respiración" (los sonidos ya viven en Configuración + librería sintetizada) y mantener en Body Scan los marcadores de timeline por zona.
+1. Cargar un **script profesional, extenso y específico** para cada hoja del árbol de Mindfulness (respiración, body scan general + zonas, observar 5-4-3-2-1, describir).
+2. Para Body Scan, además del script general por duración, dejar pre-cargados **marcadores de timeline** (segundo → zona) que se usan para iluminar la silueta.
+3. Arreglar **pausa y finalizar** durante una respiración (hoy la sesión no responde).
+4. En la barra de sesión, permitir **elegir sonido ambiente + volumen de ambiente + volumen de la voz** (Nadia), de forma independiente.
 
-## Cambios
+---
 
-### 1. Base de datos
-Agregar columna `markers jsonb` a `mindfulness_scripts` para guardar los marcadores `[{ second, zone }]` del Body Scan junto al script de cada duración.
+## 1) Seed de scripts (datos en `mindfulness_scripts`)
 
-### 2. `/admin/recursos` reescrito
-Pantalla única con sub-tabs por **módulo** (no por sub-ejercicio), todos persistiendo en `mindfulness_scripts` (Supabase):
+Usaré `supabase--insert` (no es cambio de schema) con `upsert` por la unique key `(category, sub_key, duration_min)`.
 
-- **Respiración (Orbe)** — 4 intenciones × 4 duraciones (16 scripts)
-- **Body Scan** — 3 duraciones (5/15/30 min) con script + **marcadores de timeline por zona** + 9 bloques por zona (texto que la voz lee al iluminar esa parte)
-- **Observar** — Hojas pasar y 5-4-3-2-1 (5 sentidos × 3 duraciones)
-- **Describir** — Hechos vs Juicios, Escáner Neutral, Anatomía de la Emoción
+Total de hojas a poblar (según `MINDFULNESS_TREE`):
 
-Cada tab muestra a la izquierda el árbol filtrado de `MINDFULNESS_TREE` para ese módulo, y a la derecha el editor con:
-- Textarea grande para el script
-- Botón "Probar voz" (ElevenLabs Nadia)
-- Botón "Guardar" (upsert a Supabase)
-- **Solo en hojas Body Scan por duración**: panel adicional para agregar/borrar marcadores (segundo + zona del cuerpo), guardados en `markers`.
+- **Respiración** — 4 intenciones × 4 duraciones = **16 scripts** (dormir / ansiedad / concentrarme / equilibrar × 2,5,10,15 min).
+- **Body Scan generales** — **3 scripts** (5/15/30 min) + `markers` jsonb con 9 zonas distribuidas en el tiempo.
+- **Body Scan por zona** — **9 bloques** (cabeza, mandíbula, cuello/hombros, pecho, abdomen, brazos, manos, piernas, pies). Texto que la voz lee al iluminarse esa zona.
+- **Observar 5-4-3-2-1** — 5 sentidos × 3 duraciones = **15 scripts**.
+- **Describir** — Hechos vs Juicios × 3 niveles + Escáner Neutral × 3 duraciones + Anatomía × 3 duraciones = **9 scripts**.
 
-### 3. Sincronización in-session
-`BodyScanView` pasa a leer los marcadores desde Supabase en vez de localStorage, para que lo que se edita en admin aparezca en la práctica real.
+**Total: 52 scripts + 9 bloques de zona = 61 filas**, todas con texto largo, voz Nadia (voseo argentino, tono terapéutico, pausas con `...`), aptos para ElevenLabs `eleven_multilingual_v2`.
 
-### 4. Limpieza
-- Borrar `BreathingSoundsManager.tsx` (la sección "Sonidos de respiración" se va).
-- Borrar los managers viejos basados en localStorage: `BodyScanManager.tsx`, `Grounding54321Manager.tsx`, `MiraElPresenteManager.tsx`.
-- Eliminar la entrada duplicada **Mindfulness** del nav del admin (`/admin/mindfulness`) y redirigir esa ruta a `/admin/recursos`.
+### Marcadores de Body Scan (en `markers jsonb`)
 
-### 5. Detalles técnicos
+Para cada script general de Body Scan precalculamos `[{second, zone}, ...]` repartiendo las 9 zonas linealmente sobre la duración:
 
 ```text
-/admin/recursos
-└── Mindfulness (única categoría activa por ahora)
-    ├── Respiración        → tree filtrado a category="respiracion"
-    ├── Body Scan          → tree filtrado a category="body_scan"
-    │     ├── Duraciones   → script + markers[]
-    │     └── Bloques zona → solo script por zona
-    ├── Observar           → tree filtrado a category="observar"
-    └── Describir          → tree filtrado a category="describir"
+5 min  → cada ~33 s una zona
+15 min → cada ~100 s
+30 min → cada ~200 s
 ```
 
-Tabla `mindfulness_scripts` (clave única `category + sub_key + duration_min`) ya existe; solo agregamos `markers jsonb default '[]'::jsonb`.
+`BodyScanView` ya tendrá que leer estos marcadores desde Supabase para iluminar la zona correspondiente en lugar de calcular sobre 7 zonas hardcodeadas.
 
-### 6. Fuera de alcance
-- No se tocan los ejercicios en sí ni la lógica de reproducción del Orbe/Observar/Describir.
-- La gestión de sonidos ambiente queda solo en `/admin/configuracion` con la librería sintetizada actual.
+---
+
+## 2) Fix de Pausa / Finalizar en respiración
+
+Problema: en `OrbView` el botón central llama a `setRunning(r => !r)` pero:
+
+- El `useEffect` de voz dispara `audio.speak()` que abre un `await canplaythrough` largo; el siguiente `speak` no cancela al pausar.
+- `SessionToolbar` (z-20, posición absoluta abajo) tapa el botón pequeño de pause y el "Finalizar" no detiene la voz en curso.
+
+Cambios:
+
+- `OrbView` / `BodyScanView`: al cambiar `running` a `false`, llamar `audio.stopSpeech()` y `audio.pauseMusic()`; al reanudar, `audio.resumeMusic()`.
+- Al `onAbort` (Finalizar): `stopSpeech()` + `stopMusic()` antes de salir.
+- Asegurar que el botón central de pausa quede por encima de `SessionToolbar` (z-index / padding inferior del contenedor).
+- En `useMindfulAudio` agregar `pauseMusic` / `resumeMusic` (delegan a `useAmbientPlayer`).
+
+---
+
+## 3) Volumen de voz independiente + sheet de ambiente
+
+- `elevenLabsTTS.ts`: exponer `setSpeechVolume(v: number)` y aplicar a `currentAudio.volume`. Persistir en `localStorage` (`resma_voice_volume`).
+- `useMindfulAudio`: agregar `setVoiceVolume` / `getVoiceVolume`.
+- `AmbientSoundSheet`: añadir un **segundo slider "Voz (Nadia)"** arriba del slider de ambiente, con su propio %.
+- `SessionToolbar`: pasar `voiceVolume` + `onVoiceVolumeChange` al sheet, además del ya existente ambiente.
+- Mantener la decodificación/elección de sonido tal cual (la grilla por categoría ya existe).
+
+---
+
+## 4) Archivos afectados
+
+**Datos (sin migración de schema, solo INSERT/UPSERT):**
+
+- `mindfulness_scripts` — 61 upserts vía `supabase--insert`.
+
+**Código:**
+
+- `src/lib/elevenLabsTTS.ts` — volumen + getter.
+- `src/hooks/useMindfulAudio.ts` — `pauseMusic`, `resumeMusic`, `setVoiceVolume`, `getVoiceVolume`.
+- `src/hooks/useAmbientPlayer.ts` — `pause`/`resume` si no existen.
+- `src/components/mindfulness/AmbientSoundSheet.tsx` — slider de voz.
+- `src/components/mindfulness/breathing/SessionToolbar.tsx` — propagar volumen de voz.
+- `src/components/mindfulness/breathing/OrbView.tsx` — pausar/reanudar voz+música; z-index.
+- `src/components/mindfulness/breathing/BodyScanView.tsx` — ídem + leer `markers` desde Supabase para iluminar zonas.
+
+---
+
+## Fuera de alcance
+
+- Cambios visuales mayores en los ejercicios.
+- TTS de hombre / voces extra (queda como follow-up cuando agregues la voz masculina).

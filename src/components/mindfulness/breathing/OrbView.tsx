@@ -73,6 +73,17 @@ export function OrbView({
     setPhaseElapsed(0);
   }, [phaseElapsed, phase.seconds, phaseIdx, pattern.phases.length]);
 
+  // Pause/resume music + cut speech when paused
+  useEffect(() => {
+    if (running) {
+      audio.resumeMusic();
+    } else {
+      audio.stopSpeech();
+      audio.pauseMusic();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running]);
+
   useEffect(() => {
     if (!running) return;
     if (voice) audio.speak(phase.speech);
@@ -80,6 +91,12 @@ export function OrbView({
     else if (phase.haptic === "exhale") haptics.exhale();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phaseIdx, running, voice]);
+
+  const handleFinish = () => {
+    audio.stopSpeech();
+    audio.stopMusic();
+    onAbort();
+  };
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = Math.floor(timeLeft % 60);
@@ -183,7 +200,9 @@ export function OrbView({
         onMusicChange={setMusic}
         volume={audio.getMusicVolume()}
         onVolumeChange={(v) => audio.setMusicVolume(v)}
-        onFinish={onAbort}
+        voiceVolume={audio.getVoiceVolume()}
+        onVoiceVolumeChange={(v) => audio.setVoiceVolume(v)}
+        onFinish={handleFinish}
       />
         </div>
       </OrganicStage>
