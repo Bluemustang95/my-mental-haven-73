@@ -241,16 +241,18 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
       <div className="absolute inset-0">
         <AnimatePresence>
           {thoughts.map((t) => (
-            <ThoughtBubble key={t.id} thought={t} paused={paused} />
+            <ThoughtBubble key={t.id} thought={t} paused={paused} onTap={() => releaseThought(t)} />
           ))}
         </AnimatePresence>
       </div>
 
       {/* Empty hint */}
       {thoughts.length === 0 && !composing && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-8">
-          <p className="text-center font-serif text-base leading-relaxed text-white/65 max-w-xs">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-8">
+          <p className="max-w-xs text-center font-serif text-base leading-relaxed text-white/65">
             Cuando aparezca un pensamiento,<br />tocá <span className="text-white">+</span> y dejálo ir.
+            <br />
+            <span className="text-[11px] text-white/45">Tocá una nube para soltarla antes.</span>
           </p>
         </div>
       )}
