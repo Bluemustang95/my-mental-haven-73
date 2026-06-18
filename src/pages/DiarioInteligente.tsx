@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { OpenSessionsList } from "@/components/dbt/OpenSessionsList";
 import { BienestarProcessCard } from "@/components/bienestar/BienestarProcessCard";
-import { readDraft as readBienestarDraft, todayStatus, draftHasProgress } from "@/components/bienestar/useBienestarDraft";
+import { readDraft as readBienestarDraft, todayStatus } from "@/components/bienestar/useBienestarDraft";
 
 type Sub = {
   id: string;
