@@ -52,7 +52,7 @@ export default function DiarioInteligente() {
   const [subs, setSubs] = useState<Sub[]>([]);
   const [hasAnySession, setHasAnySession] = useState(false);
   const [openSessionsTick, setOpenSessionsTick] = useState(0);
-  const [patternsOpen, setPatternsOpen] = useState(false);
+  
 
   // Soft FAB badge: pending today blocks after 20:00
   const [fabPending, setFabPending] = useState(0);
