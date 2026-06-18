@@ -1,85 +1,50 @@
-## Objetivo
+## 1) Eliminar el "Continuar" duplicado del hub
+En `src/pages/mindfulness/MindfulnessHub.tsx` quitar el bloque `{resuming && (...)}` (la tarjeta naranja "CONTINUAR · Respiración · 4-7-8") y el cálculo de `resuming`. La práctica abierta sigue mostrándose solo abajo, en `OpenMindfulnessList`.
 
-1. Cargar un **script profesional, extenso y específico** para cada hoja del árbol de Mindfulness (respiración, body scan general + zonas, observar 5-4-3-2-1, describir).
-2. Para Body Scan, además del script general por duración, dejar pre-cargados **marcadores de timeline** (segundo → zona) que se usan para iluminar la silueta.
-3. Arreglar **pausa y finalizar** durante una respiración (hoy la sesión no responde).
-4. En la barra de sesión, permitir **elegir sonido ambiente + volumen de ambiente + volumen de la voz** (Nadia), de forma independiente.
+## 2) Sliders y selector de sonido dentro de la práctica
+Rediseñar `SessionToolbar.tsx` para que todos los controles vivan en la pantalla activa, sin tener que abrir un sheet para ajustar volumen:
 
----
+- Fila superior siempre visible con dos sliders compactos:
+  - 🎙 Voz (Nadia) — 0–100%
+  - 🔊 Ambiente — 0–100%
+- Fila inferior con tres acciones:
+  - Chip "Sonido: <nombre actual>" → abre `AmbientSoundSheet` solo como **selector** de pista.
+  - Botón Voz on/off.
+  - Botón Finalizar.
 
-## 1) Seed de scripts (datos en `mindfulness_scripts`)
+En `AmbientSoundSheet.tsx` quitar los sliders internos (ya no se necesitan, viven en la pantalla) y dejar únicamente la grilla por categorías para elegir pista.
 
-Usaré `supabase--insert` (no es cambio de schema) con `upsert` por la unique key `(category, sub_key, duration_min)`.
+Aplica a `OrbView.tsx` y `BodyScanView.tsx`, que ya usan `SessionToolbar`.
 
-Total de hojas a poblar (según `MINDFULNESS_TREE`):
-
-- **Respiración** — 4 intenciones × 4 duraciones = **16 scripts** (dormir / ansiedad / concentrarme / equilibrar × 2,5,10,15 min).
-- **Body Scan generales** — **3 scripts** (5/15/30 min) + `markers` jsonb con 9 zonas distribuidas en el tiempo.
-- **Body Scan por zona** — **9 bloques** (cabeza, mandíbula, cuello/hombros, pecho, abdomen, brazos, manos, piernas, pies). Texto que la voz lee al iluminarse esa zona.
-- **Observar 5-4-3-2-1** — 5 sentidos × 3 duraciones = **15 scripts**.
-- **Describir** — Hechos vs Juicios × 3 niveles + Escáner Neutral × 3 duraciones + Anatomía × 3 duraciones = **9 scripts**.
-
-**Total: 52 scripts + 9 bloques de zona = 61 filas**, todas con texto largo, voz Nadia (voseo argentino, tono terapéutico, pausas con `...`), aptos para ElevenLabs `eleven_multilingual_v2`.
-
-### Marcadores de Body Scan (en `markers jsonb`)
-
-Para cada script general de Body Scan precalculamos `[{second, zone}, ...]` repartiendo las 9 zonas linealmente sobre la duración:
-
-```text
-5 min  → cada ~33 s una zona
-15 min → cada ~100 s
-30 min → cada ~200 s
-```
-
-`BodyScanView` ya tendrá que leer estos marcadores desde Supabase para iluminar la zona correspondiente en lugar de calcular sobre 7 zonas hardcodeadas.
-
----
-
-## 2) Fix de Pausa / Finalizar en respiración
-
-Problema: en `OrbView` el botón central llama a `setRunning(r => !r)` pero:
-
-- El `useEffect` de voz dispara `audio.speak()` que abre un `await canplaythrough` largo; el siguiente `speak` no cancela al pausar.
-- `SessionToolbar` (z-20, posición absoluta abajo) tapa el botón pequeño de pause y el "Finalizar" no detiene la voz en curso.
+## 3) Arreglar voz y sonido ambiente que no se escuchan
+La causa raíz es el bloqueo de autoplay del navegador: el primer `play()` ocurre en un `useEffect` después de navegar, no dentro del click del usuario, así que `AudioContext` y `HTMLAudioElement` quedan suspendidos.
 
 Cambios:
 
-- `OrbView` / `BodyScanView`: al cambiar `running` a `false`, llamar `audio.stopSpeech()` y `audio.pauseMusic()`; al reanudar, `audio.resumeMusic()`.
-- Al `onAbort` (Finalizar): `stopSpeech()` + `stopMusic()` antes de salir.
-- Asegurar que el botón central de pausa quede por encima de `SessionToolbar` (z-index / padding inferior del contenedor).
-- En `useMindfulAudio` agregar `pauseMusic` / `resumeMusic` (delegan a `useAmbientPlayer`).
+- `src/hooks/useAmbientPlayer.ts`: exponer `prime()` que cree/reanude el `AudioContext` y reproduzca un buffer silencioso de 1 frame.
+- `src/lib/elevenLabsTTS.ts`: exponer `primeAudio()` que cree un `HTMLAudioElement` silenciado y haga `.play()` para "armar" el canal de TTS.
+- `src/hooks/useMindfulAudio.ts`: re-exportar un único `prime()` que llame a ambos.
+- En los botones "Comenzar" de los setups (`IntentionSetupScreen`, `PatternSetupScreen`, `TimeSetupScreen` y equivalentes de Observar / Describir / Body Scan): llamar `prime()` **sincrónicamente** dentro del onClick antes de navegar al `OrbView` / `BodyScanView`.
+- En `OrbView` y `BodyScanView`: si el primer `audio.play()` falla con `NotAllowedError`, mostrar overlay "Tocá para activar el sonido" que reintenta `prime()` y reproduce la frase actual.
+- Añadir `console.warn` en los `catch` de `speak`, `setSound` y `audio.play` para confirmar la causa si todavía no suena.
 
----
+## 4) Verificación
+En `/herramientas/mindfulness/respiracion`:
+- Iniciar 4‑7‑8 → debe escucharse Nadia y la pista ambiente.
+- Mover sliders en vivo → cambia volumen sin reiniciar la pista.
+- Abrir el sheet y elegir "Olas" / "Lluvia suave" → cambia al instante.
+- Pausar/Reanudar/Finalizar → corta y retoma audio correctamente.
+- Volver al hub → solo aparece la tarjeta "Práctica abierta" abajo, no la barra naranja de arriba.
 
-## 3) Volumen de voz independiente + sheet de ambiente
-
-- `elevenLabsTTS.ts`: exponer `setSpeechVolume(v: number)` y aplicar a `currentAudio.volume`. Persistir en `localStorage` (`resma_voice_volume`).
-- `useMindfulAudio`: agregar `setVoiceVolume` / `getVoiceVolume`.
-- `AmbientSoundSheet`: añadir un **segundo slider "Voz (Nadia)"** arriba del slider de ambiente, con su propio %.
-- `SessionToolbar`: pasar `voiceVolume` + `onVoiceVolumeChange` al sheet, además del ya existente ambiente.
-- Mantener la decodificación/elección de sonido tal cual (la grilla por categoría ya existe).
-
----
-
-## 4) Archivos afectados
-
-**Datos (sin migración de schema, solo INSERT/UPSERT):**
-
-- `mindfulness_scripts` — 61 upserts vía `supabase--insert`.
-
-**Código:**
-
-- `src/lib/elevenLabsTTS.ts` — volumen + getter.
-- `src/hooks/useMindfulAudio.ts` — `pauseMusic`, `resumeMusic`, `setVoiceVolume`, `getVoiceVolume`.
-- `src/hooks/useAmbientPlayer.ts` — `pause`/`resume` si no existen.
-- `src/components/mindfulness/AmbientSoundSheet.tsx` — slider de voz.
-- `src/components/mindfulness/breathing/SessionToolbar.tsx` — propagar volumen de voz.
-- `src/components/mindfulness/breathing/OrbView.tsx` — pausar/reanudar voz+música; z-index.
-- `src/components/mindfulness/breathing/BodyScanView.tsx` — ídem + leer `markers` desde Supabase para iluminar zonas.
-
----
-
-## Fuera de alcance
-
-- Cambios visuales mayores en los ejercicios.
-- TTS de hombre / voces extra (queda como follow-up cuando agregues la voz masculina).
+## Archivos a modificar
+- `src/pages/mindfulness/MindfulnessHub.tsx`
+- `src/components/mindfulness/breathing/SessionToolbar.tsx`
+- `src/components/mindfulness/AmbientSoundSheet.tsx`
+- `src/components/mindfulness/breathing/OrbView.tsx`
+- `src/components/mindfulness/breathing/BodyScanView.tsx`
+- `src/components/mindfulness/breathing/IntentionSetupScreen.tsx`
+- `src/components/mindfulness/breathing/PatternSetupScreen.tsx`
+- `src/components/mindfulness/breathing/TimeSetupScreen.tsx`
+- `src/hooks/useAmbientPlayer.ts`
+- `src/hooks/useMindfulAudio.ts`
+- `src/lib/elevenLabsTTS.ts`

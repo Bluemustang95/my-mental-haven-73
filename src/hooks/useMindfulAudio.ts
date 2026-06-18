@@ -65,6 +65,11 @@ export function useMindfulAudio() {
     try { window.speechSynthesis?.cancel(); } catch { /* noop */ }
   }, []);
 
+  const prime = useCallback(() => {
+    ambient.prime();
+    import("@/lib/elevenLabsTTS").then((m) => m.primeAudio()).catch(() => {});
+  }, [ambient]);
+
   useEffect(() => {
     return () => { stopSpeech(); };
   }, [stopSpeech]);
@@ -73,6 +78,6 @@ export function useMindfulAudio() {
     playMusic, stopMusic, pauseMusic, resumeMusic,
     setMusicVolume, getMusicVolume,
     setVoiceVolume, getVoiceVolume,
-    speak, stopSpeech,
+    speak, stopSpeech, prime,
   };
 }

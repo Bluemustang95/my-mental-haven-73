@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Wind, Eye, MessageSquare, Plus, RotateCcw } from "lucide-react";
+import { ArrowLeft, Wind, Eye, MessageSquare, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,7 +20,7 @@ export default function MindfulnessHub() {
   const [historyDate, setHistoryDate] = useState<Date | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [resuming, setResuming] = useState<{ name: string; path: string } | null>(null);
+  // (Se eliminó la tarjeta "Continuar" superior — usar OpenMindfulnessList al pie)
 
   useEffect(() => {
     if (!user) return;
@@ -43,17 +43,7 @@ export default function MindfulnessHub() {
     })();
   }, [user]);
 
-  // Detectar sesión abandonada
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("mindfulness-current-draft");
-      if (!raw) return;
-      const p = JSON.parse(raw);
-      if (p?.exerciseName && p?.returnPath && p.returnPath !== window.location.pathname) {
-        setResuming({ name: p.exerciseName, path: p.returnPath });
-      }
-    } catch {}
-  }, []);
+  // (La detección de sesión abandonada ahora vive en OpenMindfulnessList)
 
   const todayKey = localDateStr(new Date());
   const didSomethingToday = (progressByDate[todayKey] ?? 0) > 0;
@@ -107,24 +97,7 @@ export default function MindfulnessHub() {
 
         <RecommendedNowChip />
 
-        {resuming && (
-          <motion.button
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={() => navigate(resuming.path)}
-            className="mt-3 flex w-full items-center gap-2 rounded-2xl border border-[#FB923C]/30 bg-[#FB923C]/8 px-3 py-2.5 text-left"
-          >
-            <RotateCcw size={14} className="text-[#FB923C]" />
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#C2410C]">
-                Continuar
-              </div>
-              <div className="truncate font-display text-[13px] font-semibold text-[#101927]">
-                {resuming.name}
-              </div>
-            </div>
-          </motion.button>
-        )}
+        {/* Se eliminó la tarjeta superior "Continuar" — la práctica abierta ya se muestra debajo en OpenMindfulnessList */}
 
         <div className="mt-4">
           <WeekStrip

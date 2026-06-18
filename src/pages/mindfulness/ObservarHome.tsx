@@ -11,6 +11,8 @@ import {
   nextMusic,
 } from "@/components/mindfulness/breathing/SessionToolbar";
 import type { MusicTrack } from "@/hooks/useMindfulAudio";
+import { primeAudio } from "@/lib/elevenLabsTTS";
+import { primeAmbientAudio } from "@/hooks/useAmbientPlayer";
 
 type SubMode = "clouds" | "senses";
 type Step = "setup_mode" | "setup_time" | "playing";
@@ -90,7 +92,7 @@ export default function ObservarHome() {
         subtitle={SUB[sub].subtitle}
         minutes={minutes}
         onMinutesChange={setMinutes}
-        onStart={() => setStep("playing")}
+        onStart={() => { primeAudio(); primeAmbientAudio(); setStep("playing"); }}
         onClose={close}
         onBack={() => setStep("setup_mode")}
         accent={ACCENT}

@@ -12,6 +12,8 @@ import {
   nextMusic,
 } from "@/components/mindfulness/breathing/SessionToolbar";
 import type { MusicTrack } from "@/hooks/useMindfulAudio";
+import { primeAudio } from "@/lib/elevenLabsTTS";
+import { primeAmbientAudio } from "@/hooks/useAmbientPlayer";
 
 type SubMode = "facts" | "scan" | "anatomy";
 type Step = "setup_mode" | "playing";
@@ -60,6 +62,8 @@ export default function DescribirHome() {
         layout="stack"
         onClose={close}
         onPick={(id) => {
+          primeAudio();
+          primeAmbientAudio();
           setSub(id as SubMode);
           setStep("playing");
         }}

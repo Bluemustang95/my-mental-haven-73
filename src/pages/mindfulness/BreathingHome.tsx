@@ -7,6 +7,8 @@ import { BodyScanView } from "@/components/mindfulness/breathing/BodyScanView";
 import { IntentionSetupScreen, intentionToPattern } from "@/components/mindfulness/breathing/IntentionSetupScreen";
 import { TimeSetupScreen } from "@/components/mindfulness/breathing/TimeSetupScreen";
 import { BreathingOnboarding } from "@/components/mindfulness/breathing/BreathingOnboarding";
+import { primeAudio } from "@/lib/elevenLabsTTS";
+import { primeAmbientAudio } from "@/hooks/useAmbientPlayer";
 
 type Visual = "orb" | "bodyscan";
 type Step = "setup_intention" | "setup_time" | "playing";
@@ -99,7 +101,7 @@ export default function BreathingHome() {
         }
         minutes={minutes}
         onMinutesChange={setMinutes}
-        onStart={() => setStep("playing")}
+        onStart={() => { primeAudio(); primeAmbientAudio(); setStep("playing"); }}
         onClose={close}
         onBack={visual === "orb" ? () => setStep("setup_intention") : undefined}
         accent={ACCENT}
@@ -117,7 +119,7 @@ export default function BreathingHome() {
             pattern={pattern}
             totalSeconds={minutes * 60}
             initialVoice
-            initialMusic="silence"
+            initialMusic="rain_soft"
             hapticsEnabled
             onComplete={onComplete}
             onAbort={onAbort}
@@ -126,7 +128,7 @@ export default function BreathingHome() {
           <BodyScanView
             totalSeconds={minutes * 60}
             initialVoice
-            initialMusic="silence"
+            initialMusic="rain_soft"
             onComplete={onComplete}
             onAbort={onAbort}
           />

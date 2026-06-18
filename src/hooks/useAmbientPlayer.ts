@@ -13,9 +13,37 @@ function readVolume(): number {
   return 0.8;
 }
 
+// Module-level AudioContext so a "prime" call from a user gesture
+// in one component unlocks audio for hooks mounted later.
+let sharedCtx: AudioContext | null = null;
+function getSharedCtx(): AudioContext {
+  if (!sharedCtx) {
+    const Ctor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    sharedCtx = new Ctor();
+  }
+  if (sharedCtx.state === "suspended") sharedCtx.resume().catch(() => {});
+  return sharedCtx;
+}
+
+/** Module-level primer callable from a user gesture before any hook mounts. */
+export function primeAmbientAudio() {
+  try {
+    const ctx = getSharedCtx();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+  } catch (e) {
+    console.warn("[ambient] primeAmbientAudio failed", e);
+  }
+}
+
 /**
  * Play/stop ambient sounds from the library.
- * Returns a stable API: setSound(id), stop(), setVolume(n), pause(), resume()
+ * Returns a stable API: setSound(id), stop(), setVolume(n), pause(), resume(), prime()
  */
 export function useAmbientPlayer() {
   const ctxRef = useRef<AudioContext | null>(null);
@@ -24,10 +52,7 @@ export function useAmbientPlayer() {
   const volumeRef = useRef<number>(readVolume());
 
   const ensureCtx = useCallback(() => {
-    if (!ctxRef.current) {
-      const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      ctxRef.current = new Ctor();
-    }
+    if (!ctxRef.current) ctxRef.current = getSharedCtx();
     if (ctxRef.current.state === "suspended") ctxRef.current.resume().catch(() => {});
     return ctxRef.current;
   }, []);
@@ -71,10 +96,25 @@ export function useAmbientPlayer() {
     try { ctxRef.current?.resume(); } catch { /* noop */ }
   }, []);
 
+  /** Call inside a user gesture to unlock the AudioContext for autoplay. */
+  const prime = useCallback(() => {
+    try {
+      const ctx = ensureCtx();
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch (e) {
+      console.warn("[ambient] prime failed", e);
+    }
+  }, [ensureCtx]);
+
   useEffect(() => {
     return () => {
       stop();
-      try { ctxRef.current?.close(); } catch { /* noop */ }
+      // Don't close the shared AudioContext — other components may still need it.
       ctxRef.current = null;
     };
   }, [stop]);
@@ -84,6 +124,7 @@ export function useAmbientPlayer() {
     stop,
     pause,
     resume,
+    prime,
     setVolume,
     getVolume: () => volumeRef.current,
     getCurrent: () => currentIdRef.current,
