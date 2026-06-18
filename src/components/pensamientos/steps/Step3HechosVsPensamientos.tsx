@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { GlassCard } from "../pieces/GlassCard";
 import HechosTrainer from "../pieces/HechosTrainer";
 import type { ThoughtDraft } from "@/lib/pensamientos/state";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 type Props = {
   draft: ThoughtDraft;

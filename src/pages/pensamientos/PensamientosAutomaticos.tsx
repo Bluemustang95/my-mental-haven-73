@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import WizardShell from "@/components/pensamientos/shell/WizardShell";
 import Step1FiltroMental from "@/components/pensamientos/steps/Step1FiltroMental";
 import Step2Captura from "@/components/pensamientos/steps/Step2Captura";

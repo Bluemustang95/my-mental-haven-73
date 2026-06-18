@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { GlassCard } from "../pieces/GlassCard";
 import type { ThoughtDraft, ActionRow } from "@/lib/pensamientos/state";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 type Props = {
   draft: ThoughtDraft;
