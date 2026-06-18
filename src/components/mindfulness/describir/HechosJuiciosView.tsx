@@ -214,6 +214,3 @@ function SwipeCard({
     </motion.div>
   );
 }
-
-// Silenciar warning de var no usada
-void setDeckKey;
