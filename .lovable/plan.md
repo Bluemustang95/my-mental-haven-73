@@ -1,95 +1,54 @@
-# Mejoras Pensamientos Automáticos
+# Ajustes finales Pensamientos Automáticos
 
-Reestructuro el flujo para que sea más corto, más funcional y consistente con el resto de la app.
+## 1. Footer arriba de la tab bar global
 
-## 1. Layout y tamaños
+El footer fijo del wizard se está pisando con la `BottomNav` flotante (cápsula oscura en `bottom: max(1rem, safe-area)` ≈ 80–96 px de alto).
 
-- Bajar el contenedor de `max-w-[480px]` a la medida estándar de la app (`max-w-md` ≈ 448px) y reducir tipografías de títulos (`text-3xl` → `text-2xl`, `text-2xl` → `text-xl`) y paddings de las `GlassCard` (`p-5` → `p-4`).
-- Arreglar el solape de la barra inferior con el botón "Continuar":
-  - Aumentar el `pb` del scroll interno de `pb-40` a `pb-44`.
-  - Quitar el `min-h-screen` rígido y usar `h-[100dvh]` para evitar el corte en móviles con barra dinámica.
-  - El footer pasa a tener fondo sólido con borde superior (no gradiente translúcido) para que se lea siempre el botón.
+- Mover el footer del wizard a `bottom: calc(env(safe-area-inset-bottom) + 5.5rem)` (mismo patrón que ya usa `src/components/dbt/shared.tsx`), con `z-30` y fondo sólido más sombra superior suave.
+- Aumentar el `pb` del scroll interno a `pb-56` para que el último contenido se vea por encima del footer + tab bar.
+- Quitar el padding extra que estaba compensando.
 
-## 2. Nueva estructura: 4 pasos (antes 5)
+## 2. Sizing tipo onboarding
 
-```text
-Paso 1  Filtro Mental (igual, más compacto)
-Paso 2  Captura + Análisis IA (fusiona el actual 2 y 3)
-Paso 3  Evidencias + IA (nuevo gráfico, sin balanza)
-Paso 4  Tratamiento (igual, con routing A/B)
-```
+Adoptar los mismos tokens de `src/pages/Onboarding.tsx`:
 
-Se elimina el "mini-juego Hechos vs Pensamientos" como paso independiente (queda como tooltip educativo opcional dentro del Paso 2). El usuario llega antes a lo accionable.
+- Header del wizard: título `text-[20px]` font-display semibold (no font-serif bold) + caption `text-[11px]`.
+- Cards: `rounded-3xl`, `p-4`, sombra `shadow-glass`, border `border-white/60`, `bg-white/75 backdrop-blur-xl`.
+- Tipografías internas: títulos de card `text-[14px] font-semibold`, ayudas `text-[11.5px]`, inputs/textareas `text-[13.5px]`, botones `text-[13px]`.
+- Reducir ancho a `max-w-[420px]` (más cercano al rendering real de onboarding).
+- Progress bar más fina (`h-[3px]`).
 
-## 3. Paso 2 — Captura con Análisis IA en línea
+## 3. Paso 4 — Planificador de acciones
 
-El paso conserva las 3 cards (Emoción + intensidad / Evento / Pensamiento) y agrega debajo de "Pensamiento automático":
-
-- Botón **"Analizar con IA"** (mismo edge function `analyze-thought`, ya existente).
-- El resultado se renderiza inmediatamente **debajo del textarea del pensamiento**, en un bloque de feedback en línea (no en card separada) con:
-  - Reformulación fáctica sugerida del pensamiento.
-  - 1–2 preguntas socráticas para profundizar.
-  - Botón "Usar esta versión" que reemplaza el contenido del textarea por la versión fáctica.
-- El edge function `analyze-thought` se ajusta para devolver `{ factual, questions[] }` en lugar de un solo bloque de texto (estructurado vía Output del SDK).
-
-Se desactiva el avance al Paso 3 hasta que (a) los 3 campos estén completos o (b) el usuario explícitamente toque "Saltar análisis".
-
-## 4. Paso 3 — Evidencias con nuevo gráfico e IA
-
-Se reemplaza la balanza SVG por un **Termómetro de Evidencia Fáctica**: una barra horizontal segmentada tipo "medidor de credibilidad" que va de 0 a 100 %.
+La grilla `2 cols + botón` no entra en 390 px. Se reescribe el row:
 
 ```text
-[ ▓▓▓▓▓▓░░░░░░░░░░░░░░ ]  38 % factual
- a favor (rojo cálido)   |   en contra (verde menta)
+[ Acción (full width)                            ✕ ]
+[ 📅 Día / hora (full width)                       ]
 ```
 
-- Cálculo: `score = en_contra / (a_favor + en_contra) * 100`, con etiqueta dinámica ("Pensamiento poco sostenido por hechos", "Sostenido parcialmente", etc.).
-- Debajo del medidor: chip con la **distorsión cognitiva** detectada (ya existe `distortionDetector`), tappable para abrir descripción.
+Cada acción queda como una mini-card vertical de dos inputs apilados + botón X en la esquina. Más legible y nunca se desborda.
 
-Razones para preferir el termómetro sobre la balanza:
-- Comunica un porcentaje concreto, no una metáfora visual ambigua.
-- Funciona bien en mobile angosto (la balanza necesita altura y se siente "infantil").
-- Permite mostrar progreso a medida que se agregan evidencias.
+## 4. IA que no responde
 
-Alternativas consideradas (puedo cambiar a otra si preferís): tablero "Pro / Contra" tipo Kanban con conteo, gauge semicircular, o pirámide invertida de credibilidad.
+Los logs de `analyze-thought` muestran solo "booted", lo que indica que las invocaciones fallaron antes de loguearse o que el modelo devolvió contenido vacío al pedir `response_format: json_object` (Gemini en el gateway no siempre acepta ese flag y devuelve `content: ""`).
 
-**Asistencia IA nueva en el paso**: dos botones contextuales sobre cada lista:
-- **"Sugerirme evidencias a favor"** y **"Sugerirme evidencias en contra"** → nuevo edge function `suggest-evidence` que, dado `triggerEvent + automaticThought + lado`, devuelve 3 sugerencias clicables que el usuario puede aceptar/editar/descartar antes de agregarlas. Esto destraba al usuario cuando no se le ocurren pruebas.
-- Las sugerencias aceptadas se marcan internamente con `source: "ai"` para futuro analytics, sin mostrarlo en UI.
+Cambios:
 
-## 5. Paso 4 — Tratamiento
+- Quitar `response_format` de `analyze-thought` y `suggest-evidence`.
+- Pedir JSON en el system prompt y parsear con tolerancia (extraer el primer bloque `{...}` con regex como fallback).
+- Si el parseo falla, devolver `factual: contenidoCrudo, questions: []` para que al menos se vea algo en pantalla.
+- Subir `temperature: 0.4` y `max_tokens` explícito.
+- Agregar `console.log` mínimo del status + primeros 200 chars del body para diagnosticar desde logs.
+- En el cliente, si la respuesta llega vacía, mostrar un toast claro ("La IA no devolvió respuesta, probá de nuevo") en lugar de quedar en silencio.
 
-Queda igual funcionalmente, pero:
-- Se usa el `score` del termómetro (no el conteo crudo) para decidir Path A (Reestructuración) si `score ≥ 60` o Path B (Plan conductual) si `score < 60`.
-- Se muestra al inicio del paso un resumen de 3 líneas: emoción + intensidad, pensamiento original, % factual del termómetro.
+## Archivos a editar
 
-## 6. Persistencia
+- `src/components/pensamientos/shell/WizardShell.tsx` (sizing + footer arriba del tab bar)
+- `src/components/pensamientos/steps/Step2Captura.tsx`, `Step3Evidencias.tsx`, `Step4Tratamiento.tsx`, `Step1FiltroMental.tsx` (tokens onboarding)
+- `src/components/pensamientos/pieces/GlassCard.tsx` (rounded-3xl + shadow-glass)
+- `src/components/pensamientos/pieces/EvidenceList.tsx`, `TermometroEvidencia.tsx` (tokens onboarding)
+- `src/components/pensamientos/steps/Step4Tratamiento.tsx` (planificador vertical)
+- `supabase/functions/analyze-thought/index.ts` y `suggest-evidence/index.ts` (parseo tolerante + sin response_format)
 
-- Se mantiene la tabla `thought_records` tal cual.
-- El estado local (`useThoughtDraft`) reduce `step` de 5 a 4 y agrega `aiAnalysisStructured: { factual, questions }` y `evidenceSources: { for: string[], against: string[] }`.
-- Migración no requerida (el JSONB ya acepta los nuevos campos).
-
-## Requisitos técnicos
-
-- Archivos a editar:
-  - `src/components/pensamientos/shell/WizardShell.tsx` (layout/sizes/footer).
-  - `src/components/pensamientos/steps/Step2Captura.tsx` (integrar IA inline).
-  - `src/pages/pensamientos/PensamientosAutomaticos.tsx` (4 pasos, routing renumerado).
-  - `src/lib/pensamientos/state.ts` (nuevos campos).
-  - `supabase/functions/analyze-thought/index.ts` (output estructurado).
-- Archivos a crear:
-  - `src/components/pensamientos/pieces/TermometroEvidencia.tsx` (nuevo gráfico).
-  - `src/components/pensamientos/steps/Step3Evidencias.tsx` (reemplaza `Step4Balanza`).
-  - `supabase/functions/suggest-evidence/index.ts`.
-- Archivos a eliminar:
-  - `src/components/pensamientos/steps/Step3HechosVsPensamientos.tsx`
-  - `src/components/pensamientos/steps/Step4Balanza.tsx`
-  - `src/components/pensamientos/pieces/BalanzaFisica.tsx`
-  - `src/components/pensamientos/pieces/HechosTrainer.tsx`
-  - `src/lib/pensamientos/trainerData.ts`
-- Renumeración: `Step5Tratamiento` pasa a ser `Step4Tratamiento` (rename archivo + import).
-- Voseo rioplatense clínico mantenido en todos los textos nuevos y prompts IA.
-
-## Pregunta abierta
-
-¿Vamos con el **Termómetro de Evidencia** como gráfico nuevo, o preferís ver primero un mock con otra opción (gauge semicircular o Pro/Contra Kanban)?
+Sin cambios de schema.
