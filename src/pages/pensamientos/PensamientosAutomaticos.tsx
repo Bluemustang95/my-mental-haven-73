@@ -6,12 +6,12 @@ import { toast } from "sonner";
 import WizardShell from "@/components/pensamientos/shell/WizardShell";
 import Step1FiltroMental from "@/components/pensamientos/steps/Step1FiltroMental";
 import Step2Captura from "@/components/pensamientos/steps/Step2Captura";
-import Step3Evidencias from "@/components/pensamientos/steps/Step3Evidencias";
-import Step4Tratamiento from "@/components/pensamientos/steps/Step4Tratamiento";
+import Step3Distorsion from "@/components/pensamientos/steps/Step3Distorsion";
+import Step4Evidencias from "@/components/pensamientos/steps/Step4Evidencias";
+import Step5Tratamiento from "@/components/pensamientos/steps/Step5Tratamiento";
 import { useThoughtDraft } from "@/lib/pensamientos/state";
-import { detectDistortion } from "@/lib/pensamientos/distortionDetector";
 
-const TOTAL = 4;
+const TOTAL = 5;
 
 export default function PensamientosAutomaticos() {
   const navigate = useNavigate();
@@ -28,8 +28,9 @@ export default function PensamientosAutomaticos() {
           (draft.emotion !== "otro" || draft.emotionOther.trim().length > 0) &&
           draft.triggerEvent.trim().length >= 4 &&
           draft.automaticThought.trim().length >= 8;
-      case 3: return draft.evidenceFor.length + draft.evidenceAgainst.length >= 1;
-      case 4:
+      case 3: return true;
+      case 4: return draft.evidenceFor.length + draft.evidenceAgainst.length >= 1;
+      case 5:
         if (draft.isRealProblem) return draft.actionPlan.some((r) => r.what.trim() && r.when.trim());
         return draft.alternativeThought.trim().length >= 8;
       default: return false;
@@ -37,21 +38,18 @@ export default function PensamientosAutomaticos() {
   }, [step, draft]);
 
   const goNext = async () => {
-    if (step === 3) {
-      const d = detectDistortion(draft.automaticThought);
+    if (step === 4) {
       const total = draft.evidenceFor.length + draft.evidenceAgainst.length;
       const score = total === 0 ? 50 : (draft.evidenceAgainst.length / total) * 100;
       const isReal = score < 60;
       patch({
-        step: 4,
-        distortionKey: d?.key ?? null,
-        distortionLabel: d?.label ?? null,
+        step: 5,
         isRealProblem: isReal,
         intensityFinal: draft.intensityInitial,
       });
       return;
     }
-    if (step === 4) return finish();
+    if (step === TOTAL) return finish();
     patch({ step: step + 1 });
   };
 
@@ -110,8 +108,9 @@ export default function PensamientosAutomaticos() {
     >
       {step === 1 && <Step1FiltroMental draft={draft} patch={patch} />}
       {step === 2 && <Step2Captura draft={draft} patch={patch} />}
-      {step === 3 && <Step3Evidencias draft={draft} patch={patch} />}
-      {step === 4 && <Step4Tratamiento draft={draft} patch={patch} />}
+      {step === 3 && <Step3Distorsion draft={draft} patch={patch} />}
+      {step === 4 && <Step4Evidencias draft={draft} patch={patch} />}
+      {step === 5 && <Step5Tratamiento draft={draft} patch={patch} />}
     </WizardShell>
   );
 }
