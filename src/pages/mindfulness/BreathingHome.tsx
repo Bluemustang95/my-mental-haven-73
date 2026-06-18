@@ -100,7 +100,7 @@ export default function BreathingHome() {
         }
         minutes={minutes}
         onMinutesChange={setMinutes}
-        onStart={() => setStep("playing")}
+        onStart={() => { primeAudio(); setStep("playing"); }}
         onClose={close}
         onBack={visual === "orb" ? () => setStep("setup_intention") : undefined}
         accent={ACCENT}
