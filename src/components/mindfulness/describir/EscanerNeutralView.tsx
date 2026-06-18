@@ -100,8 +100,21 @@ export function EscanerNeutralView({ music, onComplete, onAbort }: Props) {
       {result && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-5 space-y-4">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-[10px] uppercase tracking-wider text-white/40">Tu versión</div>
-            <p className="mt-2 font-serif text-sm text-white/75 leading-relaxed">{text}</p>
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-wider text-white/40">Tu versión</div>
+              {result.removed?.length > 0 && (
+                <button
+                  onClick={() => setHighlight((h) => !h)}
+                  className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-1 text-[10px] text-white/70"
+                >
+                  {highlight ? <EyeOff size={11} /> : <Eye size={11} />}
+                  {highlight ? "Ocultar juicios" : "Resaltar juicios"}
+                </button>
+              )}
+            </div>
+            <p className="mt-2 font-serif text-sm leading-relaxed text-white/75">
+              {originalHighlighted ?? text}
+            </p>
           </div>
           <div className="rounded-2xl border p-4" style={{ borderColor: `${ACCENT}66`, background: `${ACCENT}1a` }}>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider" style={{ color: "#C4B5FD" }}>
