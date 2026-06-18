@@ -145,20 +145,36 @@ export function primeAudio() {
 
 export async function speak(text: string, voiceId?: string): Promise<void> {
   stopSpeak();
-  const blob = await synthesize(text, voiceId);
+  const vid = voiceId ?? getGlobalVoice().voiceId;
+  const blob = await synthesize(text, vid);
   if (!blob) {
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "es-AR";
-      u.rate = 0.92;
-      u.volume = currentVolume;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    } catch {
-      /* noop */
-    }
+    fallbackBrowserSpeak(text);
     return;
   }
+  const ok = await tryPlayBlob(blob);
+  if (ok) return;
+
+  // Cached blob is probably corrupted: invalidate and retry once with a fresh fetch.
+  console.warn("[TTS] playback failed, invalidating cache and retrying");
+  await cacheDelete(makeKey(text, vid));
+  const fresh = await synthesize(text, vid);
+  if (fresh && (await tryPlayBlob(fresh))) return;
+
+  fallbackBrowserSpeak(text);
+}
+
+function fallbackBrowserSpeak(text: string) {
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "es-AR";
+    u.rate = 0.92;
+    u.volume = currentVolume;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch { /* noop */ }
+}
+
+async function tryPlayBlob(blob: Blob): Promise<boolean> {
   const url = URL.createObjectURL(blob);
   const audio = new Audio();
   audio.preload = "auto";
@@ -175,24 +191,21 @@ export async function speak(text: string, voiceId?: string): Promise<void> {
   });
   try {
     await audio.play();
+    audio.onended = () => {
+      if (currentUrl === url) {
+        URL.revokeObjectURL(url);
+        currentUrl = null;
+        currentAudio = null;
+      }
+    };
+    return true;
   } catch (e) {
     console.error("[TTS] audio.play failed", e);
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "es-AR";
-      u.rate = 0.92;
-      u.volume = currentVolume;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    } catch { /* noop */ }
+    try { audio.pause(); audio.src = ""; } catch { /* noop */ }
+    URL.revokeObjectURL(url);
+    if (currentUrl === url) { currentUrl = null; currentAudio = null; }
+    return false;
   }
-  audio.onended = () => {
-    if (currentUrl === url) {
-      URL.revokeObjectURL(url);
-      currentUrl = null;
-      currentAudio = null;
-    }
-  };
 }
 
 export function stopSpeak() {
