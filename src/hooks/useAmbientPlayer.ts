@@ -114,7 +114,7 @@ export function useAmbientPlayer() {
   useEffect(() => {
     return () => {
       stop();
-      try { ctxRef.current?.close(); } catch { /* noop */ }
+      // Don't close the shared AudioContext — other components may still need it.
       ctxRef.current = null;
     };
   }, [stop]);
