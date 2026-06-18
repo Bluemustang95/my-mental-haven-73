@@ -9,6 +9,14 @@ import { TimeSetupScreen } from "@/components/mindfulness/breathing/TimeSetupScr
 import { BreathingOnboarding } from "@/components/mindfulness/breathing/BreathingOnboarding";
 import { primeAudio } from "@/lib/elevenLabsTTS";
 import { primeAmbientAudio } from "@/hooks/useAmbientPlayer";
+import { supabase } from "@/integrations/supabase/client";
+
+const PATTERN_TO_SUBKEY: Record<string, string> = {
+  "478": "dormir",
+  sigh: "ansiedad",
+  box: "concentrarme",
+  coherence: "equilibrar",
+};
 
 type Visual = "orb" | "bodyscan";
 type Step = "setup_intention" | "setup_time" | "playing";
