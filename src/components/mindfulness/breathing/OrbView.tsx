@@ -17,6 +17,7 @@ interface OrbViewProps {
   initialVoice: boolean;
   initialMusic: MusicTrack;
   hapticsEnabled: boolean;
+  narrationText?: string;
   onComplete: () => void;
   onAbort: () => void;
 }
