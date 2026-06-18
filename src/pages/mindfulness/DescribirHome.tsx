@@ -117,7 +117,7 @@ export default function DescribirHome() {
             voice={voice}
             onVoiceToggle={() => setVoice((v) => !v)}
             music={music}
-            onMusicCycle={() => setMusic((m) => nextMusic(m))}
+            onMusicChange={setMusic}
             onFinish={onAbort}
           />
         </div>
