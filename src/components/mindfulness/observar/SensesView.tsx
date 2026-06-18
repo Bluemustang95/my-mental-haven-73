@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Eye, Hand, Ear, Wind, Coffee, ArrowRight } from "lucide-react";
+import { X, Eye, Hand, Ear, Wind, Coffee, ArrowRight, Mic, MicOff } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { cn } from "@/lib/utils";
 import { useGroundingScripts, type GroundingScripts } from "@/lib/groundingScripts";
+import { toast } from "@/hooks/use-toast";
 
 interface Step {
   count: number;
