@@ -86,11 +86,30 @@ export function OrbView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
+  // Haptics on each phase change
   useEffect(() => {
     if (!running) return;
-    if (voice) audio.speak(phase.speech);
     if (phase.haptic === "inhale") haptics.inhale();
     else if (phase.haptic === "exhale") haptics.exhale();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phaseIdx, running]);
+
+  // Narration: speak the full DB script once. Fallback to phase cues if no script.
+  const narratedRef = useRef(false);
+  useEffect(() => {
+    if (!running || !voice || narratedRef.current) return;
+    if (narrationText && narrationText.trim().length > 0) {
+      narratedRef.current = true;
+      audio.speak(narrationText);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, voice, narrationText]);
+
+  // Phase cues only when there's no long-form narration available
+  useEffect(() => {
+    if (!running || !voice) return;
+    if (narrationText && narrationText.trim().length > 0) return;
+    audio.speak(phase.speech);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phaseIdx, running, voice]);
 
