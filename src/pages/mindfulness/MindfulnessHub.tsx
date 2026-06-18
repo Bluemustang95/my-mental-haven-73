@@ -107,24 +107,7 @@ export default function MindfulnessHub() {
 
         <RecommendedNowChip />
 
-        {resuming && (
-          <motion.button
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={() => navigate(resuming.path)}
-            className="mt-3 flex w-full items-center gap-2 rounded-2xl border border-[#FB923C]/30 bg-[#FB923C]/8 px-3 py-2.5 text-left"
-          >
-            <RotateCcw size={14} className="text-[#FB923C]" />
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#C2410C]">
-                Continuar
-              </div>
-              <div className="truncate font-display text-[13px] font-semibold text-[#101927]">
-                {resuming.name}
-              </div>
-            </div>
-          </motion.button>
-        )}
+        {/* Se eliminó la tarjeta superior "Continuar" — la práctica abierta ya se muestra debajo en OpenMindfulnessList */}
 
         <div className="mt-4">
           <WeekStrip
