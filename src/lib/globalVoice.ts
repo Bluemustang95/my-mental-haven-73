@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 export type GlobalVoice = { label: string; voiceId: string };
 
 export const VOICE_PRESETS: GlobalVoice[] = [
-  { label: "Elena (AR)", voiceId: "XB0fDUnXU5powFXDhCwa" },
-  { label: "Jorge (ES)", voiceId: "JBFqnCBsd6RMkjVDRZzb" },
-  { label: "Camila (MX)", voiceId: "EXAVITQu4vr4xnSDxMaL" },
-  { label: "Mateo (Neutral)", voiceId: "TX3LPaxmHKxFdv7VOQHJ" },
-  { label: "Sofía (Cálida)", voiceId: "XrExE9yKIg1WjnnlVkGX" },
+  { label: "Nadia · Argentina (recomendada)", voiceId: "9rvdnhrYoXoUt4igKpBw" },
+  { label: "Elena · España", voiceId: "XB0fDUnXU5powFXDhCwa" },
+  { label: "Jorge · España", voiceId: "JBFqnCBsd6RMkjVDRZzb" },
+  { label: "Camila · México", voiceId: "EXAVITQu4vr4xnSDxMaL" },
+  { label: "Mateo · Neutral", voiceId: "TX3LPaxmHKxFdv7VOQHJ" },
+  { label: "Sofía · Cálida", voiceId: "XrExE9yKIg1WjnnlVkGX" },
 ];
 
 const KEY = "resma:admin:global_voice";
