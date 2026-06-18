@@ -180,7 +180,9 @@ export function OrbView({
         voice={voice}
         onVoiceToggle={() => setVoice((v) => !v)}
         music={music}
-        onMusicCycle={() => setMusic((m) => nextMusic(m))}
+        onMusicChange={setMusic}
+        volume={audio.getMusicVolume()}
+        onVolumeChange={(v) => audio.setMusicVolume(v)}
         onFinish={onAbort}
       />
         </div>
