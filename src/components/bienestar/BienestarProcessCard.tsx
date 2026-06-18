@@ -108,8 +108,8 @@ export function BienestarProcessCard() {
                     </div>
                   ))}
                   {HOURS.map((h) => (
-                    <>
-                      <div key={`l-${h}`} className="text-[9px] text-[#101927]/40 pr-1 text-right">
+                    <Fragment key={h}>
+                      <div className="text-[9px] text-[#101927]/40 pr-1 text-right">
                         {h.slice(0, 2)}
                       </div>
                       {DAYS.map((d) => {
@@ -125,7 +125,7 @@ export function BienestarProcessCard() {
                           />
                         );
                       })}
-                    </>
+                    </Fragment>
                   ))}
                 </div>
                 <div className="mt-1.5 flex items-center gap-2 text-[9px] text-[#101927]/55">
