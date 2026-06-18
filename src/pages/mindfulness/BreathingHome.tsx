@@ -8,6 +8,7 @@ import { IntentionSetupScreen, intentionToPattern } from "@/components/mindfulne
 import { TimeSetupScreen } from "@/components/mindfulness/breathing/TimeSetupScreen";
 import { BreathingOnboarding } from "@/components/mindfulness/breathing/BreathingOnboarding";
 import { primeAudio } from "@/lib/elevenLabsTTS";
+import { primeAmbientAudio } from "@/hooks/useAmbientPlayer";
 
 type Visual = "orb" | "bodyscan";
 type Step = "setup_intention" | "setup_time" | "playing";
