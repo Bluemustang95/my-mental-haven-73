@@ -1,11 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { useAmbientPlayer } from "@/hooks/useAmbientPlayer";
 
-/**
- * Backwards-compatible alias. Ambient sounds are now identified by string IDs
- * from the ambient library (see `@/lib/ambientLibrary`). The legacy values
- * "silence" | "rain" | "ambient" are mapped at runtime.
- */
 export type MusicTrack = string;
 
 const LEGACY_MAP: Record<string, string> = {
@@ -18,12 +13,16 @@ function resolveAmbientId(id: string): string {
   return LEGACY_MAP[id] ?? id;
 }
 
-/**
- * Mindful audio engine.
- * - Voice: ElevenLabs via edge function (es-AR, Nadia voice by default), with
- *   browser speechSynthesis fallback.
- * - Music: full ambient library (rain/wind/water/nature/abstract drones).
- */
+const VOICE_VOL_KEY = "resma:mindful:voice_volume";
+
+function readVoiceVolume(): number {
+  try {
+    const v = Number(localStorage.getItem(VOICE_VOL_KEY));
+    if (Number.isFinite(v) && v >= 0 && v <= 1) return v;
+  } catch { /* noop */ }
+  return 1;
+}
+
 export function useMindfulAudio() {
   const ambient = useAmbientPlayer();
 
@@ -31,22 +30,30 @@ export function useMindfulAudio() {
     ambient.setSound(resolveAmbientId(track));
   }, [ambient]);
 
-  const stopMusic = useCallback(() => {
-    ambient.stop();
-  }, [ambient]);
+  const stopMusic = useCallback(() => { ambient.stop(); }, [ambient]);
+  const pauseMusic = useCallback(() => { ambient.pause(); }, [ambient]);
+  const resumeMusic = useCallback(() => { ambient.resume(); }, [ambient]);
 
-  const setMusicVolume = useCallback((v: number) => {
-    ambient.setVolume(v);
-  }, [ambient]);
-
+  const setMusicVolume = useCallback((v: number) => { ambient.setVolume(v); }, [ambient]);
   const getMusicVolume = useCallback(() => ambient.getVolume(), [ambient]);
 
+  const setVoiceVolume = useCallback((v: number) => {
+    const clamped = Math.min(1, Math.max(0, v));
+    try { localStorage.setItem(VOICE_VOL_KEY, String(clamped)); } catch { /* noop */ }
+    import("@/lib/elevenLabsTTS").then((m) => m.setSpeechVolume(clamped)).catch(() => {});
+  }, []);
+  const getVoiceVolume = useCallback(() => readVoiceVolume(), []);
+
   const speak = useCallback((text: string) => {
-    import("@/lib/elevenLabsTTS").then((m) => m.speak(text)).catch(() => {
+    import("@/lib/elevenLabsTTS").then((m) => {
+      m.setSpeechVolume(readVoiceVolume());
+      return m.speak(text);
+    }).catch(() => {
       try {
         const u = new SpeechSynthesisUtterance(text);
         u.lang = "es-AR";
         u.rate = 0.92;
+        u.volume = readVoiceVolume();
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(u);
       } catch { /* noop */ }
@@ -59,10 +66,13 @@ export function useMindfulAudio() {
   }, []);
 
   useEffect(() => {
-    return () => {
-      stopSpeech();
-    };
+    return () => { stopSpeech(); };
   }, [stopSpeech]);
 
-  return { playMusic, stopMusic, setMusicVolume, getMusicVolume, speak, stopSpeech };
+  return {
+    playMusic, stopMusic, pauseMusic, resumeMusic,
+    setMusicVolume, getMusicVolume,
+    setVoiceVolume, getVoiceVolume,
+    speak, stopSpeech,
+  };
 }
