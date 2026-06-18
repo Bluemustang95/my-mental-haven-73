@@ -1,15 +1,33 @@
 import { useEffect, useState } from "react";
 
-export type GlobalVoice = { label: string; voiceId: string };
+export type GlobalVoice = { label: string; voiceId: string; country: string; gender?: "F" | "M" };
 
 export const VOICE_PRESETS: GlobalVoice[] = [
-  { label: "Nadia · Argentina (recomendada)", voiceId: "9rvdnhrYoXoUt4igKpBw" },
-  { label: "Elena · España", voiceId: "XB0fDUnXU5powFXDhCwa" },
-  { label: "Jorge · España", voiceId: "JBFqnCBsd6RMkjVDRZzb" },
-  { label: "Camila · México", voiceId: "EXAVITQu4vr4xnSDxMaL" },
-  { label: "Mateo · Neutral", voiceId: "TX3LPaxmHKxFdv7VOQHJ" },
-  { label: "Sofía · Cálida", voiceId: "XrExE9yKIg1WjnnlVkGX" },
+  // 🇦🇷 Argentina
+  { label: "Nadia (recomendada)", voiceId: "9rvdnhrYoXoUt4igKpBw", country: "Argentina", gender: "F" },
+  // 🇪🇸 España
+  { label: "Elena", voiceId: "XB0fDUnXU5powFXDhCwa", country: "España", gender: "F" },
+  { label: "Jorge", voiceId: "JBFqnCBsd6RMkjVDRZzb", country: "España", gender: "M" },
+  // 🇲🇽 México
+  { label: "Camila", voiceId: "EXAVITQu4vr4xnSDxMaL", country: "México", gender: "F" },
+  // Neutral / Internacional
+  { label: "Mateo", voiceId: "TX3LPaxmHKxFdv7VOQHJ", country: "Neutral", gender: "M" },
+  { label: "Sofía cálida", voiceId: "XrExE9yKIg1WjnnlVkGX", country: "Neutral", gender: "F" },
 ];
+
+const COUNTRY_ORDER = ["Argentina", "España", "México", "Neutral"];
+
+export function getVoicesByCountry(): { country: string; voices: GlobalVoice[] }[] {
+  const groups = new Map<string, GlobalVoice[]>();
+  for (const v of VOICE_PRESETS) {
+    if (!groups.has(v.country)) groups.set(v.country, []);
+    groups.get(v.country)!.push(v);
+  }
+  return COUNTRY_ORDER.filter((c) => groups.has(c)).map((country) => ({
+    country,
+    voices: groups.get(country)!,
+  }));
+}
 
 const KEY = "resma:admin:global_voice";
 const DEFAULT: GlobalVoice = VOICE_PRESETS[0];
@@ -19,7 +37,11 @@ export function getGlobalVoice(): GlobalVoice {
     const raw = localStorage.getItem(KEY);
     if (!raw) return DEFAULT;
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed.voiceId === "string") return parsed;
+    if (parsed && typeof parsed.voiceId === "string") {
+      // Backfill country if missing from older saved value
+      const match = VOICE_PRESETS.find((p) => p.voiceId === parsed.voiceId);
+      return { country: match?.country ?? "Custom", ...parsed };
+    }
     return DEFAULT;
   } catch {
     return DEFAULT;
