@@ -12,15 +12,12 @@ function parseSuggestions(raw: string): string[] {
     }
     return [];
   };
-  try { return tryParse(raw); } catch { /* ignore */ }
-  const match = raw.match(/\{[\s\S]*\}/);
-  if (match) {
-    try { return tryParse(match[0]); } catch { /* ignore */ }
-  }
-  // fallback: split by lines starting with "- " or numbered
+  try { return tryParse(raw); } catch { /* */ }
+  const m = raw.match(/\{[\s\S]*\}/);
+  if (m) { try { return tryParse(m[0]); } catch {} }
   const lines = raw
     .split(/\n+/)
-    .map((l) => l.replace(/^[\s\-\*\d\.\)]+/, "").trim())
+    .map((l) => l.replace(/^[\s\-\*\d\.\)"]+/, "").replace(/"$/, "").trim())
     .filter((l) => l.length > 5)
     .slice(0, 3);
   return lines;
@@ -30,7 +27,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { side, thought, trigger, existing } = await req.json();
+    const { side, thought, trigger, existing, emotion, distortion } = await req.json();
     if (!thought || typeof thought !== "string" || (side !== "for" && side !== "against")) {
       return new Response(JSON.stringify({ error: "Parámetros inválidos" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -46,20 +43,23 @@ Deno.serve(async (req) => {
 
     const lado = side === "for" ? "A FAVOR" : "EN CONTRA";
 
-    const systemPrompt = `Sos RESMA, psicólogo CBT argentino que habla en voseo rioplatense.
-Sugerí 3 posibles evidencias FÁCTICAS y OBSERVABLES ${lado} del pensamiento automático.
-Reglas:
-- Cada evidencia es un hecho concreto, no una opinión ni una emoción.
-- Empezá cada una con un dato observable o un verbo en pasado.
-- Máx 20 palabras por evidencia.
+    const systemPrompt = `Sos RESMA, psicólogo CBT argentino (voseo rioplatense).
+Tu tarea: evaluar si el PENSAMIENTO AUTOMÁTICO se sostiene dado el EVENTO OBJETIVO, y proponer 3 evidencias ${lado} CONCRETAS y específicas a este caso.
+Reglas estrictas:
+- Cada evidencia es un hecho observable, NO una opinión ni una emoción.
+- Tiene que referirse directamente al evento y al pensamiento dados, no a generalidades.
+- Empezá con un dato observable o un verbo en pasado.
+- Máx 22 palabras por evidencia.
 - No repitas las que ya cargó el paciente.
-Devolvé SOLO un JSON con la forma:
-{"suggestions":["...","...","..."]}`;
+Devolvé SOLO un JSON: {"suggestions":["...","...","..."]}`;
 
-    const userPrompt = `Disparador: ${trigger || "(no especificado)"}
+    const userPrompt = `Evento objetivo: ${trigger || "(no especificado)"}
 Pensamiento automático: "${thought}"
-Lado solicitado: ${lado}
-Ya cargó: ${Array.isArray(existing) && existing.length ? existing.map((e: string) => `- ${e}`).join("\n") : "(ninguna)"}`;
+Emoción asociada: ${emotion || "-"}
+Distorsión cognitiva detectada: ${distortion || "(ninguna)"}
+Lado solicitado: ${lado} del pensamiento
+Ya cargó:
+${Array.isArray(existing) && existing.length ? existing.map((e: string) => `- ${e}`).join("\n") : "(ninguna)"}`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -86,7 +86,7 @@ Ya cargó: ${Array.isArray(existing) && existing.length ? existing.map((e: strin
     }
     if (!res.ok) {
       const t = await res.text();
-      console.log("suggest-evidence upstream error", res.status, t.slice(0, 300));
+      console.log("suggest-evidence upstream", res.status, t.slice(0, 300));
       return new Response(JSON.stringify({ error: "Fallo en IA" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

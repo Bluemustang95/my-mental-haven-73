@@ -3,110 +3,122 @@ export type DistortionKey =
   | "catalogar" | "magnificar" | "abstraccion_selectiva" | "leer_mente"
   | "sobregeneralizacion" | "personalizacion" | "debo_tengo_que";
 
-type Rule = {
+export type DistortionInfo = {
   key: DistortionKey;
   label: string;
   description: string;
-  patterns: RegExp[];
+  example: string;
 };
+
+type Rule = DistortionInfo & { patterns: RegExp[] };
 
 const RULES: Rule[] = [
   {
     key: "dicotomico",
-    label: "Pensamiento Dicotómico (todo o nada)",
+    label: "Pensamiento Dicotómico",
     description:
-      "Estás viendo la situación en blanco y negro, sin matices. Casi nada en la vida real es 100% o 0% — el matiz es lo que vuelve manejable la experiencia.",
-    patterns: [/\b(todo|nada|siempre perfecto|completo fracaso|absolutamente|jamás|jamas)\b/i],
+      "La situación se ve en solo dos categorías en lugar de considerar toda una gama de posibilidades.",
+    example: "Si no soy un triunfador absoluto, soy un fracasado.",
+    patterns: [/\b(todo o nada|siempre perfecto|completo fracaso|absolutamente|jamás|jamas|o (todo|nada))\b/i],
   },
   {
     key: "catastrofico",
-    label: "Catastrofismo",
+    label: "Catastrófico",
     description:
-      "Estás anticipando el peor escenario posible como si fuera el único. La probabilidad real suele ser mucho menor que la imaginada.",
-    patterns: [/\b(catástrofe|catastrofe|desastre|terrible|horrible|peor cosa|me voy a morir|insoportable|no voy a poder)\b/i],
+      "Se realiza una predicción del futuro negativamente, sin tener en cuenta otras posibilidades.",
+    example: "Voy a estar tan molesto que no podré hacer nada.",
+    patterns: [/\b(catástrofe|catastrofe|desastre|terrible|horrible|peor cosa|me voy a morir|insoportable|no voy a poder|no podré)\b/i],
   },
   {
-    key: "leer_mente",
-    label: "Leer la Mente",
+    key: "descalificar",
+    label: "Descalificar lo positivo",
     description:
-      "Estás asumiendo que sabés lo que la otra persona piensa o siente, sin evidencia directa. No podés verificar lo que ocurre en otra cabeza.",
-    patterns: [/\b(seguro (que )?(piensa|cree|opina)|sé que (piensa|cree)|me odia|le caigo mal|piensa que soy)\b/i],
-  },
-  {
-    key: "sobregeneralizacion",
-    label: "Sobregeneralización",
-    description:
-      "Estás tomando un hecho puntual y convirtiéndolo en una regla universal. Un episodio no define todos los demás.",
-    patterns: [/\b(siempre|nunca|nadie|todos me|ninguno|cada vez que)\b/i],
-  },
-  {
-    key: "debo_tengo_que",
-    label: "Debo / Tengo que",
-    description:
-      "Te estás exigiendo con reglas rígidas. Cambiar el “debería” por “me gustaría” afloja la auto-presión sin perder el objetivo.",
-    patterns: [/\b(debería|deberia|tendría que|tendria que|tengo que|debo|hay que)\b/i],
-  },
-  {
-    key: "catalogar",
-    label: "Etiquetar (Catalogar)",
-    description:
-      "Estás reduciendo a una persona (o a vos) a una etiqueta global. La conducta puntual no es la identidad completa.",
-    patterns: [/\bsoy un[ao]? (inútil|inutil|fracasad|tont|idiot|desastre|perdedor|pésim|pesim)/i],
+      "Se considera que las experiencias, logros o cualidades positivas no valen nada.",
+    example: "Hice bien ese proyecto pero solamente fue suerte.",
+    patterns: [/\b(no cuenta|fue suerte|cualquiera lo hace|no fue para tanto|no vale)\b/i],
   },
   {
     key: "razonamiento_emocional",
     label: "Razonamiento Emocional",
     description:
-      "Estás tratando una emoción como prueba de los hechos. Sentir algo no lo convierte automáticamente en verdadero.",
-    patterns: [/\bsiento que (soy|es|va a)|si me siento|me siento mal entonces\b/i],
+      "Algo debe ser real porque lo siento, dejando de lado la posibilidad de evaluarlo objetivamente.",
+    example: "Sé que hago muchas cosas bien en el trabajo pero igualmente me siento un fracasado.",
+    patterns: [/\b(siento que (soy|es|va a)|si me siento|me siento mal entonces)\b/i],
   },
   {
-    key: "personalizacion",
-    label: "Personalización",
+    key: "catalogar",
+    label: "Catalogar (Etiquetar)",
     description:
-      "Estás cargando con responsabilidad por algo que no controlás del todo. Otros factores también intervienen.",
-    patterns: [/\b(es mi culpa|por mi culpa|todo por mí|todo por mi|me pasa a mí|me pasa a mi solo)\b/i],
+      "Colocarse a uno mismo o a los demás una etiqueta global, sin tener en cuenta otros aspectos que llevan a conclusiones menos desastrosas.",
+    example: "Soy un perdedor. Él es un inútil.",
+    patterns: [/\bsoy un[ao]? (inútil|inutil|fracasad|tont|idiot|desastre|perdedor|pésim|pesim)/i],
   },
   {
     key: "magnificar",
     label: "Magnificar / Minimizar",
     description:
-      "Estás agrandando lo negativo o achicando lo positivo. La proporción real está en algún punto intermedio.",
-    patterns: [/\b(no sirve para nada|fue una pavada lo que hice bien|gigantesco|enorme problema)\b/i],
+      "Al evaluarse a uno mismo, a otra persona o una situación, se magnifica enormemente lo negativo y/o se minimiza en gran medida lo positivo.",
+    example: "El hecho de que obtuve una calificación mediocre demuestra que soy inútil.",
+    patterns: [/\b(no sirve para nada|fue una pavada lo que hice bien|gigantesco|enorme problema|demuestra que soy)\b/i],
   },
   {
     key: "abstraccion_selectiva",
     label: "Abstracción Selectiva (filtro mental)",
     description:
-      "Estás enfocándote sólo en el detalle negativo y dejando fuera el resto del cuadro. Ampliá el zoom.",
+      "Se presta mucha atención a un detalle negativo en lugar de tener en cuenta todo el contexto.",
+    example: "Como me saqué un puntaje bajo en la evaluación laboral quiere decir que soy un inútil.",
     patterns: [/\b(lo único malo|lo único que importa|sólo me fijo en|solo me fijo en)\b/i],
   },
   {
-    key: "descalificar",
-    label: "Descalificar lo Positivo",
+    key: "leer_mente",
+    label: "Leer la Mente",
     description:
-      "Estás descartando lo bueno como si no contara. Lo positivo también es información válida.",
-    patterns: [/\b(no cuenta|fue suerte|cualquiera lo hace|no fue para tanto)\b/i],
+      "Creer que se sabe lo que los demás están pensando y no se es capaz de tener en cuenta otras posibilidades.",
+    example: "Él está pensando mal de mí. Ella piensa que no sé nada sobre este proyecto.",
+    patterns: [/\b(seguro (que )?(piensa|cree|opina)|sé que (piensa|cree)|me odia|le caigo mal|piensa que soy|está pensando)\b/i],
+  },
+  {
+    key: "sobregeneralizacion",
+    label: "Sobregeneralización",
+    description:
+      "Llegar a una conclusión negativa que va mucho más allá de lo que sugiere la situación.",
+    example: "Como no me sentí cómodo en esta reunión quiere decir que no tengo capacidad para hacer amistades.",
+    patterns: [/\b(siempre|nunca|nadie|todos me|ninguno|cada vez que)\b/i],
+  },
+  {
+    key: "personalizacion",
+    label: "Personalización",
+    description:
+      "Creer que los otros tienen una actitud negativa dirigida hacia usted, sin tener en cuenta otras explicaciones de los comportamientos.",
+    example: "El técnico fue parco conmigo porque yo hice algo incorrecto.",
+    patterns: [/\b(es mi culpa|por mi culpa|todo por mí|todo por mi|me pasa a mí|me pasa a mi solo|conmigo porque)\b/i],
+  },
+  {
+    key: "debo_tengo_que",
+    label: "Debo / Tengo que",
+    description:
+      "Idea precisa y rígida respecto del comportamiento que hay que observar y sobrestima lo negativo de no cumplir con esas expectativas.",
+    example: "Es horrible cometer errores. Siempre debo hacer lo mejor que puedo.",
+    patterns: [/\b(debería|deberia|tendría que|tendria que|tengo que|debo|hay que|siempre debo)\b/i],
   },
 ];
 
-export type DistortionResult = {
-  key: DistortionKey;
-  label: string;
-  description: string;
-};
+export const ALL_DISTORTIONS: DistortionInfo[] = RULES.map(
+  ({ key, label, description, example }) => ({ key, label, description, example })
+);
 
-export function detectDistortion(text: string): DistortionResult | null {
+export function getDistortion(key: string | null | undefined): DistortionInfo | null {
+  if (!key) return null;
+  const r = RULES.find((r) => r.key === key);
+  return r ? { key: r.key, label: r.label, description: r.description, example: r.example } : null;
+}
+
+export function detectDistortion(text: string): DistortionInfo | null {
   if (!text || text.trim().length < 4) return null;
   for (const rule of RULES) {
     if (rule.patterns.some((p) => p.test(text))) {
-      return { key: rule.key, label: rule.label, description: rule.description };
+      return { key: rule.key, label: rule.label, description: rule.description, example: rule.example };
     }
-  }
-  // fallback to a generic "Magnificar" if nothing matched but text is intense
-  if (/[!]{1,}|nunca|nadie/i.test(text)) {
-    const r = RULES.find((r) => r.key === "magnificar")!;
-    return { key: r.key, label: r.label, description: r.description };
   }
   return null;
 }

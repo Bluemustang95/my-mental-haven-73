@@ -1,39 +1,50 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Camino } from "./emotions";
 
-const KEY = "resma:thought-draft:v2";
+const KEY = "resma:thought-draft:v3";
 
-export type ActionRow = { id: string; what: string; when: string };
+export type ActionRow = { id: string; what: string; when: string; why?: string };
 
-export type AiAnalysis = {
+export type AiAnalysisRefine = {
+  mode: "refine";
   factual: string;
   questions: string[];
 } | null;
+
+export type AiAnalysisIdentify = {
+  mode: "identify";
+  tips: string[];
+  candidates: string[];
+} | null;
+
+export type AiAnalysis = AiAnalysisRefine | AiAnalysisIdentify;
 
 export type ThoughtDraft = {
   step: number;
   // Step 1
   caminoElegido: Camino | null;
   emocionDidactica: string | null;
-  // Step 2 (captura + IA en línea)
+  // Step 2
   emotion: string;
   emotionOther: string;
   intensityInitial: number;
   triggerEvent: string;
   automaticThought: string;
   aiAnalysis: AiAnalysis;
-  // Step 3 (evidencias)
+  // Step 3 (distorsión)
+  distortionKey: string | null;
+  distortionLabel: string | null;
+  // Step 4 (evidencias)
   evidenceFor: string[];
   evidenceAgainst: string[];
   evidenceSources: { for: ("user" | "ai")[]; against: ("user" | "ai")[] };
-  distortionKey: string | null;
-  distortionLabel: string | null;
   isRealProblem: boolean | null;
-  // Step 4 (tratamiento)
+  // Step 5 (tratamiento)
   alternativeThought: string;
   intensityFinal: number;
   brainstorm: string;
-  aiSuggestions: string[];
+  aiAlternatives: string[];
+  aiActionSuggestions: { what: string; when: string; why?: string }[];
   actionPlan: ActionRow[];
 };
 
@@ -47,16 +58,17 @@ export const EMPTY_DRAFT: ThoughtDraft = {
   triggerEvent: "",
   automaticThought: "",
   aiAnalysis: null,
+  distortionKey: null,
+  distortionLabel: null,
   evidenceFor: [],
   evidenceAgainst: [],
   evidenceSources: { for: [], against: [] },
-  distortionKey: null,
-  distortionLabel: null,
   isRealProblem: null,
   alternativeThought: "",
   intensityFinal: 50,
   brainstorm: "",
-  aiSuggestions: [],
+  aiAlternatives: [],
+  aiActionSuggestions: [],
   actionPlan: [],
 };
 
