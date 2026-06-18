@@ -43,17 +43,7 @@ export default function MindfulnessHub() {
     })();
   }, [user]);
 
-  // Detectar sesión abandonada
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("mindfulness-current-draft");
-      if (!raw) return;
-      const p = JSON.parse(raw);
-      if (p?.exerciseName && p?.returnPath && p.returnPath !== window.location.pathname) {
-        setResuming({ name: p.exerciseName, path: p.returnPath });
-      }
-    } catch {}
-  }, []);
+  // (La detección de sesión abandonada ahora vive en OpenMindfulnessList)
 
   const todayKey = localDateStr(new Date());
   const didSomethingToday = (progressByDate[todayKey] ?? 0) > 0;
