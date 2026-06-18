@@ -1,23 +1,49 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getPattern } from "@/lib/breathingPatterns";
 import { ExerciseShell, type ExerciseShellMeta } from "@/components/exercises/ExerciseShell";
 import { OrbView } from "@/components/mindfulness/breathing/OrbView";
 import { BodyScanView } from "@/components/mindfulness/breathing/BodyScanView";
-import { PatternSetupScreen } from "@/components/mindfulness/breathing/PatternSetupScreen";
+import { IntentionSetupScreen, intentionToPattern } from "@/components/mindfulness/breathing/IntentionSetupScreen";
 import { TimeSetupScreen } from "@/components/mindfulness/breathing/TimeSetupScreen";
+import { BreathingOnboarding } from "@/components/mindfulness/breathing/BreathingOnboarding";
 
 type Visual = "orb" | "bodyscan";
-type Step = "setup_pattern" | "setup_time" | "playing";
+type Step = "setup_intention" | "setup_time" | "playing";
 
 const ACCENT = "#7C5CFF";
+const ONBOARDED_KEY = "mindfulness:breathing:onboarded";
 
 export default function BreathingHome() {
   const navigate = useNavigate();
-  const [patternId, setPatternId] = useState("box");
+  const [searchParams] = useSearchParams();
+
+  // Pre-cargar desde URL si viene de Home/Recomendado
+  const urlIntention = searchParams.get("intention");
+  const urlMinutes = parseInt(searchParams.get("minutes") ?? "", 10);
+
+  const [patternId, setPatternId] = useState(
+    urlIntention ? intentionToPattern(urlIntention) : "box"
+  );
   const [visual, setVisual] = useState<Visual>("orb");
-  const [minutes, setMinutes] = useState(3);
-  const [step, setStep] = useState<Step>("setup_pattern");
+  const [minutes, setMinutes] = useState(
+    Number.isFinite(urlMinutes) && urlMinutes >= 1 ? urlMinutes : 3
+  );
+  const [step, setStep] = useState<Step>(urlIntention ? "setup_time" : "setup_intention");
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(ONBOARDED_KEY)) setShowOnboarding(true);
+    } catch {}
+  }, []);
+
+  function finishOnboarding() {
+    try {
+      localStorage.setItem(ONBOARDED_KEY, "1");
+    } catch {}
+    setShowOnboarding(false);
+  }
 
   const pattern = getPattern(patternId);
   const close = () => navigate("/herramientas/mindfulness");
@@ -42,13 +68,21 @@ export default function BreathingHome() {
     durationSeconds: minutes * 60,
   };
 
-  if (step === "setup_pattern" && visual === "orb") {
+  if (showOnboarding) {
+    return <BreathingOnboarding onDone={finishOnboarding} />;
+  }
+
+  if (step === "setup_intention" && visual === "orb") {
     return (
-      <PatternSetupScreen
+      <IntentionSetupScreen
         visual={visual}
         onVisualChange={handleVisualChange}
-        onPick={(id) => {
-          setPatternId(id);
+        onPickIntention={(_, pid) => {
+          setPatternId(pid);
+          setStep("setup_time");
+        }}
+        onPickAdvanced={(pid) => {
+          setPatternId(pid);
           setStep("setup_time");
         }}
         onClose={close}
@@ -57,7 +91,7 @@ export default function BreathingHome() {
     );
   }
 
-  if (step === "setup_time" || (step === "setup_pattern" && visual === "bodyscan")) {
+  if (step === "setup_time" || (step === "setup_intention" && visual === "bodyscan")) {
     return (
       <TimeSetupScreen
         subtitle={
@@ -67,7 +101,7 @@ export default function BreathingHome() {
         onMinutesChange={setMinutes}
         onStart={() => setStep("playing")}
         onClose={close}
-        onBack={visual === "orb" ? () => setStep("setup_pattern") : undefined}
+        onBack={visual === "orb" ? () => setStep("setup_intention") : undefined}
         accent={ACCENT}
       />
     );
@@ -76,7 +110,7 @@ export default function BreathingHome() {
   return (
     <ExerciseShell
       meta={meta}
-      onExit={() => setStep(visual === "orb" ? "setup_pattern" : "setup_time")}
+      onExit={() => setStep(visual === "orb" ? "setup_intention" : "setup_time")}
       renderActivity={({ onComplete, onAbort }) =>
         visual === "orb" ? (
           <OrbView
