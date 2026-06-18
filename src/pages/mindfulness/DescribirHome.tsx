@@ -62,6 +62,8 @@ export default function DescribirHome() {
         layout="stack"
         onClose={close}
         onPick={(id) => {
+          primeAudio();
+          primeAmbientAudio();
           setSub(id as SubMode);
           setStep("playing");
         }}
