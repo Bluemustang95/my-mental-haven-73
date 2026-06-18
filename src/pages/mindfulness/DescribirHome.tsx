@@ -12,6 +12,8 @@ import {
   nextMusic,
 } from "@/components/mindfulness/breathing/SessionToolbar";
 import type { MusicTrack } from "@/hooks/useMindfulAudio";
+import { primeAudio } from "@/lib/elevenLabsTTS";
+import { primeAmbientAudio } from "@/hooks/useAmbientPlayer";
 
 type SubMode = "facts" | "scan" | "anatomy";
 type Step = "setup_mode" | "playing";
