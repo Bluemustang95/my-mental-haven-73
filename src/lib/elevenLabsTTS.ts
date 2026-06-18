@@ -66,7 +66,7 @@ export async function synthesize(text: string, voiceId?: string): Promise<Blob |
   const vid = voiceId ?? getGlobalVoice().voiceId;
   const key = makeKey(text, vid);
   const cached = await cacheGet(key);
-  if (cached && cached.size > 0) return cached;
+  if (isAudioBlob(cached)) return cached;
 
   try {
     const res = await fetch(TTS_URL, {
@@ -83,12 +83,17 @@ export async function synthesize(text: string, voiceId?: string): Promise<Blob |
       console.error("[TTS] edge function error", res.status, errText);
       return null;
     }
-    const blob = await res.blob();
-    if (blob.size > 0) {
-      cachePut(key, blob);
-      return blob;
+    const ct = res.headers.get("Content-Type") || "audio/mpeg";
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength < 200) {
+      console.error("[TTS] response too small", buf.byteLength);
+      return null;
     }
-    return null;
+    // Force a known good audio MIME so HTMLAudioElement can decode reliably.
+    const blob = new Blob([buf], { type: "audio/mpeg" });
+    void ct;
+    cachePut(key, blob);
+    return blob;
   } catch (e) {
     console.error("[TTS] fetch failed", e);
     return null;
@@ -115,14 +120,33 @@ export async function speak(text: string, voiceId?: string): Promise<void> {
     return;
   }
   const url = URL.createObjectURL(blob);
-  const audio = new Audio(url);
+  const audio = new Audio();
+  audio.preload = "auto";
+  audio.src = url;
   audio.volume = 1;
   currentAudio = audio;
   currentUrl = url;
+  // Wait for the browser to recognize the data before playing — avoids
+  // NotSupportedError that can happen when calling play() before decode.
+  await new Promise<void>((resolve) => {
+    const done = () => resolve();
+    audio.addEventListener("canplaythrough", done, { once: true });
+    audio.addEventListener("loadeddata", done, { once: true });
+    audio.addEventListener("error", done, { once: true });
+    setTimeout(done, 1500);
+  });
   try {
     await audio.play();
   } catch (e) {
     console.error("[TTS] audio.play failed", e);
+    // Fallback to browser TTS if the MP3 cannot be played in this environment.
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "es-AR";
+      u.rate = 0.92;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch { /* noop */ }
   }
   audio.onended = () => {
     if (currentUrl === url) {
