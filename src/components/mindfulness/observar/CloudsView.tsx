@@ -50,10 +50,12 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
   const [pile, setPile] = useState<Array<{ id: string; x: number; rotation: number; hue: number }>>([]);
   const [composing, setComposing] = useState(false);
 
-  // When a thought finishes its trip, move it to the pile (only leaf variants get visually piled,
-  // but all variants increment the counter so the user sees their releases).
+  // When a thought finishes its trip (o lo soltás con un tap), va al pile.
   function settleThought(thought: Thought) {
-    setThoughts((prev) => prev.filter((t) => t.id !== thought.id));
+    setThoughts((prev) => {
+      if (!prev.some((t) => t.id === thought.id)) return prev;
+      return prev.filter((t) => t.id !== thought.id);
+    });
     setPile((prev) => [
       ...prev.slice(-39), // keep at most 40 in the pile
       {
@@ -63,6 +65,11 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
         hue: Math.floor(Math.random() * 5),
       },
     ]);
+  }
+
+  function releaseThought(thought: Thought) {
+    // Tap-to-release: soltar el pensamiento antes de que termine su trayecto
+    settleThought(thought);
   }
 
   const speakRef = useRef(audio.speak);
@@ -234,16 +241,18 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
       <div className="absolute inset-0">
         <AnimatePresence>
           {thoughts.map((t) => (
-            <ThoughtBubble key={t.id} thought={t} paused={paused} />
+            <ThoughtBubble key={t.id} thought={t} paused={paused} onTap={() => releaseThought(t)} />
           ))}
         </AnimatePresence>
       </div>
 
       {/* Empty hint */}
       {thoughts.length === 0 && !composing && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-8">
-          <p className="text-center font-serif text-base leading-relaxed text-white/65 max-w-xs">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-8">
+          <p className="max-w-xs text-center font-serif text-base leading-relaxed text-white/65">
             Cuando aparezca un pensamiento,<br />tocá <span className="text-white">+</span> y dejálo ir.
+            <br />
+            <span className="text-[11px] text-white/45">Tocá una nube para soltarla antes.</span>
           </p>
         </div>
       )}
@@ -301,10 +310,20 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
 
 /* ====== ThoughtBubble: 3 random visual variants ====== */
 
-function ThoughtBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
-  if (thought.variant === "leaf") return <LeafBubble thought={thought} paused={paused} />;
-  if (thought.variant === "train") return <TrainBubble thought={thought} paused={paused} />;
-  return <CloudBubble thought={thought} paused={paused} />;
+function ThoughtBubble({
+  thought,
+  paused,
+  onTap,
+}: {
+  thought: Thought;
+  paused: boolean;
+  onTap?: () => void;
+}) {
+  if (thought.variant === "leaf")
+    return <LeafBubble thought={thought} paused={paused} onTap={onTap} />;
+  if (thought.variant === "train")
+    return <TrainBubble thought={thought} paused={paused} onTap={onTap} />;
+  return <CloudBubble thought={thought} paused={paused} onTap={onTap} />;
 }
 
 function bubbleSize(size: Thought["size"]) {
@@ -315,7 +334,7 @@ function bubbleSize(size: Thought["size"]) {
     : "px-4 py-2 text-sm max-w-[12rem]";
 }
 
-function CloudBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
+function CloudBubble({ thought, paused, onTap }: { thought: Thought; paused: boolean; onTap?: () => void }) {
   return (
     <motion.div
       initial={{ x: "-30%", opacity: 0 }}
@@ -327,15 +346,16 @@ function CloudBubble({ thought, paused }: { thought: Thought; paused: boolean })
       }}
       style={{ top: `${15 + thought.lane * 55}%`, animationPlayState: paused ? "paused" : "running" }}
       className="absolute left-0"
+      onClick={onTap}
     >
-      <div className={`rounded-[2rem] bg-white/90 text-[#0F172A] shadow-[0_8px_30px_rgba(255,255,255,0.15)] backdrop-blur ${bubbleSize(thought.size)} font-serif leading-snug`}>
+      <div className={`cursor-pointer rounded-[2rem] bg-white/90 text-[#0F172A] shadow-[0_8px_30px_rgba(255,255,255,0.15)] backdrop-blur ${bubbleSize(thought.size)} font-serif leading-snug`}>
         {thought.text}
       </div>
     </motion.div>
   );
 }
 
-function LeafBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
+function LeafBubble({ thought, paused, onTap }: { thought: Thought; paused: boolean; onTap?: () => void }) {
   // Falls top-to-bottom with horizontal sway (pendulum)
   const swayAmp = 35 + Math.random() * 45;
   const fallDuration = thought.speed * 0.9;
@@ -350,6 +370,7 @@ function LeafBubble({ thought, paused }: { thought: Thought; paused: boolean }) 
       }}
       style={{ left: `${10 + thought.lane * 75}%`, animationPlayState: paused ? "paused" : "running" }}
       className="absolute top-0"
+      onClick={onTap}
     >
       <motion.div
         animate={{ x: [-swayAmp, swayAmp, -swayAmp], rotate: [-14, 14, -14] }}
@@ -387,7 +408,7 @@ function LeafBubble({ thought, paused }: { thought: Thought; paused: boolean }) 
 }
 
 
-function TrainBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
+function TrainBubble({ thought, paused, onTap }: { thought: Thought; paused: boolean; onTap?: () => void }) {
   // Rectangular wagon with wheels, linear horizontal motion
   const duration = thought.speed * 0.7;
   return (
@@ -401,6 +422,7 @@ function TrainBubble({ thought, paused }: { thought: Thought; paused: boolean })
       }}
       style={{ top: `${25 + thought.lane * 50}%`, animationPlayState: paused ? "paused" : "running" }}
       className="absolute left-0"
+      onClick={onTap}
     >
       <div className="relative">
         <div className={`relative rounded-md border-2 border-[#0F172A]/70 bg-amber-200/95 text-[#0F172A] ${bubbleSize(thought.size)} font-serif leading-snug shadow-[0_6px_16px_rgba(0,0,0,0.25)]`}>

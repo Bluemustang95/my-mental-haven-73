@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Sparkles, Loader2, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Sparkles, Loader2, RotateCcw, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ export function EscanerNeutralView({ music, onComplete, onAbort }: Props) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
+  const [highlight, setHighlight] = useState(true);
 
   const audio = useMindfulAudio();
   useEffect(() => {
@@ -43,7 +44,26 @@ export function EscanerNeutralView({ music, onComplete, onAbort }: Props) {
     }
   }
 
-  function reset() { setText(""); setResult(null); }
+  function reset() { setText(""); setResult(null); setHighlight(true); }
+
+  // Construye el texto original con las palabras "removidas" resaltadas
+  const originalHighlighted = useMemo(() => {
+    if (!result || !highlight) return null;
+    const removed = (result.removed ?? []).filter(Boolean);
+    if (removed.length === 0) return null;
+    const escaped = removed.map((r) => r.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const regex = new RegExp(`(${escaped.join("|")})`, "gi");
+    const parts = text.split(regex);
+    return parts.map((p, i) =>
+      regex.test(p)
+        ? (
+          <span key={i} className="rounded bg-[#F87171]/25 px-1 text-[#FCA5A5] line-through decoration-[#FCA5A5]/60">
+            {p}
+          </span>
+        )
+        : <span key={i}>{p}</span>
+    );
+  }, [result, highlight, text]);
 
   return (
     <div className="absolute inset-0 flex flex-col px-5 pt-12 pb-8 overflow-y-auto">
@@ -80,8 +100,21 @@ export function EscanerNeutralView({ music, onComplete, onAbort }: Props) {
       {result && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-5 space-y-4">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="text-[10px] uppercase tracking-wider text-white/40">Tu versión</div>
-            <p className="mt-2 font-serif text-sm text-white/75 leading-relaxed">{text}</p>
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-wider text-white/40">Tu versión</div>
+              {result.removed?.length > 0 && (
+                <button
+                  onClick={() => setHighlight((h) => !h)}
+                  className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-1 text-[10px] text-white/70"
+                >
+                  {highlight ? <EyeOff size={11} /> : <Eye size={11} />}
+                  {highlight ? "Ocultar juicios" : "Resaltar juicios"}
+                </button>
+              )}
+            </div>
+            <p className="mt-2 font-serif text-sm leading-relaxed text-white/75">
+              {originalHighlighted ?? text}
+            </p>
           </div>
           <div className="rounded-2xl border p-4" style={{ borderColor: `${ACCENT}66`, background: `${ACCENT}1a` }}>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider" style={{ color: "#C4B5FD" }}>

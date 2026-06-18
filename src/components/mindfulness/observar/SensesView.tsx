@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Eye, Hand, Ear, Wind, Coffee, ArrowRight } from "lucide-react";
+import { X, Eye, Hand, Ear, Wind, Coffee, ArrowRight, Mic, MicOff } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
 import { cn } from "@/lib/utils";
 import { useGroundingScripts, type GroundingScripts } from "@/lib/groundingScripts";
+import { toast } from "@/hooks/use-toast";
 
 interface Step {
   count: number;
@@ -85,12 +86,14 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
   const [phase, setPhase] = useState<Phase>("input");
   const [entries, setEntries] = useState<string[][]>(STEPS.map((s) => Array(s.count).fill("")));
   const [activeInput, setActiveInput] = useState(0);
+  const [listeningIdx, setListeningIdx] = useState<number | null>(null);
+  const recognitionRef = useRef<any>(null);
   const speakRef = useRef(audio.speak);
   speakRef.current = audio.speak;
 
   useEffect(() => {
     audio.playMusic(music);
-    return () => { audio.stopSpeech(); audio.stopMusic(); };
+    return () => { audio.stopSpeech(); audio.stopMusic(); stopListening(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music]);
 
@@ -118,7 +121,7 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
   const Icon = step.icon;
   const stepEntries = entries[stepIdx];
   const filledCount = stepEntries.filter((e) => e.trim()).length;
-  const canAdvance = filledCount >= 1;
+  const canAdvance = true; // escribir es opcional
   const isLast = stepIdx === STEPS.length - 1;
 
   function updateEntry(i: number, v: string) {
@@ -127,6 +130,47 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
       copy[stepIdx][i] = v;
       return copy;
     });
+  }
+
+  function stopListening() {
+    try {
+      recognitionRef.current?.stop?.();
+    } catch {}
+    recognitionRef.current = null;
+    setListeningIdx(null);
+  }
+
+  function startListening(i: number) {
+    const SR: any =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      toast({ title: "Dictado no disponible", description: "Tu navegador no soporta reconocimiento de voz." });
+      return;
+    }
+    stopListening();
+    const rec = new SR();
+    rec.lang = "es-AR";
+    rec.interimResults = true;
+    rec.continuous = false;
+    let finalText = "";
+    rec.onresult = (e: any) => {
+      let interim = "";
+      for (let j = e.resultIndex; j < e.results.length; j++) {
+        const t = e.results[j][0].transcript;
+        if (e.results[j].isFinal) finalText += t;
+        else interim += t;
+      }
+      updateEntry(i, (finalText + interim).trim().slice(0, 80));
+    };
+    rec.onerror = () => stopListening();
+    rec.onend = () => setListeningIdx((cur) => (cur === i ? null : cur));
+    recognitionRef.current = rec;
+    setListeningIdx(i);
+    try {
+      rec.start();
+    } catch {
+      stopListening();
+    }
   }
 
   function goToScript() {
@@ -203,25 +247,52 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
 
               {/* Inputs */}
               <div className="mt-6 space-y-2">
-                {stepEntries.map((value, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex items-center gap-3 rounded-2xl border bg-white/5 px-4 py-3 transition",
-                      value.trim() ? "border-white/25" : i === activeInput ? "border-white/40" : "border-white/10"
-                    )}
-                  >
-                    <span className="font-display text-xs font-semibold text-white/40 w-4">{i + 1}</span>
-                    <input
-                      value={value}
-                      onChange={(e) => updateEntry(i, e.target.value)}
-                      onFocus={() => setActiveInput(i)}
-                      placeholder={step.placeholder}
-                      maxLength={80}
-                      className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
-                    />
-                  </div>
-                ))}
+                {stepEntries.map((value, i) => {
+                  const listening = listeningIdx === i;
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex items-center gap-3 rounded-2xl border bg-white/5 px-4 py-3 transition",
+                        listening
+                          ? "border-[#34D399]/60"
+                          : value.trim()
+                          ? "border-white/25"
+                          : i === activeInput
+                          ? "border-white/40"
+                          : "border-white/10"
+                      )}
+                    >
+                      <span className="w-4 font-display text-xs font-semibold text-white/40">
+                        {i + 1}
+                      </span>
+                      <input
+                        value={value}
+                        onChange={(e) => updateEntry(i, e.target.value)}
+                        onFocus={() => setActiveInput(i)}
+                        placeholder={step.placeholder}
+                        maxLength={80}
+                        className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => (listening ? stopListening() : startListening(i))}
+                        aria-label={listening ? "Detener dictado" : "Dictar por voz"}
+                        className={cn(
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition",
+                          listening
+                            ? "bg-[#34D399]/30 text-[#34D399]"
+                            : "bg-white/10 text-white/55"
+                        )}
+                      >
+                        {listening ? <MicOff size={14} /> : <Mic size={14} />}
+                      </button>
+                    </div>
+                  );
+                })}
+                <p className="text-center text-[10px] text-white/35">
+                  Escribir es opcional · podés dictar con el 🎤
+                </p>
               </div>
             </motion.div>
           ) : (

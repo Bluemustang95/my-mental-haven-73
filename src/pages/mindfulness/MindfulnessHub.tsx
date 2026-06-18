@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Wind, Eye, MessageSquare, Plus } from "lucide-react";
+import { ArrowLeft, Wind, Eye, MessageSquare, Plus, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { localDateStr } from "@/lib/utils";
-import { addDays, startOfWeek } from "date-fns";
+import { addDays, startOfWeek, subDays } from "date-fns";
 import { DayHistorySheet } from "@/components/mindfulness/DayHistorySheet";
 import { QuickAddSheet } from "@/components/mindfulness/QuickAddSheet";
 import { OpenMindfulnessList } from "@/components/mindfulness/OpenMindfulnessList";
-
+import { RecommendedNowChip } from "@/components/mindfulness/RecommendedNowChip";
+import { StreakBadge } from "@/components/mindfulness/StreakBadge";
 
 export default function MindfulnessHub() {
   const navigate = useNavigate();
@@ -19,12 +20,13 @@ export default function MindfulnessHub() {
   const [historyDate, setHistoryDate] = useState<Date | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [resuming, setResuming] = useState<{ name: string; path: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const start = startOfWeek(new Date(), { weekStartsOn: 1 });
-      const end = addDays(start, 7);
+      const start = subDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 7);
+      const end = addDays(new Date(), 1);
       const { data } = await supabase
         .from("exercise_sessions")
         .select("created_at")
@@ -41,6 +43,18 @@ export default function MindfulnessHub() {
     })();
   }, [user]);
 
+  // Detectar sesión abandonada
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("mindfulness-current-draft");
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      if (p?.exerciseName && p?.returnPath && p.returnPath !== window.location.pathname) {
+        setResuming({ name: p.exerciseName, path: p.returnPath });
+      }
+    } catch {}
+  }, []);
+
   const todayKey = localDateStr(new Date());
   const didSomethingToday = (progressByDate[todayKey] ?? 0) > 0;
 
@@ -49,7 +63,7 @@ export default function MindfulnessHub() {
       to: "/herramientas/mindfulness/respiracion",
       icon: Wind,
       title: "Respiración",
-      desc: "Patrones guiados para regular tu sistema nervioso.",
+      desc: "2–5 min · Regular el sistema nervioso",
       from: "#FB923C",
       to2: "#FCD34D",
     },
@@ -57,7 +71,7 @@ export default function MindfulnessHub() {
       to: "/herramientas/mindfulness/observar",
       icon: Eye,
       title: "Mira el presente",
-      desc: "Notá lo que aparece sin engancharte.",
+      desc: "1–3 min · Anclarte sin engancharte",
       from: "#60A5FA",
       to2: "#A78BFA",
     },
@@ -65,7 +79,7 @@ export default function MindfulnessHub() {
       to: "/herramientas/mindfulness/describir",
       icon: MessageSquare,
       title: "Ver los hechos",
-      desc: "Hechos vs. juicios y anatomía emocional.",
+      desc: "3–7 min · Poner palabras sin juicio",
       from: "#A78BFA",
       to2: "#F472B6",
     },
@@ -74,11 +88,43 @@ export default function MindfulnessHub() {
   return (
     <div className="min-h-screen bg-[#FDFCFB] pb-32">
       <div className="px-5 pt-12">
-        <button onClick={() => navigate("/herramientas")} className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+        <button
+          onClick={() => navigate("/herramientas")}
+          className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm"
+        >
           <ArrowLeft size={18} />
         </button>
-        <h1 className="font-serif text-3xl font-bold text-[#101927]">Mindfulness</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Tres caminos para estar más presente.</p>
+
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="font-serif text-3xl font-bold text-[#101927]">Mindfulness</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Tres caminos para estar más presente.
+            </p>
+          </div>
+          <StreakBadge progressByDate={progressByDate} />
+        </div>
+
+        <RecommendedNowChip />
+
+        {resuming && (
+          <motion.button
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => navigate(resuming.path)}
+            className="mt-3 flex w-full items-center gap-2 rounded-2xl border border-[#FB923C]/30 bg-[#FB923C]/8 px-3 py-2.5 text-left"
+          >
+            <RotateCcw size={14} className="text-[#FB923C]" />
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#C2410C]">
+                Continuar
+              </div>
+              <div className="truncate font-display text-[13px] font-semibold text-[#101927]">
+                {resuming.name}
+              </div>
+            </div>
+          </motion.button>
+        )}
 
         <div className="mt-4">
           <WeekStrip
@@ -97,17 +143,19 @@ export default function MindfulnessHub() {
             key={m.to}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate(m.to)}
-            className="w-full rounded-2xl bg-white p-3 text-left shadow-sm flex items-center gap-3"
+            className="flex w-full items-center gap-3 rounded-2xl bg-white p-3 text-left shadow-sm"
           >
             <div
-              className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
               style={{ background: `linear-gradient(135deg, ${m.from}, ${m.to2})` }}
             >
               <m.icon size={20} className="text-white" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="font-display text-base font-semibold text-[#101927]">{m.title}</div>
-              <div className="text-[11px] leading-snug text-muted-foreground line-clamp-1">{m.desc}</div>
+              <div className="text-[11px] leading-snug text-muted-foreground line-clamp-1">
+                {m.desc}
+              </div>
             </div>
           </motion.button>
         ))}
@@ -117,7 +165,6 @@ export default function MindfulnessHub() {
         </div>
       </div>
 
-
       {didSomethingToday && (
         <motion.button
           initial={{ scale: 0, opacity: 0 }}
@@ -125,7 +172,7 @@ export default function MindfulnessHub() {
           whileTap={{ scale: 0.92 }}
           onClick={() => setQuickAddOpen(true)}
           aria-label="Agregar ejercicio"
-          className="fixed bottom-24 right-5 z-40 h-14 w-14 rounded-full bg-[#101927] text-white shadow-lg flex items-center justify-center"
+          className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#101927] text-white shadow-lg"
         >
           <Plus size={24} />
         </motion.button>

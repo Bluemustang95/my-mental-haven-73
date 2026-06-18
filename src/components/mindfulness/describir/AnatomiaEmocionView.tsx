@@ -76,7 +76,7 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete, onAbort }
     setParts((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
   }
 
-  async function save() {
+  async function save(alsoJournal = false) {
     if (!user || !emotion || parts.length === 0) return;
     setSaving(true);
     const rows = parts.map((p) => ({
@@ -86,6 +86,35 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete, onAbort }
       note: `${emotion.label}${note ? " · " + note : ""}`,
     }));
     const { error } = await supabase.from("body_map_entries").insert(rows);
+
+    if (alsoJournal) {
+      const zonas = parts
+        .map((id) => PARTS.find((p) => p.id === id)?.label)
+        .filter(Boolean)
+        .join(", ");
+      const content = `Anatomía de la emoción\n\nEmoción: ${emotion.label}\nIntensidad: ${intensity}/10\nDónde la siento: ${zonas}${note ? `\n\nSensación: ${note}` : ""}`;
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      const { error: jErr } = await supabase.from("journal_entries").insert({
+        user_id: user.id,
+        entry_date: `${yyyy}-${mm}-${dd}`,
+        content,
+        prompt: "Anatomía de la emoción",
+        emotion_tags: [emotion.id],
+      } as any);
+      if (jErr) {
+        toast({
+          title: "Mapa guardado, pero no se pudo crear la entrada de Diario",
+          description: jErr.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Guardado en tu Diario ✓" });
+      }
+    }
+
     setSaving(false);
     if (error) {
       toast({ title: "No se pudo guardar el mapa", description: error.message, variant: "destructive" });
@@ -210,9 +239,16 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete, onAbort }
               className="min-h-[140px] w-full rounded-2xl border border-white/10 bg-white/5 p-4 font-serif text-sm text-white placeholder:text-white/30 focus:outline-none"
               style={{ borderColor: undefined }}
             />
-            <PrimaryBtn onClick={save} disabled={saving} accent={accent}>
+            <PrimaryBtn onClick={() => save(false)} disabled={saving} accent={accent}>
               {saving ? "Guardando…" : "Guardar mapa"}
             </PrimaryBtn>
+            <button
+              onClick={() => save(true)}
+              disabled={saving}
+              className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 py-3 text-sm font-medium text-white/85 disabled:opacity-40"
+            >
+              Guardar y enviar al Diario
+            </button>
           </Frame>
         )}
       </AnimatePresence>
