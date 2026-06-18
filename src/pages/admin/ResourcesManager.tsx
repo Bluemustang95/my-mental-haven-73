@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Wind, Sparkles, Eye, Leaf } from "lucide-react";
-import { BreathingSoundsManager } from "./mindfulness/BreathingSoundsManager";
-import { BodyScanManager } from "./mindfulness/BodyScanManager";
-import { Grounding54321Manager } from "./mindfulness/Grounding54321Manager";
-import { MiraElPresenteManager } from "./mindfulness/MiraElPresenteManager";
+import { Wind, Sparkles, Eye, MessageSquare } from "lucide-react";
+import { MindfulnessCategoryEditor } from "./mindfulness/MindfulnessCategoryEditor";
 
 type Section = "mindfulness";
-type MindSub = "respiracion" | "body-scan" | "hojas-pasar" | "54321";
+type MindSub = "respiracion" | "body_scan" | "observar" | "describir";
+
+const TABS: { id: MindSub; label: string; icon: typeof Wind }[] = [
+  { id: "respiracion", label: "Respiración", icon: Wind },
+  { id: "body_scan", label: "Body Scan", icon: Sparkles },
+  { id: "observar", label: "Observar", icon: Eye },
+  { id: "describir", label: "Describir", icon: MessageSquare },
+];
 
 export default function ResourcesManager() {
   const [section] = useState<Section>("mindfulness");
@@ -23,7 +27,6 @@ export default function ResourcesManager() {
         </div>
       </div>
 
-      {/* Section tabs (room to grow) */}
       <div className="flex flex-wrap gap-2">
         <button
           className={`flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition ${
@@ -39,15 +42,9 @@ export default function ResourcesManager() {
         </span>
       </div>
 
-      {/* Sub tabs */}
       <div className="rounded-3xl border border-white/60 bg-white/55 p-2 backdrop-blur-xl">
         <div className="flex flex-wrap gap-1">
-          {[
-            { id: "respiracion" as const, label: "Respiración", icon: Wind },
-            { id: "body-scan" as const, label: "Body Scan", icon: Sparkles },
-            { id: "hojas-pasar" as const, label: "Hojas pasar", icon: Leaf },
-            { id: "54321" as const, label: "5-4-3-2-1", icon: Eye },
-          ].map((t) => {
+          {TABS.map((t) => {
             const active = sub === t.id;
             return (
               <button
@@ -66,12 +63,7 @@ export default function ResourcesManager() {
         </div>
       </div>
 
-      <div>
-        {sub === "respiracion" && <BreathingSoundsManager />}
-        {sub === "body-scan" && <BodyScanManager />}
-        {sub === "hojas-pasar" && <MiraElPresenteManager />}
-        {sub === "54321" && <Grounding54321Manager />}
-      </div>
+      <MindfulnessCategoryEditor key={sub} category={sub} />
     </div>
   );
 }
