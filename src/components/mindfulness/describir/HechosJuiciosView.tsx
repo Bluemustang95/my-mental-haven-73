@@ -23,10 +23,9 @@ const LEVELS: { id: Difficulty; label: string; desc: string }[] = [
 
 export function HechosJuiciosView({ music, onComplete, onAbort }: Props) {
   const [level, setLevel] = useState<Difficulty | null>(null);
-  const [deckKey, setDeckKey] = useState(0);
   const deck = useMemo(
     () => (level ? pickDeck(10, level) : []),
-    [level, deckKey]
+    [level]
   );
   const [idx, setIdx] = useState(0);
   const [hits, setHits] = useState(0);
