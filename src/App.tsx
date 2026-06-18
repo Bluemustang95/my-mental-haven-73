@@ -95,7 +95,7 @@ import PackHome from "@/pages/pack/PackHome";
 import BAProgram from "@/pages/pack/ba/BAProgram";
 import PackOverview from "@/pages/admin/pack/PackOverview";
 import BAContentEditor from "@/pages/admin/pack/BAContentEditor";
-import MindfulnessScriptsAdmin from "@/pages/admin/mindfulness/MindfulnessScriptsAdmin";
+
 
 const queryClient = new QueryClient();
 
@@ -219,7 +219,7 @@ const App = () => (
               <Route path="/admin/estadisticas" element={<AdminStats />} />
               <Route path="/admin/pack" element={<PackOverview />} />
               <Route path="/admin/pack/ba" element={<BAContentEditor />} />
-              <Route path="/admin/mindfulness" element={<MindfulnessScriptsAdmin />} />
+              <Route path="/admin/mindfulness" element={<Navigate to="/admin/recursos" replace />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
