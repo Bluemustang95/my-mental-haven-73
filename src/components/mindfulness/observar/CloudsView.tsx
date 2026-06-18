@@ -334,7 +334,7 @@ function bubbleSize(size: Thought["size"]) {
     : "px-4 py-2 text-sm max-w-[12rem]";
 }
 
-function CloudBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
+function CloudBubble({ thought, paused, onTap }: { thought: Thought; paused: boolean; onTap?: () => void }) {
   return (
     <motion.div
       initial={{ x: "-30%", opacity: 0 }}
@@ -346,15 +346,16 @@ function CloudBubble({ thought, paused }: { thought: Thought; paused: boolean })
       }}
       style={{ top: `${15 + thought.lane * 55}%`, animationPlayState: paused ? "paused" : "running" }}
       className="absolute left-0"
+      onClick={onTap}
     >
-      <div className={`rounded-[2rem] bg-white/90 text-[#0F172A] shadow-[0_8px_30px_rgba(255,255,255,0.15)] backdrop-blur ${bubbleSize(thought.size)} font-serif leading-snug`}>
+      <div className={`cursor-pointer rounded-[2rem] bg-white/90 text-[#0F172A] shadow-[0_8px_30px_rgba(255,255,255,0.15)] backdrop-blur ${bubbleSize(thought.size)} font-serif leading-snug`}>
         {thought.text}
       </div>
     </motion.div>
   );
 }
 
-function LeafBubble({ thought, paused }: { thought: Thought; paused: boolean }) {
+function LeafBubble({ thought, paused, onTap }: { thought: Thought; paused: boolean; onTap?: () => void }) {
   // Falls top-to-bottom with horizontal sway (pendulum)
   const swayAmp = 35 + Math.random() * 45;
   const fallDuration = thought.speed * 0.9;
