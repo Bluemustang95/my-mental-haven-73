@@ -7,6 +7,7 @@ import { BodyScanView } from "@/components/mindfulness/breathing/BodyScanView";
 import { IntentionSetupScreen, intentionToPattern } from "@/components/mindfulness/breathing/IntentionSetupScreen";
 import { TimeSetupScreen } from "@/components/mindfulness/breathing/TimeSetupScreen";
 import { BreathingOnboarding } from "@/components/mindfulness/breathing/BreathingOnboarding";
+import { primeAudio } from "@/lib/elevenLabsTTS";
 
 type Visual = "orb" | "bodyscan";
 type Step = "setup_intention" | "setup_time" | "playing";
