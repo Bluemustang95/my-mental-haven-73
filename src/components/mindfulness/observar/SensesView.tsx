@@ -121,7 +121,7 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
   const Icon = step.icon;
   const stepEntries = entries[stepIdx];
   const filledCount = stepEntries.filter((e) => e.trim()).length;
-  const canAdvance = filledCount >= 1;
+  const canAdvance = true; // escribir es opcional
   const isLast = stepIdx === STEPS.length - 1;
 
   function updateEntry(i: number, v: string) {
