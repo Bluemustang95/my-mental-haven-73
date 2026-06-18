@@ -119,7 +119,7 @@ export default function BreathingHome() {
             pattern={pattern}
             totalSeconds={minutes * 60}
             initialVoice
-            initialMusic="silence"
+            initialMusic="rain_soft"
             hapticsEnabled
             onComplete={onComplete}
             onAbort={onAbort}
@@ -128,7 +128,7 @@ export default function BreathingHome() {
           <BodyScanView
             totalSeconds={minutes * 60}
             initialVoice
-            initialMusic="silence"
+            initialMusic="rain_soft"
             onComplete={onComplete}
             onAbort={onAbort}
           />
