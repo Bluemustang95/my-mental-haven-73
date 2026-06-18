@@ -28,6 +28,7 @@ export function OrbView({
   initialVoice,
   initialMusic,
   hapticsEnabled,
+  narrationText,
   onComplete,
   onAbort,
 }: OrbViewProps) {
