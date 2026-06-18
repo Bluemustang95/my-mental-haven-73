@@ -71,6 +71,21 @@ export function useAmbientPlayer() {
     try { ctxRef.current?.resume(); } catch { /* noop */ }
   }, []);
 
+  /** Call inside a user gesture to unlock the AudioContext for autoplay. */
+  const prime = useCallback(() => {
+    try {
+      const ctx = ensureCtx();
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch (e) {
+      console.warn("[ambient] prime failed", e);
+    }
+  }, [ensureCtx]);
+
   useEffect(() => {
     return () => {
       stop();
@@ -84,6 +99,7 @@ export function useAmbientPlayer() {
     stop,
     pause,
     resume,
+    prime,
     setVolume,
     getVolume: () => volumeRef.current,
     getCurrent: () => currentIdRef.current,
