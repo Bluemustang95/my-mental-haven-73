@@ -1695,45 +1695,75 @@ export type Database = {
       }
       thought_records: {
         Row: {
+          action_plan: Json | null
           alternative_thought: string | null
           automatic_thought: string | null
+          brainstorm: string | null
+          completed_at: string | null
           created_at: string | null
+          distortion_key: string | null
+          distortion_label: string | null
           emotion: string | null
           emotion_intensity: number | null
+          emotion_other: string | null
           evidence_against: string | null
+          evidence_against_json: Json | null
           evidence_for: string | null
+          evidence_for_json: Json | null
           id: string
+          is_real_problem: boolean | null
           new_emotion: string | null
           new_emotion_intensity: number | null
           situation: string
+          trainer_score: number | null
           user_id: string
         }
         Insert: {
+          action_plan?: Json | null
           alternative_thought?: string | null
           automatic_thought?: string | null
+          brainstorm?: string | null
+          completed_at?: string | null
           created_at?: string | null
+          distortion_key?: string | null
+          distortion_label?: string | null
           emotion?: string | null
           emotion_intensity?: number | null
+          emotion_other?: string | null
           evidence_against?: string | null
+          evidence_against_json?: Json | null
           evidence_for?: string | null
+          evidence_for_json?: Json | null
           id?: string
+          is_real_problem?: boolean | null
           new_emotion?: string | null
           new_emotion_intensity?: number | null
           situation: string
+          trainer_score?: number | null
           user_id: string
         }
         Update: {
+          action_plan?: Json | null
           alternative_thought?: string | null
           automatic_thought?: string | null
+          brainstorm?: string | null
+          completed_at?: string | null
           created_at?: string | null
+          distortion_key?: string | null
+          distortion_label?: string | null
           emotion?: string | null
           emotion_intensity?: number | null
+          emotion_other?: string | null
           evidence_against?: string | null
+          evidence_against_json?: Json | null
           evidence_for?: string | null
+          evidence_for_json?: Json | null
           id?: string
+          is_real_problem?: boolean | null
           new_emotion?: string | null
           new_emotion_intensity?: number | null
           situation?: string
+          trainer_score?: number | null
           user_id?: string
         }
         Relationships: []
