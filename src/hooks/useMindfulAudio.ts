@@ -123,23 +123,22 @@ export function useMindfulAudio() {
   }, [getCtx, playAmbient, playRain, stopMusic]);
 
   const speak = useCallback((text: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "es-AR";
-      u.rate = 0.88;
-      u.pitch = 1.02;
-      const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find((v) => /es[-_](AR|MX|ES)/i.test(v.lang) && /female|mujer|monica|paulina/i.test(v.name))
-        ?? voices.find((v) => /^es/i.test(v.lang));
-      if (preferred) u.voice = preferred;
-      window.speechSynthesis.speak(u);
-    } catch {}
+    // Use ElevenLabs (via edge function + IndexedDB cache). Falls back to
+    // speechSynthesis internally if the function is unavailable.
+    import("@/lib/elevenLabsTTS").then((m) => m.speak(text)).catch(() => {
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "es-AR";
+        u.rate = 0.92;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      } catch { /* noop */ }
+    });
   }, []);
 
   const stopSpeech = useCallback(() => {
-    try { window.speechSynthesis?.cancel(); } catch {}
+    import("@/lib/elevenLabsTTS").then((m) => m.stopSpeak()).catch(() => {});
+    try { window.speechSynthesis?.cancel(); } catch { /* noop */ }
   }, []);
 
   // Cleanup on unmount

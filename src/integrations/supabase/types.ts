@@ -1004,6 +1004,60 @@ export type Database = {
         }
         Relationships: []
       }
+      mindfulness_scripts: {
+        Row: {
+          category: string
+          created_at: string
+          duration_min: number | null
+          id: string
+          markers: Json
+          script: string
+          sub_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          duration_min?: number | null
+          id?: string
+          markers?: Json
+          script?: string
+          sub_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          duration_min?: number | null
+          id?: string
+          markers?: Json
+          script?: string
+          sub_key?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mindfulness_sound_settings: {
+        Row: {
+          defaults: Json
+          enabled_ids: Json
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          defaults?: Json
+          enabled_ids?: Json
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          defaults?: Json
+          enabled_ids?: Json
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_app_profiles: {
         Row: {
           areas_of_interest: string[] | null

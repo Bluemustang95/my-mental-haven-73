@@ -84,7 +84,7 @@ export function IntentionSetupScreen({
 
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-[#0F172A] text-white">
-      <div className="flex min-h-full flex-col px-5 pt-12 pb-10">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col items-stretch px-5 pt-12 pb-32">
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={onClose}
@@ -118,7 +118,7 @@ export function IntentionSetupScreen({
         </div>
 
         <div className="mt-8 text-center">
-          <h1 className="font-serif text-[30px] font-bold leading-tight">¿Qué necesitás ahora?</h1>
+          <h1 className="font-serif text-[28px] font-bold leading-tight">¿Qué necesitás ahora?</h1>
           <p className="mx-auto mt-2 max-w-[280px] text-[12px] leading-relaxed text-white/55">
             Elegí una intención y te sugerimos el patrón adecuado.
           </p>
