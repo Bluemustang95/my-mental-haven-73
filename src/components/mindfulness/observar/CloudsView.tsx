@@ -370,6 +370,7 @@ function LeafBubble({ thought, paused, onTap }: { thought: Thought; paused: bool
       }}
       style={{ left: `${10 + thought.lane * 75}%`, animationPlayState: paused ? "paused" : "running" }}
       className="absolute top-0"
+      onClick={onTap}
     >
       <motion.div
         animate={{ x: [-swayAmp, swayAmp, -swayAmp], rotate: [-14, 14, -14] }}
