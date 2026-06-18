@@ -4,9 +4,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { thought, trigger } = await req.json();
-    if (!thought || typeof thought !== "string") {
-      return new Response(JSON.stringify({ error: "Pensamiento inválido" }), {
+    const { side, thought, trigger, existing } = await req.json();
+    if (!thought || typeof thought !== "string" || (side !== "for" && side !== "against")) {
+      return new Response(JSON.stringify({ error: "Parámetros inválidos" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -18,13 +18,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    const systemPrompt = `Sos RESMA, psicólogo clínico cognitivo-conductual (CBT) argentino. Hablás en voseo rioplatense, cálido y sin diagnóstico.
-Tu tarea: a partir del pensamiento automático del paciente devolver un JSON con dos campos:
-- "factual": una reescritura del pensamiento en versión observable, en primera persona, sin juicios ni predicciones (máx 40 palabras).
-- "questions": un array de 2 preguntas socráticas breves que ayuden a desafiar el pensamiento original (cada una máx 18 palabras).
-Sin markdown, sin disclaimers, sin texto extra. Solo el JSON.`;
+    const lado = side === "for" ? "A FAVOR" : "EN CONTRA";
 
-    const userPrompt = `Disparador (opcional): ${trigger || "(no especificado)"}\nPensamiento automático: "${thought}"`;
+    const systemPrompt = `Sos RESMA, psicólogo CBT argentino que habla en voseo rioplatense.
+Tu tarea: sugerir 3 posibles evidencias FÁCTICAS y OBSERVABLES ${lado} del pensamiento automático del paciente.
+Reglas:
+- Cada evidencia debe ser un hecho concreto, no una opinión ni una emoción.
+- Empieza cada una con un verbo en pasado o un dato observable (ej: "En el último mes…", "Mi jefa dijo…", "Aprobé 7 de 10 entregas").
+- Máx 20 palabras por evidencia.
+- No repitas las que ya cargó el paciente.
+- Devolvé SOLO un JSON con la forma {"suggestions": ["...", "...", "..."]}.`;
+
+    const userPrompt = `Disparador: ${trigger || "(no especificado)"}
+Pensamiento automático: "${thought}"
+Lado solicitado: ${lado}
+Ya cargó: ${Array.isArray(existing) && existing.length ? existing.map((e: string) => `- ${e}`).join("\n") : "(ninguna)"}`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -58,19 +66,21 @@ Sin markdown, sin disclaimers, sin texto extra. Solo el JSON.`;
 
     const data = await res.json();
     const raw = data?.choices?.[0]?.message?.content ?? "{}";
-    let factual = "";
-    let questions: string[] = [];
+    let suggestions: string[] = [];
     try {
       const parsed = JSON.parse(raw);
-      factual = typeof parsed.factual === "string" ? parsed.factual : "";
-      questions = Array.isArray(parsed.questions)
-        ? parsed.questions.filter((q: unknown) => typeof q === "string").slice(0, 3)
-        : [];
+      if (Array.isArray(parsed.suggestions)) {
+        suggestions = parsed.suggestions
+          .filter((s: unknown) => typeof s === "string")
+          .map((s: string) => s.trim())
+          .filter(Boolean)
+          .slice(0, 3);
+      }
     } catch {
-      factual = raw;
+      // ignore
     }
 
-    return new Response(JSON.stringify({ factual, questions }), {
+    return new Response(JSON.stringify({ suggestions }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

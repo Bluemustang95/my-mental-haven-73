@@ -1,32 +1,35 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Camino } from "./emotions";
 
-const KEY = "resma:thought-draft:v1";
+const KEY = "resma:thought-draft:v2";
 
 export type ActionRow = { id: string; what: string; when: string };
+
+export type AiAnalysis = {
+  factual: string;
+  questions: string[];
+} | null;
 
 export type ThoughtDraft = {
   step: number;
   // Step 1
   caminoElegido: Camino | null;
   emocionDidactica: string | null;
-  // Step 2
+  // Step 2 (captura + IA en línea)
   emotion: string;
   emotionOther: string;
   intensityInitial: number;
   triggerEvent: string;
   automaticThought: string;
-  // Step 3
-  trainerScore: number;
-  trainerCompleted: boolean;
-  aiAnalysis: string | null;
-  // Step 4
+  aiAnalysis: AiAnalysis;
+  // Step 3 (evidencias)
   evidenceFor: string[];
   evidenceAgainst: string[];
+  evidenceSources: { for: ("user" | "ai")[]; against: ("user" | "ai")[] };
   distortionKey: string | null;
   distortionLabel: string | null;
   isRealProblem: boolean | null;
-  // Step 5
+  // Step 4 (tratamiento)
   alternativeThought: string;
   intensityFinal: number;
   brainstorm: string;
@@ -43,11 +46,10 @@ export const EMPTY_DRAFT: ThoughtDraft = {
   intensityInitial: 50,
   triggerEvent: "",
   automaticThought: "",
-  trainerScore: 0,
-  trainerCompleted: false,
   aiAnalysis: null,
   evidenceFor: [],
   evidenceAgainst: [],
+  evidenceSources: { for: [], against: [] },
   distortionKey: null,
   distortionLabel: null,
   isRealProblem: null,
