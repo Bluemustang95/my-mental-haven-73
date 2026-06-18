@@ -181,37 +181,14 @@ export default function DiarioInteligente() {
       )}
 
       {isRegulacion && (
-        <div className="mt-3 px-5">
-          <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-            <button
-              onClick={() => setPatternsOpen((o) => !o)}
-              className="flex w-full items-center justify-between px-4 py-3"
-            >
-              <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-[#facb60]" />
-                <span className="font-display text-sm font-semibold text-[#101927]">
-                  Tus patrones
-                </span>
-              </div>
-              <motion.div animate={{ rotate: patternsOpen ? 180 : 0 }}>
-                <ChevronDown size={18} className="text-[#101927]/60" />
-              </motion.div>
-            </button>
-            <AnimatePresence initial={false}>
-              {patternsOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="border-t border-[#101927]/5 px-3 py-3">
-                    <PatternInsights embedded />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        <div className="mt-5 px-5">
+          <div className="mb-2 flex items-center gap-2">
+            <Sparkles size={14} className="text-[#facb60]" />
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#101927]/55">
+              Mis procesos
+            </span>
           </div>
+          <BienestarProcessCard />
         </div>
       )}
 
