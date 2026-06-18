@@ -20,7 +20,7 @@ export default function MindfulnessHub() {
   const [historyDate, setHistoryDate] = useState<Date | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [resuming, setResuming] = useState<{ name: string; path: string } | null>(null);
+  // (Se eliminó la tarjeta "Continuar" superior — usar OpenMindfulnessList al pie)
 
   useEffect(() => {
     if (!user) return;
