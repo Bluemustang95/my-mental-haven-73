@@ -1,0 +1,1 @@
+ALTER TABLE public.mindfulness_scripts ADD COLUMN IF NOT EXISTS markers jsonb NOT NULL DEFAULT '[]'::jsonb;
