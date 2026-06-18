@@ -10,6 +10,8 @@ interface Props {
   onMusicChange: (id: string) => void;
   volume?: number;
   onVolumeChange?: (v: number) => void;
+  voiceVolume?: number;
+  onVoiceVolumeChange?: (v: number) => void;
   onFinish: () => void;
 }
 
@@ -26,6 +28,8 @@ export function SessionToolbar({
   onMusicChange,
   volume = 0.8,
   onVolumeChange,
+  voiceVolume = 1,
+  onVoiceVolumeChange,
   onFinish,
 }: Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -81,8 +85,10 @@ export function SessionToolbar({
         onOpenChange={setSheetOpen}
         currentId={normalized}
         volume={volume}
+        voiceVolume={voiceVolume}
         onPick={(id) => onMusicChange(id)}
         onVolume={(v) => onVolumeChange?.(v)}
+        onVoiceVolume={(v) => onVoiceVolumeChange?.(v)}
       />
     </>
   );
