@@ -86,12 +86,14 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
   const [phase, setPhase] = useState<Phase>("input");
   const [entries, setEntries] = useState<string[][]>(STEPS.map((s) => Array(s.count).fill("")));
   const [activeInput, setActiveInput] = useState(0);
+  const [listeningIdx, setListeningIdx] = useState<number | null>(null);
+  const recognitionRef = useRef<any>(null);
   const speakRef = useRef(audio.speak);
   speakRef.current = audio.speak;
 
   useEffect(() => {
     audio.playMusic(music);
-    return () => { audio.stopSpeech(); audio.stopMusic(); };
+    return () => { audio.stopSpeech(); audio.stopMusic(); stopListening(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music]);
 
