@@ -142,6 +142,55 @@ export function PendingBento() {
       }
     }
 
+    // Sugerencia Mindfulness: si el check-in de hoy muestra mood bajo o
+    // emociones tensas y no hizo mindfulness hoy, ofrecer 4-7-8.
+    if (user) {
+      try {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        const startOfDay = new Date(today);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const [{ data: ci }, { data: ms }] = await Promise.all([
+          supabase
+            .from("daily_checkins")
+            .select("mood_score, emotions")
+            .eq("user_id", user.id)
+            .eq("checkin_date", todayStr)
+            .maybeSingle(),
+          supabase
+            .from("exercise_sessions")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("exercise_type", "mindfulness")
+            .gte("created_at", startOfDay.toISOString())
+            .limit(1),
+        ]);
+
+        const c: any = ci;
+        const tense =
+          (typeof c?.mood_score === "number" && c.mood_score <= 4) ||
+          (Array.isArray(c?.emotions) &&
+            c.emotions.some((e: string) => /ansied|enoj|miedo|panic|estr[eé]s/i.test(e)));
+        const didMindfulness = (ms ?? []).length > 0;
+
+        if (tense && !didMindfulness) {
+          next.push({
+            key: "mindfulness-reco",
+            title: "Te puede aliviar",
+            subtitle: "Respiración 4-7-8 · 3 min",
+            to: "/herramientas/mindfulness/respiracion?intention=ansiedad&minutes=3",
+            icon: <Wind size={16} className="text-white" />,
+            from: "#60A5FA",
+            to2: "#A78BFA",
+          });
+        }
+      } catch {}
+    }
+
     setItems(next);
   }, [user]);
 
