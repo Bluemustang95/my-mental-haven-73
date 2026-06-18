@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Sparkles, Loader2, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Sparkles, Loader2, RotateCcw, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ export function EscanerNeutralView({ music, onComplete, onAbort }: Props) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
+  const [highlight, setHighlight] = useState(true);
 
   const audio = useMindfulAudio();
   useEffect(() => {
