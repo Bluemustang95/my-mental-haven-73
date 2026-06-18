@@ -132,6 +132,47 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
     });
   }
 
+  function stopListening() {
+    try {
+      recognitionRef.current?.stop?.();
+    } catch {}
+    recognitionRef.current = null;
+    setListeningIdx(null);
+  }
+
+  function startListening(i: number) {
+    const SR: any =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      toast({ title: "Dictado no disponible", description: "Tu navegador no soporta reconocimiento de voz." });
+      return;
+    }
+    stopListening();
+    const rec = new SR();
+    rec.lang = "es-AR";
+    rec.interimResults = true;
+    rec.continuous = false;
+    let finalText = "";
+    rec.onresult = (e: any) => {
+      let interim = "";
+      for (let j = e.resultIndex; j < e.results.length; j++) {
+        const t = e.results[j][0].transcript;
+        if (e.results[j].isFinal) finalText += t;
+        else interim += t;
+      }
+      updateEntry(i, (finalText + interim).trim().slice(0, 80));
+    };
+    rec.onerror = () => stopListening();
+    rec.onend = () => setListeningIdx((cur) => (cur === i ? null : cur));
+    recognitionRef.current = rec;
+    setListeningIdx(i);
+    try {
+      rec.start();
+    } catch {
+      stopListening();
+    }
+  }
+
   function goToScript() {
     audio.stopSpeech();
     setPhase("script");
