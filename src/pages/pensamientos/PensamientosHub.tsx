@@ -72,7 +72,7 @@ export default function PensamientosHub() {
         </p>
 
         <div className="mt-4">
-          <WeekStrip progressByDate={progressByDate as any} />
+          <WeekStrip progressByDate={progressByDate} />
         </div>
       </div>
 
