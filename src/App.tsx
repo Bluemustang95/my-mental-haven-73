@@ -31,6 +31,7 @@ import DiarioHuellas from "@/pages/DiarioHuellas";
 import ThoughtRecord from "@/pages/ThoughtRecord";
 
 import PensamientosAutomaticos from "@/pages/pensamientos/PensamientosAutomaticos";
+import PensamientosHub from "@/pages/pensamientos/PensamientosHub";
 import HabitosHome from "@/pages/pensamientos/HabitosHome";
 import DreamLog from "@/pages/DreamLog";
 import DiarioTools from "@/pages/DiarioTools";
@@ -171,6 +172,7 @@ const App = () => (
               
               <Route path="/herramientas/grounding" element={<Grounding />} />
               <Route path="/herramientas/mindfulness" element={<MindfulnessHub />} />
+              <Route path="/herramientas/pensamientos" element={<PensamientosHub />} />
               <Route path="/herramientas/mindfulness/respiracion" element={<BreathingHome />} />
               <Route path="/herramientas/mindfulness/observar" element={<ObservarHome />} />
               <Route path="/herramientas/mindfulness/describir" element={<DescribirHome />} />
