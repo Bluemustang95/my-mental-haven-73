@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Wind, HeartPulse, Waves, Users, Brain, Sparkles, Lock, type LucideIcon } from "lucide-react";
+import { Zap, Wind, HeartPulse, Brain, Sparkles, Lock, type LucideIcon } from "lucide-react";
 import { readLocalProfile } from "@/lib/clinicalAlgorithm";
 import { usePlan } from "@/hooks/usePlan";
 import { PaywallModal } from "@/components/modals/PaywallModal";
@@ -13,11 +13,13 @@ type Tile = {
   tint: "primary" | "accent";
 };
 
-const tiles: Tile[] = [
-  { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary" },
-  { slug: "regulacion-emocional", name: "Regulación Emocional", desc: "Habilidades STOP y TIP.", Icon: HeartPulse, tint: "accent" },
-  { slug: "tolerancia-malestar", name: "Tolerancia al Malestar", desc: "Sobrevive a crisis.", Icon: Waves, tint: "primary" },
-  { slug: "efectividad-personal", name: "Efectividad Personal", desc: "Mejorá vínculos.", Icon: Users, tint: "accent" },
+type TileWithTarget = Tile & { target: string };
+
+const tiles: TileWithTarget[] = [
+  { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary", target: "/diario-inteligente/mindfulness" },
+  { slug: "regulacion-emocional", name: "Regulación Emocional", desc: "Habilidades STOP y TIP.", Icon: HeartPulse, tint: "accent", target: "/diario-inteligente/regulacion-emocional" },
+  { slug: "pensamientos", name: "Pensamientos", desc: "Wizard de CBT.", Icon: Brain, tint: "primary", target: "/diario-inteligente/gestion-pensamientos/pensamientos-automaticos" },
+  { slug: "habitos", name: "Hábitos", desc: "Habit Tracker.", Icon: Zap, tint: "accent", target: "/diario-inteligente/gestion-pensamientos/habitos" },
 ];
 
 const tintBg: Record<Tile["tint"], string> = {
@@ -57,7 +59,7 @@ export function BentoGrid() {
           return (
             <button
               key={t.slug}
-              onClick={() => open(t.slug, t.name, `/diario-inteligente/${t.slug}`)}
+              onClick={() => open(t.slug, t.name, t.target)}
               className="relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl border border-foreground/5 bg-card/80 p-4 text-left shadow-glass backdrop-blur-3xl transition active:scale-[0.98]"
               style={isPriority ? { borderColor: "#7cc2c8", boxShadow: "0 12px 28px -12px rgba(124,194,200,0.45)" } : undefined}
             >
@@ -82,27 +84,6 @@ export function BentoGrid() {
           );
         })}
       </div>
-
-      {/* Gestion de Pensamientos */}
-      <button
-        onClick={() => open("gestion-pensamientos", "Gestión de Pensamientos", "/diario-inteligente/gestion-pensamientos")}
-        className="relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-3xl border border-foreground/5 bg-card/80 p-4 text-left shadow-glass backdrop-blur-3xl transition active:scale-[0.98]"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-            <Brain size={20} strokeWidth={2} />
-          </div>
-          <div>
-            <h3 className="font-display text-base font-bold text-foreground">Gestión de Pensamientos</h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">Distorsiones, rumiación y preocupación.</p>
-          </div>
-        </div>
-        {!isPremium && (
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground/85 text-white">
-            <Lock size={11} strokeWidth={2.6} />
-          </span>
-        )}
-      </button>
 
       {/* Pack Actividades */}
       <button
