@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RotateCcw, ChevronRight } from "lucide-react";
+import { ArrowLeft, RotateCcw, ChevronRight, HelpCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 type Props = {
@@ -9,16 +8,16 @@ type Props = {
   onBack?: () => void;
   onNext?: () => void;
   onReset?: () => void;
+  onHelp?: () => void;
   canContinue: boolean;
   nextLabel?: string;
   children: ReactNode;
 };
 
 export default function WizardShell({
-  step, totalSteps, onBack, onNext, onReset, canContinue,
+  step, totalSteps, onBack, onNext, onReset, onHelp, canContinue,
   nextLabel = "Continuar", children,
 }: Props) {
-  const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
