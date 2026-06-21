@@ -9,7 +9,7 @@ import { localDateStr } from "@/lib/utils";
 import { addDays, startOfWeek, subDays, format } from "date-fns";
 import { es } from "date-fns/locale";
 
-type Record = {
+type ThoughtRow = {
   id: string;
   created_at: string;
   situation: string | null;
@@ -20,8 +20,8 @@ type Record = {
 export default function PensamientosHub() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [progressByDate, setProgressByDate] = useState<Record<string, number>>({} as any);
-  const [recent, setRecent] = useState<Record[]>([]);
+  const [progressByDate, setProgressByDate] = useState<{ [k: string]: number }>({});
+  const [recent, setRecent] = useState<ThoughtRow[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -35,13 +35,13 @@ export default function PensamientosHub() {
         .gte("created_at", start.toISOString())
         .lt("created_at", end.toISOString())
         .order("created_at", { ascending: false });
-      const map: Record<string, number> = {} as any;
+      const map: { [k: string]: number } = {};
       (data ?? []).forEach((r: any) => {
         const k = localDateStr(new Date(r.created_at));
-        (map as any)[k] = Math.min(4, ((map as any)[k] ?? 0) + 1);
+        map[k] = Math.min(4, (map[k] ?? 0) + 1);
       });
       setProgressByDate(map);
-      setRecent(((data as any[]) ?? []).slice(0, 5) as Record[]);
+      setRecent(((data as any[]) ?? []).slice(0, 5) as ThoughtRow[]);
     })();
   }, [user]);
 
