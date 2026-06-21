@@ -127,6 +127,15 @@ Pensamiento automático: "${thought}"`;
     console.log(`analyze-thought ${mode} raw`, raw.slice(0, 250));
     const parsed = (tryParseJSON(raw) ?? {}) as Record<string, unknown>;
 
+    if (mode === "holistic") {
+      const trigger = typeof parsed.trigger === "string" ? parsed.trigger : "";
+      const emotion = typeof parsed.emotion === "string" ? parsed.emotion : "";
+      const intensity = typeof parsed.intensity === "number" ? parsed.intensity : 50;
+      const thoughts = Array.isArray(parsed.thoughts) ? (parsed.thoughts as unknown[]).filter((x) => typeof x === "string" && (x as string).trim().length > 0).slice(0, 5) : [];
+      return new Response(JSON.stringify({ trigger, emotion, intensity, thoughts }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (mode === "identify") {
       const tips = Array.isArray(parsed.tips) ? (parsed.tips as unknown[]).filter((x) => typeof x === "string").slice(0, 3) : [];
       const candidates = Array.isArray(parsed.candidates) ? (parsed.candidates as unknown[]).filter((x) => typeof x === "string").slice(0, 3) : [];
