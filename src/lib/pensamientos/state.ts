@@ -58,6 +58,7 @@ export const EMPTY_DRAFT: ThoughtDraft = {
   intensityInitial: 50,
   triggerEvent: "",
   automaticThought: "",
+  pendingThoughts: [],
   aiAnalysis: null,
   distortionKey: null,
   distortionLabel: null,
