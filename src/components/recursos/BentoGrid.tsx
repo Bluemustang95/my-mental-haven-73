@@ -18,7 +18,7 @@ type TileWithTarget = Tile & { target: string };
 const tiles: TileWithTarget[] = [
   { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary", target: "/diario-inteligente/mindfulness" },
   { slug: "regulacion-emocional", name: "Regulación Emocional", desc: "Habilidades STOP y TIP.", Icon: HeartPulse, tint: "accent", target: "/diario-inteligente/regulacion-emocional" },
-  { slug: "pensamientos", name: "Pensamientos", desc: "Wizard de CBT.", Icon: Brain, tint: "primary", target: "/diario-inteligente/gestion-pensamientos/pensamientos-automaticos" },
+  { slug: "pensamientos", name: "Pensamientos", desc: "Wizard de CBT.", Icon: Brain, tint: "primary", target: "/herramientas/pensamientos" },
   { slug: "habitos", name: "Hábitos", desc: "Habit Tracker.", Icon: Zap, tint: "accent", target: "/diario-inteligente/gestion-pensamientos/habitos" },
 ];
 

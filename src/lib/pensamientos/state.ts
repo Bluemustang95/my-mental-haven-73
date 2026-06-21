@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Camino } from "./emotions";
 
-const KEY = "resma:thought-draft:v3";
+const KEY = "resma:thought-draft:v4";
 
 export type ActionRow = { id: string; what: string; when: string; why?: string };
 
@@ -30,6 +30,7 @@ export type ThoughtDraft = {
   intensityInitial: number;
   triggerEvent: string;
   automaticThought: string;
+  pendingThoughts: string[];
   aiAnalysis: AiAnalysis;
   // Step 3 (distorsión)
   distortionKey: string | null;
@@ -57,6 +58,7 @@ export const EMPTY_DRAFT: ThoughtDraft = {
   intensityInitial: 50,
   triggerEvent: "",
   automaticThought: "",
+  pendingThoughts: [],
   aiAnalysis: null,
   distortionKey: null,
   distortionLabel: null,

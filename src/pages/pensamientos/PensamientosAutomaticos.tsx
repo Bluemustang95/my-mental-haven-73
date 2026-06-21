@@ -1,36 +1,42 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import WizardShell from "@/components/pensamientos/shell/WizardShell";
-import Step1FiltroMental from "@/components/pensamientos/steps/Step1FiltroMental";
 import Step2Captura from "@/components/pensamientos/steps/Step2Captura";
 import Step3Distorsion from "@/components/pensamientos/steps/Step3Distorsion";
 import Step4Evidencias from "@/components/pensamientos/steps/Step4Evidencias";
 import Step5Tratamiento from "@/components/pensamientos/steps/Step5Tratamiento";
+import ModeloCognitivoIntro from "@/components/pensamientos/intro/ModeloCognitivoIntro";
+import { hasSeenIntro } from "@/lib/pensamientos/intro";
 import { useThoughtDraft } from "@/lib/pensamientos/state";
 
-const TOTAL = 5;
+const TOTAL = 4;
+const HUB = "/herramientas/pensamientos";
 
 export default function PensamientosAutomaticos() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { draft, patch, reset } = useThoughtDraft();
+  const [introOpen, setIntroOpen] = useState(false);
+
+  useEffect(() => {
+    if (!hasSeenIntro()) setIntroOpen(true);
+  }, []);
 
   const step = Math.min(Math.max(draft.step, 1), TOTAL);
 
   const canContinue = useMemo(() => {
     switch (step) {
-      case 1: return !!draft.caminoElegido;
-      case 2:
+      case 1:
         return !!draft.emotion &&
           (draft.emotion !== "otro" || draft.emotionOther.trim().length > 0) &&
           draft.triggerEvent.trim().length >= 4 &&
           draft.automaticThought.trim().length >= 8;
-      case 3: return true;
-      case 4: return draft.evidenceFor.length + draft.evidenceAgainst.length >= 1;
-      case 5:
+      case 2: return true;
+      case 3: return draft.evidenceFor.length + draft.evidenceAgainst.length >= 1;
+      case 4:
         if (draft.isRealProblem) return draft.actionPlan.some((r) => r.what.trim() && r.when.trim());
         return draft.alternativeThought.trim().length >= 8;
       default: return false;
@@ -38,12 +44,12 @@ export default function PensamientosAutomaticos() {
   }, [step, draft]);
 
   const goNext = async () => {
-    if (step === 4) {
+    if (step === 3) {
       const total = draft.evidenceFor.length + draft.evidenceAgainst.length;
       const score = total === 0 ? 50 : (draft.evidenceAgainst.length / total) * 100;
       const isReal = score < 60;
       patch({
-        step: 5,
+        step: 4,
         isRealProblem: isReal,
         intensityFinal: draft.intensityInitial,
       });
@@ -55,7 +61,7 @@ export default function PensamientosAutomaticos() {
 
   const goBack = () => {
     if (step === 1) {
-      navigate("/diario-inteligente/gestion-pensamientos");
+      navigate(HUB);
       return;
     }
     patch({ step: step - 1 });
@@ -93,24 +99,28 @@ export default function PensamientosAutomaticos() {
     }
     toast.success("Sesión guardada. Gran trabajo.");
     reset();
-    navigate("/diario-inteligente/gestion-pensamientos");
+    navigate(HUB);
   };
 
   return (
-    <WizardShell
-      step={step}
-      totalSteps={TOTAL}
-      onBack={goBack}
-      onNext={goNext}
-      onReset={() => reset()}
-      canContinue={canContinue}
-      nextLabel={step === TOTAL ? "Finalizar" : "Continuar"}
-    >
-      {step === 1 && <Step1FiltroMental draft={draft} patch={patch} />}
-      {step === 2 && <Step2Captura draft={draft} patch={patch} />}
-      {step === 3 && <Step3Distorsion draft={draft} patch={patch} />}
-      {step === 4 && <Step4Evidencias draft={draft} patch={patch} />}
-      {step === 5 && <Step5Tratamiento draft={draft} patch={patch} />}
-    </WizardShell>
+    <>
+      <WizardShell
+        step={step}
+        totalSteps={TOTAL}
+        onBack={goBack}
+        onNext={goNext}
+        onReset={() => reset()}
+        onHelp={() => setIntroOpen(true)}
+        canContinue={canContinue}
+        nextLabel={step === TOTAL ? "Finalizar" : "Continuar"}
+      >
+        {step === 1 && <Step2Captura draft={draft} patch={patch} />}
+        {step === 2 && <Step3Distorsion draft={draft} patch={patch} />}
+        {step === 3 && <Step4Evidencias draft={draft} patch={patch} />}
+        {step === 4 && <Step5Tratamiento draft={draft} patch={patch} />}
+      </WizardShell>
+
+      <ModeloCognitivoIntro open={introOpen} onClose={() => setIntroOpen(false)} />
+    </>
   );
 }

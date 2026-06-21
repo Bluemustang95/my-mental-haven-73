@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const mode: "identify" | "refine" | "alternatives" = body.mode ?? "refine";
+    const mode: "identify" | "refine" | "alternatives" | "holistic" = body.mode ?? "refine";
 
     const key = Deno.env.get("LOVABLE_API_KEY");
     if (!key) {
@@ -40,7 +40,24 @@ Deno.serve(async (req) => {
     let systemPrompt = "";
     let userPrompt = "";
 
-    if (mode === "identify") {
+    if (mode === "holistic") {
+      const { story } = body;
+      if (!story || typeof story !== "string" || story.trim().length < 10) {
+        return new Response(JSON.stringify({ error: "Contame un poco más." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      systemPrompt = `Sos RESMA, psicólogo cognitivo-conductual argentino (voseo rioplatense), cálido y concreto.
+El paciente te cuenta una situación libre. Tu tarea es separar el modelo cognitivo en tres componentes y devolver SOLO un JSON:
+{"trigger":"...","emotion":"...","intensity":50,"thoughts":["...","..."]}
+- "trigger": el evento OBJETIVO en una frase (sin juicios, sin pensamientos). Máx 25 palabras.
+- "emotion": UNA palabra en minúscula entre: ansiedad, tristeza, enojo, culpa, verguenza, frustracion, celos, miedo. Si no encaja, usá la palabra más cercana en minúscula.
+- "intensity": número 1-100 estimando la intensidad emocional.
+- "thoughts": array con TODOS los pensamientos automáticos detectados (en primera persona, breves, máx 25 palabras cada uno). Si solo hay uno, devolvé uno.
+Sin markdown ni texto fuera del JSON.`;
+      userPrompt = `Relato del paciente:
+${story.trim()}`;
+    } else if (mode === "identify") {
       const { trigger, emotion, intensity } = body;
       systemPrompt = `Sos RESMA, psicólogo cognitivo-conductual argentino. Voseo rioplatense, cálido y concreto.
 El paciente sintió una emoción pero no logra identificar el pensamiento automático que la disparó.
@@ -110,6 +127,15 @@ Pensamiento automático: "${thought}"`;
     console.log(`analyze-thought ${mode} raw`, raw.slice(0, 250));
     const parsed = (tryParseJSON(raw) ?? {}) as Record<string, unknown>;
 
+    if (mode === "holistic") {
+      const trigger = typeof parsed.trigger === "string" ? parsed.trigger : "";
+      const emotion = typeof parsed.emotion === "string" ? parsed.emotion : "";
+      const intensity = typeof parsed.intensity === "number" ? parsed.intensity : 50;
+      const thoughts = Array.isArray(parsed.thoughts) ? (parsed.thoughts as unknown[]).filter((x) => typeof x === "string" && (x as string).trim().length > 0).slice(0, 5) : [];
+      return new Response(JSON.stringify({ trigger, emotion, intensity, thoughts }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (mode === "identify") {
       const tips = Array.isArray(parsed.tips) ? (parsed.tips as unknown[]).filter((x) => typeof x === "string").slice(0, 3) : [];
       const candidates = Array.isArray(parsed.candidates) ? (parsed.candidates as unknown[]).filter((x) => typeof x === "string").slice(0, 3) : [];

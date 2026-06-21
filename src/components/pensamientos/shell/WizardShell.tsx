@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RotateCcw, ChevronRight } from "lucide-react";
+import { ArrowLeft, RotateCcw, ChevronRight, HelpCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 type Props = {
@@ -9,16 +8,16 @@ type Props = {
   onBack?: () => void;
   onNext?: () => void;
   onReset?: () => void;
+  onHelp?: () => void;
   canContinue: boolean;
   nextLabel?: string;
   children: ReactNode;
 };
 
 export default function WizardShell({
-  step, totalSteps, onBack, onNext, onReset, canContinue,
+  step, totalSteps, onBack, onNext, onReset, onHelp, canContinue,
   nextLabel = "Continuar", children,
 }: Props) {
-  const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,7 +37,7 @@ export default function WizardShell({
         <div className="sticky top-0 z-20 px-4 pt-7 pb-3 backdrop-blur-[18px] bg-white/55 border-b border-white/40">
           <div className="flex items-start justify-between gap-3">
             <button
-              onClick={() => (onBack ? onBack() : navigate(-1))}
+              onClick={() => onBack?.()}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-glass active:scale-95 transition"
               aria-label="Atrás"
             >
@@ -52,6 +51,15 @@ export default function WizardShell({
                 Gestión de Pensamientos
               </h1>
             </div>
+            {onHelp && (
+              <button
+                onClick={onHelp}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-glass active:scale-95 transition"
+                aria-label="Ver explicación"
+              >
+                <HelpCircle size={14} className="text-[#7cc2c8]" />
+              </button>
+            )}
             {onReset && (
               <button
                 onClick={() => {
@@ -97,7 +105,7 @@ export default function WizardShell({
       >
         <div className="mx-auto flex max-w-[420px] gap-2.5">
           <button
-            onClick={() => (onBack ? onBack() : navigate(-1))}
+            onClick={() => onBack?.()}
             className="flex-1 rounded-full border border-[#101927]/10 bg-white py-3 font-display text-[13px] font-semibold text-[#101927] shadow-glass active:scale-[0.98] transition"
           >
             Atrás
