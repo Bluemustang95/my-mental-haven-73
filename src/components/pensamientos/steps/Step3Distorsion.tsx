@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Brain, Info } from "lucide-react";
+import { Brain, Info, Eye, Repeat, Compass } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlassCard } from "../pieces/GlassCard";
 import DistortionPicker from "../pieces/DistortionPicker";
@@ -10,6 +10,24 @@ type Props = {
   draft: ThoughtDraft;
   patch: (p: Partial<ThoughtDraft>) => void;
 };
+
+const BENEFITS = [
+  {
+    Icon: Eye,
+    title: "Le ponés nombre al automatismo",
+    desc: "Deja de ser invisible y empezás a observarlo.",
+  },
+  {
+    Icon: Repeat,
+    title: "Ves el patrón repetido",
+    desc: "Tu historial muestra la raíz, no solo el síntoma.",
+  },
+  {
+    Icon: Compass,
+    title: "Habilita el contra‑argumento justo",
+    desc: "Cada distorsión tiene una salida específica.",
+  },
+];
 
 export default function Step3Distorsion({ draft, patch }: Props) {
   const [showPicker, setShowPicker] = useState(false);
@@ -37,6 +55,30 @@ export default function Step3Distorsion({ draft, patch }: Props) {
           Identificar el patrón te quita poder al automatismo.
         </p>
       </div>
+
+      {/* Why register — bigger bullets up top */}
+      <GlassCard tone="gold" className="p-3.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#92561a]">
+          Por qué registrarlo
+        </p>
+        <ul className="mt-2.5 space-y-2.5">
+          {BENEFITS.map(({ Icon, title, desc }) => (
+            <li key={title} className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-glass">
+                <Icon size={16} className="text-[#92561a]" />
+              </div>
+              <div className="flex-1">
+                <p className="font-display text-[13px] font-semibold text-[#101927] leading-snug">
+                  {title}
+                </p>
+                <p className="mt-0.5 text-[11.5px] text-[#101927]/75 leading-snug">
+                  {desc}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </GlassCard>
 
       {selected ? (
         <GlassCard className="p-3.5">
@@ -82,17 +124,6 @@ export default function Step3Distorsion({ draft, patch }: Props) {
           </div>
         </GlassCard>
       )}
-
-      <GlassCard tone="gold" className="p-3">
-        <p className="text-[9.5px] font-bold uppercase tracking-widest text-[#92561a]">
-          Por qué registrarlo
-        </p>
-        <ul className="mt-1 space-y-0.5 text-[11.5px] text-[#101927]/85 leading-relaxed">
-          <li>· Le ponés nombre al automatismo: deja de ser invisible.</li>
-          <li>· Ves el patrón repetido en tu historial y trabajás la raíz.</li>
-          <li>· Habilita el contra-argumento más eficaz para esa distorsión.</li>
-        </ul>
-      </GlassCard>
 
       <button
         onClick={() => setShowPicker((v) => !v)}
