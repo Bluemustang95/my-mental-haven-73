@@ -1,126 +1,111 @@
-## Objetivo
 
-Rehacer el wizard de Pensamientos Automáticos para que sea más compacto, clínicamente más útil, y que la IA realmente acompañe en cada paso. Pasamos de 4 a **5 pasos**, sumando un paso dedicado a la **distorsión cognitiva**.
+# Módulo "Hábitos" — Habit Tracker Premium para RESMA
 
-## Nuevo flujo (5 pasos)
+## 1. Reorganización del hub `PensamientosHome` (Bento 2x2)
 
+Reemplazar la lista vertical actual de `src/pages/pensamientos/PensamientosHome.tsx` por un Bento Grid 2x2 con tarjetas glassmorphic (`rounded-[28px]`, `bg-white/45`, `backdrop-blur-[28px]`, borde `white/60`, sombra suave).
+
+```text
+┌─────────────┬─────────────┐
+│ 🍃 Mindfuln │ ❤️ Reg. Emo │   ← opacity-60, no clickeables
+├─────────────┼─────────────┤
+│ 🧠 Pensam.  │ ⚡ Hábitos  │   ← activos
+│ Wizard CBT  │ Habit Track │
+└─────────────┴─────────────┘
 ```
-1. Filtro Mental (didáctico, compacto)
-2. Captura + IA que ayuda a identificar el pensamiento
-3. Distorsión Cognitiva (nuevo) — qué tipo es y por qué registrarlo
-4. Evidencias (IA evalúa el pensamiento dado el evento, sugerencias inline)
-5. Tratamiento (Reestructuración o Plan de acción, ambos con IA interactiva)
+
+- **Mindfulness** y **Regulación Emocional**: `opacity-60`, sin onClick, subtítulo gris.
+- **Pensamientos**: navega a `/diario-inteligente/gestion-pensamientos/pensamientos-automaticos` (ya existe).
+- **Hábitos**: navega a la nueva ruta `/diario-inteligente/gestion-pensamientos/habitos`, borde de acento oro (`ring-1 ring-[#facb60]/40`).
+- Debajo del bento se conserva una tarjeta "Módulo activo · Pack de Actividades" tal como muestran las capturas.
+
+## 2. Nueva pantalla `HabitosHome` (`/.../habitos`)
+
+Archivo nuevo: `src/pages/pensamientos/HabitosHome.tsx`. Misma base visual (ambient orbs, glass header sticky con back + chip "Workspace · Gestión de Pensamientos", botón "Wrapped" + botón "+" arriba a la derecha).
+
+Contenido:
+- Header editorial: chip dorado `ACUMULAR AFECTO POSITIVO`, título serif `Tus Hábitos Diarios`, bajada `Asociá rutinas sencillas a tus valores fundamentales…`.
+- **Selector de vista** segmentado (pill negra activa) con 3 modos: `Grid` · `Semana` · `Cards`. Estado en componente.
+- Lista de hábitos del usuario (cada uno renderiza la vista seleccionada).
+- Padding inferior `pb-40` para no chocar con la tab bar; contenedor con `ref` y `scrollTop = 0` al montar / cambiar de vista.
+
+### Vistas por hábito
+Cada tarjeta de hábito (glass) tiene cabecera: icono emoji en cuadro, nombre serif, `VALOR: …` uppercase, chip de racha `4 días 🔥` con `textColor` del hábito. La cabecera es clickeable y abre el modal de estadísticas.
+
+- **Grid**: cuadrícula 10×4 (40 bloques) coloreada con `bg-[color]` cuando el día está en `completions`, gris `#eef1f5` cuando no. Tap toggle inmediato con transición `scale-110` + glow. Caption inferior `TOCÁ LOS BLOQUES PARA REGISTRAR…`.
+- **Semana**: 7 círculos `L M M J V S D` con check ✓ en los días completados de la semana actual.
+- **Cards**: mini calendario 28 días en grid 7×4, cada día redondeado, marcado con color cuando está completo.
+
+Toggle: actualiza optimistamente el estado local y persiste en backend (ver §4).
+
+## 3. Modal "Nuevo Hábito Clínico" (botón "+")
+
+Sheet/dialog glass con:
+- Input "¿Qué rutina vas a incorporar?" (placeholder `Ej: Beber 2L de agua`).
+- Picker de icono emoji (📖 ☀️ ✍️ 🧘 💧 🏃) horizontal con seleccionable destacado.
+- Select "¿A qué valor de vida se asocia?" con `Salud / Autocuidado 🧘`, `Crecimiento 🌱`, `Relaciones 🤝`, `Ocio 🎨`, `Espiritualidad ✨`.
+- Picker de color hue (5 swatches): teal `#7cc2c8`, oro `#facb60`, coral `#f47b6f`, lavanda `#b794f4`, índigo `#7c83f4`.
+- CTA negro pill `CREAR HÁBITO`.
+- Toasts del sistema RESMA (oscuros). Sin `alert/confirm`.
+
+## 4. Persistencia (Lovable Cloud)
+
+Migración nueva con dos tablas:
+
+```text
+habits(id uuid pk, user_id uuid, name text, icon text, value_key text,
+       color text, text_color text, best_streak int default 0,
+       created_at timestamptz default now(), archived_at timestamptz)
+
+habit_completions(id uuid pk, user_id uuid, habit_id uuid fk,
+                  completed_date date, created_at timestamptz default now(),
+                  unique(habit_id, completed_date))
 ```
 
----
+- `GRANT SELECT/INSERT/UPDATE/DELETE … TO authenticated;` `GRANT ALL … TO service_role;`
+- RLS: cada usuario sólo ve/edita sus filas (`auth.uid() = user_id`). Admin select via `has_role`.
+- Streak (`streak`, `bestStreak`), `hourlyData`, `weekdayData`, `historyTrend` se calculan en cliente a partir de `habit_completions.created_at` y `completed_date`. `best_streak` se persiste al cerrar racha.
 
-## Paso 1 — Filtro Mental (compactar)
+Hook nuevo `src/hooks/useHabits.ts` que carga hábitos + completions del mes/año en curso y expone `toggle(habitId, date)`, `create(habit)`, `archive(habitId)`.
 
-Sigue muy alto. Reducir todo en ~30%:
-- Quitar la "Ficha 2.2" del título — mantener subtítulo corto.
-- Tarjeta de evento activador: padding `p-3`, texto `text-[13px]`.
-- Flechas más chicas y sin margen vertical extra.
-- Tarjetas de Camino: padding `p-3`, emoji `text-xl`, label en una línea.
-- Panel de emoción/fisiología/conducta: condensar en lista compacta de 3 filas con label inline + dato (sin separadores con `pt-3 border-t`), padding `p-3`, font sizes 11–12px.
+## 5. Modal de estadísticas del hábito (`HabitStatsSheet`)
 
-Resultado: cabe sin scroll en 390×743.
+Drawer bottom (`animate-in slide-in-from-bottom-8`) glass.
+- 2 tarjetas grandes: "Total del mes" y "Mejor racha histórica".
+- **Distribución horaria**: 4 barras horizontales (Mañana 6-12, Mediodía 12-17, Tarde 17-21, Noche 21-6) basadas en `created_at` de completions.
+- **Rendimiento semanal**: histograma vertical L-D.
+- **Tendencia 4 semanas**: barras verticales por semana del último mes.
+- Render con SVG simple inline (sin nueva dependencia; ya hay `recharts` si conviene).
 
-## Paso 2 — Captura + IA "Ayudame a identificarlo"
+## 6. "RESMA Wrapped" anual
 
-Mantener los 3 bloques (Emoción + Intensidad, Evento, Pensamiento), pero cambiar la IA:
+Botón `Wrapped 📊` en header abre dialog glass `WrappedDialog`:
+- Header serif `Tu 2026 en Revisión`.
+- Tarjeta navy oscura con borde dorado: `Total completados`, `Racha más larga`, `Valor prioritario`.
+- Debajo: **Distribución por Valores** (donut/barras de %), **Curva mensual** (12 barras Ene-Dic).
+- Botón `COMPARTIR FICHA WRAPPED` (genera PNG con `html-to-image` si está disponible; si no, copia resumen al portapapeles con toast).
+- Botón `Cerrar Resumen`.
 
-- Renombrar botón a **"Ayudame a identificar mi pensamiento"** (con icono Sparkles).
-- Si el usuario NO escribió pensamiento aún (o <8 chars), la IA recibe: emoción + intensidad + evento, y devuelve:
-  - `tips`: 2-3 tips de cómo identificar el pensamiento ("¿Qué imagen apareció en tu mente?", "¿Qué te decías a vos mismo?", etc.) — vienen del prompt.
-  - `candidates`: 2 candidatos plausibles de pensamiento automático para que el usuario elija/edite.
-- Si SÍ hay pensamiento escrito, devuelve `factual` (reescritura observable) + `questions` (socráticas). Como hoy.
-- Cualquier candidato/factual es tocable → rellena el textarea.
-- Toda la sugerencia aparece **debajo del textarea, no al final**, en una tarjeta amarilla colapsable.
+## 7. Detalles técnicos
 
-Actualizar `analyze-thought` edge function:
-- Recibir `mode: "identify" | "refine"` (lo decide el cliente según largo del texto).
-- Prompt distinto por modo, devolviendo el JSON adecuado: `{tips:[], candidates:[]}` o `{factual, questions:[]}`.
+- Tokens del módulo: gradiente base `linear-gradient(180deg,#f9f9fb 0%,#f2f4f8 100%)`, orbes existentes (`animate-[orb-float_…]` ya definidos en index.css).
+- Voseo argentino en todos los strings.
+- Todo el módulo cliente-side; backend solo Supabase + RLS.
+- No tocar el wizard de Pensamientos Automáticos existente.
 
-## Paso 3 (NUEVO) — Distorsión Cognitiva
+## Archivos
 
-Antes de evidencias. Usa `detectDistortion()` sobre el pensamiento del paso 2.
+**Crear**
+- `src/pages/pensamientos/HabitosHome.tsx`
+- `src/components/habitos/HabitCard.tsx` (incluye vistas Grid/Semana/Cards)
+- `src/components/habitos/NewHabitSheet.tsx`
+- `src/components/habitos/HabitStatsSheet.tsx`
+- `src/components/habitos/WrappedDialog.tsx`
+- `src/hooks/useHabits.ts`
+- `supabase/migrations/<ts>_habits.sql`
 
-- Si detecta una: card grande con
-  - Etiqueta (ej "Catastrofismo")
-  - Definición clínica corta (basada en el documento adjunto: Dicotómico, Catastrófico, Descalificar, Razonamiento emocional, Catalogar, Magnificar/Minimizar, Abstracción selectiva, Leer la mente, Sobregeneralización, Personalización, Debo/Tengo que). Ampliar `distortionDetector.ts` para que las descripciones coincidan textualmente con el documento.
-  - Ejemplo típico (1 línea).
-  - Bloque "Por qué registrarlo": "Identificar el patrón te quita poder al automatismo y permite reescribirlo con evidencia". 3 bullets cortos.
-  - Selector chico (chips) para que el usuario corrija/elija otra distorsión si la detección no le cierra ("Mejor encaja:" → lista compacta de las 11).
-- Si NO detecta: card neutra "No detectamos un patrón rígido evidente. De todas formas, podés marcar uno si te resuena", con la lista de chips para elegir manualmente. También un botón "Ninguno aplica".
+**Editar**
+- `src/pages/pensamientos/PensamientosHome.tsx` → Bento 2x2.
+- `src/App.tsx` → ruta `/diario-inteligente/gestion-pensamientos/habitos`.
 
-`canContinue` paso 3: siempre `true` (el usuario puede seguir con o sin distorsión marcada).
-
-## Paso 4 — Evidencias (mejorar IA + inline)
-
-- Header compacto + termómetro como hoy.
-- Quitar la tarjeta vieja "Patrón cognitivo detectado" (ya vive en paso 3, sin duplicar).
-- **IA inline**: las sugerencias de la IA aparecen **dentro de cada lista** (a favor / en contra), justo debajo del header de esa lista, no al final del scroll. Cada sugerencia es un chip con `+` que la agrega directamente.
-- Mejorar la calidad de la IA en `suggest-evidence`:
-  - Pasar también `distortionKey` y `emotion` para contextualizar.
-  - Prompt: "Evaluá si el pensamiento '{thought}' se sostiene dado el evento OBJETIVO '{trigger}'. Devolvé 3 evidencias {a favor / en contra} concretas, observables, basadas en el evento. Nada genérico, nada que el usuario ya escribió."
-  - Filtrar duplicados contra `existing`.
-- Cuando la IA termina, el panel de sugerencias aparece **encima de la lista correspondiente**, no flotando al final.
-
-## Paso 5 — Tratamiento (rehacer ambos caminos)
-
-Quitar scroll largo. Layout más interactivo.
-
-### Camino A — Reestructuración Racional
-Una sola tarjeta principal con tabs internas o pasos verticales muy compactos:
-1. **Resumen mini** (1 línea): emoción · pensamiento · % en contra.
-2. **Generar alternativa con IA** (botón grande): la IA toma pensamiento + evidencias en contra + distorsión y devuelve 3 alternativas balanceadas. Aparecen como cards seleccionables; al tocar una se carga al textarea editable.
-3. **Textarea** del pensamiento alternativo (auto-rellenado, editable).
-4. **Slider de re-evaluación** + microanimación cuando baja >20.
-
-Sin tarjeta "Camino sugerido" gigante; queda como un chip arriba.
-
-Nueva edge function `suggest-alternatives` (o reutilizar `analyze-thought` con un mode nuevo `alternatives`).
-
-### Camino B — Modificación Conductual
-Un solo flujo vertical:
-1. **Lluvia de ideas** (textarea pequeño).
-2. **Sugerir plan con IA** (botón). La IA usa lluvia + pensamiento + evento y devuelve **acciones estructuradas** (no texto plano):
-   ```json
-   { "actions": [ { "what": "...", "when": "...", "why": "..." }, ... ] }
-   ```
-3. Cada acción sugerida aparece como card con botón **"Sumar al plan"** → se agrega editable a `actionPlan`.
-4. **Planificador** vertical compacto (como ahora pero más chico) debajo. Cada fila: input acción + input cuándo + X. Botón "+ Sumar acción manual".
-
-Actualizar `suggest-behavior-plan` para devolver `actions[]` estructuradas y aceptar `distortionKey`.
-
----
-
-## Cambios técnicos resumidos
-
-### Archivos a editar
-- `src/lib/pensamientos/state.ts` — añadir `step` hasta 5, `aiTips: string[]`, `aiCandidates: string[]`, ampliar `aiSuggestions` a `{what,when,why}[]`.
-- `src/lib/pensamientos/distortionDetector.ts` — descripciones alineadas con el documento, agregar `example`.
-- `src/components/pensamientos/steps/Step1FiltroMental.tsx` — compactar.
-- `src/components/pensamientos/steps/Step2Captura.tsx` — IA con modos identify/refine, sugerencias inline.
-- `src/components/pensamientos/steps/Step4Tratamiento.tsx` → renombrar a `Step5Tratamiento.tsx` y rehacer.
-- `src/components/pensamientos/steps/Step3Evidencias.tsx` → renombrar a `Step4Evidencias.tsx`, sugerencias inline.
-- `src/pages/pensamientos/PensamientosAutomaticos.tsx` — `TOTAL=5`, lógica `goNext` para nuevo paso 3.
-- `supabase/functions/analyze-thought/index.ts` — soportar modo `identify` / `refine` / `alternatives`.
-- `supabase/functions/suggest-evidence/index.ts` — mejor prompt + contexto.
-- `supabase/functions/suggest-behavior-plan/index.ts` — devolver `actions[]` estructuradas.
-
-### Archivos a crear
-- `src/components/pensamientos/steps/Step3Distorsion.tsx` (nuevo).
-- `src/components/pensamientos/pieces/DistortionPicker.tsx` (chips de selección manual).
-
-### Sin cambios de schema
-La tabla `thought_records` ya tiene `distortion_key`, `distortion_label`, `is_real_problem`, `action_plan` (jsonb) — alcanza para guardar la versión nueva.
-
----
-
-## Criterios de aceptación
-- Paso 1 entra completo en 390×743 sin scroll del contenido.
-- Paso 2: la IA, sin pensamiento escrito, devuelve tips + 2 candidatos; con pensamiento, devuelve fáctica + 2 preguntas. Las sugerencias caen pegadas al textarea.
-- Paso 3 muestra distorsión detectada con definición clínica del documento o permite elegirla manualmente.
-- Paso 4: sugerencias IA aparecen dentro del bloque "a favor" o "en contra" correspondiente.
-- Paso 5: alternativa o plan se generan con IA y se aceptan con un toque, sin que el usuario tenga que copiar/pegar.
+No se modifica el wizard CBT ni `WeeklyGoalsWidget`.

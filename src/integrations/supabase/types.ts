@@ -804,6 +804,80 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_completions: {
+        Row: {
+          completed_date: string
+          created_at: string
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_date: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_date?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          archived_at: string | null
+          best_streak: number
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          text_color: string
+          updated_at: string
+          user_id: string
+          value_key: string
+        }
+        Insert: {
+          archived_at?: string | null
+          best_streak?: number
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          text_color?: string
+          updated_at?: string
+          user_id: string
+          value_key?: string
+        }
+        Update: {
+          archived_at?: string | null
+          best_streak?: number
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          text_color?: string
+          updated_at?: string
+          user_id?: string
+          value_key?: string
+        }
+        Relationships: []
+      }
       internal_dialogues: {
         Row: {
           compassionate_voice: string
