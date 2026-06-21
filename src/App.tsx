@@ -29,7 +29,7 @@ import InternalDialogue from "@/components/journal/InternalDialogue";
 import JournalTimeline from "@/components/journal/JournalTimeline";
 import DiarioHuellas from "@/pages/DiarioHuellas";
 import ThoughtRecord from "@/pages/ThoughtRecord";
-import PensamientosHome from "@/pages/pensamientos/PensamientosHome";
+
 import PensamientosAutomaticos from "@/pages/pensamientos/PensamientosAutomaticos";
 import HabitosHome from "@/pages/pensamientos/HabitosHome";
 import DreamLog from "@/pages/DreamLog";
@@ -136,7 +136,7 @@ const App = () => (
               <Route path="/cuestionario" element={<Questionnaire />} />
               <Route path="/configuracion" element={<Settings />} />
               <Route path="/configuracion/historial" element={<SettingsHistory />} />
-              <Route path="/diario-inteligente/gestion-pensamientos" element={<PensamientosHome />} />
+              
               <Route path="/diario-inteligente/gestion-pensamientos/pensamientos-automaticos" element={<PensamientosAutomaticos />} />
               <Route path="/diario-inteligente/gestion-pensamientos/habitos" element={<HabitosHome />} />
               <Route path="/diario-inteligente/:slug" element={<DiarioInteligente />} />
