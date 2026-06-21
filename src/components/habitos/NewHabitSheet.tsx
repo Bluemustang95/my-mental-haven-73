@@ -13,7 +13,7 @@ interface Props {
 export function NewHabitSheet({ open, onClose, onCreate }: Props) {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState(ICON_OPTIONS[0]);
-  const [valueKey, setValueKey] = useState(VALUE_OPTIONS[0].key);
+  const [valueKey, setValueKey] = useState<string>(VALUE_OPTIONS[0].key);
   const [colorIdx, setColorIdx] = useState(0);
   const [saving, setSaving] = useState(false);
 
