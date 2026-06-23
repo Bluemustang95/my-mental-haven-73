@@ -14,7 +14,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdminRole();
-  const { plan, planStartedAt } = usePlan();
+  const { plan, planStartedAt, isAdmin: isAdminPlan } = usePlan();
 
   const [name, setName] = useState("");
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
@@ -22,11 +22,19 @@ export default function Settings() {
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState<null | "manage" | "restore">(null);
 
-  const isPremium = plan === "premium";
-  const planLabel = isPremium ? "Plan Activo: Premium Semanal" : "Plan Activo: Gratis de Terapia";
-  const planSub = isPremium && planStartedAt
-    ? `Renueva semanalmente · activo desde ${new Date(planStartedAt).toLocaleDateString("es-AR")}`
-    : "Acceso completo a Terapia y Seguimiento.";
+  const adminFlag = isAdmin || isAdminPlan;
+
+  const isPremium = plan === "premium" || adminFlag;
+  const planLabel = adminFlag
+    ? "Plan Activo: Admin (Premium)"
+    : isPremium
+      ? "Plan Activo: Premium Semanal"
+      : "Plan Activo: Gratis de Terapia";
+  const planSub = adminFlag
+    ? "Acceso completo sin restricciones como administrador."
+    : isPremium && planStartedAt
+      ? `Renueva semanalmente · activo desde ${new Date(planStartedAt).toLocaleDateString("es-AR")}`
+      : "Acceso completo a Terapia y Seguimiento.";
 
   useEffect(() => {
     if (!user) return;
