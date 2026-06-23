@@ -24,11 +24,17 @@ export default function Settings() {
 
   const adminFlag = isAdmin || isAdminPlan;
 
-  const isPremium = plan === "premium";
-  const planLabel = isPremium ? "Plan Activo: Premium Semanal" : "Plan Activo: Gratis de Terapia";
-  const planSub = isPremium && planStartedAt
-    ? `Renueva semanalmente · activo desde ${new Date(planStartedAt).toLocaleDateString("es-AR")}`
-    : "Acceso completo a Terapia y Seguimiento.";
+  const isPremium = plan === "premium" || adminFlag;
+  const planLabel = adminFlag
+    ? "Plan Activo: Admin (Premium)"
+    : isPremium
+      ? "Plan Activo: Premium Semanal"
+      : "Plan Activo: Gratis de Terapia";
+  const planSub = adminFlag
+    ? "Acceso completo sin restricciones como administrador."
+    : isPremium && planStartedAt
+      ? `Renueva semanalmente · activo desde ${new Date(planStartedAt).toLocaleDateString("es-AR")}`
+      : "Acceso completo a Terapia y Seguimiento.";
 
   useEffect(() => {
     if (!user) return;
