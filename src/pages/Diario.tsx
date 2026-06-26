@@ -214,7 +214,10 @@ function WriteView({
     setText(""); setPrompt(null); attachments.forEach((a) => URL.revokeObjectURL(a.url));
     setAttachments([]); setEmo(null); setCauses(new Set()); setOpenAcc(null);
     setRecording(false); setEntryId(null); setSaveState("idle");
+    if (editorRef.current) editorRef.current.innerHTML = "";
+    lastLen.current = 0;
   };
+
 
   // Autosave: debounced upsert whenever meaningful content changes
   useEffect(() => {
