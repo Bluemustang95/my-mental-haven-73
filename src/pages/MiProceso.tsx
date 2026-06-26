@@ -277,12 +277,12 @@ function BentoCard({
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="flex flex-col items-start gap-3 rounded-[20px] border border-white/70 bg-white/80 p-4 text-left shadow-[0_8px_24px_-16px_rgba(16,25,39,0.25)] backdrop-blur-xl"
+      className="flex flex-col items-start gap-2 rounded-[18px] border border-white/70 bg-white/80 p-3 text-left shadow-[0_6px_20px_-16px_rgba(16,25,39,0.22)] backdrop-blur-xl"
     >
-      <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconBg}`}>{icon}</div>
+      <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${iconBg}`}>{icon}</div>
       <div>
-        <p className="font-display text-[14px] font-bold leading-tight text-[#0f172a]">{title}</p>
-        <p className="mt-1 text-[11px] leading-snug text-[#64748b]">{sub}</p>
+        <p className="font-display text-[12.5px] font-bold leading-tight text-[#0f172a]">{title}</p>
+        <p className="mt-0.5 text-[10.5px] leading-snug text-[#64748b]">{sub}</p>
       </div>
     </motion.button>
   );
