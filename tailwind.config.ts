@@ -103,6 +103,13 @@ export default {
           values: { bg: "hsl(var(--resource-values-bg))", accent: "hsl(var(--resource-values-accent))" },
           safety: { bg: "hsl(var(--resource-safety-bg))", accent: "hsl(var(--resource-safety-accent))" },
         },
+        resma: {
+          navy: "#101927",
+          teal: "#7cc2c8",
+          gold: "#facb60",
+          lightBg: "#f9f9fb",
+          lightBg2: "#e8ebf3",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
