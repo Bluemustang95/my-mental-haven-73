@@ -450,26 +450,7 @@ function WriteView({
 
 
 
-      {/* Footer actions */}
-      <div className="mt-3 flex gap-2">
-        <button
-          onClick={reset}
-          className={cn(
-            "h-12 flex-1 rounded-full text-sm font-semibold",
-            zen ? "border border-white/10 bg-white/[0.04] text-slate-200" : "border border-[#101927]/15 bg-white/80 text-[#101927]"
-          )}
-        >
-          Vaciar
-        </button>
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          disabled={saving}
-          onClick={save}
-          className="h-12 flex-[1.8] rounded-full bg-[#7cc2c8] text-sm font-semibold text-[#101927] shadow-[0_10px_30px_-10px_rgba(124,194,200,0.6)] disabled:opacity-60"
-        >
-          {saving ? "Guardando…" : "Registrar Entrada"}
-        </motion.button>
-      </div>
+      {/* Autosave — no manual buttons */}
     </motion.div>
   );
 }
