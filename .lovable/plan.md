@@ -1,79 +1,122 @@
 
-# Rediseño del módulo Gestión de Pensamientos
+## Objetivo
 
-## 1) Quitar "Preocupaciones" y entrar directo
+Reemplazar el wizard actual de 4 pasos de Gestión de Pensamientos por un flujo TCC de 8 pasos, manteniendo el Hub (`/herramientas/pensamientos`), eliminando el `ModeloCognitivoIntro` previo, y reemplazando la psicoeducación por un modal serif accesible desde el "?" del header en cada paso. Agregar IA acompañante real (Lovable AI Gateway) en un drawer flotante.
 
-- En `src/components/recursos/BentoGrid.tsx`, el tile **Pensamientos** ya no irá al wizard directo; apuntará al nuevo hub `/herramientas/pensamientos`.
-- Si existe alguna sub‑resource "Preocupaciones" en `algo_sub_resources`, se filtra en el hub (no se renderiza). Cualquier ruta vieja a "preocupaciones" se deja sin enlazar.
+## 1. Migración de base de datos
 
-## 2) Nuevo Hub de Pensamientos (estilo Mindfulness / Regulación)
+Ampliar `thought_records` con columnas tipadas para los nuevos pasos:
 
-Nuevo archivo `src/pages/pensamientos/PensamientosHub.tsx`, ruta `/herramientas/pensamientos`. Estructura espejo de `MindfulnessHub.tsx`:
+- `sub_emotions text[]` — subemociones seleccionadas en Paso 3
+- `behavior text` — conducta del Paso 4
+- `body_sensations text[]` — sensaciones corporales seleccionadas (Paso 5)
+- `distortions jsonb` — array `[{key, label}]` (Paso 7, múltiples)
+- `resolution_mode text` — `"reestructuracion" | "abordaje"` (Paso 8)
+- `resolution_plan text` — plan de acción cuando es Abordaje
 
-- Header con back a `/herramientas`, título "Pensamientos", subtítulo.
-- `WeekStrip` con progreso (lee `thought_records` por fecha del usuario).
-- Lista de intervenciones (por ahora solo **Modificá tus pensamientos** → wizard CBT). Diseñado para sumar más en el futuro.
-- Sección inferior "Sesiones recientes" (últimos `thought_records`, abrir lectura).
-- FAB "+" → abre el wizard.
+Mantener las columnas existentes (`situation`, `automatic_thought`, `emotion`, `emotion_intensity`, `evidence_for_json`, `evidence_against_json`, `distortion_key`/`label`, `alternative_thought`, `is_real_problem`). Las nuevas son nullable; los registros viejos siguen abriéndose.
 
-## 3) Intro educativa interactiva (Modelo Cognitivo)
-
-Nuevo `src/components/pensamientos/intro/ModeloCognitivoIntro.tsx` (modal full‑screen) que se muestra **una sola vez** la primera vez que se entra a "Modificá tus pensamientos" (flag `resma:pensamientos:intro-v1` en localStorage). Se puede reabrir desde un botón **?** en el header del wizard.
-
-Contenido (basado en el PDF "Modelo Cognitivo"):
-
-- Slide 1 — *No es la situación, es la interpretación*: ejemplo dinámico de 5 lectores leyendo el mismo libro → distintas emociones (entusiasmo / decepción / disgusto / angustia / tristeza). Card animada: el usuario toca cada lector y ve el pensamiento + emoción que dispara.
-- Slide 2 — *El esquema A‑B‑C interactivo* (la imagen 1 adjunta como referencia): mismo evento "La ventana cruje" con dos caminos ("¡Un ladrón!" vs "Es el viento") que el usuario alterna y ve cómo cambian Emoción, Cuerpo y Conducta. Se reutiliza el contenido actual de `Step1FiltroMental` pero como demostración educativa, no como paso obligatorio.
-- Slide 3 — *Qué son los pensamientos automáticos*: definición breve + la pregunta clave **"¿Qué acaba de pasar por mi mente?"**.
-- Slide 4 — *Pensamientos disfuncionales*: carrusel con las 11 distorsiones del PDF (dicotómico, catastrófico, descalificar, razonamiento emocional, catalogar, magnificar/minimizar, abstracción selectiva, leer la mente, sobregeneralización, personalización, "debo/tengo que"), cada una con ejemplo.
-- CTA final: "Empezar mi registro".
-
-Estilo: glass, animaciones suaves Motion, copy en voseo argentino empático. Skippable con "Saltar".
-
-## 4) Paso 2 reordenado + IA holística
-
-Reescribir `Step2Captura.tsx` con orden **Evento → Emoción → Pensamiento** (en vez de Emoción → Evento → Pensamiento).
-
-Sección nueva al inicio del paso: **"Contame qué pasó"** (textarea libre + botón "Que la IA lo organice"). Llama a `analyze-thought` en un modo nuevo `holistic` que devuelve JSON:
+## 2. Pasos del wizard (8)
 
 ```
-{ trigger, emotion, intensity, thoughts: [string, ...] }
+1. Situación (texto)            - Identificar
+2. Pensamiento automático       - Identificar
+3. Emociones + subemociones     - Identificar
+4. Conducta                     - Identificar
+5. Sensaciones corporales       - Identificar (orden dinámico)
+6. Balanza de evidencias        - Evaluar
+7. Distorsiones (bento 2x2)     - Evaluar
+8. Resolución (bifurcada)       - Reestructurar
 ```
 
-- Si `thoughts.length > 1`: muestra una tarjeta "Detectamos varios pensamientos" con todos listados y el mensaje "Empezá con uno: tocá el que más resuene". El elegido se carga en `automaticThought`; los demás se guardan en `draft.pendingThoughts` para sugerir abrir otra sesión al final.
-- Auto‑rellena los tres campos pero el usuario puede editar cada uno.
+Datos clínicos en `src/lib/pensamientos/`:
+- `emotions.ts` (existente, extender): por cada emoción principal, lista de subemociones y de sensaciones corporales asociadas (chest tightness ↔ ansiedad, nudo en garganta ↔ tristeza/ansiedad, mandíbula apretada ↔ enojo, etc).
+- `bodySensations.ts` (nuevo): catálogo de ~12 sensaciones con `id`, `label`, `emoji`, `linkedEmotions[]`.
+- `distortions.ts` (nuevo): los 4 sesgos del bento (Dicotómico, Catastrófico, Lectura de mente, Descalificar lo positivo) con icono/emoji y descripción corta.
 
-Editar `supabase/functions/analyze-thought/index.ts` para aceptar `mode: "holistic"` y devolver el JSON estructurado (Gemini default). Mantener los modos `identify` y `refine` actuales como fallback manual.
+## 3. Componentes nuevos en `src/components/pensamientos/steps/`
 
-Extender `ThoughtDraft` en `src/lib/pensamientos/state.ts`: agregar `pendingThoughts: string[]` y bump del key de localStorage a `v4`.
+- `Step1Situacion.tsx` — textarea + tip-callout (cámara de video).
+- `Step2Pensamiento.tsx` — textarea + tip-callout cerebro.
+- `Step3Emociones.tsx` — grilla 2x3 de emociones; al elegir se expande panel de subemociones (chips multi-select); slider de intensidad 1-100.
+- `Step4Conducta.tsx` — textarea simple.
+- `Step5Sensaciones.tsx` — grid 2 columnas; sensaciones vinculadas a `draft.emotion` van primero con badge teal "Frecuente en tu sentir".
+- `Step6Balanza.tsx` — refactor de `Step4Evidencias` actual con 2 contadores grandes (% A favor / En contra), botón `+` por panel, lista con eliminar individual.
+- `Step7Distorsiones.tsx` — bento 2x2 multi-select.
+- `Step8Resolucion.tsx` — calcula modo desde `evidenceFor/Against`. Si más en contra → "Reestructuración Cognitiva" + textarea respuesta adaptativa. Si más a favor → "Abordaje de la Problemática" + textarea plan asertivo. Banner gold "Resultado de balanza".
 
-## 5) Paso 3 — Distorsión cognitiva con viñetas grandes
+## 4. Shell y navegación (`WizardShell.tsx`)
 
-En `Step3Distorsion.tsx`:
+- `totalSteps = 8`. Header muestra "PASO N DE 8" + título dinámico.
+- Botón "?" abre `PsicoeducacionModal` (nuevo) — modal centrado tipografía serif (Lora/Playfair) con copy específico por paso (mapa `STEP_HELP[step] = { title, body, llave }`).
+- Botón central ☰ abre `PasosDrawer` (nuevo) — lista los 8 pasos con check verde si completos; el nombre del paso 8 cambia dinámicamente a "Reestructuración" o "Resolución de Problema" según balanza.
+- Botón Atrás: en paso 1 navega a `/herramientas/pensamientos`; resto retrocede.
+- Eliminar el componente `ModeloCognitivoIntro` y dejar de mostrarlo automáticamente. Eliminar `src/components/pensamientos/intro/ModeloCognitivoIntro.tsx` y `src/lib/pensamientos/intro.ts`.
 
-- Mover el bloque **"Por qué registrarlo"** arriba de la tarjeta de distorsión y rehacerlo como lista de 3 viñetas grandes (icono circular + título + descripción corta), no texto plano.
-- Mantener la detección automática y el `DistortionPicker` colapsable.
+## 5. State (`state.ts`)
 
-## 6) Paso 4 — Evidencias más dinámico
+Bumpear key a `resma:thought-draft:v5`. Ampliar `ThoughtDraft`:
 
-Rediseño de `Step4Evidencias.tsx`:
+```ts
+subEmotions: string[]
+behavior: string
+bodySensations: string[]
+distortions: { key: string; label: string }[]   // reemplaza distortionKey/Label single
+resolutionPlan: string
+// el modo se deriva en runtime de la balanza
+```
 
-- Tabs segmentadas **A favor / En contra** (en vez de las dos listas apiladas).
-- Botón grande "¿Qué me recomendás?" arriba que llama `suggest-evidence` y devuelve sugerencias en formato chip; tocar chip = sumar al lado correspondiente.
-- Quick‑prompts (chips) bajo el input: "Algo que pasó esta semana", "Algo que dijo otra persona", "Un dato concreto", "Una vez que no se cumplió" — al tocar, pre‑rellena el textarea.
-- Termómetro fijo arriba, animado al agregar/quitar.
+`canContinue` por paso: 1 ≥4 chars, 2 ≥8 chars, 3 emoción seleccionada, 4 ≥4 chars, 5 ≥1 sensación, 6 ≥1 evidencia total, 7 ≥1 distorsión, 8 textarea ≥10 chars.
 
-## 7) Arreglar el botón "Atrás"
+## 6. IA acompañante (drawer flotante)
 
-En `WizardShell.tsx`, el header back hace `navigate(-1)` solo si no hay `onBack`, pero el wizard pasa `onBack` que en Paso 1 va a `/diario-inteligente/gestion-pensamientos` (ruta vieja eliminada → 404 silencioso). Cambios:
+- Componente `AiCompanionDrawer.tsx` con FAB circular (icono Bot) bottom-right, persistente en todos los pasos.
+- Edge function nueva `pensamientos-companion`: usa Lovable AI Gateway (`google/gemini-3-flash-preview`) vía AI SDK con `streamText`. Recibe `{ messages, draft }` y construye system prompt con contexto del registro actual (situación, pensamiento, emoción, paso actual). Tono voseo argentino, empático, con disclaimer terapéutico (regla de memoria).
+- Cliente usa `useChat` (`@ai-sdk/react`) apuntando a `${VITE_SUPABASE_URL}/functions/v1/pensamientos-companion` con header `Authorization: Bearer ${VITE_SUPABASE_PUBLISHABLE_KEY}`.
+- Render con `react-markdown`. Manejo de 429/402 con toasts.
+- Mensaje inicial: "Hola, soy tu acompañante cognitivo. Estoy acá para ayudarte a desarmar este pensamiento, paso a paso."
 
-- En `PensamientosAutomaticos.tsx`, en Paso 1 navegar a `/herramientas/pensamientos` (nuevo hub).
-- En `WizardShell.tsx`, asegurar que el botón flecha del header **siempre** dispara la misma lógica que el footer "Atrás" (ya pasa `onBack`, verificar que no quede el fallback a `navigate(-1)` cuando estamos en paso 1 — usar siempre `onBack` provisto).
-- También `finish()` redirige al nuevo hub.
+## 7. Modal "?" (`PsicoeducacionModal.tsx`)
 
-## Detalles técnicos
+Modal centrado, fondo blur, panel glass, tipografía serif para el título (Lora). Para cada paso muestra:
+- Título serif
+- Cuerpo explicativo (2-3 párrafos)
+- "Pregunta llave" destacada en card gold
 
-- Archivos nuevos: `src/pages/pensamientos/PensamientosHub.tsx`, `src/components/pensamientos/intro/ModeloCognitivoIntro.tsx`, helpers en `src/lib/pensamientos/intro.ts` (flag localStorage + contenido de slides).
-- Archivos editados: `src/App.tsx` (ruta `/herramientas/pensamientos`), `src/components/recursos/BentoGrid.tsx` (target del tile), `src/components/pensamientos/shell/WizardShell.tsx`, `src/pages/pensamientos/PensamientosAutomaticos.tsx`, `src/components/pensamientos/steps/Step2Captura.tsx`, `Step3Distorsion.tsx`, `Step4Evidencias.tsx`, `src/lib/pensamientos/state.ts`, `supabase/functions/analyze-thought/index.ts`.
-- Sin cambios de base de datos. Sin tocar Step1FiltroMental (su contenido pasa a vivir dentro del Intro educativo; el wizard arranca ahora en el actual Paso 2). Total de pasos del wizard pasa de 5 a **4** (Captura → Distorsión → Evidencias → Tratamiento).
-- Voseo argentino, glassmorphism Light, toasts existentes.
+Ejemplo Paso 2 (Pensamiento Automático): explica que son hipótesis veloces, no verdades; pregunta llave: *"¿Qué prueba tengo de que esto sea cierto?"*.
+
+## 8. Guardado y reset
+
+`finish()` en `PensamientosAutomaticos.tsx` mapea todo el draft a las columnas (antiguas + nuevas), incluye `resolution_mode` derivado, navega al Hub y resetea.
+
+## 9. Archivos
+
+**Crear:**
+- `src/components/pensamientos/steps/Step1Situacion.tsx` ... `Step8Resolucion.tsx` (8 archivos)
+- `src/components/pensamientos/shell/PsicoeducacionModal.tsx`
+- `src/components/pensamientos/shell/PasosDrawer.tsx`
+- `src/components/pensamientos/ai/AiCompanionDrawer.tsx`
+- `src/lib/pensamientos/bodySensations.ts`
+- `src/lib/pensamientos/distortions.ts`
+- `src/lib/pensamientos/stepHelp.ts`
+- `supabase/functions/pensamientos-companion/index.ts`
+- `supabase/functions/_shared/ai-gateway.ts` (helper si no existe)
+
+**Editar:**
+- `src/components/pensamientos/shell/WizardShell.tsx` — header con "?" y drawer pasos
+- `src/lib/pensamientos/state.ts` — v5 + nuevos campos
+- `src/lib/pensamientos/emotions.ts` — agregar subemociones por categoría
+- `src/pages/pensamientos/PensamientosAutomaticos.tsx` — wiring 8 pasos, sin intro, FAB IA, save
+- `supabase/config.toml` — registrar `pensamientos-companion` con `verify_jwt = false` si necesario
+
+**Eliminar:**
+- `src/components/pensamientos/intro/ModeloCognitivoIntro.tsx`
+- `src/lib/pensamientos/intro.ts`
+- Steps obsoletos: `Step1FiltroMental.tsx`, `Step2Captura.tsx`, `Step3Distorsion.tsx`, `Step4Evidencias.tsx`, `Step5Tratamiento.tsx`
+
+## 10. Estética
+
+- Mantener tokens RESMA actuales (resmaTeal #7cc2c8, resmaNavy #101927, resmaGold #facb60).
+- Panel glass con `backdrop-blur-xl bg-white/75`.
+- Títulos de paso en serif (Playfair/Lora) ya presentes; mantener consistencia con screenshots.
+- FAB IA: círculo 56px teal con icono Bot navy, badge verde de notificación al cargar.
