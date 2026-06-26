@@ -116,7 +116,7 @@ export function useHabits() {
 
   const create = useCallback(async (input: HabitInput) => {
     if (!user) return;
-    const payload: Record<string, unknown> = {
+    const { data } = await supabase.from("habits").insert({
       user_id: user.id,
       name: input.name,
       description: input.description ?? null,
@@ -131,8 +131,7 @@ export function useHabits() {
       time_slot: input.time_slot ?? "all",
       cadence: input.cadence ?? "every_day",
       reminders_enabled: input.reminders_enabled ?? false,
-    };
-    const { data } = await supabase.from("habits").insert(payload).select().single();
+    }).select().single();
     if (data) setHabits(prev => [...prev, data as unknown as Habit]);
   }, [user]);
 
