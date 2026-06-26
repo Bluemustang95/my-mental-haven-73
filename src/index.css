@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Poppins:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -200,3 +200,77 @@ body.zen-mode nav { opacity: 0 !important; pointer-events: none !important; tran
 }
 .animate-diario-orb-a { animation: diario-orb-a 20s ease-in-out infinite; }
 .animate-diario-orb-b { animation: diario-orb-b 24s ease-in-out infinite; }
+
+/* ============================================================
+   RESMA HOME — Premium glass + reactive tokens
+   ============================================================ */
+:root {
+  --resma-navy: #101927;
+  --resma-teal: #7cc2c8;
+  --resma-gold: #facb60;
+  --resma-light-bg: #f9f9fb;
+  --resma-light-bg-2: #e8ebf3;
+}
+
+.resma-bg-gradient {
+  background:
+    radial-gradient(120% 80% at 10% 0%, #ffffff 0%, transparent 55%),
+    linear-gradient(170deg, var(--resma-light-bg) 0%, var(--resma-light-bg-2) 100%);
+}
+.glass-premium {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 12px 40px -16px rgba(16, 25, 39, 0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.glass-premium-dark {
+  background: rgba(16, 25, 39, 0.92);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glow-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.45;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@keyframes blob-float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(60px, 40px) scale(1.08); }
+}
+@keyframes blob-float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-50px, -36px) scale(1.05); }
+}
+.animate-blob-a { animation: blob-float-a 40s ease-in-out infinite; }
+.animate-blob-b { animation: blob-float-b 55s ease-in-out infinite; }
+
+@keyframes pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.animate-pop { animation: pop 380ms cubic-bezier(.34,1.56,.64,1); }
+
+@keyframes jiggle {
+  0%   { transform: rotate(-1.1deg) translate(0, 0); }
+  50%  { transform: rotate(1.1deg) translate(0, -0.5px); }
+  100% { transform: rotate(-1.1deg) translate(0, 0); }
+}
+.animate-jiggle { animation: jiggle 0.22s ease-in-out infinite alternate; }
+.animate-jiggle-alt { animation: jiggle 0.26s ease-in-out infinite alternate-reverse; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.smooth-scroll { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+
+.font-serif-elegant { font-family: 'Playfair Display', 'Lora', Georgia, serif; }
+
+/* Hide global BottomNav while Home edit mode is active */
+body.home-edit nav { opacity: 0.0 !important; pointer-events: none !important; transition: opacity .25s ease; }
+
