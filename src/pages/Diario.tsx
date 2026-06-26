@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Clock, Lock, Sparkles, ChevronDown, X, Camera, Image as ImageIcon,
-  Paperclip, Mic, Pause, Trash2, Flower, Volume2, VolumeX, FileText,
+  Clock, Lock, Sparkles, X, Camera, Image as ImageIcon,
+  Paperclip, Mic, Pause, Flower, Volume2, VolumeX, FileText,
+  Smile, Tag,
 } from "lucide-react";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import * as audio from "@/lib/diarioAudio";
+
 
 /* ────────────── Data ────────────── */
 const PROMPTS = [
