@@ -99,15 +99,6 @@ export default function MindfulnessHub() {
 
         {/* Se eliminó la tarjeta superior "Continuar" — la práctica abierta ya se muestra debajo en OpenMindfulnessList */}
 
-        <div className="mt-4">
-          <WeekStrip
-            progressByDate={progressByDate}
-            onSelectDay={(d) => {
-              setHistoryDate(d);
-              setHistoryOpen(true);
-            }}
-          />
-        </div>
       </div>
 
       <div className="mt-5 space-y-2 px-5">
