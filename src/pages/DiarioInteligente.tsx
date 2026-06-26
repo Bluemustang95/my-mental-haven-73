@@ -48,19 +48,7 @@ export default function DiarioInteligente() {
 
   const { user } = useAuth();
   const [subs, setSubs] = useState<Sub[]>([]);
-  const [hasAnySession, setHasAnySession] = useState(false);
   const [openSessionsTick, setOpenSessionsTick] = useState(0);
-  
-
-  // Soft FAB badge: pending today blocks after 20:00
-  const [fabPending, setFabPending] = useState(0);
-  useEffect(() => {
-    const d = readBienestarDraft();
-    const st = todayStatus(d);
-    const hh = new Date().getHours();
-    if (hh >= 20 && st.pending > 0) setFabPending(st.pending);
-    else setFabPending(0);
-  }, []);
 
   const meta = CATEGORY_LABELS[slug] ?? { label: slug, subtitle: "" };
   const isRegulacion = slug === "regulacion-emocional";
