@@ -765,9 +765,11 @@ function HistoryView({ onBack }: { onBack: () => void }) {
                   </span>
                 )}
               </div>
-              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-[#101927]/80" style={{ fontFamily: "Lora, serif" }}>
-                {e.content.replace("[audio]", "").trim()}
-              </p>
+              <div
+                className="mt-3 line-clamp-3 text-sm leading-relaxed text-[#101927]/80"
+                style={{ fontFamily: "Lora, serif" }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(e.content.replace("[audio]", "").trim()) }}
+              />
             </div>
           );
         })}
