@@ -193,13 +193,7 @@ function WriteView({
     >
       {/* Minimal header — only logo / actions */}
       <div className="mb-3 flex items-center justify-between">
-        {zen ? (
-          <div className="flex items-center gap-2">
-            <Flower size={20} className="text-[#7cc2c8]" />
-          </div>
-        ) : (
-          <Flower size={20} className="text-[#7cc2c8]" />
-        )}
+        {zen ? <Flower size={20} className="text-[#7cc2c8]" /> : <span />}
         <div className="flex gap-1.5">
           {!zen && (
             <>
@@ -218,6 +212,7 @@ function WriteView({
           )}
         </div>
       </div>
+
 
       {/* Prompt banner */}
       <AnimatePresence>
