@@ -192,16 +192,6 @@ export default function EmotionalRegulation() {
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-resource-regulation-bg font-mindful text-xl font-bold">T</span>
                     <span><span className="block font-mindful text-base font-bold">Habilidades TIPP</span><span className="text-xs font-semibold opacity-70">Cambio químico rápido</span></span>
                   </button>
-                  <button onClick={() => navigate("/herramientas/cambiar-respuestas")} className="flex w-full items-center gap-4 rounded-[3rem] border border-resource-regulation-accent/15 bg-card/85 px-6 py-5 text-left font-sans text-resource-regulation-accent shadow-sm transition-transform active:scale-95">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-resource-regulation-bg">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                    </span>
-                    <span className="flex-1">
-                      <span className="block font-mindful text-base font-bold">Cambiar respuestas emocionales</span>
-                      <span className="text-xs font-semibold opacity-70">DBT · Fichas 8 a 13 · Workspace clínico</span>
-                    </span>
-                    <span className="rounded-full bg-[#facb60]/20 px-2 py-0.5 text-[10px] font-bold text-[#b8860b]">PREMIUM</span>
-                  </button>
                 </div>
               </div>
             </motion.section>

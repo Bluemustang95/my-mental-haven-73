@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Heart, Sparkles } from "lucide-react";
+import { ArrowLeft, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { OpenSessionsList } from "@/components/dbt/OpenSessionsList";
-import { BienestarProcessCard } from "@/components/bienestar/BienestarProcessCard";
-import { readDraft as readBienestarDraft, todayStatus } from "@/components/bienestar/useBienestarDraft";
 
 type Sub = {
   id: string;
@@ -50,19 +48,7 @@ export default function DiarioInteligente() {
 
   const { user } = useAuth();
   const [subs, setSubs] = useState<Sub[]>([]);
-  const [hasAnySession, setHasAnySession] = useState(false);
   const [openSessionsTick, setOpenSessionsTick] = useState(0);
-  
-
-  // Soft FAB badge: pending today blocks after 20:00
-  const [fabPending, setFabPending] = useState(0);
-  useEffect(() => {
-    const d = readBienestarDraft();
-    const st = todayStatus(d);
-    const hh = new Date().getHours();
-    if (hh >= 20 && st.pending > 0) setFabPending(st.pending);
-    else setFabPending(0);
-  }, []);
 
   const meta = CATEGORY_LABELS[slug] ?? { label: slug, subtitle: "" };
   const isRegulacion = slug === "regulacion-emocional";
@@ -85,16 +71,6 @@ export default function DiarioInteligente() {
     })();
   }, [slug]);
 
-  useEffect(() => {
-    if (!user || !isRegulacion) return;
-    (async () => {
-      const { count } = await supabase
-        .from("dbt_emotion_sessions")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      if ((count ?? 0) > 0) setHasAnySession(true);
-    })();
-  }, [user, isRegulacion, openSessionsTick]);
 
   const modules = useMemo(
     () =>
@@ -107,22 +83,6 @@ export default function DiarioInteligente() {
               desc: "5 pasos guiados · Acción opuesta y resolución (Linehan).",
               from: "#7cc2c8",
               to2: "#facb60",
-            },
-            {
-              to: "/herramientas/cambiar-respuestas",
-              icon: Sparkles,
-              title: "Cambiar respuestas emocionales",
-              desc: "IA guiada · Verificá los hechos, decidí y actuá.",
-              from: "#101927",
-              to2: "#7cc2c8",
-            },
-            {
-              to: "/herramientas/construir-bienestar",
-              icon: Sparkles,
-              title: "Construir Bienestar",
-              desc: "Valores → metas → actividades en tu semana.",
-              from: "#7cc2c8",
-              to2: "#34D399",
             },
           ]
         : subs.map((s, i) => ({
@@ -188,39 +148,7 @@ export default function DiarioInteligente() {
         </div>
       )}
 
-      {isRegulacion && (
-        <div className="mt-5 px-5">
-          <div className="mb-2 flex items-center gap-2">
-            <Sparkles size={14} className="text-[#facb60]" />
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#101927]/55">
-              Mis procesos
-            </span>
-          </div>
-          <BienestarProcessCard />
-        </div>
-      )}
 
-      {isRegulacion && hasAnySession && (
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={() =>
-            fabPending > 0
-              ? navigate("/herramientas/construir-bienestar?tab=seguimiento&day=hoy")
-              : navigate("/herramientas/cambiar-respuestas")
-          }
-          aria-label="Sumar otra sesión"
-          className="fixed bottom-24 right-5 z-40 h-14 w-14 rounded-full bg-[#101927] text-white shadow-lg flex items-center justify-center"
-        >
-          <Plus size={24} />
-          {fabPending > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#facb60] px-1 text-[10px] font-bold text-[#101927] ring-2 ring-[#FDFCFB]">
-              {fabPending}
-            </span>
-          )}
-        </motion.button>
-      )}
     </div>
   );
 }
