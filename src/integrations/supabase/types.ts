@@ -1772,11 +1772,14 @@ export type Database = {
           action_plan: Json | null
           alternative_thought: string | null
           automatic_thought: string | null
+          behavior: string | null
+          body_sensations: string[]
           brainstorm: string | null
           completed_at: string | null
           created_at: string | null
           distortion_key: string | null
           distortion_label: string | null
+          distortions: Json
           emotion: string | null
           emotion_intensity: number | null
           emotion_other: string | null
@@ -1788,7 +1791,10 @@ export type Database = {
           is_real_problem: boolean | null
           new_emotion: string | null
           new_emotion_intensity: number | null
+          resolution_mode: string | null
+          resolution_plan: string | null
           situation: string
+          sub_emotions: string[]
           trainer_score: number | null
           user_id: string
         }
@@ -1796,11 +1802,14 @@ export type Database = {
           action_plan?: Json | null
           alternative_thought?: string | null
           automatic_thought?: string | null
+          behavior?: string | null
+          body_sensations?: string[]
           brainstorm?: string | null
           completed_at?: string | null
           created_at?: string | null
           distortion_key?: string | null
           distortion_label?: string | null
+          distortions?: Json
           emotion?: string | null
           emotion_intensity?: number | null
           emotion_other?: string | null
@@ -1812,7 +1821,10 @@ export type Database = {
           is_real_problem?: boolean | null
           new_emotion?: string | null
           new_emotion_intensity?: number | null
+          resolution_mode?: string | null
+          resolution_plan?: string | null
           situation: string
+          sub_emotions?: string[]
           trainer_score?: number | null
           user_id: string
         }
@@ -1820,11 +1832,14 @@ export type Database = {
           action_plan?: Json | null
           alternative_thought?: string | null
           automatic_thought?: string | null
+          behavior?: string | null
+          body_sensations?: string[]
           brainstorm?: string | null
           completed_at?: string | null
           created_at?: string | null
           distortion_key?: string | null
           distortion_label?: string | null
+          distortions?: Json
           emotion?: string | null
           emotion_intensity?: number | null
           emotion_other?: string | null
@@ -1836,7 +1851,10 @@ export type Database = {
           is_real_problem?: boolean | null
           new_emotion?: string | null
           new_emotion_intensity?: number | null
+          resolution_mode?: string | null
+          resolution_plan?: string | null
           situation?: string
+          sub_emotions?: string[]
           trainer_score?: number | null
           user_id?: string
         }
