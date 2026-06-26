@@ -54,31 +54,31 @@ const CARDS: Card[] = [
 export function PsychometryCarousel({ onSelect }: { onSelect: (code: TestKey) => void }) {
   return (
     <div>
-      <div className="mb-3 flex items-end justify-between">
-        <p className="font-[Montserrat] text-[11px] font-medium uppercase tracking-[0.18em] text-[#7cc2c8]">
+      <div className="mb-2.5 flex items-end justify-between">
+        <p className="font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.18em] text-[#7cc2c8]">
           Evaluaciones y psicometría
         </p>
-        <p className="text-[11px] text-[#94a3b8]">Desliza para ver más</p>
+        <p className="text-[10px] text-[#94a3b8]">Desliza →</p>
       </div>
-      <div className="-mx-5 flex gap-3 overflow-x-auto no-scrollbar px-5 pb-1">
+      <div className="-mx-5 flex gap-2.5 overflow-x-auto no-scrollbar px-5 pb-1">
         {CARDS.map((c) => (
           <motion.button
             key={c.code}
             whileTap={{ scale: 0.97 }}
             onClick={() => onSelect(c.code)}
-            className="relative h-56 w-44 shrink-0 overflow-hidden rounded-[24px] p-4 text-left text-white shadow-[0_14px_30px_-16px_rgba(16,25,39,0.45)]"
+            className="relative h-44 w-36 shrink-0 overflow-hidden rounded-[20px] p-3 text-left text-white shadow-[0_10px_24px_-14px_rgba(16,25,39,0.4)]"
             style={{ background: c.gradient }}
           >
             <div className="absolute inset-0 opacity-90">{c.art}</div>
             <div className="relative flex h-full flex-col justify-between">
               <div className="flex items-start justify-end">
-                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold tracking-wider backdrop-blur-md">
+                <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider backdrop-blur-md">
                   {c.code === "BDI" ? "BDI-II" : c.code}
                 </span>
               </div>
               <div>
-                <p className="font-serif text-[18px] font-medium leading-tight drop-shadow">{c.title}</p>
-                <div className="mt-2 flex items-center gap-1.5 text-[11px] text-white/85">
+                <p className="font-serif text-[14px] font-medium leading-tight drop-shadow">{c.title}</p>
+                <div className="mt-1 flex items-center gap-1 text-[10px] text-white/85">
                   <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: STATUS_DOT[c.status] }} />
                   <span>{STATUS_TEXT[c.status]} · {c.recency}</span>
                 </div>
