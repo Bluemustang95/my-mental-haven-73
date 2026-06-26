@@ -1,129 +1,65 @@
-# Plan: Módulo de Hábitos Premium DBT (RESMA)
+## Diario Clínico & Modo Zen AMOLED
 
-Reescribe completamente el módulo de Hábitos en `/herramientas/habitos` siguiendo el brief clínico. Mantiene la estructura existente de Cloud (tablas `habits` + `habit_completions`) y la extiende.
+Reescritura completa de `src/pages/Diario.tsx` (495 líneas → un solo archivo cohesivo) manteniendo la ruta `/diario` y la tabla `journal_entries` existente. Sin migraciones de DB. Solo trabajo de frontend + un helper de audio.
 
-## 1. Migración de Base de Datos
+### Vistas (intercambio fluido SPA con `AnimatePresence`)
 
-Nueva migración que agrega columnas al `habits` existente y categorías personalizadas:
+1. **Escritura (default)** — header Serif "Diario / Tu espacio seguro para escribir", iconos 🔓 (privacidad, visual) y 🕐 (historial) en la esquina.
+2. **Historial** — lista de bitácoras pasadas con tarjetas glass, fecha, emoción con halo, triggers; CTA inferior "Escribir Diario".
+3. **Modo Zen (AMOLED)** — el mismo lienzo pero la app entera se oscurece a `#050508`, la BottomNav global se desvanece, aparece "✕ Salir" arriba y el panel de Paisajes Sonoros debajo.
 
-```sql
-ALTER TABLE public.habits
-  ADD COLUMN description text,
-  ADD COLUMN category_key text DEFAULT 'salud',
-  ADD COLUMN frequency text DEFAULT 'daily',        -- daily | weekly | monthly
-  ADD COLUMN frequency_count int DEFAULT 1,         -- veces por período
-  ADD COLUMN time_slot text DEFAULT 'all',          -- morning | afternoon | night | all
-  ADD COLUMN cadence text DEFAULT 'every_day',      -- every_day | every_2 | custom
-  ADD COLUMN reminders_enabled boolean DEFAULT false,
-  ADD COLUMN icon_type text DEFAULT 'emoji';        -- emoji | line
+### Composición del lienzo de escritura
 
-CREATE TABLE public.habit_categories (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  key text NOT NULL,
-  label text NOT NULL,
-  created_at timestamptz DEFAULT now(),
-  UNIQUE(user_id, key)
-);
--- GRANTs + RLS por user_id
-```
+- Contenedor `max-w-md h-screen flex flex-col` con dos orbes glow animados de fondo (claro) y `pb-28` para respetar `BottomNav`.
+- Glassmorphic panel con `textarea` Serif (Lora) + botón flotante **"Inspirame ✨"** en la esquina superior derecha que inserta uno de 3 prompts TCC/DBT/Estoicismo (Dicotomía de control, Visualización de lo peor, Gratitud somática), mostrados como banner desplegable sobre el textarea con botón ✕ para cerrar.
+- **Barra de adjuntos** (4 botones pill): 📸 Cámara (`<input capture="environment">`), 🖼️ Foto (`accept="image/*"`), 📎 Archivo (libre), 🎙️ Audio (toggle).
+- **Mosaico de previews**: grid auto-fill, thumbnails de cristal, botón rojo ✕ para eliminar. URLs vía `URL.createObjectURL` (solo cliente; no se sube nada en esta versión).
+- **Grabadora de voz**: al activar Audio se despliega una barra con temporizador `mm:ss` y onda SVG de 12 barras animadas por `setInterval` (alturas aleatorias).
+- **Acordeones lado a lado** (grid 2 cols): `SIENTO…` (Calma/Alegría/Tristeza/Ansiedad/Enojo/Agotamiento, single-select) y `CAUSAS…` (Trabajo/Pareja/Salud/Finanzas/Sueño, multi-select). Cada cabecera muestra el valor actual o "N sel.". Sólo uno abierto a la vez.
+- Footer fijo dentro del shell: **Vaciar** (outline) + **Registrar Entrada** (sólido teal). Botón **"⚘ MODO ZEN"** al costado superior del footer.
 
-`habit_completions` ya soporta toggles por fecha — sin cambios.
+### Modo Zen
 
-## 2. Estructura de Archivos
+- Toggle agrega clase `zen` al root → sobrescribe el background a `#050508`, oculta orbes, baja opacidad de header, agrega clase global `document.body.classList.add('zen-mode')` que desde `index.css` aplica `opacity-0 pointer-events-none` al selector de la `BottomNav` existente.
+- Aparecen tarjeta "Paisajes Sonoros Binaurales" con 4 toggles: 528Hz Solfeggio, Lluvia suave, Ruido Marrón, Click Mecánico.
+- Botón ✕ Salir arriba a la izquierda (revierte estado y clase).
 
-```text
-src/pages/pensamientos/HabitosHome.tsx          (reescrito — shell elástico)
-src/components/habitos/
-  ├─ HabitShell.tsx                              (NUEVO — shell h-full/sm:h-[90vh])
-  ├─ DashboardHeader.tsx                         (NUEVO — workspace + 📊 + +)
-  ├─ ViewSegmentedControl.tsx                    (NUEVO — Grid/Últimos 5/Cards)
-  ├─ HabitCard.tsx                               (reescrito — 3 vistas pulidas)
-  ├─ NewHabitSheet.tsx                           (reescrito — tabs + acordeón)
-  ├─ HabitDetailSheet.tsx                        (NUEVO — pantalla 3)
-  │   ├─ MiniYearMatrix.tsx
-  │   └─ MonthCalendarGrid.tsx
-  └─ stats/
-      ├─ StatsDashboard.tsx                      (NUEVO — pantalla 4)
-      ├─ RadialProgress.tsx                      (SVG strokeDasharray)
-      ├─ TrendAreaChart.tsx                      (SVG Bezier cúbico C)
-      ├─ WeekdayBarChart.tsx                     (barras verticales)
-      └─ TimeSlotHorizontalBars.tsx              (Mañana/Tarde/Noche)
-src/hooks/useHabits.ts                           (extiende create con nuevos campos + useHabitCategories)
-src/lib/habitsIcons.ts                           (NUEVO — emoji set + lucide line icons)
-```
+### Helper de audio nuevo `src/lib/diarioAudio.ts`
 
-`WrappedDialog.tsx` y `HabitStatsSheet.tsx` previos quedan eliminados (reemplazados).
+Web Audio API, sin assets externos:
+- `playSolfeggio()` — `OscillatorNode` sinusoidal a 528Hz + LFO `OscillatorNode` 0.5Hz → `GainNode` para vibrato.
+- `playRain()` — buffer de ruido blanco loop + `BiquadFilter` lowpass, frecuencia modulada por LFO lento.
+- `playBrown()` — generador de ruido Browniano (integrador) + lowpass 400Hz.
+- `playKeyClick()` — disparable; oscilador square corto + envelope (5ms ataque, 30ms decay).
+- `stopAll()` y `stop(track)`.
 
-## 3. Pantalla 1 — Dashboard
+El textarea en Zen, si "Click Mecánico" está activo, llama `playKeyClick()` en `onChange` para cada keystroke nuevo.
 
-- Shell elástico: `flex flex-col h-full sm:h-[90vh] sm:max-h-[760px]` en contenedor `max-w-md`.
-- Header sticky superior glassmorphic: "WORKSPACE / RESMA" + botón estadísticas 📊 + botón `+`.
-- Hero centrado: kicker `ACUMULAR AFECTO POSITIVO`, título serif "Tus Hábitos Diarios", subtítulo DBT.
-- Segmented control píldora (Grid / Últimos 5 días / Cards).
-- Lista scroll independiente `flex-1 overflow-y-auto no-scrollbar pb-28`.
-- **Grid view**: card con icono + nombre + categoría, micro-grilla 20 celdas del mes actual, botón check circular grande con el color del hábito que dispara `animate-pop` (framer scale 0.85→1.05→1) y toast.
-- **Últimos 5 días**: fila de 5 chips día (`Ju 18`, etc.) tappables; racha 🔥 al header.
-- **Cards**: grid 2 cols compacto con icono, nombre, categoría, racha y check toggle.
-- Toast superior con `sonner` al completar.
+### Historial
 
-## 4. Pantalla 2 — Crear Hábito (Sheet)
+- Query `select * from journal_entries where user_id = auth.uid() order by created_at desc`.
+- Tarjeta glass: fecha (es-AR), chip de emoción con halo teal, tags de causas, content truncado a 3 líneas, mini-reproductor placeholder si la entrada incluye marcador `[audio]` en content.
 
-- Bottom-sheet con scroll interno propio, header serif + close.
-- Tabs **Emojis** / **Iconos finos** (lucide-react: `Droplet, Book, Dumbbell, Heart, Sun, Moon, Brain, Coffee, ...`).
-- Nombre + Descripción opcional.
-- Selector de 6 colores de racha (Teal, Gold, Rose, Indigo, Emerald, Slate).
-- Acordeón colapsable "Configurar objetivos y frecuencia":
-  - Frecuencia (Diario/Semanal/Mensual) + cantidad numérica.
-  - Horario de registro (chips: Mañana/Tarde/Noche/Día completo).
-  - Categoría DBT (chips predefinidos + "Crear propia" → input rápido → inserta en `habit_categories`).
-  - Frecuencia de registro (Día a día / Cada 2 días / Personalizado).
-  - Toggle Recordatorios → dispara `toast.info("RESMA solicita permiso…")`.
-- CTA "REGISTRAR HÁBITO".
+### Guardado
 
-## 5. Pantalla 3 — Detalle de Hábito
+- Insert en `journal_entries`: `content`, `entry_date = localDateStr()`, `emotion_tags = [emoción, ...causas]`, `prompt` = el inspirame usado (si lo hubo).
+- Los adjuntos y la nota de voz quedan en el cliente (futuro: storage bucket). El spec no exige persistencia esta vuelta.
+- Toast "Guardado con éxito" + reset del lienzo + posibilidad de saltar al historial.
 
-- Sheet full-screen al tocar nombre/icono de un card.
-- Header: icono grande, nombre serif, descripción, badge categoría.
-- Stats rápidas (2 cards): Objetivo (`3× semana`) y Racha actual (`5 días 🔥`).
-- **MiniYearMatrix**: 12 columnas (Ene-Dic), 4 filas (semanas comprimidas), celdas coloreadas según completions.
-- **MonthCalendarGrid** Junio 2026: grilla 7×N tappable; al tocar día → toggle completion; racha se recalcula desde hoy hacia atrás.
-- Botonera: Editar (abre `NewHabitSheet` en modo edit) + Eliminar (destructivo rojo con confirm).
+### Tokens / estilo
 
-## 6. Pantalla 4 — Stats Dashboard
+- Colores fijos del spec por consistencia clínica: `#f9f9fb` light bg, `#050508` zen bg, `#101927` resmaNavy, `#7cc2c8` teal, `#facb60` gold. Hardcoded sólo dentro de este módulo para asegurar el look AMOLED puro del Zen.
+- Glass: `bg-white/45 backdrop-blur-2xl border-white/60` (claro) / `bg-white/[0.04] backdrop-blur-xl border-white/10` (zen).
+- Animaciones orb 18-22s loop con `@keyframes orb-1/orb-2` añadidos a `index.css` (single import, sin tocar tailwind config).
 
-- Se renderiza dentro del mismo shell cuando se pulsa 📊 (toggle `view='stats'`).
-- Selector horizontal de hábito (chips). Cambiar hábito retransiciona gráficos (framer `AnimatePresence` + key).
-- **RadialProgress** — `<circle strokeDasharray>` animado: % adherencia últimos 30 días.
-- **TrendAreaChart** — SVG path con `C` cúbico, área rellena con gradient del color del hábito, tooltips on tap.
-- **WeekdayBarChart** — 7 barras verticales L→D, altura proporcional.
-- **TimeSlotHorizontalBars** — 3 barras horizontales Mañana/Tarde/Noche con %.
-- Card Psicoeducación Serif con texto Linehan/parasimpático.
+### Archivos
 
-## 7. Sistema de Diseño
+- ✏️ `src/pages/Diario.tsx` — reescritura.
+- ➕ `src/lib/diarioAudio.ts` — síntesis Web Audio.
+- ✏️ `src/index.css` — keyframes `orb-1`, `orb-2`, `.zen-mode .resma-bottom-nav { opacity:0; pointer-events:none }` (verifico el selector real del BottomNav antes de escribir).
 
-- Tokens existentes (`#101927`, `#7cc2c8`, `#facb60`, `#f9f9fb`) — sin cambios.
-- Glass panels: `bg-white/45 backdrop-blur-[28px] border border-white/60`.
-- Dos orbes animados de fondo (ya existen patrones).
-- Tipografía: serif `Lora` para títulos, `Inter` UI, `Montserrat uppercase tracking` para etiquetas (los 3 ya cargados).
-- Animaciones: `framer-motion` (`layout`, `AnimatePresence`, scale en toggle). Transiciones de vista `slide-in-from-right`.
+### Fuera de alcance
 
-## 8. Lógica & Hooks
-
-- `useHabits`: extiende `create(input)` con nuevos campos; agrega `update(id, patch)`, `remove(id)` (hard delete vs archive en detalle).
-- Nuevo `useHabitCategories()` para fetch + insert.
-- Cálculos de stats (puro frontend desde `completions`): `adherence30d`, `weeklyTrend(8 semanas)`, `weekdayDistribution`, `timeSlotDistribution` (proxy basado en hora de `created_at`).
-- `localDateStr` ya respeta UTC-3.
-
-## 9. Garantías de Layout
-
-- Shell `flex flex-col`, contenido `flex-1 min-h-0 overflow-y-auto pb-28 smooth-scroll`.
-- BottomNav global se respeta con `pb-28`; sheets internos con `pb-40`.
-- Modo desktop: el contenedor se centra con `sm:h-[90vh] sm:max-h-[760px]` y bordes redondeados.
-
-## Validación final
-
-- Build TS pasa.
-- Crear hábito → aparece en las 3 vistas, toggle día funciona, racha se actualiza.
-- Toggle día desde `MonthCalendarGrid` y desde Stats refleja en todos lados.
-- BottomNav nunca tapa el CTA.
+- Subida real de adjuntos/audio a Storage.
+- Edición de entradas existentes.
+- Recomendaciones dinámicas por keywords del Diario actual (se remueven para limpiar el flujo según el nuevo diseño).

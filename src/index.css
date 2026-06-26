@@ -186,3 +186,17 @@
   0%, 100% { transform: translate(0, 0) scale(1); }
   50%      { transform: translate(-24px, 18px) scale(1.07); }
 }
+
+/* Diario AMOLED Zen mode */
+body.zen-mode { background: #050508 !important; }
+body.zen-mode nav { opacity: 0 !important; pointer-events: none !important; transition: opacity .35s ease; }
+@keyframes diario-orb-a {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(40px,-30px) scale(1.12); }
+}
+@keyframes diario-orb-b {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(-32px,28px) scale(1.08); }
+}
+.animate-diario-orb-a { animation: diario-orb-a 20s ease-in-out infinite; }
+.animate-diario-orb-b { animation: diario-orb-b 24s ease-in-out infinite; }
