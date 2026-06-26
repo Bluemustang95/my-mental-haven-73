@@ -547,6 +547,26 @@ function WriteView({
 
 
       {/* Autosave — no manual buttons */}
+
+      <AlertDialog open={confirmNew} onOpenChange={setConfirmNew}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Empezar una entrada nueva?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tu entrada actual ya se guardó automáticamente. Vamos a vaciar el editor para que empieces una nueva bitácora.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { reset(); setConfirmNew(false); }}
+              className="bg-[#7cc2c8] text-[#101927] hover:bg-[#7cc2c8]/90"
+            >
+              Empezar nueva
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
