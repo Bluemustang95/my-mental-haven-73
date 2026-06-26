@@ -153,27 +153,39 @@ function WriteView({
   const reset = () => {
     setText(""); setPrompt(null); attachments.forEach((a) => URL.revokeObjectURL(a.url));
     setAttachments([]); setEmo(null); setCauses(new Set()); setOpenAcc(null);
-    setRecording(false);
+    setRecording(false); setEntryId(null); setSaveState("idle");
   };
 
-  const save = async () => {
-    if (!text.trim()) { toast.error("Escribí algo antes de registrar"); return; }
-    setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { toast.error("Iniciá sesión"); setSaving(false); return; }
-    const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
-    const { error } = await supabase.from("journal_entries").insert({
-      user_id: user.id,
-      content: text + (recording ? "\n\n[audio]" : ""),
-      entry_date: localDateStr(),
-      emotion_tags: tags,
-      prompt: prompt?.text ?? null,
-    });
-    setSaving(false);
-    if (error) { toast.error("No se pudo guardar"); return; }
-    toast.success("Guardado con éxito");
-    reset();
-  };
+  // Autosave: debounced upsert whenever meaningful content changes
+  useEffect(() => {
+    if (!text.trim() && !emo && causes.size === 0) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      setSaveState("saving");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setSaveState("idle"); return; }
+      const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
+      const payload = {
+        user_id: user.id,
+        content: text + (recording ? "\n\n[audio]" : ""),
+        entry_date: localDateStr(),
+        emotion_tags: tags,
+        prompt: prompt?.text ?? null,
+      };
+      if (entryId) {
+        const { error } = await supabase.from("journal_entries").update(payload).eq("id", entryId);
+        if (error) { setSaveState("idle"); return; }
+      } else {
+        const { data, error } = await supabase.from("journal_entries").insert(payload).select("id").single();
+        if (error || !data) { setSaveState("idle"); return; }
+        setEntryId(data.id);
+      }
+      setSaveState("saved");
+    }, 1200);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, emo, causes, prompt, recording]);
+
 
   /* tone classes */
   const surfaceCls = zen
