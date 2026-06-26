@@ -329,16 +329,17 @@ function WriteView({
         )}
       </AnimatePresence>
 
-      {/* Textarea — fills available height */}
+      {/* Editor — fills available height, supports bold/italic on selection */}
       <div className="relative flex flex-1 flex-col">
-        <textarea
-          ref={taRef}
-          value={text}
-          onChange={onTextChange}
-          placeholder="¿Qué tenés hoy en la cabeza? Soltalo acá…"
+        <div
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={onEditorInput}
+          data-placeholder="¿Qué tenés hoy en la cabeza? Soltalo acá…"
           className={cn(
-            "h-full min-h-[300px] w-full flex-1 resize-none bg-transparent p-2 pt-1 pr-24 text-lg leading-relaxed focus:outline-none",
-            zen ? "text-slate-100 placeholder:text-slate-500" : "text-[#101927] placeholder:text-[#101927]/35",
+            "diary-editor h-full min-h-[300px] w-full flex-1 resize-none bg-transparent p-2 pt-1 pr-24 text-[15px] leading-relaxed focus:outline-none whitespace-pre-wrap break-words",
+            zen ? "text-slate-100" : "text-[#101927]",
           )}
           style={{ fontFamily: "Lora, serif" }}
         />
@@ -353,6 +354,35 @@ function WriteView({
           Inspirame <Sparkles size={11} className="text-[#facb60]" />
         </button>
       </div>
+
+      {/* Floating selection toolbar (Bold / Italic) */}
+      {fmtBar && (
+        <div
+          style={{ position: "fixed", top: fmtBar.top, left: fmtBar.left, transform: "translateX(-50%)" }}
+          className={cn(
+            "z-50 flex items-center gap-0.5 rounded-full border px-1 py-1 shadow-lg",
+            zen ? "border-white/10 bg-[#0b0b10]" : "border-[#101927]/10 bg-white",
+          )}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <button
+            onClick={() => applyFormat("bold")}
+            className={cn("grid h-7 w-7 place-items-center rounded-full", zen ? "text-slate-200 hover:bg-white/10" : "text-[#101927] hover:bg-[#101927]/5")}
+            aria-label="Negrita"
+          >
+            <Bold size={13} strokeWidth={2.5} />
+          </button>
+          <button
+            onClick={() => applyFormat("italic")}
+            className={cn("grid h-7 w-7 place-items-center rounded-full", zen ? "text-slate-200 hover:bg-white/10" : "text-[#101927] hover:bg-[#101927]/5")}
+            aria-label="Itálica"
+          >
+            <Italic size={13} strokeWidth={2.5} />
+          </button>
+        </div>
+      )}
+
+
 
       {/* Attachment previews */}
       {attachments.length > 0 && (
