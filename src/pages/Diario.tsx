@@ -449,61 +449,27 @@ function WriteView({
 
 
 /* ────────────── Subcomponents ────────────── */
-function AttachBtn({
-  icon, label, onClick, zen, active,
-}: { icon: string; label: string; onClick: () => void; zen: boolean; active?: boolean }) {
+function IconBtn({
+  label, onClick, zen, active, children,
+}: { label: string; onClick: () => void; zen: boolean; active?: boolean; children: React.ReactNode }) {
   return (
     <motion.button
-      whileTap={{ scale: 0.93 }}
+      whileTap={{ scale: 0.9 }}
       onClick={onClick}
+      aria-label={label}
+      title={label}
       className={cn(
-        "flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-xs font-semibold transition",
+        "grid h-9 w-9 place-items-center rounded-full transition",
         active
           ? "bg-[#7cc2c8]/20 text-[#7cc2c8]"
-          : zen ? "text-slate-200" : "text-[#101927]",
+          : zen ? "text-slate-300 hover:text-slate-100" : "text-[#101927]/75 hover:text-[#101927]",
       )}
     >
-      <span>{icon}</span>{label}
+      {children}
     </motion.button>
   );
 }
 
-function AccordionCard({
-  title, summary, open, onToggle, children, zen,
-}: {
-  title: string; summary: string; open: boolean; onToggle: () => void;
-  children: React.ReactNode; zen: boolean;
-}) {
-  return (
-    <div className={cn(
-      "rounded-3xl border transition",
-      zen ? "border-white/10 bg-white/[0.04]" : "border-white/60 bg-white/55 backdrop-blur-2xl shadow-[0_8px_32px_rgba(16,25,39,0.05)]"
-    )}>
-      <button onClick={onToggle} className="flex w-full items-center justify-between gap-2 p-3 text-left">
-        <div className="min-w-0">
-          <p className="font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">{title}</p>
-          <p className="mt-0.5 truncate text-sm font-semibold">{summary}</p>
-        </div>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.3 }}>
-          <ChevronDown size={16} className="opacity-60" />
-        </motion.span>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
-          >
-            <div className="p-3 pt-0">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 function Waveform() {
   const [bars, setBars] = useState<number[]>(() => Array.from({ length: 12 }, () => 0.3));
