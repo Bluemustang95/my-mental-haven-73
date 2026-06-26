@@ -44,15 +44,7 @@ export default function HabitosHome() {
             <DashboardHeader onOpenStats={() => setScreen("stats")} onNewHabit={() => setNewOpen(true)} />
 
             <div className="flex-1 overflow-y-auto px-5 pt-6 pb-28 no-scrollbar smooth-scroll">
-              <div className="text-center">
-                <p className="font-[Montserrat] text-[10px] font-bold uppercase tracking-[0.22em] text-[#facb60]">Acumular afecto positivo</p>
-                <h2 className="mt-2 font-serif text-[30px] leading-tight font-bold text-[#101927]">Tus Hábitos Diarios</h2>
-                <p className="mx-auto mt-2 max-w-[320px] text-[13px] text-[#101927]/60">
-                  Asociá rutinas sencillas a tus valores fundamentales para sostener tu bienestar.
-                </p>
-              </div>
-
-              <div className="mt-5">
+              <div>
                 <ViewSegmentedControl value={view} onChange={setView} />
               </div>
 

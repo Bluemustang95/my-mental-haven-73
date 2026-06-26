@@ -248,6 +248,69 @@ function ReorderInner({
   );
 }
 
+/** Group-based reorder: each Reorder.Item is a whole group (camino, pendientes, sueño, etc.). */
+export type GroupItem = {
+  id: string;
+  size: "full" | "half";
+  resizable?: boolean;
+  hideable?: boolean;
+  onHide?: () => void;
+  onToggleSize?: () => void;
+  render: () => React.ReactNode;
+};
+
+export function ReorderableGroupStack({
+  items,
+  onReorder,
+}: {
+  items: GroupItem[];
+  onReorder: (ids: string[]) => void;
+}) {
+  const ids = useMemo(() => items.map((i) => i.id), [items]);
+  return (
+    <Reorder.Group
+      axis="y"
+      values={ids}
+      onReorder={(next) => onReorder(next as string[])}
+      className="grid grid-cols-2 gap-3"
+    >
+      {items.map((item) => (
+        <Reorder.Item
+          key={item.id}
+          value={item.id}
+          className={cn(
+            "relative animate-jiggle touch-none",
+            item.size === "full" ? "col-span-2" : "col-span-1"
+          )}
+          whileDrag={{ scale: 1.03, zIndex: 50 }}
+        >
+          {item.hideable && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); item.onHide?.(); }}
+              aria-label="Ocultar"
+              className="absolute -left-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
+            >
+              <X size={11} strokeWidth={2.6} />
+            </button>
+          )}
+          {item.resizable && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); item.onToggleSize?.(); }}
+              aria-label="Cambiar tamaño"
+              className="absolute -right-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
+            >
+              {item.size === "full" ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+            </button>
+          )}
+          <div className="pointer-events-none space-y-2.5">{item.render()}</div>
+        </Reorder.Item>
+      ))}
+    </Reorder.Group>
+  );
+}
+
 export function EditTopBar({ visible, onDone, onReset }: { visible: boolean; onDone: () => void; onReset: () => void }) {
   return (
     <AnimatePresence>

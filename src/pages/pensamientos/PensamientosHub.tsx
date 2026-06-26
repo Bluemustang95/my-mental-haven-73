@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Brain, Plus, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { WeekStrip } from "@/components/home/WeekStrip";
+
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { localDateStr } from "@/lib/utils";
@@ -72,9 +72,6 @@ export default function PensamientosHub() {
           Identificá, evaluá y modificá pensamientos automáticos.
         </p>
 
-        <div className="mt-4">
-          <WeekStrip progressByDate={progressByDate} />
-        </div>
       </div>
 
       <div className="mt-5 space-y-2 px-5">
