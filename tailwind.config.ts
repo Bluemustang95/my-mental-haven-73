@@ -16,8 +16,9 @@ export default {
       fontFamily: {
         display: ["Poppins", "Montserrat", "sans-serif"],
         body: ["Lora", "serif"],
-        sans: ["Poppins", "Montserrat", "sans-serif"],
+        sans: ["Inter", "Poppins", "Montserrat", "sans-serif"],
         mindful: ["DM Serif Display", "serif"],
+        serifElegant: ["Playfair Display", "Lora", "Georgia", "serif"],
       },
       boxShadow: {
         glass: "0 8px 32px rgba(16,25,39,0.04)",
