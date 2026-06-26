@@ -1,95 +1,89 @@
-## Home Terapéutico RESMA — Rediseño premium
 
-Rediseño completo de `src/pages/Dashboard.tsx` (ruta `/`) aplicando glassmorphism clínico, check-in circadiano de 3 pasos con nube/luna reactivas, módulo recomendado dinámico, propagación noche→mañana y modo edición iOS (jiggle + long-press).
+# Rediseño "Mi Proceso" — Dashboard Clínico Premium
 
-### Tokens de diseño (`src/index.css` + `tailwind.config.ts`)
-- Añadir variables RESMA: `--resma-navy #101927`, `--resma-teal #7cc2c8`, `--resma-gold #facb60`, `--resma-light-bg #f9f9fb`, `--resma-light-bg-2 #e8ebf3`.
-- Clase `.glass-premium` (rgba blanco 0.45, backdrop-blur 28px, border blanco 0.6).
-- Keyframes nuevos: `jiggle` (rotación ±1.2°, 180ms infinite alternate, delay aleatorio por instancia), `pop` (scale 1→1.15→1), `blob-float-a` y `blob-float-b` (40s/55s, direcciones inversas).
-- Fondo global del Home: gradiente `#f9f9fb → #e8ebf3` + 2 orbes `.glow-blob` (teal y gold, blur 80px, opacity 0.35) posicionados absolutos animados.
-- Fuentes: cargar Playfair Display + Lora (Google Fonts) en `index.html`; mapear `font-serif-elegant` en Tailwind. Mantener Inter/Montserrat existentes.
+Reemplazo total de `src/pages/MiProceso.tsx` por una pantalla mobile-first elástica (max-w-md, flex-col, scroll interno) con fondo claro + 2 orbes animados, glassmorphism, y tokens RESMA (navy `#101927`, teal `#7cc2c8`, gold `#facb60`). Tipografías: Playfair/Lora para títulos, Inter UI, Montserrat para etiquetas en mayúsculas.
 
-### Layout blindado (`src/pages/Dashboard.tsx`)
-Reestructurar el shell así:
-```text
-<div fixed-fondo gradiente + orbes>
-  <div max-w-md mx-auto h-full sm:h-[90vh] sm:max-h-[760px] flex flex-col relative>
-    <Header />            // fijo arriba
-    <WeekStripPremium />  // fijo
-    <ScrollArea flex-1 overflow-y-auto no-scrollbar pb-28 smooth-scroll>
-       Tu Progreso (Timeline 3 pasos) + ZonaDescanso + Pendientes + Widgets
-    </ScrollArea>
-    <BottomNav absolute bottom-0 />  // ya global, ocultar en este viewport y usar versión absoluta interna
-  </div>
-</div>
-```
-- Eliminar `pb-24` y dejar que la `ScrollArea` interna gestione el scroll para que la nav nunca tape contenido.
+## 1. Header
+- "Mi Proceso" en serif 26px navy + subtítulo "Tu evolución, paso a paso." Inter italic.
+- Etiqueta "ESTADÍSTICAS DE IMPACTO" con icono Activity.
 
-### Cabecera + Semana (`src/components/home/WeekStrip.tsx` rework)
-- Tarjeta glass redondeada con 7 chips L–D (22–28). Día activo: chip vertical en `resmaNavy`, letra blanca, número grande, dot inferior `resmaGold`.
-- Al cambiar día: `toast("Visualizando el progreso del [Día]")` (sonner) + actualiza `selectedDate`.
+## 2. Tarjeta Navy "Índice de Bienestar" (clickeable → abre sheet)
+- Bg `#101927`, rounded-3xl, padding 20.
+- Label superior + badge "-16%" (pill rojo translúcido con flecha SVG).
+- Score "47" 72px blanco + "de 100" sutil.
+- Frase humana: "Bajaste 16% vs semana anterior. Empezá de a poco."
+- Sparkline SVG 7 días (`[63,58,55,52,48,47,47]`) con stroke teal 1.6px + nodos circulares.
+- Hint inferior "↑ Ver mi análisis".
 
-### Check-in circadiano (`src/components/modals/CheckinModal.tsx` rework completo)
-Wizard 4 pantallas Mañana / 3 pantallas Noche, navegación con Framer Motion (slide horizontal). Persistir en `daily_checkins` (mode, sleep_score/day_score, emotions[], dream_text, thought_text, day_goal, highlight, next_day_focus).
+## 3. Bottom Sheet "Tu semana en resumen"
+Componente nuevo `WellbeingAnalysisSheet.tsx`:
+- Backdrop fade (rgba 0.45) + sheet con `translateY` y cubic-bezier(.32,1,.28,1) 380ms. Handle pill.
+- **Sección A** — Banner "Semana con altibajos" (card f8fafc + ícono navy 44px con cara teal).
+- **Sección B** — Sparkline grande 90px con valores flotantes sobre cada nodo + etiquetas Lun-Dom.
+- **Sección C** — Grid 2×2 pilares (Sueño/Metas/Evaluación/Recursos) con iconos Lucide (Moon, Target, ClipboardHeart, Book), punto de color + nota humana.
+- **Sección D** — 3 cards comparativa (Sem. pasada 63 / Esta sem. 47 / Diferencia -16 en rojo).
+- **Sección E** — "De dónde viene tu número": 4 filas con barra de progreso (Sueño 60% teal, Metas 100% teal, Evaluación 30% gold, Herramientas 0% gris) + label humano (sin %).
+- Lenguaje natural en todo (sin pesos de fórmula).
 
-Mañana:
-1. **Slider sueño** 0–100, componente `ReactiveCloud`:
-   - 0–25 ⛈️ tinte azul-grisáceo + "Pésimo descanso con tormenta mental"
-   - 26–50 ☁️ "Normal, un poco gris y pesado"
-   - 51–75 🌤️ "Buen descanso, cielo despejado"
-   - 76–100 ☀️✨ "¡Excelente! Energizado y radiante"
-2. **Grilla 3×3 emociones** (Agotamiento, Ansiedad, Alegría, Enojo, Tristeza, Calma, Motivado, Confuso, Cariño). Toggle multi, `animate-pop`, borde acento al activar.
-3. **Diario mínima fricción**: ¿Soñaste? Sí/No. Si Sí ⇒ textarea autoexpandible (`framer-motion AnimatePresence`). Textareas opcionales: pensamiento + objetivo del día.
-4. **Progreso semanal radial**: SVG circular (stroke `resmaTeal`), "n de 7 días".
+## 4. Carrusel "Evaluaciones y Psicometría"
+- Header con título + "Desliza para ver más".
+- `flex overflow-x-auto gap-3` con 3 cards sólidas grandes (~h-56):
+  - **BDI-II** teal gradient + SVG abstracto de barras descendentes-resilientes + badge "BDI-II" + dot dorado "Toca actualizar · Hace 9 d".
+  - **BAI** índigo gradient + SVG onda sinusoidal caótica→armónica + dot verde "✓ Al día · Hace 2 d".
+  - **PSWQ** ámbar gradient + SVG espiral de Fibonacci + dot amarillo "Pendiente · Nunca".
+- Click → abre `SymptomsTestModal` (ya existe) precargado con el test correspondiente.
 
-Noche:
-1. **Slider día** con `ReactiveMoon`: 🌑 / 🌙 / 🌗 / 🌕✨ + textos descritos.
-2. Grilla emociones multi-select.
-3. Textareas: "¿Qué destacarías?" y "¿Qué te gustaría mejorar mañana?" → guarda `next_day_focus`.
+## 5. Perfil de Personalidad (BFI-20)
+- Subtítulo "TU PERFIL DE PERSONALIDAD" violeta + descripción "Evaluación trimestral de rasgos cognitivos estables."
+- Card violeta gradient (`from-[#7c3aed] to-[#6d28d9]`) con ícono User, título "Rasgos Big Five (BFI-20)", estado "● Estable · Último test: hace 3 meses", flecha → circular.
+- Click abre modal full-screen `BigFiveProfileModal.tsx` (nuevo):
+  - SVG radar 5 ejes (Apertura/Responsabilidad/Extraversión/Amabilidad/Estabilidad) con cálculo matemático seguro para etiquetas (truncado + offset por cuadrante).
+  - Chips de colores por rasgo.
+  - 5 sliders táctiles → polígono morphea en tiempo real (interpolación suave con transición SVG).
+  - Botón "Cerrar Perfil" navy fijo abajo.
 
-### Propagación noche→mañana
-- En `loadToday` leer último `daily_checkins` con `mode=night` del día anterior y `next_day_focus`.
-- Si existe y aún no hay check-in matutino: renderizar `<MorningCallback>` widget destacado al inicio de la Timeline: "Ayer querías mejorar: '…'. Hoy lo vamos a encarar juntos" con CTA que abre Mañana.
-- Requiere columna `next_day_focus` (text) en `daily_checkins` — añadir vía migración si no existe.
+## 6. Flujo BDI-II Jugable
+Extender `SymptomsTestModal` (o crear `BeckTestRunner.tsx`) para BDI-II:
+- Header: "DEPRESIÓN (BDI-II) · X de 4" + barra de progreso teal.
+- 4 preguntas Beck: Tristeza, Pesimismo, Pérdida de Placer, Pensamientos Críticos. Cada opción 0–3 en card pill con número circular.
+- Footer: "La honestidad contigo mismo es clave para un diagnóstico eficaz."
+- Pantalla final (sin tilde verde):
+  - "Evaluación Completa" + "Depresión (BDI-II)".
+  - Card "PUNTAJE TOTAL" con número grande.
+  - **Termómetro lineal segmentado**: verde 0–13, amarillo 14–19, naranja 20–28, rojo 29–63, con etiquetas Mínimo/Leve/Moderado/Severo y aguja flotante posicionada por puntaje.
+  - Badge resultado (color según baremo).
+  - Texto baremo.
+  - **Si ≥ 29**: Banner gold "💛 SOPORTE MÉDICO RESMA" + 2 botones: "Sincronizar con Lic. Claudio" (navy) e "Iniciar Respiración de Rescate" (ámbar) que navega a `/herramientas/mindfulness/respiracion` con patrón coherencia cardíaca.
 
-### Módulo recomendado dinámico
-- Reescribir nodo "psycho/practice" como **una sola tarjeta** `RecommendedResourceCard` (segundo nodo de la Timeline) que en cada montaje selecciona aleatoriamente desde `get_daily_recommendations` (ya existente) o pool fallback (Lectura TCC, Podcast DBT, Botón de Pánico). Muestra etiqueta tipo "PODCAST · DBT", título, duración y CTA "Comenzar recurso recomendado".
+## 7. Terapia y Bento 2×2
+- Toggle "TERAPIA Y SINCRONIZACIÓN" (mantiene `IOSToggle` y `TherapySyncModal`).
+- Card horizontal profesional: avatar CP gradient navy+teal, nombre + chip "MÉDICO" verde menta, M.N., botón circular llamada navy.
+- **Bento 2×2** glass:
+  1. Soporte RESMA (mail teal) → mailto.
+  2. Resumen Psico (file gold) → `/mi-proceso/resumen`.
+  3. Notas de Sesión (edit violeta) → `/mi-proceso/terapia`.
+  4. Medicación (pill teal + "Próxima toma: Al día") → `/mi-proceso/medicacion`.
 
-### Zona de Descanso
-- Tarjeta gradiente violeta→navy debajo del nodo nocturno, navega a `/herramientas/sueno` (ya conectado, ahora glass + glow más profundo).
+## 8. Suscripción
+Mantener bloque actual de membresía al final.
 
-### Pendientes para vos
-- 2 columnas compactas reusando `PendingBento` rediseñado: "Pack de activación" (estado dinámico de progreso) y "Te puede aliviar" (respiración 4-7-8, 3 min).
+## Archivos
+**Nuevos**
+- `src/components/proceso/WellbeingCardV2.tsx` (tarjeta navy + sparkline)
+- `src/components/proceso/WellbeingAnalysisSheet.tsx` (bottom sheet)
+- `src/components/proceso/PsychometryCarousel.tsx` (+ SVGs abstractos inline)
+- `src/components/proceso/BigFiveCard.tsx`
+- `src/components/proceso/BigFiveProfileModal.tsx` (radar + sliders morph)
+- `src/components/proceso/BeckTestRunner.tsx` (4 preguntas + resultados + contención)
+- `src/components/proceso/WellbeingBadge.tsx` (badge -16% reutilizable)
 
-### Widgets activos + modo edición iOS
-Nuevo componente `src/components/home/WidgetsBoard.tsx`:
-- Estado persistido en `localStorage` (`home_widgets_v1`): `{ id, enabled, size: 'full'|'half', hidden }` para nodos timeline, pendientes, zona descanso y widgets (Mini Hábitos, Agradecimiento, Notas de Contención).
-- Botón "+" junto a "Tu Progreso de Hoy" abre un sheet (Radix Sheet) con toggles para activar/desactivar widgets.
-- **Long-press 800ms** (hook `useLongPress` con `mousedown`+`touchstart`) sobre cualquier widget → activa `editMode`:
-  - Toast: "¡Personalización activada! Cambia de tamaños o quita elementos ✨"
-  - Todas las tarjetas aplican `animate-jiggle` con delay aleatorio.
-  - Aparece ✕ rojo arriba-izq (oculta), ↔️ arriba-der (toggle col-span-2 / col-span-1, layout grid 2 col que se reordena con transición `layout` de framer-motion).
-  - Barra superior fija con "Restablecer Todo" y "Listo" (sale del modo).
-- Widgets nuevos a renderizar cuando estén activos: **Mini Hábitos** (lee primer hábito activo del usuario, check rápido), **Agradecimiento** (textarea micro), **Notas de Contención** (textarea persistida en `journal_entries`).
+**Modificados**
+- `src/pages/MiProceso.tsx` — reemplazo completo de layout, conserva lógica de auth/terapia/suscripción.
+- `src/index.css` — añadir `animate-orb-1/2` si no existen, clase `.no-scrollbar`.
 
-### Base de datos (migración mínima)
-```sql
-ALTER TABLE public.daily_checkins
-  ADD COLUMN IF NOT EXISTS next_day_focus text,
-  ADD COLUMN IF NOT EXISTS dream_text text,
-  ADD COLUMN IF NOT EXISTS thought_text text,
-  ADD COLUMN IF NOT EXISTS highlight text,
-  ADD COLUMN IF NOT EXISTS emotions text[];
-```
-(Sin nuevas tablas; RLS existente conserva.)
-
-### Archivos a crear/modificar
-- Modificar: `src/pages/Dashboard.tsx`, `src/components/home/WeekStrip.tsx`, `src/components/home/Timeline.tsx`, `src/components/home/PendingBento.tsx`, `src/components/modals/CheckinModal.tsx`, `src/index.css`, `tailwind.config.ts`, `index.html`.
-- Nuevos: `src/components/home/ReactiveCloud.tsx`, `ReactiveMoon.tsx`, `RecommendedResourceCard.tsx`, `WidgetsBoard.tsx`, `MorningCallback.tsx`, `RadialWeekProgress.tsx`, `src/hooks/useLongPress.ts`, `src/lib/homeWidgets.ts`.
-- Migración SQL para columnas extra en `daily_checkins`.
-
-### Notas técnicas
-- Reusar `sonner` para todos los toasts.
-- Animaciones con `framer-motion` (ya instalado) — `layout` para reflow de grid en modo edición.
-- Mantener Argentina UTC-3 con `localDateStr()` en lecturas/escrituras de `daily_checkins`.
-- Conservar `PremiumLock` para usuarios free; admin (rol existente) sigue desbloqueado por el cambio previo en Settings.
+## Notas técnicas
+- Sheet animado con framer-motion (`AnimatePresence`).
+- Radar morph: `<motion.polygon points={...}>` con transición spring.
+- Sparkline reusable: helper `buildSparkline(values, w, h)` que devuelve `d` y nodos.
+- Sin tocar tablas/Supabase; datos demo en constantes salvo lo ya conectado (terapeuta, suscripción).
+- Lenguaje UX: nunca mostrar pesos ni decimales al usuario.

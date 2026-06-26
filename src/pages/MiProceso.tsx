@@ -1,38 +1,55 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, ClipboardList, FileText, NotebookPen, Pill, ChevronRight, Brain, Phone, Mail, BadgeCheck, Sparkles, Crown } from "lucide-react";
+import {
+  Activity,
+  ClipboardList,
+  FileText,
+  NotebookPen,
+  Pill,
+  Mail,
+  BadgeCheck,
+  Sparkles,
+  Crown,
+  Phone,
+} from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { PaywallModal } from "@/components/modals/PaywallModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
-import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
-import { WellbeingCard } from "@/components/proceso/WellbeingCard";
 import { TherapySyncModal } from "@/components/modals/TherapySyncModal";
 import { PremiumLock } from "@/components/PremiumLock";
+import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
+import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
+import { PsychometryCarousel } from "@/components/proceso/PsychometryCarousel";
+import { BigFiveCard } from "@/components/proceso/BigFiveCard";
+import { BigFiveProfileModal } from "@/components/proceso/BigFiveProfileModal";
+import { BeckTestRunner } from "@/components/proceso/BeckTestRunner";
+import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 
-const dayLabels = ["LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM"];
+const SCORE = 47;
+const DELTA = -16;
+const TREND = [63, 58, 55, 52, 48, 47, 47];
 
 export default function MiProceso() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const { isPremium, realPlan } = usePlan();
-  const [bars] = useState<number[]>([35, 50, 28, 65, 72, 60, 80]);
   const [inTherapy, setInTherapy] = useState(false);
-  const [openTest, setOpenTest] = useState<null | "symptom" | "personality">(null);
   const [syncOpen, setSyncOpen] = useState(false);
   const [linkedLastName, setLinkedLastName] = useState<string | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
 
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [bigFiveOpen, setBigFiveOpen] = useState(false);
+  const [beckOpen, setBeckOpen] = useState(false);
+  const [genericTest, setGenericTest] = useState<null | "symptom">(null);
+
   useEffect(() => {
     if (location.hash === "#suscripcion") {
-      // wait for layout
-      setTimeout(() => {
-        const el = document.getElementById("suscripcion");
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 300);
+      setTimeout(() => document.getElementById("suscripcion")?.scrollIntoView({ behavior: "smooth" }), 300);
     }
   }, [location.hash]);
 
@@ -50,11 +67,7 @@ export default function MiProceso() {
   }, [user]);
 
   const updateTherapy = async (v: boolean) => {
-    if (v) {
-      // Abre modal de sincronización en vez de activar directamente
-      setSyncOpen(true);
-      return;
-    }
+    if (v) return setSyncOpen(true);
     setInTherapy(false);
     if (!user) return;
     await supabase
@@ -62,302 +75,215 @@ export default function MiProceso() {
       .upsert({ user_id: user.id, in_therapy: false }, { onConflict: "user_id" });
   };
 
-  const handleSynced = (data: { lastName: string; phone: string }) => {
+  const handleSynced = (data: { lastName: string }) => {
     setInTherapy(true);
     setLinkedLastName(data.lastName);
   };
 
-  return (
-    <div className="min-h-screen bg-background pb-32 safe-area-top">
-      <div className="mx-auto max-w-md px-5 pt-12">
-        {/* Header */}
-        <h1 className="font-display text-3xl font-bold text-foreground">Mi Proceso</h1>
-        <p className="mt-1 font-body italic text-base text-muted-foreground">
-          Tu evolución, paso a paso.
-        </p>
+  const handleSelectTest = (code: "BDI" | "BAI" | "PSWQ") => {
+    if (code === "BDI") setBeckOpen(true);
+    else setGenericTest("symptom");
+  };
 
-        {/* Estadísticas */}
-        <p className="mt-8 mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+  return (
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f9f9fb]">
+      {/* Orbs */}
+      <div className="pointer-events-none absolute -top-32 -left-20 h-72 w-72 rounded-full bg-[#7cc2c8]/20 blur-3xl animate-blob-a" />
+      <div className="pointer-events-none absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-[#facb60]/15 blur-3xl animate-blob-b" />
+
+      <div className="relative mx-auto w-full max-w-md flex-1 px-5 pt-12 pb-32">
+        {/* Header */}
+        <h1 className="font-serif text-[26px] font-medium text-[#0f172a]">Mi Proceso</h1>
+        <p className="mt-0.5 text-[14px] italic text-[#64748b]">Tu evolución, paso a paso.</p>
+
+        <p className="mt-7 mb-3 flex items-center gap-2 font-[Montserrat] text-[11px] font-medium uppercase tracking-[0.18em] text-[#94a3b8]">
           <Activity size={14} /> Estadísticas de impacto
         </p>
 
         <PremiumLock featureName="Estadísticas de impacto" variant="section">
-          <WellbeingCard />
+          <WellbeingCardV2
+            score={SCORE}
+            delta={DELTA}
+            message="Bajaste 16% vs semana anterior. Empezá de a poco."
+            trend={TREND}
+            onOpen={() => setSheetOpen(true)}
+          />
 
-          <div className="mt-6 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-5 shadow-glass">
-            <div className="mb-4 flex items-start justify-between">
-              <div>
-                <h3 className="font-display text-base font-bold text-foreground">Calidad de Sueño</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">Uso de estrategias nocturnas</p>
-              </div>
-              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                ↗ +12%
-              </span>
-            </div>
-            <div className="flex h-32 items-end justify-between gap-2">
-              {bars.map((h, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${h}%` }}
-                  transition={{ delay: i * 0.05, type: "spring", stiffness: 80 }}
-                  className="flex-1 rounded-t-lg bg-gradient-to-t from-indigo-200 to-indigo-400"
-                />
-              ))}
-            </div>
-            <div className="mt-2 flex justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {dayLabels.map((d) => (
-                <span key={d}>{d}</span>
-              ))}
-            </div>
+          {/* Psychometry */}
+          <div className="mt-7">
+            <PsychometryCarousel onSelect={handleSelectTest} />
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <MiniBar label="Habilidades vs Síntomas" pct={66} status="Buen uso" color="#F97316" />
-            <MiniBar label="Actividades vs Síntomas" pct={45} status="Regular" color="#3B82F6" />
+          {/* Big Five */}
+          <div className="mt-7">
+            <BigFiveCard onOpen={() => setBigFiveOpen(true)} />
           </div>
-        </PremiumLock>
-
-        {/* Evaluaciones */}
-        <p className="mt-8 mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          <ClipboardList size={14} /> Evaluaciones
-        </p>
-
-        <PremiumLock featureName="Evaluaciones clínicas" variant="section">
-          <button
-            onClick={() => setOpenTest("symptom")}
-            className="flex w-full items-center gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100">
-              <Activity size={22} className="text-violet-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-display text-base font-bold text-foreground">Test de Síntomas</p>
-              <p className="text-xs text-muted-foreground">Completa tu evaluación semanal</p>
-            </div>
-            <ChevronRight size={18} className="text-muted-foreground" />
-          </button>
-
-          <button
-            onClick={() => setOpenTest("personality")}
-            className="mt-3 flex w-full items-center gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100">
-              <Brain size={22} className="text-rose-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-display text-base font-bold text-foreground">Test de Personalidad</p>
-              <p className="text-xs text-muted-foreground">Conócete a mayor profundidad</p>
-            </div>
-            <ChevronRight size={18} className="text-muted-foreground" />
-          </button>
         </PremiumLock>
 
         {/* Terapia */}
-        <div className="my-8 h-px bg-black/[0.08]" />
+        <div className="my-8 h-px bg-black/[0.06]" />
 
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <h3 className="font-display text-base font-bold text-foreground">Terapia y Seguimiento</h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">Conecta tu app con tu psicólogo/a</p>
-          </div>
+          <p className="font-[Montserrat] text-[12px] font-semibold uppercase tracking-[0.16em] text-[#0f172a]">
+            Terapia y sincronización <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />
+          </p>
           <IOSToggle checked={inTherapy} onChange={updateTherapy} label="En terapia" />
         </div>
 
         {inTherapy ? (
           <div className="mt-4 space-y-3">
-            {/* Profesional asignado */}
-            <div className="rounded-[24px] border border-white/70 bg-white/75 p-4 shadow-glass backdrop-blur-2xl">
+            <div className="rounded-[24px] border border-white/70 bg-white/85 p-4 shadow-[0_10px_30px_-18px_rgba(16,25,39,0.25)] backdrop-blur-xl">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#7cc2c8] to-[#0e8a92] font-display text-base font-bold text-white">
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#101927] to-[#0e8a92] font-display text-[15px] font-bold text-white">
                   CP
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-400" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="font-display text-[15px] font-bold text-foreground">Lic. Claudio Pereyra</p>
+                    <p className="font-display text-[15px] font-bold text-[#0f172a]">Lic. Claudio Pereyra</p>
                     <BadgeCheck size={14} className="text-[#7cc2c8]" />
                   </div>
-                  <p className="text-[11px] text-muted-foreground">M.N. 48.293 · Especialista Clínico</p>
+                  <p className="text-[11px] text-[#64748b]">M.N. 48.293 · Especialista Clínico</p>
                 </div>
-                <button
-                  aria-label="Contactar"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#101927] text-white transition active:scale-95"
+                <a
+                  href="tel:+5491100000000"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#101927] text-white"
                 >
                   <Phone size={16} />
-                </button>
+                </a>
               </div>
               {linkedLastName && (
-                <p className="mt-3 border-t border-foreground/[0.06] pt-2.5 text-[11px] text-muted-foreground">
-                  Vinculado a paciente <span className="font-semibold text-foreground/80">{linkedLastName}</span>
+                <p className="mt-3 border-t border-[#e2e8f0] pt-2.5 text-[11px] text-[#64748b]">
+                  Vinculado a paciente <span className="font-semibold text-[#0f172a]">{linkedLastName}</span>
                 </p>
               )}
             </div>
 
-            {/* Soporte RESMA */}
-            <div className="flex items-center gap-3 rounded-2xl bg-[#101927] px-4 py-3 text-white">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
-                <Mail size={16} />
-              </div>
-              <div className="flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/55">Soporte RESMA</p>
-                <a href="mailto:support@resma.com.ar" className="text-[13px] font-semibold text-white">
-                  support@resma.com.ar
-                </a>
-              </div>
+            {/* Bento 2x2 */}
+            <div className="grid grid-cols-2 gap-3">
+              <BentoCard
+                icon={<Mail size={18} className="text-[#0e8a92]" />}
+                iconBg="bg-[#7cc2c8]/15"
+                title="Soporte RESMA"
+                sub="Asistencia técnica y clínica directa."
+                onClick={() => (window.location.href = "mailto:support@resma.com.ar")}
+              />
+              <BentoCard
+                icon={<FileText size={18} className="text-[#b45309]" />}
+                iconBg="bg-[#facb60]/20"
+                title="Resumen Psico"
+                sub="Sincroniza tus reportes y hábitos de la semana."
+                onClick={() => navigate("/mi-proceso/resumen")}
+              />
+              <BentoCard
+                icon={<NotebookPen size={18} className="text-[#7c3aed]" />}
+                iconBg="bg-[#7c3aed]/12"
+                title="Notas de Sesión"
+                sub="Apuntá temas y dudas antes de entrar."
+                onClick={() => navigate("/mi-proceso/terapia")}
+              />
+              <BentoCard
+                icon={<Pill size={18} className="text-[#0e8a92]" />}
+                iconBg="bg-[#7cc2c8]/15"
+                title="Medicación"
+                sub="Próxima toma: Al día"
+                onClick={() => navigate("/mi-proceso/medicacion")}
+              />
             </div>
-
-            <TherapyRow
-              icon={<NotebookPen size={20} className="text-violet-600" />}
-              bg="bg-violet-100"
-              title="Notas para terapia"
-              sub="Temas y preguntas para tu sesión"
-              onClick={() => navigate("/mi-proceso/terapia")}
-            />
-            <TherapyRow
-              icon={<FileText size={20} className="text-orange-500" />}
-              bg="bg-orange-100"
-              title="Resumen para mi Psico"
-              sub="Reporte semanal de recursos, sueño, alimentación y registros."
-              onClick={() => navigate("/mi-proceso/resumen")}
-            />
-            <TherapyRow
-              icon={<Pill size={20} className="text-teal-600" />}
-              bg="bg-teal-100"
-              title="Medicación"
-              sub="Registro y toma de fármacos"
-              onClick={() => navigate("/mi-proceso/medicacion")}
-            />
           </div>
         ) : (
-          <div className="mt-4 rounded-[24px] border-2 border-dashed border-neutral-300 bg-white/40 p-6 text-center">
-            <p className="text-sm leading-relaxed text-muted-foreground">
+          <div className="mt-4 rounded-[24px] border-2 border-dashed border-[#e2e8f0] bg-white/40 p-6 text-center">
+            <p className="text-[13px] leading-relaxed text-[#64748b]">
               Activá el seguimiento si estás en terapia para ver notas, resúmenes y medicación.
             </p>
           </div>
         )}
 
-        {/* Suscripción / Membresía */}
+        {/* Subscription */}
         <section id="suscripcion" className="mt-10 scroll-mt-24">
-          <h2 className="font-display text-xl font-bold text-foreground">Tu membresía</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h2 className="font-serif text-[22px] font-medium text-[#0f172a]">Tu membresía</h2>
+          <p className="mt-1 text-[13px] text-[#64748b]">
             Gestioná tu plan y desbloqueá todo el catálogo cuando quieras.
           </p>
 
           {isPremium ? (
-            <div className="mt-4 overflow-hidden rounded-[28px] border border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-amber-50 p-5 shadow-glass">
+            <div className="mt-4 rounded-[24px] border border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-amber-50 p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-md">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white">
                   <Crown size={22} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-display text-base font-bold text-foreground">Plan Premium activo</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-display text-[15px] font-bold text-[#0f172a]">Plan Premium activo</p>
+                  <p className="text-[12px] text-[#64748b]">
                     {realPlan === "premium" ? "Acceso ilimitado a todos los recursos." : "Acceso completo de admin."}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => navigate("/configuracion")}
-                className="mt-4 w-full rounded-2xl border border-foreground/10 bg-white/80 py-3 text-sm font-semibold text-foreground shadow-sm transition active:scale-[0.98]"
+                className="mt-4 w-full rounded-2xl border border-[#e2e8f0] bg-white py-3 text-[13px] font-semibold text-[#0f172a]"
               >
                 Gestionar suscripción
               </button>
             </div>
           ) : (
-            <div className="mt-4 overflow-hidden rounded-[28px] border border-white/60 bg-gradient-to-br from-[#facb60]/20 via-white to-[#7cc2c8]/20 p-5 shadow-glass">
+            <div className="mt-4 rounded-[24px] border border-white/60 bg-gradient-to-br from-[#facb60]/20 via-white to-[#7cc2c8]/20 p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-md">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white">
                   <Sparkles size={22} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-display text-base font-bold text-foreground">Estás en el plan Gratuito</p>
-                  <p className="text-xs text-muted-foreground">
-                    Pasate a Premium para desbloquear diario, recursos y estadísticas.
-                  </p>
+                  <p className="font-display text-[15px] font-bold text-[#0f172a]">Estás en el plan Gratuito</p>
+                  <p className="text-[12px] text-[#64748b]">Pasate a Premium para desbloquear todo.</p>
                 </div>
               </div>
-
-              <ul className="mt-4 space-y-1.5 text-sm text-foreground/80">
-                <li className="flex items-center gap-2"><span className="text-amber-500">✦</span> Recursos clínicos ilimitados</li>
-                <li className="flex items-center gap-2"><span className="text-amber-500">✦</span> Estadísticas de impacto y evaluaciones</li>
-                <li className="flex items-center gap-2"><span className="text-amber-500">✦</span> Herramientas del diario y modo Zen</li>
-              </ul>
-
               <button
                 onClick={() => setPaywallOpen(true)}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#101927] py-3.5 text-sm font-bold text-white shadow-[0_10px_24px_-8px_rgba(16,25,39,0.4)] transition active:scale-[0.98]"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#101927] py-3.5 text-[13px] font-bold text-white"
               >
                 <Sparkles size={16} className="text-amber-300" />
                 Hazte Premium — USD 0.99/sem
-              </button>
-
-              <button
-                onClick={() => navigate("/configuracion")}
-                className="mt-2 w-full rounded-2xl py-2.5 text-xs font-semibold text-foreground/60 transition hover:text-foreground"
-              >
-                Restaurar compras
               </button>
             </div>
           )}
         </section>
       </div>
 
+      {/* Modales */}
+      <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
+      <BigFiveProfileModal open={bigFiveOpen} onClose={() => setBigFiveOpen(false)} />
+      <BeckTestRunner open={beckOpen} onClose={() => setBeckOpen(false)} />
+      <SymptomsTestModal open={!!genericTest} kind={genericTest ?? "symptom"} onClose={() => setGenericTest(null)} />
       <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} featureName="Premium" />
-
-      <SymptomsTestModal
-        open={!!openTest}
-        kind={openTest ?? "symptom"}
-        onClose={() => setOpenTest(null)}
-      />
-
-      <TherapySyncModal
-        open={syncOpen}
-        onClose={() => setSyncOpen(false)}
-        onSynced={handleSynced}
-      />
+      <TherapySyncModal open={syncOpen} onClose={() => setSyncOpen(false)} onSynced={handleSynced} />
     </div>
   );
 }
 
-function MiniBar({ label, pct, status, color }: { label: string; pct: number; status: string; color: string }) {
-  return (
-    <div className="rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 shadow-glass">
-      <p className="font-display text-sm font-bold leading-tight text-foreground">{label}</p>
-      <div className="mt-4 flex items-center gap-2">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#E5E7EB]">
-          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
-        </div>
-      </div>
-      <p className="mt-2 text-xs font-bold" style={{ color }}>{status}</p>
-    </div>
-  );
-}
-
-function TherapyRow({
+function BentoCard({
   icon,
-  bg,
+  iconBg,
   title,
   sub,
   onClick,
 }: {
   icon: React.ReactNode;
-  bg: string;
+  iconBg: string;
   title: string;
   sub: string;
   onClick: () => void;
 }) {
   return (
-    <button
+    <motion.button
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="flex w-full items-start gap-4 rounded-[28px] bg-card/80 backdrop-blur-3xl border border-foreground/5 p-4 text-left shadow-glass transition active:scale-[0.99]"
+      className="flex flex-col items-start gap-3 rounded-[20px] border border-white/70 bg-white/80 p-4 text-left shadow-[0_8px_24px_-16px_rgba(16,25,39,0.25)] backdrop-blur-xl"
     >
-      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${bg}`}>
-        {icon}
+      <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconBg}`}>{icon}</div>
+      <div>
+        <p className="font-display text-[14px] font-bold leading-tight text-[#0f172a]">{title}</p>
+        <p className="mt-1 text-[11px] leading-snug text-[#64748b]">{sub}</p>
       </div>
-      <div className="flex-1">
-        <p className="font-display text-base font-bold text-foreground">{title}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>
-      </div>
-    </button>
+    </motion.button>
   );
 }
