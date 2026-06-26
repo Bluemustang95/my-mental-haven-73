@@ -47,7 +47,7 @@ export function WeekStrip({
             <motion.span
               layoutId={isActive ? "weekDayBadge" : undefined}
               className={cn(
-                "mt-0.5 font-serifElegant text-xl font-bold",
+                "mt-0.5 font-sans text-xl font-bold",
                 isActive ? "text-white" : "text-foreground/70"
               )}
             >
