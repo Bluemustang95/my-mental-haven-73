@@ -71,16 +71,6 @@ export default function DiarioInteligente() {
     })();
   }, [slug]);
 
-  useEffect(() => {
-    if (!user || !isRegulacion) return;
-    (async () => {
-      const { count } = await supabase
-        .from("dbt_emotion_sessions")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      if ((count ?? 0) > 0) setHasAnySession(true);
-    })();
-  }, [user, isRegulacion, openSessionsTick]);
 
   const modules = useMemo(
     () =>
