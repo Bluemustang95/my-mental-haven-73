@@ -13,7 +13,7 @@ export function MiniHabitsWidget() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("habits")
         .select("id, name")
         .eq("user_id", user.id)
@@ -23,11 +23,11 @@ export function MiniHabitsWidget() {
       const h = data?.[0];
       if (!h) return;
       setHabit({ id: h.id, name: h.name });
-      const { data: c } = await supabase
+      const { data: c } = await (supabase as any)
         .from("habit_completions")
         .select("id")
         .eq("habit_id", h.id)
-        .eq("completion_date", localDateStr(new Date()))
+        .eq("completed_date", localDateStr(new Date()))
         .limit(1);
       setDoneToday((c?.length ?? 0) > 0);
     })();
@@ -36,22 +36,23 @@ export function MiniHabitsWidget() {
   const toggle = async () => {
     if (!habit || !user) return;
     if (doneToday) {
-      await supabase
+      await (supabase as any)
         .from("habit_completions")
         .delete()
         .eq("habit_id", habit.id)
-        .eq("completion_date", localDateStr(new Date()));
+        .eq("completed_date", localDateStr(new Date()));
       setDoneToday(false);
     } else {
-      await supabase.from("habit_completions").insert({
+      await (supabase as any).from("habit_completions").insert({
         habit_id: habit.id,
         user_id: user.id,
-        completion_date: localDateStr(new Date()),
+        completed_date: localDateStr(new Date()),
       });
       setDoneToday(true);
       toast.success("¡Hábito completado! ✨");
     }
   };
+
 
   if (!habit) {
     return (
