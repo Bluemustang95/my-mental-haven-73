@@ -1,89 +1,75 @@
 
-# Rediseño "Mi Proceso" — Dashboard Clínico Premium
+# Ajustes de Inicio y Mi Proceso
 
-Reemplazo total de `src/pages/MiProceso.tsx` por una pantalla mobile-first elástica (max-w-md, flex-col, scroll interno) con fondo claro + 2 orbes animados, glassmorphism, y tokens RESMA (navy `#101927`, teal `#7cc2c8`, gold `#facb60`). Tipografías: Playfair/Lora para títulos, Inter UI, Montserrat para etiquetas en mayúsculas.
+## 1. Inicio (`src/pages/Dashboard.tsx`)
 
-## 1. Header
-- "Mi Proceso" en serif 26px navy + subtítulo "Tu evolución, paso a paso." Inter italic.
-- Etiqueta "ESTADÍSTICAS DE IMPACTO" con icono Activity.
+### 1.1 Restaurar viñetas guía (camino del día)
+Volver a incluir el bloque "Tu camino de hoy" como lista de checklist con viñetas circulares (`○` vacía / `●` llena con check) y línea conectora vertical, que guíe al usuario por el flujo recomendado:
 
-## 2. Tarjeta Navy "Índice de Bienestar" (clickeable → abre sheet)
-- Bg `#101927`, rounded-3xl, padding 20.
-- Label superior + badge "-16%" (pill rojo translúcido con flecha SVG).
-- Score "47" 72px blanco + "de 100" sutil.
-- Frase humana: "Bajaste 16% vs semana anterior. Empezá de a poco."
-- Sparkline SVG 7 días (`[63,58,55,52,48,47,47]`) con stroke teal 1.6px + nodos circulares.
-- Hint inferior "↑ Ver mi análisis".
+```text
+●───  Valoración de la mañana          [Hecho / Comenzar]
+│
+○───  Recurso recomendado
+│
+○───  Valoración de la noche
+```
 
-## 3. Bottom Sheet "Tu semana en resumen"
-Componente nuevo `WellbeingAnalysisSheet.tsx`:
-- Backdrop fade (rgba 0.45) + sheet con `translateY` y cubic-bezier(.32,1,.28,1) 380ms. Handle pill.
-- **Sección A** — Banner "Semana con altibajos" (card f8fafc + ícono navy 44px con cara teal).
-- **Sección B** — Sparkline grande 90px con valores flotantes sobre cada nodo + etiquetas Lun-Dom.
-- **Sección C** — Grid 2×2 pilares (Sueño/Metas/Evaluación/Recursos) con iconos Lucide (Moon, Target, ClipboardHeart, Book), punto de color + nota humana.
-- **Sección D** — 3 cards comparativa (Sem. pasada 63 / Esta sem. 47 / Diferencia -16 en rojo).
-- **Sección E** — "De dónde viene tu número": 4 filas con barra de progreso (Sueño 60% teal, Metas 100% teal, Evaluación 30% gold, Herramientas 0% gris) + label humano (sin %).
-- Lenguaje natural en todo (sin pesos de fórmula).
+- Renderizar arriba de la grid de widgets (no reemplaza widgets, los complementa como índice).
+- Cada viñeta es tappable y baja al widget correspondiente o abre el modal directo.
+- Estado `done` se calcula con `morningDone`, `nightDone` y un check sobre `recommended_resource_log` para el recurso del día.
 
-## 4. Carrusel "Evaluaciones y Psicometría"
-- Header con título + "Desliza para ver más".
-- `flex overflow-x-auto gap-3` con 3 cards sólidas grandes (~h-56):
-  - **BDI-II** teal gradient + SVG abstracto de barras descendentes-resilientes + badge "BDI-II" + dot dorado "Toca actualizar · Hace 9 d".
-  - **BAI** índigo gradient + SVG onda sinusoidal caótica→armónica + dot verde "✓ Al día · Hace 2 d".
-  - **PSWQ** ámbar gradient + SVG espiral de Fibonacci + dot amarillo "Pendiente · Nunca".
-- Click → abre `SymptomsTestModal` (ya existe) precargado con el test correspondiente.
+### 1.2 Tipografía
+Revertir el header a la escala anterior, más sobria:
+- Saludo: `text-[11px]` mayúscula tracking normal, sin `font-semibold` agresivo.
+- Nombre: `font-serifElegant text-[22px] font-medium` (no `26px font-bold`).
+- Etiquetas de sección ("Tu progreso de hoy", "Pendientes para vos"): `text-[10px] tracking-[0.16em]` y color `text-muted-foreground` regular (sin el `/70` apagado).
+- Títulos de TimelineCard: `font-display text-[14px] font-semibold` (no serif bold 16).
 
-## 5. Perfil de Personalidad (BFI-20)
-- Subtítulo "TU PERFIL DE PERSONALIDAD" violeta + descripción "Evaluación trimestral de rasgos cognitivos estables."
-- Card violeta gradient (`from-[#7c3aed] to-[#6d28d9]`) con ícono User, título "Rasgos Big Five (BFI-20)", estado "● Estable · Último test: hace 3 meses", flecha → circular.
-- Click abre modal full-screen `BigFiveProfileModal.tsx` (nuevo):
-  - SVG radar 5 ejes (Apertura/Responsabilidad/Extraversión/Amabilidad/Estabilidad) con cálculo matemático seguro para etiquetas (truncado + offset por cuadrante).
-  - Chips de colores por rasgo.
-  - 5 sliders táctiles → polígono morphea en tiempo real (interpolación suave con transición SVG).
-  - Botón "Cerrar Perfil" navy fijo abajo.
+Objetivo: bajar el "peso" visual general, recuperar elegancia tipo iOS Health.
 
-## 6. Flujo BDI-II Jugable
-Extender `SymptomsTestModal` (o crear `BeckTestRunner.tsx`) para BDI-II:
-- Header: "DEPRESIÓN (BDI-II) · X de 4" + barra de progreso teal.
-- 4 preguntas Beck: Tristeza, Pesimismo, Pérdida de Placer, Pensamientos Críticos. Cada opción 0–3 en card pill con número circular.
-- Footer: "La honestidad contigo mismo es clave para un diagnóstico eficaz."
-- Pantalla final (sin tilde verde):
-  - "Evaluación Completa" + "Depresión (BDI-II)".
-  - Card "PUNTAJE TOTAL" con número grande.
-  - **Termómetro lineal segmentado**: verde 0–13, amarillo 14–19, naranja 20–28, rojo 29–63, con etiquetas Mínimo/Leve/Moderado/Severo y aguja flotante posicionada por puntaje.
-  - Badge resultado (color según baremo).
-  - Texto baremo.
-  - **Si ≥ 29**: Banner gold "💛 SOPORTE MÉDICO RESMA" + 2 botones: "Sincronizar con Lic. Claudio" (navy) e "Iniciar Respiración de Rescate" (ámbar) que navega a `/herramientas/mindfulness/respiracion` con patrón coherencia cardíaca.
+### 1.3 Modo edición — `src/components/home/WidgetsBoard.tsx` y `src/index.css`
+**Mover widgets de lugar (lo que falta):**
+- Reemplazar `WidgetCell` por items con `framer-motion` `Reorder.Group` / `Reorder.Item` para permitir arrastrar y soltar tarjetas en modo edición.
+- Persistir el orden en `localStorage` (extender `WidgetState` con `order: number` y serializar el array reordenado).
+- Render: en modo normal sigue siendo `grid grid-cols-2 gap-3`; en modo edición se usa `Reorder.Group` con el mismo layout grid.
 
-## 7. Terapia y Bento 2×2
-- Toggle "TERAPIA Y SINCRONIZACIÓN" (mantiene `IOSToggle` y `TherapySyncModal`).
-- Card horizontal profesional: avatar CP gradient navy+teal, nombre + chip "MÉDICO" verde menta, M.N., botón circular llamada navy.
-- **Bento 2×2** glass:
-  1. Soporte RESMA (mail teal) → mailto.
-  2. Resumen Psico (file gold) → `/mi-proceso/resumen`.
-  3. Notas de Sesión (edit violeta) → `/mi-proceso/terapia`.
-  4. Medicación (pill teal + "Próxima toma: Al día") → `/mi-proceso/medicacion`.
+**Vibración más sutil:**
+- Suavizar las keyframes `animate-jiggle` y `animate-jiggle-alt` en `index.css`: bajar rotación de `±1.2deg` actual a `±0.4deg`, duración `0.6s` → `1.4s`, easing `ease-in-out`.
+- Eliminar la variante "alt" desfasada para que el movimiento sea más uniforme y menos nervioso.
+- Botones `X` / resize: pasarlos de fondo rojo/azul fuertes (`bg-rose-500`, `bg-resma-navy`) a un estilo más suave: círculo blanco con borde fino y glyph color, sombra ligera — coherente con iOS.
 
-## 8. Suscripción
-Mantener bloque actual de membresía al final.
+### 1.4 Top bar de edición
+- `EditTopBar`: pasar de los chips actuales (`bg-resma-navy`, uppercase tracking 0.16em) a un pill blanco translúcido más fino con texto en sentence-case. "Restablecer" en gris, "Listo" en color de marca.
 
-## Archivos
-**Nuevos**
-- `src/components/proceso/WellbeingCardV2.tsx` (tarjeta navy + sparkline)
-- `src/components/proceso/WellbeingAnalysisSheet.tsx` (bottom sheet)
-- `src/components/proceso/PsychometryCarousel.tsx` (+ SVGs abstractos inline)
-- `src/components/proceso/BigFiveCard.tsx`
-- `src/components/proceso/BigFiveProfileModal.tsx` (radar + sliders morph)
-- `src/components/proceso/BeckTestRunner.tsx` (4 preguntas + resultados + contención)
-- `src/components/proceso/WellbeingBadge.tsx` (badge -16% reutilizable)
+## 2. Mi Proceso (`src/pages/MiProceso.tsx` + componentes)
 
-**Modificados**
-- `src/pages/MiProceso.tsx` — reemplazo completo de layout, conserva lógica de auth/terapia/suscripción.
-- `src/index.css` — añadir `animate-orb-1/2` si no existen, clase `.no-scrollbar`.
+Reducir la escala global sin tocar el diseño:
 
-## Notas técnicas
-- Sheet animado con framer-motion (`AnimatePresence`).
-- Radar morph: `<motion.polygon points={...}>` con transición spring.
-- Sparkline reusable: helper `buildSparkline(values, w, h)` que devuelve `d` y nodos.
-- Sin tocar tablas/Supabase; datos demo en constantes salvo lo ya conectado (terapeuta, suscripción).
-- Lenguaje UX: nunca mostrar pesos ni decimales al usuario.
+- Contenedor: `pt-12` → `pt-7`, `pb-32` → `pb-24`, mantener `max-w-md`.
+- H1 "Mi Proceso": `text-[26px]` → `text-[20px]`, subtítulo `text-[14px]` → `text-[12px]`.
+- Etiquetas de sección uppercase: `text-[11px]` → `text-[10px]`, iconos `size={14}` → `size={11}`.
+- Espaciados: `mt-7` entre bloques → `mt-5`; `my-8 h-px` divisor → `my-6`.
+- `WellbeingCardV2`: bajar padding interno (`p-6` → `p-4`), score gigante de `text-[64px]` (revisar) a `text-[44px]`, sparkline altura `64` → `44`.
+- `PsychometryCarousel`: tarjetas de `min-w-[260px]` → `min-w-[210px]`, alto reducido proporcionalmente, SVG arte interior con `viewBox` mantenido pero contenedor más bajo.
+- `BigFiveCard`: padding e ícono reducidos un 15-20%.
+- Bento 2x2 de terapia: `p-4` → `p-3.5`, icono `h-9 w-9` → `h-8 w-8`, título `text-[14px]` → `text-[12.5px]`, subtítulo `text-[11px]` → `text-[10.5px]`, gap `gap-3` → `gap-2.5`.
+- Tarjeta del terapeuta Lic. Pereyra: avatar `h-12 w-12` → `h-10 w-10`, padding `p-4` → `p-3.5`, fuentes -1px.
+- Sección suscripción: H2 `text-[22px]` → `text-[18px]`, padding del card `p-5` → `p-4`, ícono Crown chip `h-12 w-12` → `h-10 w-10`.
+
+Resultado: todo el `/mi-proceso` se ve un ~15-20% más compacto, jerarquía y ritmo visual se conservan.
+
+## Archivos a editar
+
+- `src/pages/Dashboard.tsx` — viñetas guía + escala tipográfica.
+- `src/components/home/WidgetsBoard.tsx` — `Reorder.Group`, botones X/resize suaves, orden persistido.
+- `src/index.css` — keyframes `animate-jiggle` más sutiles.
+- `src/pages/MiProceso.tsx` — escala compacta general.
+- `src/components/proceso/WellbeingCardV2.tsx` — reducir card.
+- `src/components/proceso/PsychometryCarousel.tsx` — tarjetas más chicas.
+- `src/components/proceso/BigFiveCard.tsx` — padding/iconos.
+
+## Detalles técnicos
+
+- `Reorder.Group` de `framer-motion` necesita un array `values` y `onReorder`; pasaremos los widgets visibles. Para grid 2-col mantenemos `as="div"` y CSS grid; el drag funciona con `layout` automático.
+- Persistencia de orden: añadir helper `setOrder(ids: WidgetId[])` que reescribe `widgets` ordenados antes de guardar en `localStorage`.
+- Long-press para entrar a edit mode se mantiene (`useLongPress` 800ms); al estar dentro, tap normal no acciona la card (ya implementado por el `{...(!editMode ? lp : {})}`).
