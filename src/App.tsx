@@ -187,6 +187,7 @@ const App = () => (
               <Route path="/herramientas/recuperacion" element={<Recovery />} />
               <Route path="/herramientas/regulacion-emocional" element={<EmotionalRegulation />} />
               <Route path="/herramientas/cambiar-respuestas" element={<PremiumLock featureName="Cambiar respuestas emocionales" variant="section"><CambiarRespuestas /></PremiumLock>} />
+              <Route path="/herramientas/regulacion-dbt" element={<PremiumLock featureName="Regulación Emocional DBT" variant="section"><RegulacionDbt /></PremiumLock>} />
               <Route path="/herramientas/construir-bienestar" element={<ConstruirBienestar />} />
               <Route path="/herramientas/alimentacion-consciente" element={<MindfulEating />} />
               <Route path="/herramientas/mis-valores" element={<MyValues />} />
