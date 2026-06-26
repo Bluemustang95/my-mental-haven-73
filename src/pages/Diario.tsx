@@ -230,7 +230,7 @@ function WriteView({
       const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
       const payload = {
         user_id: user.id,
-        content: text + (recording ? "\n\n[audio]" : ""),
+        content: sanitizeHtml(text) + (recording ? "\n\n[audio]" : ""),
         entry_date: localDateStr(),
         emotion_tags: tags,
         prompt: prompt?.text ?? null,
