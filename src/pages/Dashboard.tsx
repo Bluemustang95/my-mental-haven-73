@@ -203,21 +203,59 @@ export default function Dashboard() {
           <ManageWidgetsButton widgets={widgets.widgets} onToggle={widgets.toggleEnabled} />
         </div>
 
-        {widgets.editMode ? (
-          /* Reorder mode: stack single column with drag */
-          <ReorderableStack
-            items={visibleOrdered.map((w) => ({
-              id: w.id,
+        {widgets.editMode ? (() => {
+          /* Build groups from visible widgets. Camino + Pendientes move as a single block; others are individual. */
+          const visibleIds = new Set(visibleOrdered.map((w) => w.id));
+          const groups: GroupItem[] = [];
+          const caminoIds: WidgetId[] = ["morning", "recommended", "night"];
+          if (caminoIds.some((id) => visibleIds.has(id))) {
+            groups.push({
+              id: "camino",
+              size: "full",
+              render: () => <div className="space-y-2.5">{caminoIds.filter((id) => visibleIds.has(id)).map((id) => <div key={id}>{renderWidget(id)}</div>)}</div>,
+            });
+          }
+          if (visibleIds.has("pending")) {
+            groups.push({
+              id: "pendientes",
+              size: "full",
+              hideable: true,
+              onHide: () => widgets.hide("pending"),
+              render: () => renderWidget("pending"),
+            });
+          }
+          // Individual movable widgets (sueño, mini hábitos, gratitud, notas)
+          const individualIds: WidgetId[] = ["sleep_zone", "mini_habits", "gratitude", "contention_notes"];
+          // Respect persisted order
+          const persistedOrder = loadGroupOrder();
+          individualIds.forEach((id) => {
+            const w = visibleOrdered.find((x) => x.id === id);
+            if (!w) return;
+            groups.push({
+              id,
               size: w.size,
-              render: () => renderWidget(w.id),
-            }))}
-            onReorder={(ids) => widgets.reorder(ids)}
-            onHide={(id) => widgets.hide(id)}
-            onToggleSize={(id) =>
-              widgets.setSize(id, widgets.getSize(id) === "full" ? "half" : "full")
-            }
-          />
-        ) : (
+              resizable: true,
+              hideable: true,
+              onHide: () => widgets.hide(id),
+              onToggleSize: () => widgets.setSize(id, w.size === "full" ? "half" : "full"),
+              render: () => renderWidget(id),
+            });
+          });
+          // Sort by persisted order
+          if (persistedOrder.length) {
+            groups.sort((a, b) => {
+              const ia = persistedOrder.indexOf(a.id);
+              const ib = persistedOrder.indexOf(b.id);
+              return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+            });
+          }
+          return (
+            <ReorderableGroupStack
+              items={groups}
+              onReorder={(ids) => saveGroupOrder(ids)}
+            />
+          );
+        })() : (
           <div className="relative grid grid-cols-2 gap-3">
             {visibleOrdered.map((w) => (
               <WidgetCell
