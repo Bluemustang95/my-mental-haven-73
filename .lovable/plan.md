@@ -1,65 +1,95 @@
-## Diario Clínico & Modo Zen AMOLED
+## Home Terapéutico RESMA — Rediseño premium
 
-Reescritura completa de `src/pages/Diario.tsx` (495 líneas → un solo archivo cohesivo) manteniendo la ruta `/diario` y la tabla `journal_entries` existente. Sin migraciones de DB. Solo trabajo de frontend + un helper de audio.
+Rediseño completo de `src/pages/Dashboard.tsx` (ruta `/`) aplicando glassmorphism clínico, check-in circadiano de 3 pasos con nube/luna reactivas, módulo recomendado dinámico, propagación noche→mañana y modo edición iOS (jiggle + long-press).
 
-### Vistas (intercambio fluido SPA con `AnimatePresence`)
+### Tokens de diseño (`src/index.css` + `tailwind.config.ts`)
+- Añadir variables RESMA: `--resma-navy #101927`, `--resma-teal #7cc2c8`, `--resma-gold #facb60`, `--resma-light-bg #f9f9fb`, `--resma-light-bg-2 #e8ebf3`.
+- Clase `.glass-premium` (rgba blanco 0.45, backdrop-blur 28px, border blanco 0.6).
+- Keyframes nuevos: `jiggle` (rotación ±1.2°, 180ms infinite alternate, delay aleatorio por instancia), `pop` (scale 1→1.15→1), `blob-float-a` y `blob-float-b` (40s/55s, direcciones inversas).
+- Fondo global del Home: gradiente `#f9f9fb → #e8ebf3` + 2 orbes `.glow-blob` (teal y gold, blur 80px, opacity 0.35) posicionados absolutos animados.
+- Fuentes: cargar Playfair Display + Lora (Google Fonts) en `index.html`; mapear `font-serif-elegant` en Tailwind. Mantener Inter/Montserrat existentes.
 
-1. **Escritura (default)** — header Serif "Diario / Tu espacio seguro para escribir", iconos 🔓 (privacidad, visual) y 🕐 (historial) en la esquina.
-2. **Historial** — lista de bitácoras pasadas con tarjetas glass, fecha, emoción con halo, triggers; CTA inferior "Escribir Diario".
-3. **Modo Zen (AMOLED)** — el mismo lienzo pero la app entera se oscurece a `#050508`, la BottomNav global se desvanece, aparece "✕ Salir" arriba y el panel de Paisajes Sonoros debajo.
+### Layout blindado (`src/pages/Dashboard.tsx`)
+Reestructurar el shell así:
+```text
+<div fixed-fondo gradiente + orbes>
+  <div max-w-md mx-auto h-full sm:h-[90vh] sm:max-h-[760px] flex flex-col relative>
+    <Header />            // fijo arriba
+    <WeekStripPremium />  // fijo
+    <ScrollArea flex-1 overflow-y-auto no-scrollbar pb-28 smooth-scroll>
+       Tu Progreso (Timeline 3 pasos) + ZonaDescanso + Pendientes + Widgets
+    </ScrollArea>
+    <BottomNav absolute bottom-0 />  // ya global, ocultar en este viewport y usar versión absoluta interna
+  </div>
+</div>
+```
+- Eliminar `pb-24` y dejar que la `ScrollArea` interna gestione el scroll para que la nav nunca tape contenido.
 
-### Composición del lienzo de escritura
+### Cabecera + Semana (`src/components/home/WeekStrip.tsx` rework)
+- Tarjeta glass redondeada con 7 chips L–D (22–28). Día activo: chip vertical en `resmaNavy`, letra blanca, número grande, dot inferior `resmaGold`.
+- Al cambiar día: `toast("Visualizando el progreso del [Día]")` (sonner) + actualiza `selectedDate`.
 
-- Contenedor `max-w-md h-screen flex flex-col` con dos orbes glow animados de fondo (claro) y `pb-28` para respetar `BottomNav`.
-- Glassmorphic panel con `textarea` Serif (Lora) + botón flotante **"Inspirame ✨"** en la esquina superior derecha que inserta uno de 3 prompts TCC/DBT/Estoicismo (Dicotomía de control, Visualización de lo peor, Gratitud somática), mostrados como banner desplegable sobre el textarea con botón ✕ para cerrar.
-- **Barra de adjuntos** (4 botones pill): 📸 Cámara (`<input capture="environment">`), 🖼️ Foto (`accept="image/*"`), 📎 Archivo (libre), 🎙️ Audio (toggle).
-- **Mosaico de previews**: grid auto-fill, thumbnails de cristal, botón rojo ✕ para eliminar. URLs vía `URL.createObjectURL` (solo cliente; no se sube nada en esta versión).
-- **Grabadora de voz**: al activar Audio se despliega una barra con temporizador `mm:ss` y onda SVG de 12 barras animadas por `setInterval` (alturas aleatorias).
-- **Acordeones lado a lado** (grid 2 cols): `SIENTO…` (Calma/Alegría/Tristeza/Ansiedad/Enojo/Agotamiento, single-select) y `CAUSAS…` (Trabajo/Pareja/Salud/Finanzas/Sueño, multi-select). Cada cabecera muestra el valor actual o "N sel.". Sólo uno abierto a la vez.
-- Footer fijo dentro del shell: **Vaciar** (outline) + **Registrar Entrada** (sólido teal). Botón **"⚘ MODO ZEN"** al costado superior del footer.
+### Check-in circadiano (`src/components/modals/CheckinModal.tsx` rework completo)
+Wizard 4 pantallas Mañana / 3 pantallas Noche, navegación con Framer Motion (slide horizontal). Persistir en `daily_checkins` (mode, sleep_score/day_score, emotions[], dream_text, thought_text, day_goal, highlight, next_day_focus).
 
-### Modo Zen
+Mañana:
+1. **Slider sueño** 0–100, componente `ReactiveCloud`:
+   - 0–25 ⛈️ tinte azul-grisáceo + "Pésimo descanso con tormenta mental"
+   - 26–50 ☁️ "Normal, un poco gris y pesado"
+   - 51–75 🌤️ "Buen descanso, cielo despejado"
+   - 76–100 ☀️✨ "¡Excelente! Energizado y radiante"
+2. **Grilla 3×3 emociones** (Agotamiento, Ansiedad, Alegría, Enojo, Tristeza, Calma, Motivado, Confuso, Cariño). Toggle multi, `animate-pop`, borde acento al activar.
+3. **Diario mínima fricción**: ¿Soñaste? Sí/No. Si Sí ⇒ textarea autoexpandible (`framer-motion AnimatePresence`). Textareas opcionales: pensamiento + objetivo del día.
+4. **Progreso semanal radial**: SVG circular (stroke `resmaTeal`), "n de 7 días".
 
-- Toggle agrega clase `zen` al root → sobrescribe el background a `#050508`, oculta orbes, baja opacidad de header, agrega clase global `document.body.classList.add('zen-mode')` que desde `index.css` aplica `opacity-0 pointer-events-none` al selector de la `BottomNav` existente.
-- Aparecen tarjeta "Paisajes Sonoros Binaurales" con 4 toggles: 528Hz Solfeggio, Lluvia suave, Ruido Marrón, Click Mecánico.
-- Botón ✕ Salir arriba a la izquierda (revierte estado y clase).
+Noche:
+1. **Slider día** con `ReactiveMoon`: 🌑 / 🌙 / 🌗 / 🌕✨ + textos descritos.
+2. Grilla emociones multi-select.
+3. Textareas: "¿Qué destacarías?" y "¿Qué te gustaría mejorar mañana?" → guarda `next_day_focus`.
 
-### Helper de audio nuevo `src/lib/diarioAudio.ts`
+### Propagación noche→mañana
+- En `loadToday` leer último `daily_checkins` con `mode=night` del día anterior y `next_day_focus`.
+- Si existe y aún no hay check-in matutino: renderizar `<MorningCallback>` widget destacado al inicio de la Timeline: "Ayer querías mejorar: '…'. Hoy lo vamos a encarar juntos" con CTA que abre Mañana.
+- Requiere columna `next_day_focus` (text) en `daily_checkins` — añadir vía migración si no existe.
 
-Web Audio API, sin assets externos:
-- `playSolfeggio()` — `OscillatorNode` sinusoidal a 528Hz + LFO `OscillatorNode` 0.5Hz → `GainNode` para vibrato.
-- `playRain()` — buffer de ruido blanco loop + `BiquadFilter` lowpass, frecuencia modulada por LFO lento.
-- `playBrown()` — generador de ruido Browniano (integrador) + lowpass 400Hz.
-- `playKeyClick()` — disparable; oscilador square corto + envelope (5ms ataque, 30ms decay).
-- `stopAll()` y `stop(track)`.
+### Módulo recomendado dinámico
+- Reescribir nodo "psycho/practice" como **una sola tarjeta** `RecommendedResourceCard` (segundo nodo de la Timeline) que en cada montaje selecciona aleatoriamente desde `get_daily_recommendations` (ya existente) o pool fallback (Lectura TCC, Podcast DBT, Botón de Pánico). Muestra etiqueta tipo "PODCAST · DBT", título, duración y CTA "Comenzar recurso recomendado".
 
-El textarea en Zen, si "Click Mecánico" está activo, llama `playKeyClick()` en `onChange` para cada keystroke nuevo.
+### Zona de Descanso
+- Tarjeta gradiente violeta→navy debajo del nodo nocturno, navega a `/herramientas/sueno` (ya conectado, ahora glass + glow más profundo).
 
-### Historial
+### Pendientes para vos
+- 2 columnas compactas reusando `PendingBento` rediseñado: "Pack de activación" (estado dinámico de progreso) y "Te puede aliviar" (respiración 4-7-8, 3 min).
 
-- Query `select * from journal_entries where user_id = auth.uid() order by created_at desc`.
-- Tarjeta glass: fecha (es-AR), chip de emoción con halo teal, tags de causas, content truncado a 3 líneas, mini-reproductor placeholder si la entrada incluye marcador `[audio]` en content.
+### Widgets activos + modo edición iOS
+Nuevo componente `src/components/home/WidgetsBoard.tsx`:
+- Estado persistido en `localStorage` (`home_widgets_v1`): `{ id, enabled, size: 'full'|'half', hidden }` para nodos timeline, pendientes, zona descanso y widgets (Mini Hábitos, Agradecimiento, Notas de Contención).
+- Botón "+" junto a "Tu Progreso de Hoy" abre un sheet (Radix Sheet) con toggles para activar/desactivar widgets.
+- **Long-press 800ms** (hook `useLongPress` con `mousedown`+`touchstart`) sobre cualquier widget → activa `editMode`:
+  - Toast: "¡Personalización activada! Cambia de tamaños o quita elementos ✨"
+  - Todas las tarjetas aplican `animate-jiggle` con delay aleatorio.
+  - Aparece ✕ rojo arriba-izq (oculta), ↔️ arriba-der (toggle col-span-2 / col-span-1, layout grid 2 col que se reordena con transición `layout` de framer-motion).
+  - Barra superior fija con "Restablecer Todo" y "Listo" (sale del modo).
+- Widgets nuevos a renderizar cuando estén activos: **Mini Hábitos** (lee primer hábito activo del usuario, check rápido), **Agradecimiento** (textarea micro), **Notas de Contención** (textarea persistida en `journal_entries`).
 
-### Guardado
+### Base de datos (migración mínima)
+```sql
+ALTER TABLE public.daily_checkins
+  ADD COLUMN IF NOT EXISTS next_day_focus text,
+  ADD COLUMN IF NOT EXISTS dream_text text,
+  ADD COLUMN IF NOT EXISTS thought_text text,
+  ADD COLUMN IF NOT EXISTS highlight text,
+  ADD COLUMN IF NOT EXISTS emotions text[];
+```
+(Sin nuevas tablas; RLS existente conserva.)
 
-- Insert en `journal_entries`: `content`, `entry_date = localDateStr()`, `emotion_tags = [emoción, ...causas]`, `prompt` = el inspirame usado (si lo hubo).
-- Los adjuntos y la nota de voz quedan en el cliente (futuro: storage bucket). El spec no exige persistencia esta vuelta.
-- Toast "Guardado con éxito" + reset del lienzo + posibilidad de saltar al historial.
+### Archivos a crear/modificar
+- Modificar: `src/pages/Dashboard.tsx`, `src/components/home/WeekStrip.tsx`, `src/components/home/Timeline.tsx`, `src/components/home/PendingBento.tsx`, `src/components/modals/CheckinModal.tsx`, `src/index.css`, `tailwind.config.ts`, `index.html`.
+- Nuevos: `src/components/home/ReactiveCloud.tsx`, `ReactiveMoon.tsx`, `RecommendedResourceCard.tsx`, `WidgetsBoard.tsx`, `MorningCallback.tsx`, `RadialWeekProgress.tsx`, `src/hooks/useLongPress.ts`, `src/lib/homeWidgets.ts`.
+- Migración SQL para columnas extra en `daily_checkins`.
 
-### Tokens / estilo
-
-- Colores fijos del spec por consistencia clínica: `#f9f9fb` light bg, `#050508` zen bg, `#101927` resmaNavy, `#7cc2c8` teal, `#facb60` gold. Hardcoded sólo dentro de este módulo para asegurar el look AMOLED puro del Zen.
-- Glass: `bg-white/45 backdrop-blur-2xl border-white/60` (claro) / `bg-white/[0.04] backdrop-blur-xl border-white/10` (zen).
-- Animaciones orb 18-22s loop con `@keyframes orb-1/orb-2` añadidos a `index.css` (single import, sin tocar tailwind config).
-
-### Archivos
-
-- ✏️ `src/pages/Diario.tsx` — reescritura.
-- ➕ `src/lib/diarioAudio.ts` — síntesis Web Audio.
-- ✏️ `src/index.css` — keyframes `orb-1`, `orb-2`, `.zen-mode .resma-bottom-nav { opacity:0; pointer-events:none }` (verifico el selector real del BottomNav antes de escribir).
-
-### Fuera de alcance
-
-- Subida real de adjuntos/audio a Storage.
-- Edición de entradas existentes.
-- Recomendaciones dinámicas por keywords del Diario actual (se remueven para limpiar el flujo según el nuevo diseño).
+### Notas técnicas
+- Reusar `sonner` para todos los toasts.
+- Animaciones con `framer-motion` (ya instalado) — `layout` para reflow de grid en modo edición.
+- Mantener Argentina UTC-3 con `localDateStr()` en lecturas/escrituras de `daily_checkins`.
+- Conservar `PremiumLock` para usuarios free; admin (rol existente) sigue desbloqueado por el cambio previo en Settings.
