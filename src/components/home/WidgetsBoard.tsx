@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Maximize2, Minimize2, Settings, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -46,14 +46,25 @@ const LABELS: Record<WidgetId, string> = {
   contention_notes: "Notas de contención",
 };
 
-const STORAGE_KEY = "home_widgets_v1";
+const STORAGE_KEY = "home_widgets_v2";
 
 export function loadWidgets(): WidgetState[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_WIDGETS;
     const parsed = JSON.parse(raw) as WidgetState[];
-    return DEFAULT_WIDGETS.map((d) => parsed.find((p) => p.id === d.id) ?? d);
+    // Preserve stored order; append any new defaults at the end.
+    const known = new Set(parsed.map((p) => p.id));
+    const merged = parsed
+      .map((p) => {
+        const d = DEFAULT_WIDGETS.find((x) => x.id === p.id);
+        return d ? { ...d, ...p } : null;
+      })
+      .filter(Boolean) as WidgetState[];
+    DEFAULT_WIDGETS.forEach((d) => {
+      if (!known.has(d.id)) merged.push(d);
+    });
+    return merged;
   } catch {
     return DEFAULT_WIDGETS;
   }
@@ -87,69 +98,153 @@ export function useHomeWidgets() {
   const toggleEnabled = (id: WidgetId) =>
     setWidgets((p) => p.map((w) => (w.id === id ? { ...w, enabled: !w.enabled, hidden: false } : w)));
   const hide = (id: WidgetId) => setWidgets((p) => p.map((w) => (w.id === id ? { ...w, hidden: true } : w)));
+  const reorder = (ids: WidgetId[]) => {
+    setWidgets((prev) => {
+      const map = new Map(prev.map((w) => [w.id, w]));
+      const reordered = ids.map((id) => map.get(id)!).filter(Boolean);
+      const rest = prev.filter((w) => !ids.includes(w.id));
+      return [...reordered, ...rest];
+    });
+  };
   const reset = () => {
     setWidgets(DEFAULT_WIDGETS);
-    toast.success("Widgets restablecidos ✨");
+    toast.success("Widgets restablecidos");
   };
   const activateEdit = () => {
     setEditMode(true);
-    toast("¡Personalización activada! Cambia de tamaños o quita elementos ✨", { duration: 2400 });
+    toast("Mantené y arrastrá para reordenar", { duration: 2200 });
   };
 
-  return { widgets, setWidgets, editMode, setEditMode, isVisible, getSize, setSize, toggleEnabled, hide, reset, activateEdit };
+  return {
+    widgets,
+    setWidgets,
+    editMode,
+    setEditMode,
+    isVisible,
+    getSize,
+    setSize,
+    toggleEnabled,
+    hide,
+    reorder,
+    reset,
+    activateEdit,
+  };
 }
 
+/**
+ * Wraps a widget cell when shown in normal grid mode.
+ * In edit mode the parent renders a Reorder list instead and ignores this.
+ */
 export function WidgetCell({
   id,
   editMode,
   size,
-  onHide,
-  onToggleSize,
   onLongPress,
   children,
 }: {
   id: WidgetId;
   editMode: boolean;
   size: "full" | "half";
-  onHide: () => void;
-  onToggleSize: () => void;
+  onHide?: () => void;
+  onToggleSize?: () => void;
   onLongPress: () => void;
   children: React.ReactNode;
 }) {
   const lp = useLongPress(onLongPress, 800);
-  const jiggleClass = (id.charCodeAt(0) + id.length) % 2 === 0 ? "animate-jiggle" : "animate-jiggle-alt";
-
   return (
     <motion.div
       layout
-      transition={{ type: "spring", stiffness: 280, damping: 30 }}
-      className={cn(
-        "relative",
-        size === "half" ? "col-span-1" : "col-span-2",
-        editMode && jiggleClass
-      )}
+      transition={{ type: "spring", stiffness: 260, damping: 30 }}
+      className={cn("relative", size === "half" ? "col-span-1" : "col-span-2")}
       {...(!editMode ? lp : {})}
     >
-      {editMode && (
-        <>
-          <button
-            onClick={(e) => { e.stopPropagation(); onHide(); }}
-            aria-label="Ocultar widget"
-            className="absolute -left-2 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg active:scale-95"
-          >
-            <X size={14} strokeWidth={3} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onToggleSize(); }}
-            aria-label="Cambiar tamaño"
-            className="absolute -right-2 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-resma-navy text-white shadow-lg active:scale-95"
-          >
-            {size === "full" ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-          </button>
-        </>
-      )}
       {children}
     </motion.div>
+  );
+}
+
+/**
+ * Edit-mode reorderable stack. Single column for clean drag UX,
+ * with hide and resize chips on each card.
+ */
+type EditableItem = {
+  id: WidgetId;
+  size: "full" | "half";
+  render: () => React.ReactNode;
+};
+
+export function ReorderableStack({
+  items,
+  onReorder,
+  onHide,
+  onToggleSize,
+}: {
+  items: EditableItem[];
+  onReorder: (ids: WidgetId[]) => void;
+  onHide: (id: WidgetId) => void;
+  onToggleSize: (id: WidgetId) => void;
+}) {
+  // framer-motion's Reorder requires unique value identities
+  return (
+    <ReorderInner
+      items={items}
+      onReorder={onReorder}
+      onHide={onHide}
+      onToggleSize={onToggleSize}
+    />
+  );
+}
+
+// Lazy import wrapper kept inline to avoid an extra file
+import { Reorder } from "framer-motion";
+
+function ReorderInner({
+  items,
+  onReorder,
+  onHide,
+  onToggleSize,
+}: {
+  items: EditableItem[];
+  onReorder: (ids: WidgetId[]) => void;
+  onHide: (id: WidgetId) => void;
+  onToggleSize: (id: WidgetId) => void;
+}) {
+  const ids = useMemo(() => items.map((i) => i.id), [items]);
+
+  return (
+    <Reorder.Group
+      axis="y"
+      values={ids}
+      onReorder={(next) => onReorder(next as WidgetId[])}
+      className="flex flex-col gap-3"
+    >
+      {items.map((item) => (
+        <Reorder.Item
+          key={item.id}
+          value={item.id}
+          className="relative animate-jiggle touch-none"
+          whileDrag={{ scale: 1.03, zIndex: 50 }}
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onHide(item.id); }}
+            aria-label="Ocultar widget"
+            className="absolute -left-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
+          >
+            <X size={11} strokeWidth={2.6} />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onToggleSize(item.id); }}
+            aria-label="Cambiar tamaño"
+            className="absolute -right-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
+          >
+            {item.size === "full" ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+          </button>
+          <div className="pointer-events-none">{item.render()}</div>
+        </Reorder.Item>
+      ))}
+    </Reorder.Group>
   );
 }
 
@@ -158,20 +253,20 @@ export function EditTopBar({ visible, onDone, onReset }: { visible: boolean; onD
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ y: -60, opacity: 0 }}
+          initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -60, opacity: 0 }}
-          className="absolute left-0 right-0 top-0 z-50 mx-auto flex max-w-md items-center justify-between gap-2 px-4 pt-3"
+          exit={{ y: -50, opacity: 0 }}
+          className="absolute left-0 right-0 top-0 z-50 mx-auto flex max-w-md items-center justify-between gap-2 px-5 pt-3"
         >
           <button
             onClick={onReset}
-            className="rounded-full border border-foreground/10 bg-white/80 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground shadow backdrop-blur-xl"
+            className="rounded-full border border-foreground/10 bg-white/85 px-3.5 py-1.5 text-[12px] font-medium text-muted-foreground shadow-sm backdrop-blur-xl"
           >
-            Restablecer todo
+            Restablecer
           </button>
           <button
             onClick={onDone}
-            className="flex items-center gap-1.5 rounded-full bg-resma-navy px-4 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-lg"
+            className="flex items-center gap-1.5 rounded-full bg-resma-navy px-4 py-1.5 text-[12px] font-semibold text-white shadow-sm"
           >
             <Check size={12} strokeWidth={3} /> Listo
           </button>
