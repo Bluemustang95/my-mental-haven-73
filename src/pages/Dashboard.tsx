@@ -15,10 +15,19 @@ import {
   WidgetCell,
   EditTopBar,
   ManageWidgetsButton,
-  ReorderableStack,
+  ReorderableGroupStack,
   WidgetId,
+  type GroupItem,
 } from "@/components/home/WidgetsBoard";
 import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
+
+const GROUP_ORDER_KEY = "home_groups_order_v1";
+function loadGroupOrder(): string[] {
+  try { return JSON.parse(localStorage.getItem(GROUP_ORDER_KEY) || "[]"); } catch { return []; }
+}
+function saveGroupOrder(ids: string[]) {
+  try { localStorage.setItem(GROUP_ORDER_KEY, JSON.stringify(ids)); } catch {}
+}
 
 function getGreeting() {
   const h = new Date().getHours();
