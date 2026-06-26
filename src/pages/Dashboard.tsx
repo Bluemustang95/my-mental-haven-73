@@ -84,59 +84,40 @@ export default function Dashboard() {
     loadToday();
   }, [loadToday]);
 
-  // Build the path checklist
-  const pathSteps = useMemo(
-    () => [
-      {
-        id: "morning" as const,
-        label: "Valoración de la mañana",
-        done: morningDone,
-        action: () => setCheckinOpen("morning"),
-      },
-      {
-        id: "recommended" as const,
-        label: "Recurso recomendado del día",
-        done: false,
-        action: () => {
-          document.getElementById("widget-recommended")?.scrollIntoView({ behavior: "smooth", block: "center" });
-        },
-      },
-      {
-        id: "night" as const,
-        label: "Valoración de la noche",
-        done: nightDone,
-        action: () => setCheckinOpen("night"),
-      },
-    ],
-    [morningDone, nightDone]
-  );
-
   // Renderers per widget id so the same definition feeds grid + reorder list.
   const renderWidget = (id: WidgetId): React.ReactNode => {
     switch (id) {
       case "morning":
         return (
-          <TimelineCard
-            onClick={() => setCheckinOpen("morning")}
-            icon={<Sun size={18} className="text-amber-600" />}
-            iconBg="bg-amber-100"
-            done={morningDone}
-            title="Valoración de la mañana"
-            subtitle="Analiza tu sueño, emociones y propón tus objetivos del día."
-          />
+          <BulletRow done={morningDone}>
+            <TimelineCard
+              onClick={() => setCheckinOpen("morning")}
+              icon={<Sun size={15} className="text-amber-600" />}
+              iconBg="bg-amber-100"
+              done={morningDone}
+              title="Valoración de la mañana"
+              subtitle="Analiza tu sueño, emociones y propón tus objetivos del día."
+            />
+          </BulletRow>
         );
       case "recommended":
-        return <div id="widget-recommended"><RecommendedResourceCard /></div>;
+        return (
+          <BulletRow done={false}>
+            <div id="widget-recommended"><RecommendedResourceCard /></div>
+          </BulletRow>
+        );
       case "night":
         return (
-          <TimelineCard
-            onClick={() => setCheckinOpen("night")}
-            icon={<MoonIcon size={18} className="text-indigo-600" />}
-            iconBg="bg-indigo-100"
-            done={nightDone}
-            title="Valoración de la noche"
-            subtitle="Cerrá tu día, evalúa emociones y haz tu balance introspectivo."
-          />
+          <BulletRow done={nightDone}>
+            <TimelineCard
+              onClick={() => setCheckinOpen("night")}
+              icon={<MoonIcon size={15} className="text-indigo-600" />}
+              iconBg="bg-indigo-100"
+              done={nightDone}
+              title="Valoración de la noche"
+              subtitle="Cerrá tu día, evalúa emociones y haz tu balance introspectivo."
+            />
+          </BulletRow>
         );
       case "sleep_zone":
         return <SleepZoneCard onClick={() => navigate("/herramientas/sueno")} />;
