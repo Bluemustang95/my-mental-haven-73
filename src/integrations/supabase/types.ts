@@ -804,6 +804,30 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_categories: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          label: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          label: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          label?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       habit_completions: {
         Row: {
           completed_date: string
@@ -840,12 +864,20 @@ export type Database = {
         Row: {
           archived_at: string | null
           best_streak: number
+          cadence: string
+          category_key: string
           color: string
           created_at: string
+          description: string | null
+          frequency: string
+          frequency_count: number
           icon: string
+          icon_type: string
           id: string
           name: string
+          reminders_enabled: boolean
           text_color: string
+          time_slot: string
           updated_at: string
           user_id: string
           value_key: string
@@ -853,12 +885,20 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           best_streak?: number
+          cadence?: string
+          category_key?: string
           color?: string
           created_at?: string
+          description?: string | null
+          frequency?: string
+          frequency_count?: number
           icon?: string
+          icon_type?: string
           id?: string
           name: string
+          reminders_enabled?: boolean
           text_color?: string
+          time_slot?: string
           updated_at?: string
           user_id: string
           value_key?: string
@@ -866,12 +906,20 @@ export type Database = {
         Update: {
           archived_at?: string | null
           best_streak?: number
+          cadence?: string
+          category_key?: string
           color?: string
           created_at?: string
+          description?: string | null
+          frequency?: string
+          frequency_count?: number
           icon?: string
+          icon_type?: string
           id?: string
           name?: string
+          reminders_enabled?: boolean
           text_color?: string
+          time_slot?: string
           updated_at?: string
           user_id?: string
           value_key?: string
