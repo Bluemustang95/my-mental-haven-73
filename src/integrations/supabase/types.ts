@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       algo_option_links: {
         Row: {
           created_at: string
@@ -1176,6 +1194,39 @@ export type Database = {
           defaults?: Json
           enabled_ids?: Json
           id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_rules: {
+        Row: {
+          category: string
+          condition_text: string | null
+          copy_text: string
+          enabled: boolean
+          id: string
+          sort_order: number
+          trigger_key: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          condition_text?: string | null
+          copy_text: string
+          enabled?: boolean
+          id?: string
+          sort_order?: number
+          trigger_key: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          condition_text?: string | null
+          copy_text?: string
+          enabled?: boolean
+          id?: string
+          sort_order?: number
+          trigger_key?: string
           updated_at?: string
         }
         Relationships: []
