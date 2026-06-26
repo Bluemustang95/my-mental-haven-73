@@ -56,6 +56,7 @@ import Rumination from "@/pages/Rumination";
 import Recovery from "@/pages/Recovery";
 import EmotionalRegulation from "@/pages/EmotionalRegulation";
 import CambiarRespuestas from "@/pages/CambiarRespuestas";
+import RegulacionDbt from "@/pages/RegulacionDbt";
 import ConstruirBienestar from "@/pages/ConstruirBienestar";
 import { PremiumLock } from "@/components/PremiumLock";
 import MindfulEating from "@/pages/MindfulEating";
@@ -186,6 +187,7 @@ const App = () => (
               <Route path="/herramientas/recuperacion" element={<Recovery />} />
               <Route path="/herramientas/regulacion-emocional" element={<EmotionalRegulation />} />
               <Route path="/herramientas/cambiar-respuestas" element={<PremiumLock featureName="Cambiar respuestas emocionales" variant="section"><CambiarRespuestas /></PremiumLock>} />
+              <Route path="/herramientas/regulacion-dbt" element={<PremiumLock featureName="Regulación Emocional DBT" variant="section"><RegulacionDbt /></PremiumLock>} />
               <Route path="/herramientas/construir-bienestar" element={<ConstruirBienestar />} />
               <Route path="/herramientas/alimentacion-consciente" element={<MindfulEating />} />
               <Route path="/herramientas/mis-valores" element={<MyValues />} />

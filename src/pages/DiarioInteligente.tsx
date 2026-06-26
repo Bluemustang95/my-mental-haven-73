@@ -101,12 +101,20 @@ export default function DiarioInteligente() {
       isRegulacion
         ? [
             {
-              to: "/herramientas/cambiar-respuestas",
+              to: "/herramientas/regulacion-dbt",
               icon: Heart,
-              title: "Cambiar respuestas emocionales",
-              desc: "IA guiada · Verificá los hechos, decidí y actuá.",
+              title: "Ficha DBT · Regulación Emocional",
+              desc: "5 pasos guiados · Acción opuesta y resolución (Linehan).",
               from: "#7cc2c8",
               to2: "#facb60",
+            },
+            {
+              to: "/herramientas/cambiar-respuestas",
+              icon: Sparkles,
+              title: "Cambiar respuestas emocionales",
+              desc: "IA guiada · Verificá los hechos, decidí y actuá.",
+              from: "#101927",
+              to2: "#7cc2c8",
             },
             {
               to: "/herramientas/construir-bienestar",
