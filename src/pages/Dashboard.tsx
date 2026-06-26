@@ -322,36 +322,49 @@ function SleepZoneCard({ onClick }: { onClick: () => void }) {
 }
 
 function PendingForYou({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const items = [
+    {
+      to: "/herramientas/pack",
+      title: "Pack de activación",
+      subtitle: "Día 2 en curso",
+      icon: <Sparkles size={16} className="text-white" />,
+      from: "#FB923C",
+      to2: "#F472B6",
+    },
+    {
+      to: "/diario-inteligente/mindfulness",
+      title: "Te puede aliviar",
+      subtitle: "Respiración 4-7-8 · 3 min",
+      icon: <Wind size={16} className="text-white" />,
+      from: "#60A5FA",
+      to2: "#A78BFA",
+    },
+  ];
   return (
     <div>
       <p className="mb-2 px-1 font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
         Pendientes para vos
       </p>
       <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => onNavigate("/herramientas/pack")}
-          className="glass-premium flex flex-col items-start gap-2 rounded-[20px] p-3.5 text-left transition active:scale-[0.98]"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-200 to-amber-200">
-            <Sparkles size={14} className="text-rose-700" />
-          </div>
-          <div>
-            <p className="font-display text-[12.5px] font-semibold text-resma-navy">Pack de activación</p>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">Día 2 en curso</p>
-          </div>
-        </button>
-        <button
-          onClick={() => onNavigate("/diario-inteligente/mindfulness")}
-          className="glass-premium flex flex-col items-start gap-2 rounded-[20px] p-3.5 text-left transition active:scale-[0.98]"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-200 to-indigo-200">
-            <Wind size={14} className="text-indigo-700" />
-          </div>
-          <div>
-            <p className="font-display text-[12.5px] font-semibold text-resma-navy">Te puede aliviar</p>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">Respiración 4-7-8 · 3 min</p>
-          </div>
-        </button>
+        {items.map((it) => (
+          <button
+            key={it.to}
+            onClick={() => onNavigate(it.to)}
+            className="flex flex-col items-start gap-2 rounded-[20px] p-3.5 text-left text-white shadow-md transition active:scale-[0.98]"
+            style={{
+              background: `linear-gradient(135deg, ${it.from}, ${it.to2})`,
+              boxShadow: `0 12px 28px -14px ${it.from}`,
+            }}
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm">
+              {it.icon}
+            </div>
+            <div>
+              <p className="font-display text-[12.5px] font-semibold text-white">{it.title}</p>
+              <p className="mt-0.5 text-[10px] text-white/85">{it.subtitle}</p>
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );
