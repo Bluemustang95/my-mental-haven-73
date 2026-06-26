@@ -401,12 +401,17 @@ function WriteView({
           </PopoverContent>
         </Popover>
 
-        {!zen && (
+        {!zen ? (
           <>
             <span className="mx-0.5 h-5 w-px bg-[#101927]/10" />
             <IconBtn label="Modo Zen" onClick={onEnterZen} zen={zen}>
               <Flower size={17} className="text-[#7cc2c8]" />
             </IconBtn>
+          </>
+        ) : (
+          <>
+            <span className="mx-0.5 h-5 w-px bg-white/10" />
+            <SoundscapePopover />
           </>
         )}
 
@@ -415,8 +420,9 @@ function WriteView({
         <input ref={fileRef} type="file" multiple hidden onChange={(e) => { addFiles(e.target.files, "file"); e.target.value = ""; }} />
       </div>
 
-      {/* Zen soundscape */}
-      {zen && <Soundscape />}
+      {/* Zen soundscape moved into toolbar popover */}
+
+
 
       {/* Footer actions */}
       <div className="mt-3 flex gap-2">
