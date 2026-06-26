@@ -179,11 +179,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Guided path (viñetas) */}
-        {!widgets.editMode && (
-          <PathChecklist steps={pathSteps} />
-        )}
-
         {/* Yesterday's improvement callback */}
         {improveFromYesterday && !morningDone && !widgets.editMode && (
           <div className="mt-3">
@@ -191,10 +186,10 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Progress label + manage */}
-        <div className="mt-5 mb-3 flex items-center justify-between px-1">
+        {/* Camino + manage */}
+        <div className="mt-5 mb-2 flex items-center justify-between px-1">
           <p className="font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-            Tu progreso de hoy
+            Tu camino de hoy
           </p>
           <ManageWidgetsButton widgets={widgets.widgets} onToggle={widgets.toggleEnabled} />
         </div>
