@@ -1,75 +1,88 @@
+# Plan: Rediseño Mindfulness & Respiración Consciente
 
-# Ajustes de Inicio y Mi Proceso
+Reescribir el flujo `/herramientas/mindfulness/respiracion` (y el hub `/herramientas/mindfulness`) como una experiencia mobile-first de gama premium tipo Calm/Apple Health, manteniendo el sistema de tokens RESMA ya presente (`resmaNavy`, `resmaTeal`, `resmaGold`, glassmorphic, orbes animados, fuentes Inter/Montserrat/Playfair).
 
-## 1. Inicio (`src/pages/Dashboard.tsx`)
+Las capturas adjuntas muestran que la base estética ya existe. El rediseño se enfoca en: blindar el layout, refinar los 3 pasos, mejorar los 4 visualizadores y unificar controles globales.
 
-### 1.1 Restaurar viñetas guía (camino del día)
-Volver a incluir el bloque "Tu camino de hoy" como lista de checklist con viñetas circulares (`○` vacía / `●` llena con check) y línea conectora vertical, que guíe al usuario por el flujo recomendado:
+## 1. Shell del módulo (blindado elástico)
+
+Nuevo wrapper `MindfulnessShell` reutilizable para las 3 pantallas:
 
 ```text
-●───  Valoración de la mañana          [Hecho / Comenzar]
-│
-○───  Recurso recomendado
-│
-○───  Valoración de la noche
+┌─ relative max-w-md mx-auto h-full sm:h-[90vh] sm:max-h-[760px] ─┐
+│  Background: gradiente claro + 2 orbes animados (orb-1/orb-2)   │
+│  ┌─ Header sticky (MINDFULNESS · RESMA · back · ?) ──────────┐  │
+│  ├─ flex-1 overflow-y-auto no-scrollbar pb-28 smooth-scroll  │  │
+│  │   → Pantalla 1 / 2 / 3                                    │  │
+│  └─ BottomNav absolute bottom-0 w-full (3 botones)           │  │
+│  Floating: botón IA (drawer chatbot)                          │  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-- Renderizar arriba de la grid de widgets (no reemplaza widgets, los complementa como índice).
-- Cada viñeta es tappable y baja al widget correspondiente o abre el modal directo.
-- Estado `done` se calcula con `morningDone`, `nightDone` y un check sobre `recommended_resource_log` para el recurso del día.
+- Oculta la `BottomNav` global (clase `zen-mode` o flag local) para evitar doble barra.
+- Botón "?" abre `BreathingEducationModal` (modal centrado, serif, nervio vago / amígdala).
+- Botón flotante IA abre `BreathingAiDrawer` (Sheet bottom, historial pre-renderizado).
 
-### 1.2 Tipografía
-Revertir el header a la escala anterior, más sobria:
-- Saludo: `text-[11px]` mayúscula tracking normal, sin `font-semibold` agresivo.
-- Nombre: `font-serifElegant text-[22px] font-medium` (no `26px font-bold`).
-- Etiquetas de sección ("Tu progreso de hoy", "Pendientes para vos"): `text-[10px] tracking-[0.16em]` y color `text-muted-foreground` regular (sin el `/70` apagado).
-- Títulos de TimelineCard: `font-display text-[14px] font-semibold` (no serif bold 16).
+## 2. Pantalla 1 — Intención
 
-Objetivo: bajar el "peso" visual general, recuperar elegancia tipo iOS Health.
+- Segmented control premium `Respiración | Body Scan` (pill navy activa, blanco glass inactivo).
+- Body Scan → estado vacío estético "Módulo clínico en desarrollo" (icono + serif).
+- Grid 2×2 de tarjetas glass para los 4 pilares con icono coloreado, título, descripción corta y estrella favorito:
+  - Dormir mejor (4-7-8) · luna lila
+  - Bajar ansiedad (Suspiro Fisiológico) · onda teal
+  - Concentrarme (Box 4-4-4-4) · diana verde
+  - Equilibrar (Coherencia 5-5) · símbolo gold
 
-### 1.3 Modo edición — `src/components/home/WidgetsBoard.tsx` y `src/index.css`
-**Mover widgets de lugar (lo que falta):**
-- Reemplazar `WidgetCell` por items con `framer-motion` `Reorder.Group` / `Reorder.Item` para permitir arrastrar y soltar tarjetas en modo edición.
-- Persistir el orden en `localStorage` (extender `WidgetState` con `order: number` y serializar el array reordenado).
-- Render: en modo normal sigue siendo `grid grid-cols-2 gap-3`; en modo edición se usa `Reorder.Group` con el mismo layout grid.
+## 3. Pantalla 2 — Ajuste de sesión
 
-**Vibración más sutil:**
-- Suavizar las keyframes `animate-jiggle` y `animate-jiggle-alt` en `index.css`: bajar rotación de `±1.2deg` actual a `±0.4deg`, duración `0.6s` → `1.4s`, easing `ease-in-out`.
-- Eliminar la variante "alt" desfasada para que el movimiento sea más uniforme y menos nervioso.
-- Botones `X` / resize: pasarlos de fondo rojo/azul fuertes (`bg-rose-500`, `bg-resma-navy`) a un estilo más suave: círculo blanco con borde fino y glyph color, sombra ligera — coherente con iOS.
+- Card resumen del ejercicio elegido (icono + nombre + patrón).
+- Slider 1–20 min con marcadores (1, 5, 10, 15, 20), label "TIEMPO DE PRÁCTICA" + valor grande.
+- Panel glass con dos toggles:
+  - Activar Voz de Guía (subtítulos dinámicos).
+  - Sonido de Fondo (lluvia tenue, vía WebAudio sintetizado existente o silencio si no disponible).
+- CTA navy full-width `Comenzar práctica →`.
 
-### 1.4 Top bar de edición
-- `EditTopBar`: pasar de los chips actuales (`bg-resma-navy`, uppercase tracking 0.16em) a un pill blanco translúcido más fino con texto en sentence-case. "Restablecer" en gris, "Listo" en color de marca.
+## 4. Pantalla 3 — Reproductor activo
 
-## 2. Mi Proceso (`src/pages/MiProceso.tsx` + componentes)
+Cada ejercicio renderiza su visualizador singular (SVG + framer-motion, sin libs nuevas):
 
-Reducir la escala global sin tocar el diseño:
+- **Dormir 4-7-8**: fondo nocturno profundo, orbe translúcido que late siguiendo fase (escala 0.7↔1.15), partículas de luz estelar (10–14 puntos) flotando lento de abajo→arriba.
+- **Suspiro fisiológico**: onda sinusoidal SVG; bola brillante recorre la curva: sube pendiente 1 (inh1), micro-salto (inh2), desliza largo y suave por la pendiente descendente (exh).
+- **Box 4-4-4-4**: cuadrado de líneas finas; nodo de luz viaja por el perímetro exacto en 4 segmentos de 4s.
+- **Coherencia cardíaca 5-5**: Flor de la vida (7 círculos entrelazados) que expande hacia afuera 5s (inh) y se pliega al centro 5s (exh), continuo sin pausas.
 
-- Contenedor: `pt-12` → `pt-7`, `pb-32` → `pb-24`, mantener `max-w-md`.
-- H1 "Mi Proceso": `text-[26px]` → `text-[20px]`, subtítulo `text-[14px]` → `text-[12px]`.
-- Etiquetas de sección uppercase: `text-[11px]` → `text-[10px]`, iconos `size={14}` → `size={11}`.
-- Espaciados: `mt-7` entre bloques → `mt-5`; `my-8 h-px` divisor → `my-6`.
-- `WellbeingCardV2`: bajar padding interno (`p-6` → `p-4`), score gigante de `text-[64px]` (revisar) a `text-[44px]`, sparkline altura `64` → `44`.
-- `PsychometryCarousel`: tarjetas de `min-w-[260px]` → `min-w-[210px]`, alto reducido proporcionalmente, SVG arte interior con `viewBox` mantenido pero contenedor más bajo.
-- `BigFiveCard`: padding e ícono reducidos un 15-20%.
-- Bento 2x2 de terapia: `p-4` → `p-3.5`, icono `h-9 w-9` → `h-8 w-8`, título `text-[14px]` → `text-[12.5px]`, subtítulo `text-[11px]` → `text-[10.5px]`, gap `gap-3` → `gap-2.5`.
-- Tarjeta del terapeuta Lic. Pereyra: avatar `h-12 w-12` → `h-10 w-10`, padding `p-4` → `p-3.5`, fuentes -1px.
-- Sección suscripción: H2 `text-[22px]` → `text-[18px]`, padding del card `p-5` → `p-4`, ícono Crown chip `h-12 w-12` → `h-10 w-10`.
+Soporte:
+- Subtítulos dinámicos serif (instrucciones cortas por fase).
+- Timer cuenta regresiva grande.
+- Controles `Pausar/Reanudar` y `Detener` (pills glass).
+- Hook `useBreathingCycle(pattern)` que centraliza fases (inh/hold/exh/holdEmpty) y dura­ciones.
 
-Resultado: todo el `/mi-proceso` se ve un ~15-20% más compacto, jerarquía y ritmo visual se conservan.
+## 5. Controles globales
 
-## Archivos a editar
+- `BreathingEducationModal`: explicación clínica del entrenamiento respiratorio (nervio vago, amígdala) con tipografía Playfair/Lora.
+- `BreathingAiDrawer`: Sheet inferior con burbujas de chat pre-renderizadas (guía empática "voseo") + input deshabilitado o conectado a edge function existente si la hay; si no, simulado.
+- Mini-navbar absoluta de 3 botones (Inicio módulo, Configurar, Reproductor) para saltar entre pasos cuando hay sesión activa.
 
-- `src/pages/Dashboard.tsx` — viñetas guía + escala tipográfica.
-- `src/components/home/WidgetsBoard.tsx` — `Reorder.Group`, botones X/resize suaves, orden persistido.
-- `src/index.css` — keyframes `animate-jiggle` más sutiles.
-- `src/pages/MiProceso.tsx` — escala compacta general.
-- `src/components/proceso/WellbeingCardV2.tsx` — reducir card.
-- `src/components/proceso/PsychometryCarousel.tsx` — tarjetas más chicas.
-- `src/components/proceso/BigFiveCard.tsx` — padding/iconos.
+## 6. Archivos
 
-## Detalles técnicos
+Crear / reescribir:
+- `src/pages/mindfulness/BreathingHome.tsx` (orquesta los 3 pasos con estado local).
+- `src/components/mindfulness/breathing/MindfulnessShell.tsx` (shell blindado).
+- `src/components/mindfulness/breathing/IntentionScreen.tsx`
+- `src/components/mindfulness/breathing/SetupScreen.tsx`
+- `src/components/mindfulness/breathing/PlayerScreen.tsx`
+- `src/components/mindfulness/breathing/visuals/VisualizerSleep.tsx` (rediseño)
+- `src/components/mindfulness/breathing/visuals/VisualizerSigh.tsx` (rediseño)
+- `src/components/mindfulness/breathing/visuals/VisualizerBox.tsx` (rediseño)
+- `src/components/mindfulness/breathing/visuals/VisualizerCoherence.tsx` (rediseño)
+- `src/components/mindfulness/breathing/BreathingEducationModal.tsx`
+- `src/components/mindfulness/breathing/BreathingAiDrawer.tsx`
+- `src/lib/mindfulness/breathingPatterns.ts` (catálogo + fases).
+- `src/lib/mindfulness/useBreathingCycle.ts` (hook fase/tick).
 
-- `Reorder.Group` de `framer-motion` necesita un array `values` y `onReorder`; pasaremos los widgets visibles. Para grid 2-col mantenemos `as="div"` y CSS grid; el drag funciona con `layout` automático.
-- Persistencia de orden: añadir helper `setOrder(ids: WidgetId[])` que reescribe `widgets` ordenados antes de guardar en `localStorage`.
-- Long-press para entrar a edit mode se mantiene (`useLongPress` 800ms); al estar dentro, tap normal no acciona la card (ya implementado por el `{...(!editMode ? lp : {})}`).
+Sin cambios de DB ni edge functions. Sin libs nuevas (framer-motion ya presente).
+
+## 7. Verificación
+
+- Typecheck del build.
+- Revisar visualmente las 3 pantallas con Playwright (390×809) y capturar 1 screenshot por paso + 1 por visualizador para verificar que nada queda tapado por la nav fija.
