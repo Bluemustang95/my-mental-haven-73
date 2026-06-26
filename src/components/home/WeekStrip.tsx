@@ -1,63 +1,64 @@
 import { addDays, format, isSameDay, startOfWeek } from "date-fns";
+import { es } from "date-fns/locale";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { localDateStr } from "@/lib/utils";
 
 const initials = ["L", "M", "X", "J", "V", "S", "D"];
+const dayNames = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 export function WeekStrip({
   progressByDate = {},
   onSelectDay,
+  selectedDate,
 }: {
   progressByDate?: Record<string, number>;
   onSelectDay?: (d: Date) => void;
+  selectedDate?: Date;
 }) {
   const today = new Date();
   const ws = startOfWeek(today, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
+  const active = selectedDate ?? today;
 
   return (
-    <div className="grid grid-cols-7 gap-1 px-2">
+    <div className="glass-premium flex w-full items-stretch justify-between gap-1 rounded-[26px] px-2 py-2">
       {days.map((d, i) => {
+        const isActive = isSameDay(d, active);
         const isToday = isSameDay(d, today);
         const key = localDateStr(d);
         const prog = progressByDate[key] ?? 0;
-        const complete = prog >= 4;
-        const partial = prog > 0 && prog < 4;
         return (
           <button
             key={i}
-            onClick={() => onSelectDay?.(d)}
-            className="flex flex-col items-center gap-1 py-1"
+            onClick={() => {
+              onSelectDay?.(d);
+              toast(`Visualizando el progreso del ${dayNames[i]}`, { duration: 1800 });
+            }}
+            className={cn(
+              "relative flex flex-1 flex-col items-center justify-center rounded-2xl py-2 transition-all",
+              isActive ? "bg-resma-navy text-white shadow-[0_10px_24px_-12px_rgba(16,25,39,0.7)]" : "text-muted-foreground/70"
+            )}
           >
-            <span
-              className={cn(
-                "font-display text-[11px] font-semibold tracking-wide",
-                isToday ? "text-foreground" : "text-muted-foreground/60"
-              )}
-            >
+            <span className={cn("text-[10px] font-semibold tracking-[0.12em]", isActive ? "text-white/70" : "text-muted-foreground/60")}>
               {initials[i]}
             </span>
-            <div
+            <motion.span
+              layoutId={isActive ? "weekDayBadge" : undefined}
               className={cn(
-                "relative flex h-8 w-8 items-center justify-center rounded-full font-display text-[13px] transition",
-                isToday
-                  ? "bg-accent/20 text-foreground font-bold ring-1 ring-accent/40"
-                  : "text-foreground/70"
+                "mt-0.5 font-serifElegant text-xl font-bold",
+                isActive ? "text-white" : "text-foreground/70"
               )}
             >
-              {format(d, "d")}
-              {isToday && (
-                <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-accent" />
-              )}
-              {!isToday && (complete || partial) && (
-                <span
-                  className={cn(
-                    "absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full",
-                    complete ? "bg-success" : "bg-accent"
-                  )}
-                />
-              )}
-            </div>
+              {format(d, "d", { locale: es })}
+            </motion.span>
+            {isToday && (
+              <span className={cn("mt-1 h-1 w-1 rounded-full", isActive ? "bg-resma-gold" : prog > 0 ? "bg-resma-teal" : "bg-resma-gold/60")} />
+            )}
+            {!isToday && prog > 0 && (
+              <span className="mt-1 h-1 w-1 rounded-full bg-resma-teal/80" />
+            )}
           </button>
         );
       })}
