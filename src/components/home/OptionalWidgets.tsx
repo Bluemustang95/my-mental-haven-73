@@ -92,11 +92,12 @@ export function GratitudeWidget() {
 
   const save = async () => {
     if (!val.trim() || !user) return;
-    await supabase.from("journal_entries").insert({
+    await (supabase as any).from("journal_entries").insert({
       user_id: user.id,
-      kind: "gratitud",
+      entry_date: localDateStr(new Date()),
+      prompt: "Gratitud",
       content: val.trim(),
-    } as any);
+    });
     setSaved(true);
     setVal("");
     toast.success("Gratitud guardada ✨");
