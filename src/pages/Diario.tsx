@@ -128,10 +128,12 @@ function WriteView({
   const [recSec, setRecSec] = useState(0);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [entryId, setEntryId] = useState<string | null>(null);
+  const [confirmNew, setConfirmNew] = useState(false);
+  const [fmtBar, setFmtBar] = useState<{ top: number; left: number } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lastLen = useRef(0);
-  const taRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const camRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -165,13 +167,40 @@ function WriteView({
     return () => clearInterval(id);
   }, [recording]);
 
-  // Mechanical click on textarea typing (zen only)
-  const onTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const v = e.target.value;
-    if (zen && v.length > lastLen.current) audio.triggerClick();
-    lastLen.current = v.length;
-    setText(v);
+  // Editor input → store sanitized HTML
+  const onEditorInput = () => {
+    const el = editorRef.current;
+    if (!el) return;
+    const raw = el.innerHTML;
+    const plainLen = (el.innerText ?? "").length;
+    if (zen && plainLen > lastLen.current) audio.triggerClick();
+    lastLen.current = plainLen;
+    setText(raw);
   };
+
+  // Selection toolbar tracking
+  useEffect(() => {
+    const onSel = () => {
+      const sel = window.getSelection();
+      const el = editorRef.current;
+      if (!sel || sel.isCollapsed || !el) { setFmtBar(null); return; }
+      const anchor = sel.anchorNode;
+      if (!anchor || !el.contains(anchor)) { setFmtBar(null); return; }
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) { setFmtBar(null); return; }
+      setFmtBar({ top: rect.top + window.scrollY - 44, left: rect.left + rect.width / 2 + window.scrollX });
+    };
+    document.addEventListener("selectionchange", onSel);
+    return () => document.removeEventListener("selectionchange", onSel);
+  }, []);
+
+  const applyFormat = (cmd: "bold" | "italic") => {
+    editorRef.current?.focus();
+    document.execCommand(cmd, false);
+    onEditorInput();
+  };
+
+
 
   const toggleCause = (k: string) => {
     setCauses((s) => {
