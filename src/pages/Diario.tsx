@@ -95,7 +95,9 @@ function WriteView({
   const [openAcc, setOpenAcc] = useState<"emo" | "cause" | null>(null);
   const [recording, setRecording] = useState(false);
   const [recSec, setRecSec] = useState(0);
-  const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [entryId, setEntryId] = useState<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lastLen = useRef(0);
   const taRef = useRef<HTMLTextAreaElement>(null);
