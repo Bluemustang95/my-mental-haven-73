@@ -100,6 +100,15 @@ import PackHome from "@/pages/pack/PackHome";
 import BAProgram from "@/pages/pack/ba/BAProgram";
 import PackOverview from "@/pages/admin/pack/PackOverview";
 import BAContentEditor from "@/pages/admin/pack/BAContentEditor";
+import DashboardGlobal from "@/pages/admin/modules/DashboardGlobal";
+import CrmPacientes from "@/pages/admin/modules/CrmPacientes";
+import PensamientosAdmin from "@/pages/admin/modules/PensamientosAdmin";
+import RegulacionDbtAdmin from "@/pages/admin/modules/RegulacionDbtAdmin";
+import MindfulnessAdmin from "@/pages/admin/modules/MindfulnessAdmin";
+import EscanerAdmin from "@/pages/admin/modules/EscanerAdmin";
+import HabitosAdmin from "@/pages/admin/modules/HabitosAdmin";
+import ProgresoAdmin from "@/pages/admin/modules/ProgresoAdmin";
+import NotificacionesAdmin from "@/pages/admin/modules/NotificacionesAdmin";
 
 
 const queryClient = new QueryClient();
