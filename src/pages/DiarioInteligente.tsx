@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Heart, Sparkles } from "lucide-react";
+import { ArrowLeft, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { OpenSessionsList } from "@/components/dbt/OpenSessionsList";
-import { BienestarProcessCard } from "@/components/bienestar/BienestarProcessCard";
-import { readDraft as readBienestarDraft, todayStatus } from "@/components/bienestar/useBienestarDraft";
 
 type Sub = {
   id: string;
