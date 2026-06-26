@@ -457,6 +457,17 @@ function WriteView({
 
 
 /* ────────────── Subcomponents ────────────── */
+function SaveIndicator({ state, zen }: { state: "idle" | "saving" | "saved"; zen: boolean }) {
+  const base = cn("text-[10px] font-medium tracking-wide transition-opacity", zen ? "text-slate-400" : "text-[#101927]/45");
+  if (state === "idle") return <span className={cn(base, "opacity-0")}>·</span>;
+  if (state === "saving") return <span className={base}>Guardando…</span>;
+  return (
+    <span className={cn(base, "flex items-center gap-1 text-[#7cc2c8]")}>
+      <span className="h-1.5 w-1.5 rounded-full bg-[#7cc2c8]" /> Guardado
+    </span>
+  );
+}
+
 function IconBtn({
   label, onClick, zen, active, children,
 }: { label: string; onClick: () => void; zen: boolean; active?: boolean; children: React.ReactNode }) {
