@@ -72,9 +72,6 @@ export default function PensamientosHub() {
           Identificá, evaluá y modificá pensamientos automáticos.
         </p>
 
-        <div className="mt-4">
-          <WeekStrip progressByDate={progressByDate} />
-        </div>
       </div>
 
       <div className="mt-5 space-y-2 px-5">
