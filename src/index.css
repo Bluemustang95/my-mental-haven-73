@@ -274,3 +274,17 @@ body.zen-mode nav { opacity: 0 !important; pointer-events: none !important; tran
 /* Hide global BottomNav while Home edit mode is active */
 body.home-edit nav { opacity: 0.0 !important; pointer-events: none !important; transition: opacity .25s ease; }
 
+
+/* ============== ADMIN PANEL (RESMA+ Master Dashboard) ============== */
+.resma-admin-shell { font-family: 'Inter', system-ui, sans-serif; color: #101927; }
+.resma-admin-shell .font-admin-label { font-family: 'Montserrat', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+.admin-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+.admin-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.admin-scroll::-webkit-scrollbar-track { background: transparent; }
+.admin-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; transition: background .2s; }
+.admin-scroll:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
+.admin-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+@keyframes admin-toast-in { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.admin-toast-in { animation: admin-toast-in .25s ease-out; }
+@keyframes admin-zoom-in { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.admin-zoom-in { animation: admin-zoom-in .2s ease-out; }

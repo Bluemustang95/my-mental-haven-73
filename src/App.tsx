@@ -100,6 +100,15 @@ import PackHome from "@/pages/pack/PackHome";
 import BAProgram from "@/pages/pack/ba/BAProgram";
 import PackOverview from "@/pages/admin/pack/PackOverview";
 import BAContentEditor from "@/pages/admin/pack/BAContentEditor";
+import DashboardGlobal from "@/pages/admin/modules/DashboardGlobal";
+import CrmPacientes from "@/pages/admin/modules/CrmPacientes";
+import PensamientosAdmin from "@/pages/admin/modules/PensamientosAdmin";
+import RegulacionDbtAdmin from "@/pages/admin/modules/RegulacionDbtAdmin";
+import MindfulnessAdmin from "@/pages/admin/modules/MindfulnessAdmin";
+import EscanerAdmin from "@/pages/admin/modules/EscanerAdmin";
+import HabitosAdmin from "@/pages/admin/modules/HabitosAdmin";
+import ProgresoAdmin from "@/pages/admin/modules/ProgresoAdmin";
+import NotificacionesAdmin from "@/pages/admin/modules/NotificacionesAdmin";
 
 
 const queryClient = new QueryClient();
@@ -217,19 +226,27 @@ const App = () => (
               <Route path="/vincular" element={<LinkProfessional />} />
             </Route>
             <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="/admin/dashboard" element={<DashboardGlobal />} />
+              <Route path="/admin/pacientes" element={<CrmPacientes />} />
+              <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
+              <Route path="/admin/pensamientos" element={<PensamientosAdmin />} />
+              <Route path="/admin/regulacion" element={<RegulacionDbtAdmin />} />
+              <Route path="/admin/mindfulness" element={<MindfulnessAdmin />} />
+              <Route path="/admin/escaner" element={<EscanerAdmin />} />
+              <Route path="/admin/habitos" element={<HabitosAdmin />} />
+              <Route path="/admin/progreso" element={<ProgresoAdmin />} />
+              <Route path="/admin/notificaciones" element={<NotificacionesAdmin />} />
               <Route path="/admin/contenido" element={<ContentManager />} />
               <Route path="/admin/recursos" element={<ResourcesManager />} />
               <Route path="/admin/recursos/:slug" element={<ResourceDetail />} />
               <Route path="/admin/solicitudes" element={<TreatmentRequests />} />
-              <Route path="/admin/pacientes" element={<PatientList />} />
-              <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
               <Route path="/admin/cuestionario" element={<QuestionnaireManager />} />
               <Route path="/admin/configuracion" element={<SystemSettings />} />
               <Route path="/admin/estadisticas" element={<AdminStats />} />
               <Route path="/admin/pack" element={<PackOverview />} />
               <Route path="/admin/pack/ba" element={<BAContentEditor />} />
-              <Route path="/admin/mindfulness" element={<Navigate to="/admin/recursos" replace />} />
+              <Route path="/admin/legacy" element={<AdminDashboard />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,88 +1,95 @@
-# Plan: Rediseño Mindfulness & Respiración Consciente
+Rediseñaré el panel admin (`/admin/*`) como un **Master Dashboard B2B desktop-first** con un nuevo shell, sidebar acordeón, tokens RESMA+ y reemplazaré los módulos por las vistas que pediste. Psicoeducación y Pack de Actividades **conservan su lógica** y solo se reestilan para encajar en el shell. Añado un módulo nuevo de **Notificaciones Anti-Fatiga** con simulador de push.
 
-Reescribir el flujo `/herramientas/mindfulness/respiracion` (y el hub `/herramientas/mindfulness`) como una experiencia mobile-first de gama premium tipo Calm/Apple Health, manteniendo el sistema de tokens RESMA ya presente (`resmaNavy`, `resmaTeal`, `resmaGold`, glassmorphic, orbes animados, fuentes Inter/Montserrat/Playfair).
+---
 
-Las capturas adjuntas muestran que la base estética ya existe. El rediseño se enfoca en: blindar el layout, refinar los 3 pasos, mejorar los 4 visualizadores y unificar controles globales.
+### 1 · Sistema de diseño (tokens nuevos)
 
-## 1. Shell del módulo (blindado elástico)
+En `tailwind.config.ts` y `src/index.css` agrego:
+- Colores: `resmaNavy #101927`, `resmaTeal #7cc2c8`, `resmaGold #facb60`, `resmaPurple #6366f1`, fondo `#f4f7f9`.
+- Fuentes: `font-sans = Inter` para tablas/forms, `font-display = Montserrat` con `tracking-wider` para etiquetas.
+- Clase utilitaria `.admin-scroll` (scrollbar 6px, thumb `#cbd5e1`, oscurece en hover).
+- Animaciones modal `animate-in zoom-in-95 duration-200`.
+- Aislamos los tokens admin: aplican solo dentro de `.resma-admin-shell` para no romper la app móvil del paciente.
 
-Nuevo wrapper `MindfulnessShell` reutilizable para las 3 pantallas:
+### 2 · Nuevo Shell (`AdminLayout.tsx` reescrito)
 
 ```text
-┌─ relative max-w-md mx-auto h-full sm:h-[90vh] sm:max-h-[760px] ─┐
-│  Background: gradiente claro + 2 orbes animados (orb-1/orb-2)   │
-│  ┌─ Header sticky (MINDFULNESS · RESMA · back · ?) ──────────┐  │
-│  ├─ flex-1 overflow-y-auto no-scrollbar pb-28 smooth-scroll  │  │
-│  │   → Pantalla 1 / 2 / 3                                    │  │
-│  └─ BottomNav absolute bottom-0 w-full (3 botones)           │  │
-│  Floating: botón IA (drawer chatbot)                          │  │
-└──────────────────────────────────────────────────────────────────┘
+┌──────────── 100vw / 100vh, overflow-hidden ────────────┐
+│ Sidebar w-64 navy  │  Header (título + subtítulo)       │
+│  · Logo RESMA+     │  Tabs (subrayado dinámico teal)    │
+│  · Acordeón 4 secs │ ─────────────────────────────────  │
+│  · Footer admin    │  Outlet — flex-1 overflow-y-auto   │
+└────────────────────┴────────────────────────────────────┘
 ```
 
-- Oculta la `BottomNav` global (clase `zen-mode` o flag local) para evitar doble barra.
-- Botón "?" abre `BreathingEducationModal` (modal centrado, serif, nervio vago / amígdala).
-- Botón flotante IA abre `BreathingAiDrawer` (Sheet bottom, historial pre-renderizado).
+- **Sidebar**: `bg-resmaNavy text-slate-300`, header 16px logo, secciones colapsables con estado React (`Principal`, `Recursos Clínicos`, `Monitoreo`, `Librería CMS`). Activo: `bg-resmaTeal/10 text-resmaTeal border-l-2 border-resmaTeal`. Footer con avatar admin.
+- **Header**: módulo activo + subtítulo, derecho reservado para acciones contextuales (ej. "Guardar configuración global").
+- **Tabs**: componente `AdminTabs` controlado por router (querystring `?tab=`) con subrayado animado teal.
+- **Toast**: usar el `sonner` existente con variante inferior derecha (`position="bottom-right"`).
 
-## 2. Pantalla 1 — Intención
+### 3 · Mapa de rutas
 
-- Segmented control premium `Respiración | Body Scan` (pill navy activa, blanco glass inactivo).
-- Body Scan → estado vacío estético "Módulo clínico en desarrollo" (icono + serif).
-- Grid 2×2 de tarjetas glass para los 4 pilares con icono coloreado, título, descripción corta y estrella favorito:
-  - Dormir mejor (4-7-8) · luna lila
-  - Bajar ansiedad (Suspiro Fisiológico) · onda teal
-  - Concentrarme (Box 4-4-4-4) · diana verde
-  - Equilibrar (Coherencia 5-5) · símbolo gold
+| Ruta | Componente | Tabs internas |
+|------|------------|---------------|
+| `/admin` → redirect a `/admin/dashboard` | — | — |
+| `/admin/dashboard` | `DashboardGlobal` | Uso App |
+| `/admin/pacientes` | `CrmPacientes` (tabla + modal ficha) | Directorio |
+| `/admin/pacientes/:userId` | mantiene `PatientDetail` reestilado | — |
+| `/admin/pensamientos` | `PensamientosAdmin` | Instrucciones IA · Distorsiones · Emociones |
+| `/admin/regulacion` | `RegulacionDbtAdmin` | Matriz de Efectividad |
+| `/admin/mindfulness` | `MindfulnessAdmin` | Guiones · Voz IA |
+| `/admin/escaner` | `EscanerAdmin` | Nodos · Cromoterapia |
+| `/admin/habitos` | `HabitosAdmin` | Plantillas · Categorías · Coach IA |
+| `/admin/progreso` | `ProgresoAdmin` | Índice · Baremos · Protocolos |
+| `/admin/notificaciones` | `NotificacionesAdmin` | Anti-fatiga |
+| `/admin/contenido` | `ContentManager` actual, reestilado | — |
+| `/admin/pack` | `PackOverview` actual, reestilado | — |
 
-## 3. Pantalla 2 — Ajuste de sesión
+Rutas legacy útiles (`/admin/solicitudes`, `/admin/cuestionario`, `/admin/configuracion`, `/admin/recursos`, `/admin/estadisticas`) quedan accesibles pero **fuera del sidebar nuevo** para mantenerlas operativas sin saturar el menú.
 
-- Card resumen del ejercicio elegido (icono + nombre + patrón).
-- Slider 1–20 min con marcadores (1, 5, 10, 15, 20), label "TIEMPO DE PRÁCTICA" + valor grande.
-- Panel glass con dos toggles:
-  - Activar Voz de Guía (subtítulos dinámicos).
-  - Sonido de Fondo (lluvia tenue, vía WebAudio sintetizado existente o silencio si no disponible).
-- CTA navy full-width `Comenzar práctica →`.
+### 4 · Detalle de los módulos nuevos
 
-## 4. Pantalla 3 — Reproductor activo
+**Dashboard Global** — 3 cards (Usuarios Activos · Tasa Check-in · Tiempo en App) + barras horizontales "Uso de Módulos Clínicos" (`bg-slate-100` con relleno teal/gold/purple). Datos: query a `auth.users` / tablas de actividad existentes; si falta métrica, mock determinista marcado como *demo*.
 
-Cada ejercicio renderiza su visualizador singular (SVG + framer-motion, sin libs nuevas):
+**CRM Pacientes** — Tabla limpia con buscador (Nombre · Plan · Estado · Última actividad · Acción "Ver Ficha"). Modal `max-w-2xl` con 3 sub-tabs: Perfil (Edad/Ocupación/Motivo/BDI-II), Uso App (módulo top + check-ins + barras 7d), Membresía (pausar/revocar, botones destructivos rojos).
 
-- **Dormir 4-7-8**: fondo nocturno profundo, orbe translúcido que late siguiendo fase (escala 0.7↔1.15), partículas de luz estelar (10–14 puntos) flotando lento de abajo→arriba.
-- **Suspiro fisiológico**: onda sinusoidal SVG; bola brillante recorre la curva: sube pendiente 1 (inh1), micro-salto (inh2), desliza largo y suave por la pendiente descendente (exh).
-- **Box 4-4-4-4**: cuadrado de líneas finas; nodo de luz viaja por el perímetro exacto en 4 segmentos de 4s.
-- **Coherencia cardíaca 5-5**: Flor de la vida (7 círculos entrelazados) que expande hacia afuera 5s (inh) y se pliega al centro 5s (exh), continuo sin pausas.
+**Pensamientos Auto** — Tab 1: Prompt RESMITA (textarea grande) → guarda en tabla `ai_prompts` (key `pensamientos_companion`). Tab 2: grid de cards de distorsiones (emoji + nombre + toggle activo). Tab 3: matriz emoción→somatización editable.
 
-Soporte:
-- Subtítulos dinámicos serif (instrucciones cortas por fase).
-- Timer cuenta regresiva grande.
-- Controles `Pausar/Reanudar` y `Detener` (pills glass).
-- Hook `useBreathingCycle(pattern)` que centraliza fases (inh/hold/exh/holdEmpty) y dura­ciones.
+**Regulación DBT** — Tabla "Matriz de Efectividad" (Emoción · Criterio de Ajuste · Acción Opuesta). Botón "Editar" abre modal con dos `Textarea` clínicos.
 
-## 5. Controles globales
+**Mindfulness & Resp** — 2 columnas: izq árbol de ejercicios (4-7-8, Suspiro, Box, Coherencia con minutos), der textarea XL para guion ElevenLabs + botones "Probar Voz" (llama edge function `elevenlabs-tts` si existe) y "Guardar".
 
-- `BreathingEducationModal`: explicación clínica del entrenamiento respiratorio (nervio vago, amígdala) con tipografía Playfair/Lora.
-- `BreathingAiDrawer`: Sheet inferior con burbujas de chat pre-renderizadas (guía empática "voseo") + input deshabilitado o conectado a edge function existente si la hay; si no, simulado.
-- Mini-navbar absoluta de 3 botones (Inicio módulo, Configurar, Reproductor) para saltar entre pasos cuando hay sesión activa.
+**Escáner Corporal** — 2 columnas igual + Tab "Cromoterapia" con `input type="color"` para Tensión y Relajación.
 
-## 6. Archivos
+**Gestión de Hábitos** — Tab "Plantillas Clínicas" (CRUD con icon + color), Tab "Categorías DBT" (chips agregables/eliminables), Tab "Coach IA" (prompt + frecuencia).
 
-Crear / reescribir:
-- `src/pages/mindfulness/BreathingHome.tsx` (orquesta los 3 pasos con estado local).
-- `src/components/mindfulness/breathing/MindfulnessShell.tsx` (shell blindado).
-- `src/components/mindfulness/breathing/IntentionScreen.tsx`
-- `src/components/mindfulness/breathing/SetupScreen.tsx`
-- `src/components/mindfulness/breathing/PlayerScreen.tsx`
-- `src/components/mindfulness/breathing/visuals/VisualizerSleep.tsx` (rediseño)
-- `src/components/mindfulness/breathing/visuals/VisualizerSigh.tsx` (rediseño)
-- `src/components/mindfulness/breathing/visuals/VisualizerBox.tsx` (rediseño)
-- `src/components/mindfulness/breathing/visuals/VisualizerCoherence.tsx` (rediseño)
-- `src/components/mindfulness/breathing/BreathingEducationModal.tsx`
-- `src/components/mindfulness/breathing/BreathingAiDrawer.tsx`
-- `src/lib/mindfulness/breathingPatterns.ts` (catálogo + fases).
-- `src/lib/mindfulness/useBreathingCycle.ts` (hook fase/tick).
+**Progreso y Psicometría** — Tab Índice: 4 sliders (Check-in, Tests, Hábitos, Recursos) con barra multicolor en tiempo real; si suma ≠ 100% muestra alerta gold y bloquea guardar. Tab Baremos: tabla con barra segmentada (verde/amarillo/naranja/rojo). Tab Protocolos: lista SOS con toggles fluidos.
 
-Sin cambios de DB ni edge functions. Sin libs nuevas (framer-motion ya presente).
+### 5 · Notificaciones Anti-Fatiga (`NotificacionesAdmin.tsx`)
 
-## 7. Verificación
+Header fijo + botón "Guardar Configuración Global". Layout 2-col:
+- **Izquierda (scroll)**: 5 tarjetas blancas `rounded-3xl` para Circadianas, Hábitos, Psicometría, Hibernación, Vínculo Terapéutico. Cada disparador: toggle teal + condición (texto/dropdown) + input copy. Input deshabilitado y `opacity-50` cuando el toggle está off.
+- **Derecha (sticky)**: Mockup de iPhone (SVG) que muestra en tiempo real la notificación del input enfocado — escucha `onFocus` y refleja `title + body`.
 
-- Typecheck del build.
-- Revisar visualmente las 3 pantallas con Playwright (390×809) y capturar 1 screenshot por paso + 1 por visualizador para verificar que nada queda tapado por la nav fija.
+Persistencia: tabla nueva `notification_rules` (id, category, trigger_key, enabled bool, condition_text, copy_text, updated_at) con RLS solo admin. Migration incluida con GRANT correcto.
+
+Toast: `sonner` "Reglas de notificación guardadas y propagadas a los dispositivos".
+
+### 6 · Componentes globales reutilizables
+
+`src/components/admin/ui/`: `AdminCard`, `AdminTabs`, `AdminTable`, `AdminToggle`, `AdminModal`, `AdminButton` (primary navy, secondary purple, ghost slate), `AdminColorBar`, `PhonePreview`.
+
+### 7 · Trabajo técnico
+
+- Reescribir `AdminLayout.tsx` y `AdminRoute.tsx` (este último sin cambios funcionales).
+- Editar `App.tsx` para registrar las nuevas rutas y redirect raíz.
+- Migración Supabase: `ai_prompts`, `distortions`, `dbt_matrix`, `mindfulness_scripts`, `body_scan_nodes`, `habit_templates`, `wellbeing_weights`, `risk_protocols`, `notification_rules` (todas con RLS admin-only + GRANTs).
+- ContentManager y PackOverview: solo envuelvo su contenido en `AdminCard` y reemplazo paleta/clases, sin tocar lógica.
+
+### 8 · Fuera de alcance
+
+- No toco la app móvil del paciente (rutas no-`/admin`).
+- No implemento integración real de envío push (solo configuración + persistencia).
+- "Probar Voz" en Mindfulness solo se conecta si ya existe edge function ElevenLabs; si no, queda con toast informativo.
+
+¿Avanzo con esta arquitectura o querés ajustar algo (alcance de migraciones, conservar las rutas legacy en el sidebar, o priorizar solo algunos módulos en una primera entrega)?
