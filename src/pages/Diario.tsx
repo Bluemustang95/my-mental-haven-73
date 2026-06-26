@@ -207,10 +207,22 @@ function WriteView({
     >
       {/* Minimal header — only logo / actions */}
       <div className="mb-3 flex items-center justify-between">
-        {zen ? <Flower size={20} className="text-[#7cc2c8]" /> : <span />}
+        <div className="flex items-center gap-2">
+          {zen && <Flower size={20} className="text-[#7cc2c8]" />}
+          <SaveIndicator state={saveState} zen={zen} />
+        </div>
         <div className="flex gap-1.5">
           {!zen && (
             <>
+              <button
+                onClick={reset}
+                disabled={!text && !emo && causes.size === 0}
+                className={cn("grid h-8 w-8 place-items-center rounded-full disabled:opacity-30", iconBtnCls)}
+                aria-label="Nueva entrada"
+                title="Nueva entrada"
+              >
+                <Sparkles size={15} />
+              </button>
               <button className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Privacidad">
                 <Lock size={15} />
               </button>
