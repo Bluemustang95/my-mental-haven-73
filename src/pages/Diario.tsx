@@ -95,7 +95,9 @@ function WriteView({
   const [openAcc, setOpenAcc] = useState<"emo" | "cause" | null>(null);
   const [recording, setRecording] = useState(false);
   const [recSec, setRecSec] = useState(0);
-  const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [entryId, setEntryId] = useState<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lastLen = useRef(0);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -151,27 +153,39 @@ function WriteView({
   const reset = () => {
     setText(""); setPrompt(null); attachments.forEach((a) => URL.revokeObjectURL(a.url));
     setAttachments([]); setEmo(null); setCauses(new Set()); setOpenAcc(null);
-    setRecording(false);
+    setRecording(false); setEntryId(null); setSaveState("idle");
   };
 
-  const save = async () => {
-    if (!text.trim()) { toast.error("Escribí algo antes de registrar"); return; }
-    setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { toast.error("Iniciá sesión"); setSaving(false); return; }
-    const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
-    const { error } = await supabase.from("journal_entries").insert({
-      user_id: user.id,
-      content: text + (recording ? "\n\n[audio]" : ""),
-      entry_date: localDateStr(),
-      emotion_tags: tags,
-      prompt: prompt?.text ?? null,
-    });
-    setSaving(false);
-    if (error) { toast.error("No se pudo guardar"); return; }
-    toast.success("Guardado con éxito");
-    reset();
-  };
+  // Autosave: debounced upsert whenever meaningful content changes
+  useEffect(() => {
+    if (!text.trim() && !emo && causes.size === 0) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      setSaveState("saving");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setSaveState("idle"); return; }
+      const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
+      const payload = {
+        user_id: user.id,
+        content: text + (recording ? "\n\n[audio]" : ""),
+        entry_date: localDateStr(),
+        emotion_tags: tags,
+        prompt: prompt?.text ?? null,
+      };
+      if (entryId) {
+        const { error } = await supabase.from("journal_entries").update(payload).eq("id", entryId);
+        if (error) { setSaveState("idle"); return; }
+      } else {
+        const { data, error } = await supabase.from("journal_entries").insert(payload).select("id").single();
+        if (error || !data) { setSaveState("idle"); return; }
+        setEntryId(data.id);
+      }
+      setSaveState("saved");
+    }, 1200);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, emo, causes, prompt, recording]);
+
 
   /* tone classes */
   const surfaceCls = zen
@@ -193,10 +207,22 @@ function WriteView({
     >
       {/* Minimal header — only logo / actions */}
       <div className="mb-3 flex items-center justify-between">
-        {zen ? <Flower size={20} className="text-[#7cc2c8]" /> : <span />}
+        <div className="flex items-center gap-2">
+          {zen && <Flower size={20} className="text-[#7cc2c8]" />}
+          <SaveIndicator state={saveState} zen={zen} />
+        </div>
         <div className="flex gap-1.5">
           {!zen && (
             <>
+              <button
+                onClick={reset}
+                disabled={!text && !emo && causes.size === 0}
+                className={cn("grid h-8 w-8 place-items-center rounded-full disabled:opacity-30", iconBtnCls)}
+                aria-label="Nueva entrada"
+                title="Nueva entrada"
+              >
+                <Sparkles size={15} />
+              </button>
               <button className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Privacidad">
                 <Lock size={15} />
               </button>
@@ -424,32 +450,24 @@ function WriteView({
 
 
 
-      {/* Footer actions */}
-      <div className="mt-3 flex gap-2">
-        <button
-          onClick={reset}
-          className={cn(
-            "h-12 flex-1 rounded-full text-sm font-semibold",
-            zen ? "border border-white/10 bg-white/[0.04] text-slate-200" : "border border-[#101927]/15 bg-white/80 text-[#101927]"
-          )}
-        >
-          Vaciar
-        </button>
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          disabled={saving}
-          onClick={save}
-          className="h-12 flex-[1.8] rounded-full bg-[#7cc2c8] text-sm font-semibold text-[#101927] shadow-[0_10px_30px_-10px_rgba(124,194,200,0.6)] disabled:opacity-60"
-        >
-          {saving ? "Guardando…" : "Registrar Entrada"}
-        </motion.button>
-      </div>
+      {/* Autosave — no manual buttons */}
     </motion.div>
   );
 }
 
 
 /* ────────────── Subcomponents ────────────── */
+function SaveIndicator({ state, zen }: { state: "idle" | "saving" | "saved"; zen: boolean }) {
+  const base = cn("text-[10px] font-medium tracking-wide transition-opacity", zen ? "text-slate-400" : "text-[#101927]/45");
+  if (state === "idle") return <span className={cn(base, "opacity-0")}>·</span>;
+  if (state === "saving") return <span className={base}>Guardando…</span>;
+  return (
+    <span className={cn(base, "flex items-center gap-1 text-[#7cc2c8]")}>
+      <span className="h-1.5 w-1.5 rounded-full bg-[#7cc2c8]" /> Guardado
+    </span>
+  );
+}
+
 function IconBtn({
   label, onClick, zen, active, children,
 }: { label: string; onClick: () => void; zen: boolean; active?: boolean; children: React.ReactNode }) {
