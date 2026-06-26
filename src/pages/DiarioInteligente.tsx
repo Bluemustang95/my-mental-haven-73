@@ -108,9 +108,6 @@ export default function DiarioInteligente() {
         <h1 className="font-serif text-3xl font-bold text-[#101927]">{meta.label}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{meta.subtitle}</p>
 
-        <div className="mt-4">
-          <WeekStrip />
-        </div>
       </div>
 
       <div className="mt-5 space-y-2 px-5">
