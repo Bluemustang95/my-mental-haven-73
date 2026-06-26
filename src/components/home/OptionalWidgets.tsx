@@ -133,11 +133,12 @@ export function ContentionNotesWidget() {
 
   const save = async () => {
     if (!val.trim() || !user) return;
-    await supabase.from("journal_entries").insert({
+    await (supabase as any).from("journal_entries").insert({
       user_id: user.id,
-      kind: "contencion",
+      entry_date: localDateStr(new Date()),
+      prompt: "Contención",
       content: val.trim(),
-    } as any);
+    });
     toast.success("Nota guardada para revisar más tarde ✨");
     setVal("");
   };
