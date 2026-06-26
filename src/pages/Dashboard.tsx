@@ -84,59 +84,40 @@ export default function Dashboard() {
     loadToday();
   }, [loadToday]);
 
-  // Build the path checklist
-  const pathSteps = useMemo(
-    () => [
-      {
-        id: "morning" as const,
-        label: "Valoración de la mañana",
-        done: morningDone,
-        action: () => setCheckinOpen("morning"),
-      },
-      {
-        id: "recommended" as const,
-        label: "Recurso recomendado del día",
-        done: false,
-        action: () => {
-          document.getElementById("widget-recommended")?.scrollIntoView({ behavior: "smooth", block: "center" });
-        },
-      },
-      {
-        id: "night" as const,
-        label: "Valoración de la noche",
-        done: nightDone,
-        action: () => setCheckinOpen("night"),
-      },
-    ],
-    [morningDone, nightDone]
-  );
-
   // Renderers per widget id so the same definition feeds grid + reorder list.
   const renderWidget = (id: WidgetId): React.ReactNode => {
     switch (id) {
       case "morning":
         return (
-          <TimelineCard
-            onClick={() => setCheckinOpen("morning")}
-            icon={<Sun size={18} className="text-amber-600" />}
-            iconBg="bg-amber-100"
-            done={morningDone}
-            title="Valoración de la mañana"
-            subtitle="Analiza tu sueño, emociones y propón tus objetivos del día."
-          />
+          <BulletRow done={morningDone}>
+            <TimelineCard
+              onClick={() => setCheckinOpen("morning")}
+              icon={<Sun size={15} className="text-amber-600" />}
+              iconBg="bg-amber-100"
+              done={morningDone}
+              title="Valoración de la mañana"
+              subtitle="Analiza tu sueño, emociones y propón tus objetivos del día."
+            />
+          </BulletRow>
         );
       case "recommended":
-        return <div id="widget-recommended"><RecommendedResourceCard /></div>;
+        return (
+          <BulletRow done={false}>
+            <div id="widget-recommended"><RecommendedResourceCard /></div>
+          </BulletRow>
+        );
       case "night":
         return (
-          <TimelineCard
-            onClick={() => setCheckinOpen("night")}
-            icon={<MoonIcon size={18} className="text-indigo-600" />}
-            iconBg="bg-indigo-100"
-            done={nightDone}
-            title="Valoración de la noche"
-            subtitle="Cerrá tu día, evalúa emociones y haz tu balance introspectivo."
-          />
+          <BulletRow done={nightDone}>
+            <TimelineCard
+              onClick={() => setCheckinOpen("night")}
+              icon={<MoonIcon size={15} className="text-indigo-600" />}
+              iconBg="bg-indigo-100"
+              done={nightDone}
+              title="Valoración de la noche"
+              subtitle="Cerrá tu día, evalúa emociones y haz tu balance introspectivo."
+            />
+          </BulletRow>
         );
       case "sleep_zone":
         return <SleepZoneCard onClick={() => navigate("/herramientas/sueno")} />;
@@ -198,11 +179,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Guided path (viñetas) */}
-        {!widgets.editMode && (
-          <PathChecklist steps={pathSteps} />
-        )}
-
         {/* Yesterday's improvement callback */}
         {improveFromYesterday && !morningDone && !widgets.editMode && (
           <div className="mt-3">
@@ -210,10 +186,10 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Progress label + manage */}
-        <div className="mt-5 mb-3 flex items-center justify-between px-1">
+        {/* Camino + manage */}
+        <div className="mt-5 mb-2 flex items-center justify-between px-1">
           <p className="font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-            Tu progreso de hoy
+            Tu camino de hoy
           </p>
           <ManageWidgetsButton widgets={widgets.widgets} onToggle={widgets.toggleEnabled} />
         </div>
@@ -265,46 +241,20 @@ export default function Dashboard() {
   );
 }
 
-function PathChecklist({
-  steps,
-}: {
-  steps: { id: string; label: string; done: boolean; action: () => void }[];
-}) {
+function BulletRow({ done, children }: { done: boolean; children: React.ReactNode }) {
   return (
-    <div className="mt-5">
-      <p className="mb-2 px-1 font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-        Tu camino de hoy
-      </p>
-      <div className="relative rounded-[20px] border border-white/60 bg-white/70 px-4 py-3.5 backdrop-blur-xl shadow-[0_8px_24px_-18px_rgba(16,25,39,0.2)]">
-        <div className="absolute left-[26px] top-6 bottom-6 w-px bg-foreground/8" />
-        {steps.map((s, i) => (
-          <button
-            key={s.id}
-            onClick={s.action}
-            className="relative flex w-full items-center gap-3 py-1.5 text-left active:opacity-70"
-          >
-            <span
-              className={
-                "relative z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] transition " +
-                (s.done
-                  ? "border-resma-teal bg-resma-teal text-white"
-                  : "border-foreground/25 bg-white text-transparent")
-              }
-            >
-              {s.done && <Check size={11} strokeWidth={3} />}
-            </span>
-            <span
-              className={
-                "flex-1 font-display text-[12.5px] " +
-                (s.done ? "text-muted-foreground line-through decoration-resma-teal/40" : "text-resma-navy")
-              }
-            >
-              {s.label}
-            </span>
-            <ChevronRight size={13} className="text-muted-foreground/50" />
-          </button>
-        ))}
-      </div>
+    <div className="flex items-center gap-2.5">
+      <span
+        className={
+          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] transition " +
+          (done
+            ? "border-resma-teal bg-resma-teal text-white"
+            : "border-foreground/25 bg-white text-transparent")
+        }
+      >
+        {done && <Check size={9} strokeWidth={3} />}
+      </span>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }
@@ -328,19 +278,21 @@ function TimelineCard({
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="glass-premium relative flex w-full items-start gap-3 rounded-[24px] p-3.5 text-left"
+      className="glass-premium relative flex w-full items-center gap-2.5 rounded-[18px] p-2.5 text-left"
     >
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${iconBg}`}>
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-display text-[13.5px] font-semibold leading-tight text-resma-navy">{title}</p>
-        <p className="mt-1 text-[11.5px] leading-snug text-muted-foreground">{subtitle}</p>
+        <p className="font-display text-[12px] font-semibold leading-tight text-resma-navy">{title}</p>
+        <p className="mt-0.5 line-clamp-1 text-[10.5px] leading-snug text-muted-foreground">{subtitle}</p>
       </div>
-      {done && (
-        <span className="absolute right-3 top-3 rounded-full bg-resma-teal/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-resma-teal">
+      {done ? (
+        <span className="rounded-full bg-resma-teal/15 px-1.5 py-0.5 text-[8.5px] font-semibold uppercase tracking-[0.1em] text-resma-teal">
           Hecho
         </span>
+      ) : (
+        <ChevronRight size={13} className="text-muted-foreground/50" />
       )}
     </motion.button>
   );
