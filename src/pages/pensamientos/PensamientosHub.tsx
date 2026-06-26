@@ -15,6 +15,7 @@ type ThoughtRow = {
   situation: string | null;
   emotion: string | null;
   distortion_label: string | null;
+  distortions?: { label: string }[] | null;
 };
 
 export default function PensamientosHub() {

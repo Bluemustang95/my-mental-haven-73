@@ -1,78 +1,60 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Camino } from "./emotions";
 
-const KEY = "resma:thought-draft:v4";
+const KEY = "resma:thought-draft:v5";
 
-export type ActionRow = { id: string; what: string; when: string; why?: string };
-
-export type AiAnalysisRefine = {
-  mode: "refine";
-  factual: string;
-  questions: string[];
-} | null;
-
-export type AiAnalysisIdentify = {
-  mode: "identify";
-  tips: string[];
-  candidates: string[];
-} | null;
-
-export type AiAnalysis = AiAnalysisRefine | AiAnalysisIdentify;
+export type DistortionSel = { key: string; label: string };
 
 export type ThoughtDraft = {
   step: number;
   // Step 1
-  caminoElegido: Camino | null;
-  emocionDidactica: string | null;
+  triggerEvent: string;
   // Step 2
+  automaticThought: string;
+  // Step 3
   emotion: string;
   emotionOther: string;
+  subEmotions: string[];
   intensityInitial: number;
-  triggerEvent: string;
-  automaticThought: string;
-  pendingThoughts: string[];
-  aiAnalysis: AiAnalysis;
-  // Step 3 (distorsión)
-  distortionKey: string | null;
-  distortionLabel: string | null;
-  // Step 4 (evidencias)
+  // Step 4
+  behavior: string;
+  // Step 5
+  bodySensations: string[];
+  // Step 6
   evidenceFor: string[];
   evidenceAgainst: string[];
   evidenceSources: { for: ("user" | "ai")[]; against: ("user" | "ai")[] };
-  isRealProblem: boolean | null;
-  // Step 5 (tratamiento)
+  // Step 7
+  distortions: DistortionSel[];
+  // Step 8
   alternativeThought: string;
+  resolutionPlan: string;
   intensityFinal: number;
-  brainstorm: string;
-  aiAlternatives: string[];
-  aiActionSuggestions: { what: string; when: string; why?: string }[];
-  actionPlan: ActionRow[];
 };
 
 export const EMPTY_DRAFT: ThoughtDraft = {
   step: 1,
-  caminoElegido: null,
-  emocionDidactica: null,
-  emotion: "",
-  emotionOther: "",
-  intensityInitial: 50,
   triggerEvent: "",
   automaticThought: "",
-  pendingThoughts: [],
-  aiAnalysis: null,
-  distortionKey: null,
-  distortionLabel: null,
+  emotion: "",
+  emotionOther: "",
+  subEmotions: [],
+  intensityInitial: 50,
+  behavior: "",
+  bodySensations: [],
   evidenceFor: [],
   evidenceAgainst: [],
   evidenceSources: { for: [], against: [] },
-  isRealProblem: null,
+  distortions: [],
   alternativeThought: "",
+  resolutionPlan: "",
   intensityFinal: 50,
-  brainstorm: "",
-  aiAlternatives: [],
-  aiActionSuggestions: [],
-  actionPlan: [],
 };
+
+export function getResolutionMode(d: ThoughtDraft): "reestructuracion" | "abordaje" {
+  // Más evidencias en contra → reestructuración (pensamiento no sostenido)
+  // Más a favor → abordaje (hay problema real)
+  return d.evidenceAgainst.length >= d.evidenceFor.length ? "reestructuracion" : "abordaje";
+}
 
 function readDraft(): ThoughtDraft {
   try {
