@@ -107,8 +107,10 @@ export default {
           navy: "#101927",
           teal: "#7cc2c8",
           gold: "#facb60",
+          purple: "#6366f1",
           lightBg: "#f9f9fb",
           lightBg2: "#e8ebf3",
+          adminBg: "#f4f7f9",
         },
       },
       borderRadius: {
