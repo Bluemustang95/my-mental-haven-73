@@ -1,39 +1,28 @@
-# Rediseño Diario — escritura inmersiva
+## Ajustes al editor del Diario
 
-Reorganizar `src/pages/Diario.tsx` (componente `WriteView`) para que la escritura sea protagonista y los controles se reduzcan a una barra inferior fina con solo íconos.
+### 1. Confirmación al iniciar nueva entrada
+- En el ícono ✨ del header (botón "Nueva entrada") agregar un `AlertDialog` de shadcn antes de ejecutar `reset()`.
+- Texto: *"¿Querés empezar una entrada nueva? Se guardará la actual y se vaciará el editor."*
+- Acciones: **Cancelar** / **Empezar nueva**.
+- Solo se muestra si hay contenido (texto, emoción o causas); si está vacío, no aparece.
 
-## Cambios
+### 2. Tipografía más fina
+- Bajar el textarea de `text-lg` (18px) a `text-[15px]` con `leading-relaxed`.
+- Mantener `Lora` serif para preservar la estética de diario, pero más liviano visualmente.
+- Aplicar el mismo tamaño en Modo Zen.
 
-### 1. Header minimal
-- Modo claro: dejar solo botones `Lock` e historial (`Clock`) flotando arriba a la derecha como íconos pequeños sin pastilla pesada. Quitar el título "Diario" y subtítulo "Tu espacio seguro para escribir." para liberar la pantalla.
-- Modo Zen: dejar únicamente el logo/flor (Flower) centrado o a la izquierda + botón `X` salir. Quitar la etiqueta "MODO ZEN".
+### 3. Formato de texto enriquecido (negrita / itálica)
+- Reemplazar el `<textarea>` por un editor `contentEditable` ligero (`<div contentEditable>`), conservando el mismo placeholder, autosave y click sonoro.
+- Al **seleccionar texto**, mostrar una mini-toolbar flotante (popover anclado a la selección) con dos botones:
+  - **B** (negrita) → `document.execCommand('bold')`
+  - **I** (itálica) → `document.execCommand('italic')`
+- La toolbar aparece sólo mientras hay selección no vacía y se oculta al hacer click fuera o al colapsarse la selección.
+- Guardado: persistir el `innerHTML` en `journal_entries.content` (el campo ya es `text`, acepta HTML). El historial renderiza con `dangerouslySetInnerHTML` sanitizando con un whitelist mínimo (`<b>`, `<strong>`, `<i>`, `<em>`, `<br>`, `<div>`).
 
-### 2. Textarea full-screen
-- La card del textarea ocupa todo el alto disponible (`flex-1`, sin altura fija `h-52`).
-- Fondo translúcido sutil, sin bordes pesados. Padding cómodo, tipografía Lora más grande.
-- Botón "Inspirame" se conserva flotante arriba a la derecha del textarea, más sutil.
-- Banner de prompt se conserva arriba del textarea cuando está activo.
+### Archivos afectados
+- `src/pages/Diario.tsx` — header (AlertDialog), reemplazo textarea→contentEditable, mini-toolbar de formato, ajuste de tamaño, sanitización en el render del historial.
+- Reutiliza `@/components/ui/alert-dialog` y `@/components/ui/popover` ya existentes.
 
-### 3. Barra inferior unificada (solo íconos)
-Una sola fila compacta encima del footer de acción, con todos los controles como íconos sin texto:
-- Cámara, Foto, Archivo, Audio (íconos Lucide en lugar de emojis para look fino).
-- Selector "Siento…" como ícono (carita/emoji actual seleccionado) que abre popover compacto con chips.
-- Selector "Causas…" como ícono (etiqueta) que abre popover compacto con chips.
-- Modo Zen como ícono flor pequeño al final (en modo claro).
-- Tooltips en hover/long-press para mostrar la etiqueta sin ocupar espacio.
-- Estilo: pastilla única redondeada `rounded-full` translúcida, íconos ~18px, separación uniforme.
-
-### 4. Footer acciones
-- Mantener "Vaciar" + "Registrar Entrada" pero más finos (altura reducida de 14 a 12).
-
-### 5. Modo Zen idéntico
-- Misma estructura: solo logo arriba, textarea full-screen, misma barra inferior fina con íconos. Cambian solo los tokens de color (oscuro vs claro). Soundscape sigue presente.
-
-## Detalles técnicos
-
-- Reemplazar `AttachBtn` por `IconBtn` que renderiza ícono Lucide (`Camera`, `ImageIcon`, `Paperclip`, `Mic`) sin label visible, con `aria-label` y `title`.
-- Convertir las dos `AccordionCard` en `Popover` (shadcn) anclados a un ícono en la misma barra inferior, en vez de cards grandes apiladas.
-- Layout raíz cambia a flex column con textarea `flex-1` para que llene viewport.
-- Mantener toda la lógica de estado, grabación, attachments, guardado y soundscape sin cambios.
-
-No se tocan otras páginas ni backend.
+### Fuera de alcance
+- No se agregan más opciones de formato (subrayado, listas, headings) para mantener el editor minimal.
+- No se modifica el esquema de la tabla `journal_entries`.

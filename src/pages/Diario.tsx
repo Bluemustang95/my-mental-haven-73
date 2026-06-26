@@ -3,13 +3,44 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Clock, Lock, Sparkles, X, Camera, Image as ImageIcon,
   Paperclip, Mic, Pause, Flower, Volume2, VolumeX, FileText,
-  Smile, Tag,
+  Smile, Tag, Bold, Italic, Plus,
 } from "lucide-react";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
+
+/* ────────────── Sanitizer (whitelist b/strong/i/em/br) ────────────── */
+function sanitizeHtml(html: string): string {
+  if (!html) return "";
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  const allowed = new Set(["B", "STRONG", "I", "EM", "BR", "DIV", "P"]);
+  const walk = (node: Node) => {
+    const children = Array.from(node.childNodes);
+    for (const child of children) {
+      if (child.nodeType === 1) {
+        const el = child as HTMLElement;
+        if (!allowed.has(el.tagName)) {
+          const text = document.createTextNode(el.textContent ?? "");
+          el.replaceWith(text);
+        } else {
+          // strip attributes
+          for (const attr of Array.from(el.attributes)) el.removeAttribute(attr.name);
+          walk(el);
+        }
+      }
+    }
+  };
+  walk(tmp);
+  return tmp.innerHTML;
+}
+
 
 
 /* ────────────── Data ────────────── */
@@ -97,10 +128,12 @@ function WriteView({
   const [recSec, setRecSec] = useState(0);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [entryId, setEntryId] = useState<string | null>(null);
+  const [confirmNew, setConfirmNew] = useState(false);
+  const [fmtBar, setFmtBar] = useState<{ top: number; left: number } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lastLen = useRef(0);
-  const taRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const camRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -134,13 +167,40 @@ function WriteView({
     return () => clearInterval(id);
   }, [recording]);
 
-  // Mechanical click on textarea typing (zen only)
-  const onTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const v = e.target.value;
-    if (zen && v.length > lastLen.current) audio.triggerClick();
-    lastLen.current = v.length;
-    setText(v);
+  // Editor input → store sanitized HTML
+  const onEditorInput = () => {
+    const el = editorRef.current;
+    if (!el) return;
+    const raw = el.innerHTML;
+    const plainLen = (el.innerText ?? "").length;
+    if (zen && plainLen > lastLen.current) audio.triggerClick();
+    lastLen.current = plainLen;
+    setText(raw);
   };
+
+  // Selection toolbar tracking
+  useEffect(() => {
+    const onSel = () => {
+      const sel = window.getSelection();
+      const el = editorRef.current;
+      if (!sel || sel.isCollapsed || !el) { setFmtBar(null); return; }
+      const anchor = sel.anchorNode;
+      if (!anchor || !el.contains(anchor)) { setFmtBar(null); return; }
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) { setFmtBar(null); return; }
+      setFmtBar({ top: rect.top + window.scrollY - 44, left: rect.left + rect.width / 2 + window.scrollX });
+    };
+    document.addEventListener("selectionchange", onSel);
+    return () => document.removeEventListener("selectionchange", onSel);
+  }, []);
+
+  const applyFormat = (cmd: "bold" | "italic") => {
+    editorRef.current?.focus();
+    document.execCommand(cmd, false);
+    onEditorInput();
+  };
+
+
 
   const toggleCause = (k: string) => {
     setCauses((s) => {
@@ -154,7 +214,10 @@ function WriteView({
     setText(""); setPrompt(null); attachments.forEach((a) => URL.revokeObjectURL(a.url));
     setAttachments([]); setEmo(null); setCauses(new Set()); setOpenAcc(null);
     setRecording(false); setEntryId(null); setSaveState("idle");
+    if (editorRef.current) editorRef.current.innerHTML = "";
+    lastLen.current = 0;
   };
+
 
   // Autosave: debounced upsert whenever meaningful content changes
   useEffect(() => {
@@ -167,7 +230,7 @@ function WriteView({
       const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
       const payload = {
         user_id: user.id,
-        content: text + (recording ? "\n\n[audio]" : ""),
+        content: sanitizeHtml(text) + (recording ? "\n\n[audio]" : ""),
         entry_date: localDateStr(),
         emotion_tags: tags,
         prompt: prompt?.text ?? null,
@@ -215,13 +278,16 @@ function WriteView({
           {!zen && (
             <>
               <button
-                onClick={reset}
+                onClick={() => {
+                  if (!text && !emo && causes.size === 0) return;
+                  setConfirmNew(true);
+                }}
                 disabled={!text && !emo && causes.size === 0}
                 className={cn("grid h-8 w-8 place-items-center rounded-full disabled:opacity-30", iconBtnCls)}
                 aria-label="Nueva entrada"
                 title="Nueva entrada"
               >
-                <Sparkles size={15} />
+                <Plus size={15} />
               </button>
               <button className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Privacidad">
                 <Lock size={15} />
@@ -263,16 +329,17 @@ function WriteView({
         )}
       </AnimatePresence>
 
-      {/* Textarea — fills available height */}
+      {/* Editor — fills available height, supports bold/italic on selection */}
       <div className="relative flex flex-1 flex-col">
-        <textarea
-          ref={taRef}
-          value={text}
-          onChange={onTextChange}
-          placeholder="¿Qué tenés hoy en la cabeza? Soltalo acá…"
+        <div
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={onEditorInput}
+          data-placeholder="¿Qué tenés hoy en la cabeza? Soltalo acá…"
           className={cn(
-            "h-full min-h-[300px] w-full flex-1 resize-none bg-transparent p-2 pt-1 pr-24 text-lg leading-relaxed focus:outline-none",
-            zen ? "text-slate-100 placeholder:text-slate-500" : "text-[#101927] placeholder:text-[#101927]/35",
+            "diary-editor h-full min-h-[300px] w-full flex-1 resize-none bg-transparent p-2 pt-1 pr-24 text-[15px] leading-relaxed focus:outline-none whitespace-pre-wrap break-words",
+            zen ? "text-slate-100" : "text-[#101927]",
           )}
           style={{ fontFamily: "Lora, serif" }}
         />
@@ -287,6 +354,35 @@ function WriteView({
           Inspirame <Sparkles size={11} className="text-[#facb60]" />
         </button>
       </div>
+
+      {/* Floating selection toolbar (Bold / Italic) */}
+      {fmtBar && (
+        <div
+          style={{ position: "fixed", top: fmtBar.top, left: fmtBar.left, transform: "translateX(-50%)" }}
+          className={cn(
+            "z-50 flex items-center gap-0.5 rounded-full border px-1 py-1 shadow-lg",
+            zen ? "border-white/10 bg-[#0b0b10]" : "border-[#101927]/10 bg-white",
+          )}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <button
+            onClick={() => applyFormat("bold")}
+            className={cn("grid h-7 w-7 place-items-center rounded-full", zen ? "text-slate-200 hover:bg-white/10" : "text-[#101927] hover:bg-[#101927]/5")}
+            aria-label="Negrita"
+          >
+            <Bold size={13} strokeWidth={2.5} />
+          </button>
+          <button
+            onClick={() => applyFormat("italic")}
+            className={cn("grid h-7 w-7 place-items-center rounded-full", zen ? "text-slate-200 hover:bg-white/10" : "text-[#101927] hover:bg-[#101927]/5")}
+            aria-label="Itálica"
+          >
+            <Italic size={13} strokeWidth={2.5} />
+          </button>
+        </div>
+      )}
+
+
 
       {/* Attachment previews */}
       {attachments.length > 0 && (
@@ -451,6 +547,26 @@ function WriteView({
 
 
       {/* Autosave — no manual buttons */}
+
+      <AlertDialog open={confirmNew} onOpenChange={setConfirmNew}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Empezar una entrada nueva?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tu entrada actual ya se guardó automáticamente. Vamos a vaciar el editor para que empieces una nueva bitácora.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { reset(); setConfirmNew(false); }}
+              className="bg-[#7cc2c8] text-[#101927] hover:bg-[#7cc2c8]/90"
+            >
+              Empezar nueva
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
@@ -649,9 +765,11 @@ function HistoryView({ onBack }: { onBack: () => void }) {
                   </span>
                 )}
               </div>
-              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-[#101927]/80" style={{ fontFamily: "Lora, serif" }}>
-                {e.content.replace("[audio]", "").trim()}
-              </p>
+              <div
+                className="mt-3 line-clamp-3 text-sm leading-relaxed text-[#101927]/80"
+                style={{ fontFamily: "Lora, serif" }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(e.content.replace("[audio]", "").trim()) }}
+              />
             </div>
           );
         })}
