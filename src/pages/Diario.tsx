@@ -3,13 +3,44 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Clock, Lock, Sparkles, X, Camera, Image as ImageIcon,
   Paperclip, Mic, Pause, Flower, Volume2, VolumeX, FileText,
-  Smile, Tag,
+  Smile, Tag, Bold, Italic, Plus,
 } from "lucide-react";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
+
+/* ────────────── Sanitizer (whitelist b/strong/i/em/br) ────────────── */
+function sanitizeHtml(html: string): string {
+  if (!html) return "";
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  const allowed = new Set(["B", "STRONG", "I", "EM", "BR", "DIV", "P"]);
+  const walk = (node: Node) => {
+    const children = Array.from(node.childNodes);
+    for (const child of children) {
+      if (child.nodeType === 1) {
+        const el = child as HTMLElement;
+        if (!allowed.has(el.tagName)) {
+          const text = document.createTextNode(el.textContent ?? "");
+          el.replaceWith(text);
+        } else {
+          // strip attributes
+          for (const attr of Array.from(el.attributes)) el.removeAttribute(attr.name);
+          walk(el);
+        }
+      }
+    }
+  };
+  walk(tmp);
+  return tmp.innerHTML;
+}
+
 
 
 /* ────────────── Data ────────────── */
