@@ -278,13 +278,16 @@ function WriteView({
           {!zen && (
             <>
               <button
-                onClick={reset}
+                onClick={() => {
+                  if (!text && !emo && causes.size === 0) return;
+                  setConfirmNew(true);
+                }}
                 disabled={!text && !emo && causes.size === 0}
                 className={cn("grid h-8 w-8 place-items-center rounded-full disabled:opacity-30", iconBtnCls)}
                 aria-label="Nueva entrada"
                 title="Nueva entrada"
               >
-                <Sparkles size={15} />
+                <Plus size={15} />
               </button>
               <button className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Privacidad">
                 <Lock size={15} />
