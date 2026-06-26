@@ -495,7 +495,7 @@ function Waveform() {
   );
 }
 
-function Soundscape() {
+function SoundscapePopover() {
   const [, force] = useState(0);
   const refresh = () => force((n) => n + 1);
   const toggle = (t: audio.Track) => {
@@ -508,34 +508,50 @@ function Soundscape() {
     { t: "brown", label: "Ruido Marrón", emoji: "🪵" },
     { t: "click", label: "Click Mecánico", emoji: "⌨️" },
   ];
+  const anyOn = items.some((it) => audio.isPlaying(it.t));
   return (
-    <div className="mt-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
-      <p className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-[#7cc2c8]">
-        Paisajes sonoros binaurales
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {items.map((it) => {
-          const on = audio.isPlaying(it.t);
-          return (
-            <button
-              key={it.t}
-              onClick={() => toggle(it.t)}
-              className={cn(
-                "flex items-center justify-between gap-2 rounded-2xl border px-3 py-2.5 text-xs transition",
-                on
-                  ? "border-[#7cc2c8]/50 bg-[#7cc2c8]/10 text-[#7cc2c8]"
-                  : "border-white/10 bg-white/[0.03] text-slate-200"
-              )}
-            >
-              <span className="truncate"><span className="mr-1.5">{it.emoji}</span>{it.label}</span>
-              {on ? <Volume2 size={14} /> : <VolumeX size={14} className="opacity-60" />}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          aria-label="Paisajes sonoros"
+          title="Paisajes sonoros"
+          className={cn(
+            "grid h-9 w-9 place-items-center rounded-full transition",
+            anyOn ? "bg-[#7cc2c8]/20 text-[#7cc2c8]" : "text-slate-300 hover:text-slate-100",
+          )}
+        >
+          {anyOn ? <Volume2 size={17} /> : <VolumeX size={17} />}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="center" sideOffset={8} className="w-64 rounded-2xl border-white/10 bg-[#0b0b10] p-3">
+        <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-[#7cc2c8]">
+          Paisajes sonoros
+        </p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {items.map((it) => {
+            const on = audio.isPlaying(it.t);
+            return (
+              <button
+                key={it.t}
+                onClick={() => toggle(it.t)}
+                className={cn(
+                  "flex items-center justify-between gap-1 rounded-xl border px-2 py-2 text-[11px] transition",
+                  on
+                    ? "border-[#7cc2c8]/50 bg-[#7cc2c8]/10 text-[#7cc2c8]"
+                    : "border-white/10 bg-white/[0.03] text-slate-200"
+                )}
+              >
+                <span className="truncate"><span className="mr-1">{it.emoji}</span>{it.label}</span>
+                {on ? <Volume2 size={12} /> : <VolumeX size={12} className="opacity-60" />}
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
+
 
 /* ────────────── History View ────────────── */
 type Entry = { id: string; content: string; entry_date: string | null; emotion_tags: string[] | null; created_at: string | null };
