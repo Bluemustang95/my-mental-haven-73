@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Book, ClipboardHeart, Moon, Smile, Target, X } from "lucide-react";
+import { Book, ClipboardList, Moon, Smile, Target, X } from "lucide-react";
 import { Sparkline } from "./Sparkline";
 
 const TREND = [63, 58, 55, 52, 48, 47, 47];
@@ -81,7 +81,7 @@ export function WellbeingAnalysisSheet({ open, onClose }: Props) {
                   <Pillar icon={<Moon size={20} />} area="Sueño" state="Descansaste bien" sub="6 de 7 noches" dot="#7cc2c8" />
                   <Pillar icon={<Target size={20} />} area="Metas del día" state="Todas cumplidas" sub="7 de 7 días" dot="#7cc2c8" />
                   <Pillar
-                    icon={<ClipboardHeart size={20} />}
+                    icon={<ClipboardList size={20} />}
                     area="Evaluación clínica"
                     state="Pendiente de actualizar"
                     sub="Hace 9 días"
