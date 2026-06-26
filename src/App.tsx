@@ -56,6 +56,7 @@ import Rumination from "@/pages/Rumination";
 import Recovery from "@/pages/Recovery";
 import EmotionalRegulation from "@/pages/EmotionalRegulation";
 import CambiarRespuestas from "@/pages/CambiarRespuestas";
+import RegulacionDbt from "@/pages/RegulacionDbt";
 import ConstruirBienestar from "@/pages/ConstruirBienestar";
 import { PremiumLock } from "@/components/PremiumLock";
 import MindfulEating from "@/pages/MindfulEating";
