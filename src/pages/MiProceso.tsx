@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Activity, ClipboardList, FileText, NotebookPen, Pill, Mail,
-  BadgeCheck, Sparkles, Phone, UserPlus,
+  Activity, Sparkles,
 } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { PaywallModal } from "@/components/modals/PaywallModal";
@@ -11,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
 import { TherapySyncModal } from "@/components/modals/TherapySyncModal";
+import { TherapyMiniTracker } from "@/components/proceso/TherapyMiniTracker";
+import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
+import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
 import { PremiumLock } from "@/components/PremiumLock";
 import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
 import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
@@ -21,6 +23,7 @@ import { BeckTestRunner } from "@/components/proceso/BeckTestRunner";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
+
 
 
 type Therapist = {
