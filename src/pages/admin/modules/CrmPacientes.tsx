@@ -169,12 +169,13 @@ function PatientModal({ patient, onClose }: { patient: Patient | null; onClose: 
     const since30 = new Date(Date.now() - 30 * 86400000).toISOString();
     (async () => {
       const [ci, th, db, hb] = await Promise.all([
-        supabase.from("daily_checkins").select("id, created_at", { count: "exact" }).eq("user_id", patient.user_id).gte("created_at", since30).order("created_at", { ascending: false }).limit(1),
-        supabase.from("thought_records").select("id, created_at", { count: "exact" }).eq("user_id", patient.user_id).order("created_at", { ascending: false }).limit(1),
-        supabase.from("dbt_sessions").select("id, created_at", { count: "exact" }).eq("user_id", patient.user_id).order("created_at", { ascending: false }).limit(1),
-        supabase.from("habit_logs").select("id, created_at", { count: "exact" }).eq("user_id", patient.user_id).order("created_at", { ascending: false }).limit(1),
+        supabase.from("daily_checkins").select("created_at", { count: "exact" }).eq("user_id", patient.user_id).gte("created_at", since30).order("created_at", { ascending: false }).limit(1),
+        supabase.from("thought_records").select("created_at", { count: "exact" }).eq("user_id", patient.user_id).order("created_at", { ascending: false }).limit(1),
+        supabase.from("dbt_emotion_sessions").select("created_at", { count: "exact" }).eq("user_id", patient.user_id).order("created_at", { ascending: false }).limit(1),
+        supabase.from("habit_completions").select("created_at", { count: "exact" }).eq("user_id", patient.user_id).order("created_at", { ascending: false }).limit(1),
       ]);
-      const candidates = [ci.data?.[0]?.created_at, th.data?.[0]?.created_at, db.data?.[0]?.created_at, hb.data?.[0]?.created_at].filter(Boolean) as string[];
+      const pickDate = (res: any): string | null => res?.data?.[0]?.created_at ?? null;
+      const candidates = [pickDate(ci), pickDate(th), pickDate(db), pickDate(hb)].filter(Boolean) as string[];
       const lastActive = candidates.length ? candidates.sort().slice(-1)[0] : null;
       setUsage({
         checkins30d: ci.count ?? 0,
