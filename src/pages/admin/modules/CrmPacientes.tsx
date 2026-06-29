@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminButton, AdminCard, AdminModal, AdminPageHeader, AdminTabs } from "@/components/admin/ui/AdminPrimitives";
-import { Search, Download, Filter } from "lucide-react";
+import { Search, Download, Filter, Globe2, Crown, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 
 type Patient = {
@@ -22,21 +22,65 @@ export default function CrmPacientes() {
   const [list, setList] = useState<Patient[]>([]);
   const [q, setQ] = useState("");
   const [planFilter, setPlanFilter] = useState<"all" | "premium" | "free">("all");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Patient | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
+  const refresh = () =>
     supabase.rpc("admin_list_patients").then(({ data }) => setList((data as Patient[]) ?? []));
-  }, []);
+
+  useEffect(() => { refresh(); }, []);
+
+  const countries = useMemo(() => {
+    const map = new Map<string, number>();
+    list.forEach((p) => map.set(p.country ?? "Sin especificar", (map.get(p.country ?? "Sin especificar") ?? 0) + 1));
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [list]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return list.filter((p) => {
       if (planFilter === "premium" && p.plan !== "premium") return false;
       if (planFilter === "free" && p.plan === "premium") return false;
+      if (countryFilter !== "all" && (p.country ?? "Sin especificar") !== countryFilter) return false;
       if (!term) return true;
       return [p.display_name, p.email, p.plan, p.country].some((v) => (v ?? "").toLowerCase().includes(term));
     });
-  }, [q, list, planFilter]);
+  }, [q, list, planFilter, countryFilter]);
+
+  const allPickedInView = filtered.length > 0 && filtered.every((p) => picked.has(p.user_id));
+  const toggleAll = () => {
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (allPickedInView) filtered.forEach((p) => next.delete(p.user_id));
+      else filtered.forEach((p) => next.add(p.user_id));
+      return next;
+    });
+  };
+  const togglePick = (id: string) => {
+    setPicked((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const bulkSetPlan = async (plan: "premium" | "free") => {
+    const ids = Array.from(picked);
+    if (!ids.length) return;
+    const reason = prompt(`Motivo del cambio masivo a ${plan} (${ids.length} pacientes):`);
+    if (!reason) return;
+    const { data, error } = await supabase.rpc("admin_bulk_set_plan", {
+      _user_ids: ids,
+      _plan: plan,
+      _expires_at: plan === "premium" ? new Date(Date.now() + 365 * 86400000).toISOString() : null,
+      _reason: reason,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${data ?? ids.length} pacientes actualizados a ${plan}`);
+    setPicked(new Set());
+    refresh();
+  };
 
   const exportCsv = () => {
     const rows = [
