@@ -134,7 +134,6 @@ export function TherapyMiniTracker({
         onClose={() => setConfirmOpen(false)}
         onConfirmed={() => {
           refetch();
-          onContactConfirmed?.();
         }}
       />
     </div>
