@@ -157,20 +157,25 @@ export default function RegulacionDbt() {
   };
 
   const finish = async () => {
-    // Persist clinical session to Supabase before clearing local state.
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user && state.emotion) {
+        const path =
+          state.fit === "no" ? "cognitive_restructuring"
+          : state.fit === "yes" && state.effective === "no" ? "opposite_action"
+          : "problem_solving";
         await supabase.from("dbt_emotion_sessions").insert({
           user_id: user.id,
           emotion: state.emotion,
-          nuance: state.nuance,
-          story: state.story,
+          event_description: state.story,
+          interpretations: state.nuance ?? null,
           fits_facts: state.fit === "yes",
-          effective_to_act: state.effective === "yes",
-          chosen_path: planLabel.title,
-          plan: state.plan,
-        } as never);
+          is_effective: state.effective === "yes",
+          path,
+          opposite_payload: path === "opposite_action" ? { plan: state.plan } : null,
+          problem_payload: path === "problem_solving" ? { plan: state.plan } : null,
+          completed_at: new Date().toISOString(),
+        });
       }
     } catch (e) {
       console.warn("[RegulacionDbt] failed to persist session", e);
