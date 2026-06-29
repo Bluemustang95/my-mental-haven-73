@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Sun, Moon as MoonIcon, ChevronRight, Heart, Wind, Check } from "lucide-react";
+import { Sparkles, Sun, Moon as MoonIcon, ChevronRight, Heart, Wind, Check, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { localDateStr } from "@/lib/utils";
 import { WeekStrip } from "@/components/home/WeekStrip";
 import { CheckinModal } from "@/components/modals/CheckinModal";
 import { DayHistorySheet } from "@/components/mindfulness/DayHistorySheet";
+import { MonthCalendarSheet } from "@/components/home/MonthCalendarSheet";
 import { RecommendedResourceCard } from "@/components/home/RecommendedResourceCard";
 import { MorningCallback } from "@/components/home/MorningCallback";
 import {
@@ -51,6 +52,7 @@ export default function Dashboard() {
   const [checkinOpen, setCheckinOpen] = useState<"morning" | "night" | null>(null);
   const [historyDate, setHistoryDate] = useState<Date | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [monthOpen, setMonthOpen] = useState(false);
   const [weekProgress, setWeekProgress] = useState<Record<string, number>>({});
 
   const widgets = useHomeWidgets();
@@ -179,15 +181,25 @@ export default function Dashboard() {
         </div>
 
         {/* Week strip */}
-        <div className="mt-4">
-          <WeekStrip
-            progressByDate={weekProgress}
-            onSelectDay={(d) => {
-              setHistoryDate(d);
-              setHistoryOpen(true);
-            }}
-          />
+        <div className="mt-4 flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <WeekStrip
+              progressByDate={weekProgress}
+              onSelectDay={(d) => {
+                setHistoryDate(d);
+                setHistoryOpen(true);
+              }}
+            />
+          </div>
+          <button
+            onClick={() => setMonthOpen(true)}
+            aria-label="Ver calendario completo"
+            className="glass-premium flex h-[60px] w-12 shrink-0 items-center justify-center rounded-[22px] text-resma-navy active:scale-95"
+          >
+            <CalendarDays size={18} />
+          </button>
         </div>
+
 
         {/* Yesterday's improvement callback */}
         {improveFromYesterday && !morningDone && !widgets.editMode && (
@@ -284,6 +296,14 @@ export default function Dashboard() {
         scope="all"
         open={historyOpen}
         onOpenChange={setHistoryOpen}
+      />
+      <MonthCalendarSheet
+        open={monthOpen}
+        onOpenChange={setMonthOpen}
+        onPickDay={(d) => {
+          setHistoryDate(d);
+          setHistoryOpen(true);
+        }}
       />
     </div>
   );

@@ -77,31 +77,37 @@ export default function MindfulnessHub() {
 
   return (
     <div className="min-h-screen bg-[#FDFCFB] pb-32">
-      <div className="px-5 pt-12">
-        <button
-          onClick={() => navigate("/herramientas")}
-          className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm"
-        >
-          <ArrowLeft size={18} />
-        </button>
-
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h1 className="font-serif text-3xl font-bold text-[#101927]">Mindfulness</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Tres caminos para estar más presente.
-            </p>
-          </div>
+      <div className="mx-auto max-w-md px-5 pt-5">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate("/herramientas")}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <p className="font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+            Atención plena
+          </p>
           <StreakBadge progressByDate={progressByDate} />
         </div>
 
+        <div className="mt-5">
+          <p className="font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Tres caminos
+          </p>
+          <h1 className="mt-1 font-serif text-[26px] font-medium leading-tight text-[#101927]">
+            Mindfulness
+          </h1>
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted-foreground">
+            Tres caminos para estar más presente.
+          </p>
+        </div>
+
         <RecommendedNowChip />
-
-        {/* Se eliminó la tarjeta superior "Continuar" — la práctica abierta ya se muestra debajo en OpenMindfulnessList */}
-
       </div>
 
-      <div className="mt-5 space-y-2 px-5">
+
+      <div className="mx-auto mt-4 max-w-md space-y-2 px-5">
         {modules.map((m) => (
           <motion.button
             key={m.to}

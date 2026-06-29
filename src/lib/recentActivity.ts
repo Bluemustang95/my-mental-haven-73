@@ -58,3 +58,37 @@ export async function fetchRecentActivity(userId: string, limit = 20): Promise<R
 
   return out.sort((a, b) => +new Date(b.at) - +new Date(a.at)).slice(0, limit);
 }
+
+/**
+ * Returns a Set of YYYY-MM-DD local date keys where the user logged ANY activity in a given range.
+ * Used by the home calendar to dot active days.
+ */
+export async function fetchActivityDateKeys(
+  userId: string,
+  from: Date,
+  to: Date,
+): Promise<Set<string>> {
+  const fromIso = from.toISOString();
+  const toIso = to.toISOString();
+  const queries = await Promise.all([
+    supabase.from("thought_records").select("created_at").eq("user_id", userId).gte("created_at", fromIso).lt("created_at", toIso),
+    supabase.from("dbt_emotion_sessions").select("created_at").eq("user_id", userId).gte("created_at", fromIso).lt("created_at", toIso),
+    supabase.from("exercise_sessions").select("created_at").eq("user_id", userId).gte("created_at", fromIso).lt("created_at", toIso),
+    supabase.from("daily_checkins").select("created_at").eq("user_id", userId).gte("created_at", fromIso).lt("created_at", toIso),
+    supabase.from("journal_entries").select("created_at").eq("user_id", userId).gte("created_at", fromIso).lt("created_at", toIso),
+    supabase.from("sleep_log").select("created_at").eq("user_id", userId).gte("created_at", fromIso).lt("created_at", toIso),
+    supabase.from("medication_logs").select("taken_at").eq("user_id", userId).gte("taken_at", fromIso).lt("taken_at", toIso),
+    supabase.from("test_results").select("created_at").eq("user_id", userId).gte("created_at", fromIso).lt("created_at", toIso),
+  ]);
+  const keys = new Set<string>();
+  const push = (iso: string | null | undefined) => {
+    if (!iso) return;
+    const d = new Date(iso);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    keys.add(k);
+  };
+  queries.forEach((q, i) => {
+    (q.data ?? []).forEach((r: any) => push(i === 6 ? r.taken_at : r.created_at));
+  });
+  return keys;
+}
