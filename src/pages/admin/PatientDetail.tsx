@@ -12,15 +12,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Crown, Shield, Mic } from "lucide-react";
+import { ArrowLeft, Crown, Shield, Mic, Brain, Heart } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { voiceForCountry } from "@/lib/voiceByCountry";
 import type { Tables } from "@/integrations/supabase/types";
+import { fetchRecentActivity, type RecentActivity } from "@/lib/recentActivity";
 
 type Profile = Tables<"patient_app_profiles">;
 type Checkin = Tables<"daily_checkins">;
 type TestResult = Tables<"test_results">;
 type Exercise = Tables<"exercise_sessions">;
+type Thought = Tables<"thought_records">;
+type Dbt = Tables<"dbt_emotion_sessions">;
 
 type PlanAction = { plan: "free" | "premium"; days?: number; label: string };
 
@@ -32,6 +35,9 @@ export default function PatientDetail() {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [tests, setTests] = useState<TestResult[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [thoughts, setThoughts] = useState<Thought[]>([]);
+  const [dbt, setDbt] = useState<Dbt[]>([]);
+  const [recent, setRecent] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -42,19 +48,24 @@ export default function PatientDetail() {
   const load = () => {
     if (!userId) return;
     Promise.all([
-      // Use the admin RPC for the profile (server-side role check + future-proof for new fields).
       supabase.rpc("admin_get_patient", { _user_id: userId }),
       supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
       supabase.from("daily_checkins").select("*").eq("user_id", userId).order("checkin_date", { ascending: false }).limit(30),
       supabase.from("test_results").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       supabase.from("exercise_sessions").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
-    ]).then(([profileRes, roleRes, checkinsRes, testsRes, exercisesRes]) => {
+      supabase.from("thought_records").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
+      supabase.from("dbt_emotion_sessions").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
+      fetchRecentActivity(userId, 15),
+    ]).then(([profileRes, roleRes, checkinsRes, testsRes, exercisesRes, thoughtsRes, dbtRes, recentRes]) => {
       const profileRow = Array.isArray(profileRes.data) ? profileRes.data[0] : profileRes.data;
       setProfile((profileRow as Profile) ?? null);
       setIsAdmin(!!roleRes.data);
       setCheckins(checkinsRes.data ?? []);
       setTests(testsRes.data ?? []);
       setExercises(exercisesRes.data ?? []);
+      setThoughts((thoughtsRes.data as Thought[]) ?? []);
+      setDbt((dbtRes.data as Dbt[]) ?? []);
+      setRecent(recentRes);
       setLoading(false);
     });
   };
