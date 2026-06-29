@@ -6,17 +6,18 @@ export type WellbeingSnapshot = {
   trend: number[];        // últimos 7 días (mood/check-in equivalente 0-100)
   message: string;
   components: {
-    sleep: number | null;     // 0-100
-    mood: number | null;      // 0-100
-    habits: number | null;    // 0-100 (% completado)
-    tests: number | null;     // 0-100 (severity invertida)
+    sleep: number | null;       // 0-100
+    mood: number | null;        // 0-100
+    habits: number | null;      // 0-100 (% completado)
+    tests: number | null;       // 0-100 (severity invertida)
+    engagement: number | null;  // 0-100 (uso clínico: pensamientos + dbt + diario)
   };
 };
 
 const EMPTY: WellbeingSnapshot = {
   score: 0, delta: 0, trend: [0,0,0,0,0,0,0],
   message: "Empezá registrando tu día para ver tu evolución.",
-  components: { sleep: null, mood: null, habits: null, tests: null },
+  components: { sleep: null, mood: null, habits: null, tests: null, engagement: null },
 };
 
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
@@ -32,7 +33,9 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
   const today = startOfDay(new Date());
   const from14 = new Date(today.getTime() - 13 * 86400000);
 
-  const [{ data: ci }, { data: tr }, { data: hc }] = await Promise.all([
+  const from7iso = new Date(today.getTime() - 6 * 86400000).toISOString();
+
+  const [{ data: ci }, { data: tr }, { data: hc }, { data: th }, { data: dbt }, { data: jr }] = await Promise.all([
     supabase.from("daily_checkins")
       .select("checkin_date, mood_score, sleep_score, mode")
       .eq("user_id", user.id)
@@ -45,6 +48,9 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
       .select("completed_date")
       .eq("user_id", user.id)
       .gte("completed_date", isoDate(from14)),
+    supabase.from("thought_records").select("created_at").eq("user_id", user.id).gte("created_at", from7iso),
+    supabase.from("dbt_emotion_sessions").select("created_at").eq("user_id", user.id).gte("created_at", from7iso),
+    supabase.from("journal_entries").select("created_at").eq("user_id", user.id).gte("created_at", from7iso),
   ]);
 
   // ── Trend (últimos 7 días, normalizado a 0-100) ──
@@ -88,8 +94,13 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
   const tScores = latestTests.map((t) => severityScore(t.severity)).filter((x): x is number => x !== null);
   const tests = tScores.length ? Math.round(tScores.reduce((a,b)=>a+b,0) / tScores.length) : null;
 
+  // engagement: actividad clínica (pensamientos + DBT + diario) últimos 7d
+  // 0 sesiones → null, 1 sesión → 40, 3 → 70, 6+ → 100
+  const totalEngagement = (th?.length ?? 0) + (dbt?.length ?? 0) + (jr?.length ?? 0);
+  const engagement = totalEngagement === 0 ? null : Math.min(100, 30 + totalEngagement * 12);
+
   // Weighted score
-  const buckets = [mood, sleep, habits, tests].filter((x): x is number => x !== null);
+  const buckets = [mood, sleep, habits, tests, engagement].filter((x): x is number => x !== null);
   const score = buckets.length ? Math.round(buckets.reduce((a,b)=>a+b,0) / buckets.length) : 0;
 
   // Delta: comparar promedio últimos 7 vs 7 anteriores
@@ -105,5 +116,5 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
     : score >= 45 ? "Semana con altibajos. Es normal que el proceso no sea lineal."
     : "Días difíciles. Bajá la exigencia y volvé a lo básico: dormir y respirar.";
 
-  return { score, delta, trend, message, components: { sleep, mood, habits, tests } };
+  return { score, delta, trend, message, components: { sleep, mood, habits, tests, engagement } };
 }

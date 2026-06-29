@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
 import { AmbientGlows } from "./AmbientGlows";
 import { CrisisButton } from "@/components/CrisisButton";
+import { NotificationRunner } from "@/components/system/NotificationRunner";
 
 // Routes where the global CrisisButton should appear.
 // Sensitive modules: tests, journal, regulation, thoughts, sleep, safety plan, my-process.
@@ -22,6 +23,7 @@ export function AppLayout() {
   return (
     <div className="relative min-h-screen bg-background">
       <AmbientGlows />
+      <NotificationRunner />
       <div className="relative">
         <Outlet />
       </div>
