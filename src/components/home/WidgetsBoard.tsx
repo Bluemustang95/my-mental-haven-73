@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Maximize2, Minimize2, Settings, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Switch } from "@/components/ui/switch";
 import { useLongPress } from "@/hooks/useLongPress";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export type WidgetId =
   | "morning"
@@ -79,8 +80,58 @@ export function saveWidgets(w: WidgetState[]) {
 export function useHomeWidgets() {
   const [widgets, setWidgets] = useState<WidgetState[]>(() => loadWidgets());
   const [editMode, setEditMode] = useState(false);
+  const cloudTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hydratedRef = useRef(false);
 
+  // Local cache
   useEffect(() => saveWidgets(widgets), [widgets]);
+
+  // Hydrate from cloud once on mount.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { hydratedRef.current = true; return; }
+      const { data } = await supabase
+        .from("home_layouts")
+        .select("widgets")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const remote = (data?.widgets as unknown as WidgetState[] | undefined) ?? null;
+      if (remote && remote.length) {
+        // Merge with defaults to surface new widgets added in app updates.
+        const known = new Set(remote.map((p) => p.id));
+        const merged: WidgetState[] = [
+          ...remote
+            .map((p) => {
+              const d = DEFAULT_WIDGETS.find((x) => x.id === p.id);
+              return d ? { ...d, ...p } : null;
+            })
+            .filter(Boolean) as WidgetState[],
+          ...DEFAULT_WIDGETS.filter((d) => !known.has(d.id)),
+        ];
+        setWidgets(merged);
+      }
+      hydratedRef.current = true;
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Debounced upsert to cloud after hydration.
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    if (cloudTimer.current) clearTimeout(cloudTimer.current);
+    cloudTimer.current = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("home_layouts").upsert({
+        user_id: user.id,
+        widgets: widgets as unknown as never,
+      }, { onConflict: "user_id" });
+    }, 700);
+    return () => { if (cloudTimer.current) clearTimeout(cloudTimer.current); };
+  }, [widgets]);
 
   useEffect(() => {
     if (editMode) document.body.classList.add("home-edit");
