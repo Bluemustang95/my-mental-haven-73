@@ -1,73 +1,42 @@
-## Cambios solicitados
+## Rediseño del formulario de admisión (intake) — 3 pasos
 
-### 1. Flujo modal de sincronización
-- Tras `handleSync` exitoso (encontrado o intake enviado): **cerrar el modal** automáticamente. No mostrar la vista de tracking adentro del modal — el seguimiento vive en la página `Mi Proceso`.
-- `TherapyTrackingView` deja de usarse dentro del modal (la dejamos para no romper imports pero se elimina del flujo).
-- `handleSynced` recibe los datos y reemplaza la card "Profesional vinculado" por un mini-tracker.
+Reemplazar el formulario de un solo paso en `TherapySyncModal.tsx` por un wizard de 3 pasos que cumpla el contrato del endpoint `app-bridge-intake`.
 
-### 2. Mini-tracker inline en Mi Proceso (reemplaza card actual)
-Cuando `inTherapy === true` y el estado bridge es `searching` o `assigned`, mostrar **dos esferas compactas horizontales** (no las 4 grandes):
+### Paso 1 — Datos personales
+- Nombre * (`first_name`)
+- Apellido * (`last_name`)
+- Fecha de nacimiento * — date input, se envía como `YYYY-MM-DD` (string, no Date).
+- Género * — pills: Masculino / Femenino / Otro / Prefiero no responder → `"masculino" | "femenino" | "otro" | "no_responde"`.
 
-```text
-( ● ) ──── ( ○ )           ( ● ) ──── ( ● )
-Buscando   Asignado        Buscando   Asignado
-profesional                            ✓ Lista
-```
+### Paso 2 — Contacto
+- Teléfono * con selector de código país (default +54) — se normaliza a E.164 con `+`.
+- Email (opcional).
 
-- Polling cada 60s vía `useTherapyStatus(linked_phone)` ya implementado.
-- Cuando pasa a `assigned`/`coordinating`/`concretized`: el segundo círculo se llena, aparece debajo el **aviso amarillo**: "El profesional [Nombre] se contactará contigo en las próximas 24 hs hábiles" + botón "¿Ya te contactó?" (reusa `ContactConfirmDialog`).
-- Cuando el paciente confirma contacto → se muestra la card actual completa con datos del profe + bento grid.
+### Paso 3 — Consulta
+- Tipo de tratamiento * — pills: Individual / Pareja / Familiar / Niños → `"individual" | "pareja" | "familiar" | "ninos"`.
+- Modalidad * — Online / Presencial.
+- Si Presencial → aparecen dos selects dependientes:
+  - Provincia (lista fija de 7): Buenos Aires, Chubut, Ciudad Autónoma de Buenos Aires, Ciudad de Buenos Aires, Córdoba, Entre Ríos, Mendoza, Neuquén.
+  - Localidad: lista filtrada según provincia (las listas exactas que pasaste en el prompt) — se crea `src/lib/argentinaLocalities.ts` con el mapa `provincia → localidades[]`.
+- Motivo de consulta * (`consultation_description`) — textarea, máx 2000 chars con contador.
 
-### 3. Encuesta de satisfacción a los 7 días
-Disparador: 7 días desde `bridge_assigned_at`. Se muestra como **banner** en Mi Proceso ("Contanos cómo fue tu experiencia →") + se persiste hasta que la responda o la descarte.
+### Envío
+- POST directo al endpoint vía `bridge-proxy` (action `"intake"`), payload con el shape exacto del contrato:
+  - `country: "AR"` y `consultation_reason: "Psicológica"` hardcoded.
+  - `province`/`locality` solo se incluyen si `modality === "Presencial"`.
+  - `email` se omite si está vacío.
+- Manejo de respuestas:
+  - 201 success nuevo o 200 con `deduplicated: true` → toast de éxito + `onSynced`.
+  - 400 (`missing_name`, `invalid_phone`, `country_not_supported`, `invalid_payload`) → mostrar mensaje específico, NO reintentar.
+  - 401 → error genérico de conexión.
+  - 429 → reintentar con backoff (2s, 5s).
+  - 5xx → reintentar 1 vez, si falla avisar.
+- Validación client-side: nombre/apellido no vacíos, birth_date en formato válido, teléfono regex E.164 (`^\+\d{8,15}$`), motivo no vacío.
 
-**Flujo de encuesta (sheet modal de 4-5 pasos):**
+### Cambios técnicos
+- `src/components/modals/TherapySyncModal.tsx`: refactor de la vista `"intake"` a wizard 3 pasos con barra de progreso; mantener intacta la vista `"sync"`.
+- `src/lib/argentinaLocalities.ts` (nuevo): mapa provincia→localidades + helper `getLocalities(province)`.
+- `src/lib/bridgeRetry.ts` (nuevo, opcional): helper de retry con backoff para 429/5xx.
 
-1. **¿Pudiste comenzar tratamiento?** Sí / No
-2. **Si Sí:**
-   - ¿El profesional se contactó dentro de las 24 hs hábiles? Sí / No
-   - ¿Cuántas sesiones tuviste? `0 / 1 / 2-3 / 4+`
-   - ¿Cómo te sentís con el profesional asignado? escala 1-5 (vínculo)
-   - ¿La modalidad fue la que pediste? Sí / No / Cambió y está bien
-   - ¿Recomendarías RESMA? NPS 0-10
-3. **Si No:**
-   - ¿Por qué? (multi-choice):
-     - El profesional no se contactó
-     - Tema económico
-     - Horarios no compatibles
-     - Ya no lo necesito / cambié de opinión
-     - Otro (texto)
-4. **Calificación final RESMA:** NPS 0-10 + comentario libre
-5. **Cierre:** "Si querés volver a contactarte con nosotros, podés hacerlo cuando lo desees." + botón cerrar.
-
-### 4. Base de datos
-
-**Nueva tabla `therapy_satisfaction_surveys`** (visible para admin en CRM):
-- `user_id`, `started_treatment` (bool), `contacted_in_24h` (bool, null), `sessions_count` (text), `bond_rating` (1-5), `modality_match` (text), `nps_score` (0-10), `not_started_reasons` (text[]), `other_reason` (text), `final_nps` (0-10), `comment` (text), `triggered_at`, `completed_at`.
-- RLS: paciente inserta/lee la suya; admin lee todas (via `has_role`).
-
-**Columnas nuevas en `patient_app_profiles`:**
-- `bridge_assigned_at` (timestamptz) — se setea cuando bridge state pasa a `assigned`
-- `satisfaction_survey_completed_at` (timestamptz, null)
-- `satisfaction_survey_dismissed_at` (timestamptz, null)
-
-### 5. Admin
-- Nueva sección en `CrmPacientes` o nueva ruta `/admin/satisfaccion`: listado de respuestas con filtros (NPS promedio, % que inició tratamiento, motivos más comunes). Tabla básica + export CSV reutilizando patrón existente.
-
-## Detalles técnicos
-
-- `MiProceso.tsx`: reemplazar bloque `inTherapy ?` actual. Agregar componente `<TherapyMiniTracker />` que polea estado y renderiza condicional (mini-tracker / card-completa).
-- `TherapySyncModal.tsx`: en `handleSync` y `handleIntake`, llamar `onSynced({...})` y `onClose()` directamente — eliminar vistas `tracking` e `intake-success` del modal.
-- Nuevo `src/components/proceso/TherapyMiniTracker.tsx` — usa `useTherapyStatus` con `linked_phone` ya guardado.
-- Nuevo `src/components/proceso/SatisfactionSurveySheet.tsx` — wizard 4-5 pasos, guarda en `therapy_satisfaction_surveys`.
-- Nuevo hook `useSatisfactionSurveyTrigger.ts` — checa si `bridge_assigned_at + 7d <= now()` y no hay survey completada/descartada.
-- Detección del cambio `searching→assigned` para setear `bridge_assigned_at`: en el `useEffect` que ya graba `bridge_last_state`, si pasa a `assigned` y `bridge_assigned_at` es null, lo escribe.
-
-## Archivos afectados
-- `src/components/modals/TherapySyncModal.tsx` (simplificar)
-- `src/pages/MiProceso.tsx` (reemplazar bloque inTherapy)
-- `src/components/proceso/TherapyMiniTracker.tsx` (nuevo)
-- `src/components/proceso/SatisfactionSurveySheet.tsx` (nuevo)
-- `src/hooks/useSatisfactionSurveyTrigger.ts` (nuevo)
-- Migración Supabase (tabla + columnas)
-- `src/pages/admin/modules/CrmPacientes.tsx` o nueva ruta admin para ver respuestas
+### Fuera de alcance
+- El handler del edge function (`app-bridge-intake`) lo actualizás vos.
