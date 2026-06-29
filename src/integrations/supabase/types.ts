@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          payload: Json | null
+          reason: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          reason?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          reason?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_settings: {
         Row: {
           key: string
@@ -594,6 +624,36 @@ export type Database = {
           },
         ]
       }
+      crisis_hotlines: {
+        Row: {
+          active: boolean
+          country: string
+          created_at: string
+          id: string
+          label: string
+          phone: string
+          priority: number
+        }
+        Insert: {
+          active?: boolean
+          country: string
+          created_at?: string
+          id?: string
+          label: string
+          phone: string
+          priority?: number
+        }
+        Update: {
+          active?: boolean
+          country?: string
+          created_at?: string
+          id?: string
+          label?: string
+          phone?: string
+          priority?: number
+        }
+        Relationships: []
+      }
       daily_checkins: {
         Row: {
           balance_highlight: string | null
@@ -944,6 +1004,30 @@ export type Database = {
         }
         Relationships: []
       }
+      home_layouts: {
+        Row: {
+          created_at: string
+          groups_order: Json
+          updated_at: string
+          user_id: string
+          widgets: Json
+        }
+        Insert: {
+          created_at?: string
+          groups_order?: Json
+          updated_at?: string
+          user_id: string
+          widgets?: Json
+        }
+        Update: {
+          created_at?: string
+          groups_order?: Json
+          updated_at?: string
+          user_id?: string
+          widgets?: Json
+        }
+        Relationships: []
+      }
       internal_dialogues: {
         Row: {
           compassionate_voice: string
@@ -973,6 +1057,7 @@ export type Database = {
       }
       journal_entries: {
         Row: {
+          attachments: Json | null
           content: string
           created_at: string | null
           emotion_tags: string[] | null
@@ -982,8 +1067,10 @@ export type Database = {
           prompt: string | null
           updated_at: string | null
           user_id: string
+          voice_note_path: string | null
         }
         Insert: {
+          attachments?: Json | null
           content: string
           created_at?: string | null
           emotion_tags?: string[] | null
@@ -993,8 +1080,10 @@ export type Database = {
           prompt?: string | null
           updated_at?: string | null
           user_id: string
+          voice_note_path?: string | null
         }
         Update: {
+          attachments?: Json | null
           content?: string
           created_at?: string | null
           emotion_tags?: string[] | null
@@ -1004,6 +1093,7 @@ export type Database = {
           prompt?: string | null
           updated_at?: string | null
           user_id?: string
+          voice_note_path?: string | null
         }
         Relationships: []
       }
@@ -1254,6 +1344,10 @@ export type Database = {
           priority_module: string | null
           recent_feelings: string[] | null
           sleep_quality: string | null
+          therapist_email: string | null
+          therapist_license: string | null
+          therapist_name: string | null
+          therapist_phone: string | null
           treatment_status: string | null
           updated_at: string | null
           user_id: string
@@ -1281,6 +1375,10 @@ export type Database = {
           priority_module?: string | null
           recent_feelings?: string[] | null
           sleep_quality?: string | null
+          therapist_email?: string | null
+          therapist_license?: string | null
+          therapist_name?: string | null
+          therapist_phone?: string | null
           treatment_status?: string | null
           updated_at?: string | null
           user_id: string
@@ -1308,6 +1406,10 @@ export type Database = {
           priority_module?: string | null
           recent_feelings?: string[] | null
           sleep_quality?: string | null
+          therapist_email?: string | null
+          therapist_license?: string | null
+          therapist_name?: string | null
+          therapist_phone?: string | null
           treatment_status?: string | null
           updated_at?: string | null
           user_id?: string
@@ -1639,6 +1741,39 @@ export type Database = {
           },
         ]
       }
+      safety_plans: {
+        Row: {
+          contacts: Json
+          coping_strategies: Json
+          created_at: string
+          environment_notes: string | null
+          reasons_for_living: string | null
+          updated_at: string
+          user_id: string
+          warning_signs: Json
+        }
+        Insert: {
+          contacts?: Json
+          coping_strategies?: Json
+          created_at?: string
+          environment_notes?: string | null
+          reasons_for_living?: string | null
+          updated_at?: string
+          user_id: string
+          warning_signs?: Json
+        }
+        Update: {
+          contacts?: Json
+          coping_strategies?: Json
+          created_at?: string
+          environment_notes?: string | null
+          reasons_for_living?: string | null
+          updated_at?: string
+          user_id?: string
+          warning_signs?: Json
+        }
+        Relationships: []
+      }
       selfcare_tasks: {
         Row: {
           completed: boolean | null
@@ -1692,6 +1827,36 @@ export type Database = {
           mood_after?: number | null
           note?: string
           session_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sleep_hygiene_audits: {
+        Row: {
+          audit_date: string
+          created_at: string
+          id: string
+          items: Json
+          score: number
+          sos_mode: string | null
+          user_id: string
+        }
+        Insert: {
+          audit_date?: string
+          created_at?: string
+          id?: string
+          items?: Json
+          score?: number
+          sos_mode?: string | null
+          user_id: string
+        }
+        Update: {
+          audit_date?: string
+          created_at?: string
+          id?: string
+          items?: Json
+          score?: number
+          sos_mode?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2137,6 +2302,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_patient: {
+        Args: { _user_id: string }
+        Returns: {
+          areas_of_interest: string[] | null
+          country: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          in_therapy: boolean | null
+          learning_format: string | null
+          life_stage: string | null
+          linked_last_name: string | null
+          linked_phone: string | null
+          linked_professional_code: string | null
+          module_scores: Json | null
+          notifications_on: boolean | null
+          onboarding_completed: boolean | null
+          plan: string
+          plan_expires_at: string | null
+          plan_started_at: string | null
+          prefers_dark: boolean | null
+          priority_module: string | null
+          recent_feelings: string[] | null
+          sleep_quality: string | null
+          therapist_email: string | null
+          therapist_license: string | null
+          therapist_name: string | null
+          therapist_phone: string | null
+          treatment_status: string | null
+          updated_at: string | null
+          user_id: string
+          voice_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "patient_app_profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       admin_list_patients: {
         Args: never
         Returns: {
@@ -2158,10 +2363,20 @@ export type Database = {
         Args: { _is_admin: boolean; _user_id: string }
         Returns: undefined
       }
-      admin_set_plan: {
-        Args: { _expires_at: string; _plan: string; _user_id: string }
-        Returns: undefined
-      }
+      admin_set_plan:
+        | {
+            Args: { _expires_at: string; _plan: string; _user_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _expires_at: string
+              _plan: string
+              _reason?: string
+              _user_id: string
+            }
+            Returns: undefined
+          }
       admin_stats_overview: { Args: never; Returns: Json }
       get_daily_recommendations: {
         Args: { _limit?: number; _user_id: string }
