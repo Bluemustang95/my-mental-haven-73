@@ -12,8 +12,6 @@ interface Props {
   initialState?: BridgeState | null;
   initialProName?: string | null;
   linkedLastName?: string | null;
-  contactConfirmed?: boolean;
-  onContactConfirmed?: () => void;
 }
 
 export function TherapyMiniTracker({
@@ -21,8 +19,6 @@ export function TherapyMiniTracker({
   initialState,
   initialProName,
   linkedLastName,
-  contactConfirmed,
-  onContactConfirmed,
 }: Props) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -33,6 +29,7 @@ export function TherapyMiniTracker({
   const pro = status?.professional;
   const proName = pro?.name ?? initialProName ?? null;
   const assigned = state === "assigned" || state === "coordinating" || state === "concretized";
+  const contactConfirmed = state === "coordinating" || state === "concretized";
 
   // Persist assigned_at first time we see assigned
   useEffect(() => {
