@@ -26,12 +26,6 @@ import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 
 
 
-type Therapist = {
-  name: string | null;
-  phone: string | null;
-  email: string | null;
-  license: string | null;
-};
 
 export default function MiProceso() {
   const navigate = useNavigate();
