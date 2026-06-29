@@ -66,18 +66,15 @@ export default function MiProceso() {
     if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("in_therapy, linked_last_name, therapist_name, therapist_phone, therapist_email, therapist_license")
+      .select("in_therapy, linked_last_name, linked_phone, bridge_last_state, therapist_name")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         setInTherapy(!!data?.in_therapy);
         setLinkedLastName(data?.linked_last_name ?? null);
-        setTherapist({
-          name: data?.therapist_name ?? null,
-          phone: data?.therapist_phone ?? null,
-          email: data?.therapist_email ?? null,
-          license: data?.therapist_license ?? null,
-        });
+        setLinkedPhone(data?.linked_phone ?? null);
+        setBridgeLastState(data?.bridge_last_state ?? null);
+        setTherapistName(data?.therapist_name ?? null);
       });
     loadWellbeing().then(setSnap);
   }, [user]);
@@ -85,15 +82,18 @@ export default function MiProceso() {
   const updateTherapy = async (v: boolean) => {
     if (v) return setSyncOpen(true);
     setInTherapy(false);
+    setLinkedPhone(null);
     if (!user) return;
     await supabase
       .from("patient_app_profiles")
       .upsert({ user_id: user.id, in_therapy: false }, { onConflict: "user_id" });
   };
 
-  const handleSynced = (data: { lastName: string }) => {
+  const handleSynced = (data: { lastName: string; phone: string }) => {
     setInTherapy(true);
     setLinkedLastName(data.lastName);
+    setLinkedPhone(data.phone);
+    setBridgeLastState("searching");
   };
 
   const handleSelectTest = (code: "BDI" | "BAI" | "PSWQ") => {
@@ -101,9 +101,6 @@ export default function MiProceso() {
     else setGenericTest("symptom");
   };
 
-  const therapistInitials = therapist.name
-    ? therapist.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()
-    : "TX";
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f9f9fb]">
