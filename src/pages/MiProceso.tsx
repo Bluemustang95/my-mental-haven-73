@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Activity, ClipboardList, FileText, NotebookPen, Pill, Mail,
-  BadgeCheck, Sparkles, Phone, UserPlus,
+  Activity, Sparkles,
 } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { PaywallModal } from "@/components/modals/PaywallModal";
@@ -11,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
 import { TherapySyncModal } from "@/components/modals/TherapySyncModal";
+import { TherapyMiniTracker } from "@/components/proceso/TherapyMiniTracker";
+import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
+import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
 import { PremiumLock } from "@/components/PremiumLock";
 import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
 import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
@@ -23,12 +25,7 @@ import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 
 
-type Therapist = {
-  name: string | null;
-  phone: string | null;
-  email: string | null;
-  license: string | null;
-};
+
 
 export default function MiProceso() {
   const navigate = useNavigate();
@@ -38,8 +35,13 @@ export default function MiProceso() {
   const [inTherapy, setInTherapy] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [linkedLastName, setLinkedLastName] = useState<string | null>(null);
-  const [therapist, setTherapist] = useState<Therapist>({ name: null, phone: null, email: null, license: null });
+  const [linkedPhone, setLinkedPhone] = useState<string | null>(null);
+  const [bridgeLastState, setBridgeLastState] = useState<string | null>(null);
+  const [therapistName, setTherapistName] = useState<string | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
+
+  const [surveyOpen, setSurveyOpen] = useState(false);
+  const { shouldShow: surveyAvailable, dismiss: dismissSurvey, recheck: recheckSurvey } = useSatisfactionSurveyTrigger();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bigFiveOpen, setBigFiveOpen] = useState(false);
@@ -58,18 +60,15 @@ export default function MiProceso() {
     if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("in_therapy, linked_last_name, therapist_name, therapist_phone, therapist_email, therapist_license")
+      .select("in_therapy, linked_last_name, linked_phone, bridge_last_state, therapist_name")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         setInTherapy(!!data?.in_therapy);
         setLinkedLastName(data?.linked_last_name ?? null);
-        setTherapist({
-          name: data?.therapist_name ?? null,
-          phone: data?.therapist_phone ?? null,
-          email: data?.therapist_email ?? null,
-          license: data?.therapist_license ?? null,
-        });
+        setLinkedPhone(data?.linked_phone ?? null);
+        setBridgeLastState(data?.bridge_last_state ?? null);
+        setTherapistName(data?.therapist_name ?? null);
       });
     loadWellbeing().then(setSnap);
   }, [user]);
@@ -77,15 +76,18 @@ export default function MiProceso() {
   const updateTherapy = async (v: boolean) => {
     if (v) return setSyncOpen(true);
     setInTherapy(false);
+    setLinkedPhone(null);
     if (!user) return;
     await supabase
       .from("patient_app_profiles")
       .upsert({ user_id: user.id, in_therapy: false }, { onConflict: "user_id" });
   };
 
-  const handleSynced = (data: { lastName: string }) => {
+  const handleSynced = (data: { lastName: string; phone: string }) => {
     setInTherapy(true);
     setLinkedLastName(data.lastName);
+    setLinkedPhone(data.phone);
+    setBridgeLastState("searching");
   };
 
   const handleSelectTest = (code: "BDI" | "BAI" | "PSWQ") => {
@@ -93,9 +95,6 @@ export default function MiProceso() {
     else setGenericTest("symptom");
   };
 
-  const therapistInitials = therapist.name
-    ? therapist.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()
-    : "TX";
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f9f9fb]">
@@ -138,80 +137,34 @@ export default function MiProceso() {
           <IOSToggle checked={inTherapy} onChange={updateTherapy} label="En terapia" />
         </div>
 
-        {inTherapy ? (
-          <div className="mt-3 space-y-2.5">
-            <div className="rounded-[20px] border border-white/70 bg-white/85 p-3.5 shadow-[0_8px_24px_-18px_rgba(16,25,39,0.22)] backdrop-blur-xl">
-              <div className="flex items-center gap-3">
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#101927] to-[#0e8a92] font-display text-[13px] font-bold text-white">
-                  {therapistInitials}
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="truncate font-display text-[13px] font-bold text-[#0f172a]">
-                      {therapist.name ?? "Profesional vinculado"}
-                    </p>
-                    <BadgeCheck size={13} className="shrink-0 text-[#7cc2c8]" />
-                  </div>
-                  <p className="text-[10.5px] text-[#64748b]">
-                    {therapist.license ? `M.N. ${therapist.license} · ` : ""}Especialista Clínico
-                  </p>
-                </div>
-                {therapist.phone ? (
-                  <a
-                    href={`tel:${therapist.phone}`}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#101927] text-white"
-                    aria-label="Llamar"
-                  >
-                    <Phone size={14} />
-                  </a>
-                ) : (
-                  <button
-                    onClick={() => navigate("/configuracion")}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#101927]/10 text-[#101927]/70"
-                    aria-label="Agregar contacto"
-                  >
-                    <UserPlus size={14} />
-                  </button>
-                )}
+        {surveyAvailable && (
+          <button
+            onClick={() => setSurveyOpen(true)}
+            className="mt-3 flex w-full items-center justify-between gap-3 rounded-[18px] border border-[#facb60]/40 bg-[#facb60]/15 px-4 py-3 text-left transition active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-[#b45309]" />
+              <div>
+                <p className="font-display text-[12.5px] font-bold text-[#0f172a]">Contanos cómo fue tu experiencia</p>
+                <p className="text-[10.5px] text-[#64748b]">2 minutos · ayuda a otros pacientes</p>
               </div>
-              {linkedLastName && (
-                <p className="mt-2.5 border-t border-[#e2e8f0] pt-2 text-[10.5px] text-[#64748b]">
-                  Vinculado a paciente <span className="font-semibold text-[#0f172a]">{linkedLastName}</span>
-                </p>
-              )}
             </div>
+            <span className="text-[18px] text-[#b45309]">→</span>
+          </button>
+        )}
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <BentoCard
-                icon={<Mail size={15} className="text-[#0e8a92]" />}
-                iconBg="bg-[#7cc2c8]/15"
-                title="Soporte RESMA"
-                sub="Asistencia técnica y clínica."
-                onClick={() => (window.location.href = "mailto:support@resma.com.ar")}
-              />
-              <BentoCard
-                icon={<FileText size={15} className="text-[#b45309]" />}
-                iconBg="bg-[#facb60]/20"
-                title="Resumen Psico"
-                sub="Reportes y hábitos."
-                onClick={() => navigate("/mi-proceso/resumen")}
-              />
-              <BentoCard
-                icon={<NotebookPen size={15} className="text-[#7c3aed]" />}
-                iconBg="bg-[#7c3aed]/12"
-                title="Notas de Sesión"
-                sub="Temas y dudas."
-                onClick={() => navigate("/mi-proceso/terapia")}
-              />
-              <BentoCard
-                icon={<Pill size={15} className="text-[#0e8a92]" />}
-                iconBg="bg-[#7cc2c8]/15"
-                title="Medicación"
-                sub="Próxima toma: Al día"
-                onClick={() => navigate("/mi-proceso/medicacion")}
-              />
-            </div>
+        {inTherapy && linkedPhone ? (
+          <div className="mt-3">
+            <TherapyMiniTracker
+              phone={linkedPhone}
+              initialState={(bridgeLastState as any) ?? "searching"}
+              initialProName={therapistName}
+              linkedLastName={linkedLastName}
+            />
+          </div>
+        ) : inTherapy ? (
+          <div className="mt-3 rounded-[20px] border border-white/70 bg-white/85 p-4 text-center text-[12px] text-[#64748b]">
+            Sincronizando…
           </div>
         ) : (
           <div className="mt-3 rounded-[20px] border-2 border-dashed border-[#e2e8f0] bg-white/40 p-5 text-center">
@@ -229,6 +182,12 @@ export default function MiProceso() {
       <SymptomsTestModal open={!!genericTest} kind={genericTest ?? "symptom"} onClose={() => setGenericTest(null)} />
       <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} featureName="Premium" />
       <TherapySyncModal open={syncOpen} onClose={() => setSyncOpen(false)} onSynced={handleSynced} />
+      <SatisfactionSurveySheet
+        open={surveyOpen}
+        onClose={() => { setSurveyOpen(false); recheckSurvey(); }}
+        onCompleted={() => { dismissSurvey(); }}
+        onDismiss={() => { dismissSurvey(); }}
+      />
     </div>
   );
 }

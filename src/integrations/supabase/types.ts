@@ -1324,6 +1324,7 @@ export type Database = {
       patient_app_profiles: {
         Row: {
           areas_of_interest: string[] | null
+          bridge_assigned_at: string | null
           bridge_last_state: string | null
           country: string | null
           created_at: string | null
@@ -1344,6 +1345,8 @@ export type Database = {
           prefers_dark: boolean | null
           priority_module: string | null
           recent_feelings: string[] | null
+          satisfaction_survey_completed_at: string | null
+          satisfaction_survey_dismissed_at: string | null
           sleep_quality: string | null
           therapist_email: string | null
           therapist_license: string | null
@@ -1356,6 +1359,7 @@ export type Database = {
         }
         Insert: {
           areas_of_interest?: string[] | null
+          bridge_assigned_at?: string | null
           bridge_last_state?: string | null
           country?: string | null
           created_at?: string | null
@@ -1376,6 +1380,8 @@ export type Database = {
           prefers_dark?: boolean | null
           priority_module?: string | null
           recent_feelings?: string[] | null
+          satisfaction_survey_completed_at?: string | null
+          satisfaction_survey_dismissed_at?: string | null
           sleep_quality?: string | null
           therapist_email?: string | null
           therapist_license?: string | null
@@ -1388,6 +1394,7 @@ export type Database = {
         }
         Update: {
           areas_of_interest?: string[] | null
+          bridge_assigned_at?: string | null
           bridge_last_state?: string | null
           country?: string | null
           created_at?: string | null
@@ -1408,6 +1415,8 @@ export type Database = {
           prefers_dark?: boolean | null
           priority_module?: string | null
           recent_feelings?: string[] | null
+          satisfaction_survey_completed_at?: string | null
+          satisfaction_survey_dismissed_at?: string | null
           sleep_quality?: string | null
           therapist_email?: string | null
           therapist_license?: string | null
@@ -2034,6 +2043,63 @@ export type Database = {
         }
         Relationships: []
       }
+      therapy_satisfaction_surveys: {
+        Row: {
+          bond_rating: number | null
+          comment: string | null
+          completed_at: string | null
+          contacted_in_24h: boolean | null
+          created_at: string
+          final_nps: number | null
+          id: string
+          modality_match: string | null
+          not_started_reasons: string[] | null
+          nps_score: number | null
+          other_reason: string | null
+          sessions_count: string | null
+          started_treatment: boolean | null
+          triggered_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bond_rating?: number | null
+          comment?: string | null
+          completed_at?: string | null
+          contacted_in_24h?: boolean | null
+          created_at?: string
+          final_nps?: number | null
+          id?: string
+          modality_match?: string | null
+          not_started_reasons?: string[] | null
+          nps_score?: number | null
+          other_reason?: string | null
+          sessions_count?: string | null
+          started_treatment?: boolean | null
+          triggered_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bond_rating?: number | null
+          comment?: string | null
+          completed_at?: string | null
+          contacted_in_24h?: boolean | null
+          created_at?: string
+          final_nps?: number | null
+          id?: string
+          modality_match?: string | null
+          not_started_reasons?: string[] | null
+          nps_score?: number | null
+          other_reason?: string | null
+          sessions_count?: string | null
+          started_treatment?: boolean | null
+          triggered_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       thought_records: {
         Row: {
           action_plan: Json | null
@@ -2318,6 +2384,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: {
           areas_of_interest: string[] | null
+          bridge_assigned_at: string | null
           bridge_last_state: string | null
           country: string | null
           created_at: string | null
@@ -2338,6 +2405,8 @@ export type Database = {
           prefers_dark: boolean | null
           priority_module: string | null
           recent_feelings: string[] | null
+          satisfaction_survey_completed_at: string | null
+          satisfaction_survey_dismissed_at: string | null
           sleep_quality: string | null
           therapist_email: string | null
           therapist_license: string | null
