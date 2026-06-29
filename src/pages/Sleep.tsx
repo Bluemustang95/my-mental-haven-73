@@ -246,9 +246,9 @@ function Diary({ onBack }: { onBack: () => void }) {
     const { error } = await supabase.from("journal_entries").insert({
       user_id: user.id,
       content: text,
-      tags: ["sueno", ...Array.from(emos), ...Array.from(behs)],
-      log_date: localDateStr(),
-    } as never);
+      emotion_tags: ["sueno", ...Array.from(emos), ...Array.from(behs)],
+      entry_date: localDateStr(),
+    });
     setSaving(false);
     if (error) {
       toast.error("No se pudo guardar");
@@ -403,6 +403,24 @@ function Lab({ onBack }: { onBack: () => void }) {
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [sos, setSos] = useState<"anx" | "calm" | null>(null);
   const pct = Math.round((picked.size / HABITS.length) * 100);
+
+  // Debounced cloud upsert (one row per day).
+  useEffect(() => {
+    const id = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const today = localDateStr();
+      const items = Array.from(picked);
+      await supabase.from("sleep_hygiene_audits").upsert({
+        user_id: user.id,
+        audit_date: today,
+        items: items as unknown as never,
+        score: pct,
+        sos_mode: sos,
+      } as never, { onConflict: "user_id,audit_date" });
+    }, 700);
+    return () => clearTimeout(id);
+  }, [picked, sos, pct]);
 
   const toggle = (k: string) => {
     const n = new Set(picked);
@@ -598,9 +616,9 @@ function NightmareWizard({ onBack }: { onBack: () => void }) {
       await supabase.from("journal_entries").insert({
         user_id: user.id,
         content: `[Protocolo Pesadillas]\n\nOriginal:\n${original}\n\nNuevo desenlace:\n${newEnd}`,
-        tags: ["pesadilla", "IRT"],
-        log_date: localDateStr(),
-      } as never);
+        emotion_tags: ["pesadilla", "IRT"],
+        entry_date: localDateStr(),
+      });
     }
     setSaving(false);
     toast.success("Guardado con éxito");

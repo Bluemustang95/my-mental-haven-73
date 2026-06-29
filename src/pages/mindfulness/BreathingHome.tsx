@@ -6,6 +6,7 @@ import {
   Moon, Wind, Target, Sparkles, Star, Pause, X, Send,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ============================================================
    RESMA · Mindfulness — Respiración Consciente (rediseño premium)
@@ -224,7 +225,21 @@ export default function BreathingHome() {
                   minutes={minutes}
                   voice={voice}
                   ambient={ambient}
-                  onFinish={() => { toast.success("Sesión completada. Buen trabajo."); setStep("intention"); }}
+                  onFinish={async () => {
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (user) {
+                        await supabase.from("exercise_sessions").insert({
+                          user_id: user.id,
+                          exercise_type: "mindfulness",
+                          exercise_name: pattern.title,
+                          duration_seconds: minutes * 60,
+                        } as never);
+                      }
+                    } catch (e) { console.warn("[Mindfulness] persist failed", e); }
+                    toast.success("Sesión completada. Buen trabajo.");
+                    setStep("intention");
+                  }}
                   onStop={() => setStep("setup")}
                 />
               )}

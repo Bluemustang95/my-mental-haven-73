@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Phone, Plus, Shield, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, Phone, Plus, Shield, Trash2, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { saveLog } from "@/lib/resourceLogs";
+import { supabase } from "@/integrations/supabase/client";
+import { loadHotlines, detectUserCountry, type Hotline } from "@/lib/crisisHotlines";
+import { toast } from "sonner";
 
 const warningSigns = [
   "Pensamientos intrusivos y persistentes",
@@ -14,12 +17,6 @@ const warningSigns = [
   "Aumento del consumo",
 ];
 
-const emergency = [
-  { label: "Emergencias 911", phone: "911" },
-  { label: "Centro de Asistencia al Suicida (135)", phone: "135" },
-  { label: "SAME / Salud Mental (107)", phone: "107" },
-];
-
 const ambiental = [
   "Guardá objetos peligrosos fuera de tu alcance.",
   "Pedile a alguien de confianza que te acompañe.",
@@ -27,25 +24,53 @@ const ambiental = [
   "Salí del lugar donde te sentís peor: caminá una cuadra.",
 ];
 
-const STORAGE_KEY = "resma:safety:contacts";
 type Contact = { name: string; phone: string };
 
 export default function SafetyPlan() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [draft, setDraft] = useState<Contact>({ name: "", phone: "" });
+  const [hotlines, setHotlines] = useState<Hotline[]>([]);
+  const [country, setCountry] = useState<string>("AR");
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setContacts(JSON.parse(raw));
-    } catch { /* noop */ }
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const c = (await detectUserCountry()) ?? "AR";
+      setCountry(c);
+      setHotlines(await loadHotlines(c));
+      if (user) {
+        const { data } = await supabase.from("safety_plans").select("*").eq("user_id", user.id).maybeSingle();
+        if (data) {
+          const signsArr = (data.warning_signs as unknown as string[]) ?? [];
+          setChecked(new Set(signsArr.map((s) => warningSigns.indexOf(s)).filter((i) => i >= 0)));
+          setContacts(((data.contacts as unknown as Contact[]) ?? []));
+        }
+      }
+      setLoading(false);
+    })();
   }, []);
 
+  // Cloud autosave (debounced)
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
-  }, [contacts]);
+    if (loading) return;
+    const id = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setSaving(true);
+      await supabase.from("safety_plans").upsert({
+        user_id: user.id,
+        warning_signs: [...checked].map((i) => warningSigns[i]),
+        contacts: contacts as unknown as never,
+        coping_strategies: [] as unknown as never,
+      }, { onConflict: "user_id" });
+      setSaving(false);
+    }, 800);
+    return () => clearTimeout(id);
+  }, [checked, contacts, loading]);
 
   const toggle = (i: number) => {
     setChecked((prev) => {
@@ -67,6 +92,7 @@ export default function SafetyPlan() {
     const lines = [
       "PLAN DE SEGURIDAD — RESMA",
       `Fecha: ${new Date().toLocaleDateString("es-AR")}`,
+      `País: ${country}`,
       "",
       "Señales de alerta detectadas:",
       ...[...checked].map((i) => `  - ${warningSigns[i]}`),
@@ -75,7 +101,7 @@ export default function SafetyPlan() {
       ...contacts.map((c) => `  - ${c.name}: ${c.phone}`),
       "",
       "Líneas de emergencia:",
-      ...emergency.map((e) => `  - ${e.label}: ${e.phone}`),
+      ...hotlines.map((e) => `  - ${e.label}: ${e.phone}`),
       "",
       "Modificación del entorno:",
       ...ambiental.map((tip) => `  - ${tip}`),
@@ -89,7 +115,16 @@ export default function SafetyPlan() {
     a.click();
     URL.revokeObjectURL(url);
     saveLog("safety", { meta: { signs: checked.size, contacts: contacts.length } });
+    toast.success("Reporte descargado");
   };
+
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center text-resource-safety-accent">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-resource-safety-bg px-5 pb-28 pt-12 text-resource-safety-accent safe-area-top">
@@ -98,7 +133,10 @@ export default function SafetyPlan() {
           className="flex h-11 w-11 items-center justify-center rounded-full border border-resource-safety-accent/15 bg-card/80 shadow-sm">
           <ArrowLeft size={20} />
         </button>
-        <span className="rounded-full bg-card/80 px-4 py-2 font-mindful text-xs font-semibold shadow-sm">Plan de Seguridad</span>
+        <div className="flex items-center gap-2">
+          {saving && <span className="text-[10px] text-resource-safety-accent/60">Guardando…</span>}
+          <span className="rounded-full bg-card/80 px-4 py-2 font-mindful text-xs font-semibold shadow-sm">Plan de Seguridad</span>
+        </div>
       </header>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-7 flex items-center gap-3">
@@ -107,7 +145,7 @@ export default function SafetyPlan() {
         </div>
         <div>
           <h1 className="font-mindful text-3xl leading-tight">Tu red de contención</h1>
-          <p className="font-sans text-xs leading-5 text-resource-safety-accent/70">Tenelo a mano antes de que lo necesites.</p>
+          <p className="font-sans text-xs leading-5 text-resource-safety-accent/70">Se guarda en la nube · líneas para {country}.</p>
         </div>
       </motion.div>
 
@@ -126,10 +164,10 @@ export default function SafetyPlan() {
       </section>
 
       <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
-        <p className="mb-3 font-mindful text-base font-semibold">Líneas de emergencia</p>
+        <p className="mb-3 font-mindful text-base font-semibold">Líneas de emergencia ({country})</p>
         <div className="space-y-2">
-          {emergency.map((e) => (
-            <a key={e.label} href={`tel:${e.phone}`}
+          {hotlines.map((e) => (
+            <a key={e.id} href={`tel:${e.phone.replace(/\s+/g, "")}`}
               className="flex items-center gap-3 rounded-2xl bg-resource-safety-accent px-4 py-4 font-mindful text-base font-bold text-primary-foreground shadow-lg shadow-resource-safety-accent/25 active:scale-[0.98]">
               <Phone size={20} /> <span className="flex-1">{e.label}</span><span className="font-sans text-sm opacity-85">{e.phone}</span>
             </a>

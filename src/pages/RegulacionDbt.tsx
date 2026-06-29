@@ -6,6 +6,7 @@ import {
   Check, Info, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ------------------------------------------------------------------ */
 /* Clinical data — DBT Ficha 9 (Linehan)                              */
@@ -155,7 +156,30 @@ export default function RegulacionDbt() {
     else navigate(-1);
   };
 
-  const finish = () => {
+  const finish = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && state.emotion) {
+        const path =
+          state.fit === "no" ? "cognitive_restructuring"
+          : state.fit === "yes" && state.effective === "no" ? "opposite_action"
+          : "problem_solving";
+        await supabase.from("dbt_emotion_sessions").insert({
+          user_id: user.id,
+          emotion: state.emotion,
+          event_description: state.story,
+          interpretations: state.nuance ?? null,
+          fits_facts: state.fit === "yes",
+          is_effective: state.effective === "yes",
+          path,
+          opposite_payload: path === "opposite_action" ? { plan: state.plan } : null,
+          problem_payload: path === "problem_solving" ? { plan: state.plan } : null,
+          completed_at: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.warn("[RegulacionDbt] failed to persist session", e);
+    }
     toast.success("Ficha completada. Buen trabajo.");
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
     setState(EMPTY); setStep(1);

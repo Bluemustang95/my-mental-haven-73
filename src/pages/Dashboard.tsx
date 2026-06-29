@@ -20,6 +20,7 @@ import {
   type GroupItem,
 } from "@/components/home/WidgetsBoard";
 import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
+import { PendingBento } from "@/components/home/PendingBento";
 
 const GROUP_ORDER_KEY = "home_groups_order_v1";
 function loadGroupOrder(): string[] {
@@ -131,7 +132,7 @@ export default function Dashboard() {
       case "sleep_zone":
         return <SleepZoneCard onClick={() => navigate("/herramientas/sueno")} />;
       case "pending":
-        return <PendingForYou onNavigate={navigate} />;
+        return <PendingBento />;
       case "mini_habits":
         return (
           <ActiveWidgetWrapper title="Tus widgets activos" onManageClick={() => {}}>
@@ -368,54 +369,7 @@ function SleepZoneCard({ onClick }: { onClick: () => void }) {
   );
 }
 
-function PendingForYou({ onNavigate }: { onNavigate: (path: string) => void }) {
-  const items = [
-    {
-      to: "/herramientas/pack",
-      title: "Pack de activación",
-      subtitle: "Día 2 en curso",
-      icon: <Sparkles size={16} className="text-white" />,
-      from: "#FB923C",
-      to2: "#F472B6",
-    },
-    {
-      to: "/diario-inteligente/mindfulness",
-      title: "Te puede aliviar",
-      subtitle: "Respiración 4-7-8 · 3 min",
-      icon: <Wind size={16} className="text-white" />,
-      from: "#60A5FA",
-      to2: "#A78BFA",
-    },
-  ];
-  return (
-    <div>
-      <p className="mb-2 px-1 font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-        Pendientes para vos
-      </p>
-      <div className="grid grid-cols-2 gap-3">
-        {items.map((it) => (
-          <button
-            key={it.to}
-            onClick={() => onNavigate(it.to)}
-            className="flex flex-col items-start gap-2 rounded-[20px] p-3.5 text-left text-white shadow-md transition active:scale-[0.98]"
-            style={{
-              background: `linear-gradient(135deg, ${it.from}, ${it.to2})`,
-              boxShadow: `0 12px 28px -14px ${it.from}`,
-            }}
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm">
-              {it.icon}
-            </div>
-            <div>
-              <p className="font-display text-[12.5px] font-semibold text-white">{it.title}</p>
-              <p className="mt-0.5 text-[10px] text-white/85">{it.subtitle}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+// PendingForYou removed — now powered by <PendingBento /> with real Supabase data.
 
 function ActiveWidgetWrapper({ title, children, onManageClick }: { title: string; children: React.ReactNode; onManageClick: () => void }) {
   return (

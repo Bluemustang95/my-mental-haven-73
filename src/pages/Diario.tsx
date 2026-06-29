@@ -14,6 +14,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
+import { uploadAttachment, deleteAttachment } from "@/lib/journalAttachments";
 
 /* ────────────── Sanitizer (whitelist b/strong/i/em/br) ────────────── */
 function sanitizeHtml(html: string): string {
@@ -59,7 +60,15 @@ const CAUSES = [
   { k: "Finanzas", e: "💵" }, { k: "Sueño", e: "💤" },
 ];
 
-type Attachment = { id: string; name: string; type: "image" | "file"; url: string };
+type Attachment = {
+  id: string;
+  name: string;
+  type: "image" | "file" | "audio";
+  url: string;             // blob URL (immediate) o signed URL (después de subir)
+  path?: string;           // storage path (set tras upload)
+  uploading?: boolean;
+  size?: number;
+};
 
 /* ────────────── Root ────────────── */
 export default function Diario() {
@@ -141,25 +150,85 @@ function WriteView({
   // Inspirame
   const inspire = () => setPrompt(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
 
-  // Attachments
-  const addFiles = (files: FileList | null, type: "image" | "file") => {
+  // Attachments — preview inmediato + upload en background a Storage.
+  const addFiles = (files: FileList | null, type: "image" | "file" | "audio") => {
     if (!files) return;
-    const next: Attachment[] = Array.from(files).map((f) => ({
-      id: crypto.randomUUID(),
-      name: f.name,
-      type: f.type.startsWith("image/") ? "image" : type,
-      url: URL.createObjectURL(f),
-    }));
-    setAttachments((a) => [...a, ...next]);
+    Array.from(files).forEach((file) => {
+      const id = crypto.randomUUID();
+      const blobUrl = URL.createObjectURL(file);
+      const detectedType: Attachment["type"] = file.type.startsWith("image/")
+        ? "image"
+        : file.type.startsWith("audio/")
+        ? "audio"
+        : type;
+      const placeholder: Attachment = {
+        id, name: file.name, type: detectedType, url: blobUrl, uploading: true, size: file.size,
+      };
+      setAttachments((a) => [...a, placeholder]);
+      uploadAttachment(file, detectedType).then((stored) => {
+        if (!stored) {
+          toast.error(`No se pudo subir ${file.name}`);
+          setAttachments((a) => a.map((x) => x.id === id ? { ...x, uploading: false } : x));
+          return;
+        }
+        setAttachments((a) => a.map((x) =>
+          x.id === id
+            ? { ...x, uploading: false, path: stored.path, url: stored.url || blobUrl }
+            : x
+        ));
+      });
+    });
   };
   const removeAtt = (id: string) =>
     setAttachments((a) => {
       const f = a.find((x) => x.id === id);
-      if (f) URL.revokeObjectURL(f.url);
+      if (f) {
+        URL.revokeObjectURL(f.url);
+        if (f.path) deleteAttachment(f.path).catch(() => undefined);
+      }
       return a.filter((x) => x.id !== id);
     });
 
-  // Recording sim
+  // ── Real audio recording with MediaRecorder ──
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordChunksRef = useRef<Blob[]>([]);
+  const recordStreamRef = useRef<MediaStream | null>(null);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recordStreamRef.current = stream;
+      recordChunksRef.current = [];
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/webm";
+      const rec = new MediaRecorder(stream, { mimeType: mime });
+      rec.ondataavailable = (e) => { if (e.data.size > 0) recordChunksRef.current.push(e.data); };
+      rec.onstop = () => {
+        const blob = new Blob(recordChunksRef.current, { type: mime });
+        const file = new File([blob], `nota-${Date.now()}.webm`, { type: mime });
+        addFiles({ 0: file, length: 1, item: (i: number) => i === 0 ? file : null } as unknown as FileList, "audio");
+        recordStreamRef.current?.getTracks().forEach((t) => t.stop());
+        recordStreamRef.current = null;
+      };
+      rec.start();
+      mediaRecorderRef.current = rec;
+      setRecording(true);
+    } catch (e) {
+      console.warn("[Diario] mic denied", e);
+      toast.error("Permití el micrófono para grabar audio");
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
+    setRecording(false);
+  };
+
+  const toggleRecording = () => { recording ? stopRecording() : startRecording(); };
+
+  // Recording timer
   useEffect(() => {
     if (!recording) return;
     setRecSec(0);
@@ -221,19 +290,26 @@ function WriteView({
 
   // Autosave: debounced upsert whenever meaningful content changes
   useEffect(() => {
-    if (!text.trim() && !emo && causes.size === 0) return;
+    if (!text.trim() && !emo && causes.size === 0 && attachments.length === 0) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaveState("saving");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setSaveState("idle"); return; }
       const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
+      // Save only stable (uploaded) attachment metadata, NOT blob URLs.
+      const persistedAttachments = attachments
+        .filter((a) => !!a.path)
+        .map((a) => ({ id: a.id, name: a.name, type: a.type, path: a.path, size: a.size }));
+      const audioAtt = persistedAttachments.find((a) => a.type === "audio");
       const payload = {
         user_id: user.id,
-        content: sanitizeHtml(text) + (recording ? "\n\n[audio]" : ""),
+        content: sanitizeHtml(text),
         entry_date: localDateStr(),
         emotion_tags: tags,
         prompt: prompt?.text ?? null,
+        attachments: persistedAttachments as unknown as never,
+        voice_note_path: audioAtt?.path ?? null,
       };
       if (entryId) {
         const { error } = await supabase.from("journal_entries").update(payload).eq("id", entryId);
@@ -247,7 +323,7 @@ function WriteView({
     }, 1200);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, emo, causes, prompt, recording]);
+  }, [text, emo, causes, prompt, attachments]);
 
 
   /* tone classes */
@@ -419,7 +495,7 @@ function WriteView({
           >
             <div className={cn("mt-2 flex items-center gap-3 rounded-full p-2 pl-3", surfaceCls)}>
               <button
-                onClick={() => setRecording(false)}
+                onClick={stopRecording}
                 className="grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white"
               >
                 <Pause size={12} />
@@ -442,7 +518,7 @@ function WriteView({
         <IconBtn label="Archivo" onClick={() => fileRef.current?.click()} zen={zen}>
           <Paperclip size={17} />
         </IconBtn>
-        <IconBtn label={recording ? "Pausa" : "Audio"} onClick={() => setRecording((r) => !r)} zen={zen} active={recording}>
+        <IconBtn label={recording ? "Detener" : "Audio"} onClick={toggleRecording} zen={zen} active={recording}>
           {recording ? <Pause size={17} /> : <Mic size={17} />}
         </IconBtn>
 

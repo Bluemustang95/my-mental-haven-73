@@ -6,6 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Crown, Shield, Mic } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { voiceForCountry } from "@/lib/voiceByCountry";
@@ -15,6 +21,8 @@ type Profile = Tables<"patient_app_profiles">;
 type Checkin = Tables<"daily_checkins">;
 type TestResult = Tables<"test_results">;
 type Exercise = Tables<"exercise_sessions">;
+
+type PlanAction = { plan: "free" | "premium"; days?: number; label: string };
 
 export default function PatientDetail() {
   const { userId } = useParams<{ userId: string }>();
@@ -27,16 +35,22 @@ export default function PatientDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Confirm dialog for plan changes
+  const [pendingAction, setPendingAction] = useState<PlanAction | null>(null);
+  const [reason, setReason] = useState("");
+
   const load = () => {
     if (!userId) return;
     Promise.all([
-      supabase.from("patient_app_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      // Use the admin RPC for the profile (server-side role check + future-proof for new fields).
+      supabase.rpc("admin_get_patient", { _user_id: userId }),
       supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
       supabase.from("daily_checkins").select("*").eq("user_id", userId).order("checkin_date", { ascending: false }).limit(30),
       supabase.from("test_results").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       supabase.from("exercise_sessions").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
     ]).then(([profileRes, roleRes, checkinsRes, testsRes, exercisesRes]) => {
-      setProfile(profileRes.data);
+      const profileRow = Array.isArray(profileRes.data) ? profileRes.data[0] : profileRes.data;
+      setProfile((profileRow as Profile) ?? null);
       setIsAdmin(!!roleRes.data);
       setCheckins(checkinsRes.data ?? []);
       setTests(testsRes.data ?? []);
@@ -47,27 +61,41 @@ export default function PatientDetail() {
 
   useEffect(load, [userId]);
 
-  const setPlan = async (plan: "free" | "premium", days?: number) => {
-    if (!userId) return;
+  const requestPlan = (plan: "free" | "premium", days?: number) => {
+    setReason("");
+    setPendingAction({
+      plan,
+      days,
+      label: plan === "free"
+        ? "Revocar Premium"
+        : days ? `Otorgar Premium ${days} días` : "Premium sin vencimiento",
+    });
+  };
+
+  const confirmPlan = async () => {
+    if (!userId || !pendingAction) return;
     setSaving(true);
-    const expires = plan === "premium" && days
-      ? new Date(Date.now() + days * 86400000).toISOString()
+    const expires = pendingAction.plan === "premium" && pendingAction.days
+      ? new Date(Date.now() + pendingAction.days * 86400000).toISOString()
       : null;
     const { error } = await supabase.rpc("admin_set_plan", {
       _user_id: userId,
-      _plan: plan,
+      _plan: pendingAction.plan,
       _expires_at: expires,
+      _reason: reason.trim() || null,
     });
     setSaving(false);
+    setPendingAction(null);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {
-      toast({ title: `Plan actualizado a ${plan}` });
+      toast({ title: `Plan actualizado a ${pendingAction.plan}` });
       load();
     }
   };
 
   const toggleAdmin = async (next: boolean) => {
     if (!userId) return;
+    if (!confirm(next ? "¿Otorgar rol administrador?" : "¿Revocar rol administrador?")) return;
     setSaving(true);
     const { error } = await supabase.rpc("admin_set_admin_role", { _user_id: userId, _is_admin: next });
     setSaving(false);
@@ -150,16 +178,16 @@ export default function PatientDetail() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" disabled={saving} onClick={() => setPlan("premium", 30)}>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => requestPlan("premium", 30)}>
               Otorgar Premium 30 días
             </Button>
-            <Button size="sm" variant="outline" disabled={saving} onClick={() => setPlan("premium", 365)}>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => requestPlan("premium", 365)}>
               Premium 1 año
             </Button>
-            <Button size="sm" variant="outline" disabled={saving} onClick={() => setPlan("premium")}>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => requestPlan("premium")}>
               Premium sin vencimiento
             </Button>
-            <Button size="sm" variant="ghost" disabled={saving || !isPremium} onClick={() => setPlan("free")}>
+            <Button size="sm" variant="ghost" disabled={saving || !isPremium} onClick={() => requestPlan("free")}>
               Revocar
             </Button>
           </div>
@@ -271,6 +299,34 @@ export default function PatientDetail() {
           )}
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={!!pendingAction} onOpenChange={(o) => !o && setPendingAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pendingAction?.label}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción quedará registrada en el log de auditoría con tu usuario.
+              Ingresá un motivo (opcional) para que tu equipo pueda revisarlo después.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reason">Motivo</Label>
+            <Textarea
+              id="reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Ej: paciente aprobado por convenio, cortesía, error de cobro, etc."
+              rows={3}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPlan} disabled={saving}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
