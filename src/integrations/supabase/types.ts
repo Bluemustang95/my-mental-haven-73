@@ -2302,6 +2302,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_bulk_set_plan: {
+        Args: {
+          _expires_at: string
+          _plan: string
+          _reason?: string
+          _user_ids: string[]
+        }
+        Returns: number
+      }
       admin_get_patient: {
         Args: { _user_id: string }
         Returns: {

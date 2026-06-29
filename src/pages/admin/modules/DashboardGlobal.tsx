@@ -15,6 +15,7 @@ type Stats = {
   signups_30d?: { date: string; count: number }[];
   top_modules?: { module: string; count: number }[];
   retention?: { d1: number | null; d7: number | null };
+  module_retention?: { module: string; u7d: number; u30d: number }[];
 };
 
 const palette = ["#7cc2c8", "#facb60", "#6366f1", "#22c55e", "#f97316", "#ec4899", "#101927"];
@@ -158,6 +159,42 @@ export default function DashboardGlobal() {
             </div>
           </AdminCard>
         </div>
+
+        {/* Module retention */}
+        <AdminCard className="mt-6 p-6">
+          <h2 className="text-base font-semibold text-resma-navy mb-1">Retención por módulo</h2>
+          <p className="text-xs text-slate-500 mb-4">Usuarios únicos que tocaron cada módulo en los últimos 7 y 30 días.</p>
+          {(stats?.module_retention ?? []).length === 0 ? (
+            <p className="text-xs text-slate-400 py-4">Sin datos suficientes.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+              {(stats?.module_retention ?? []).map((m, i) => {
+                const ratio = m.u30d ? Math.round((m.u7d / m.u30d) * 100) : 0;
+                const color = palette[i % palette.length];
+                return (
+                  <div key={m.module} className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-resma-navy">{m.module}</span>
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                        style={{ background: `${color}25`, color }}
+                      >
+                        {ratio}% recur.
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-resma-navy">{m.u7d}</span>
+                      <span className="text-xs text-slate-500">7d · {m.u30d} en 30d</span>
+                    </div>
+                    <div className="mt-2 h-1.5 bg-white rounded-full overflow-hidden ring-1 ring-slate-100">
+                      <div className="h-full rounded-full" style={{ width: `${ratio}%`, background: color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </AdminCard>
       </div>
     </>
   );
