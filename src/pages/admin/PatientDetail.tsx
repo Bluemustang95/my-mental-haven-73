@@ -6,6 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Crown, Shield, Mic } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { voiceForCountry } from "@/lib/voiceByCountry";
@@ -15,6 +21,8 @@ type Profile = Tables<"patient_app_profiles">;
 type Checkin = Tables<"daily_checkins">;
 type TestResult = Tables<"test_results">;
 type Exercise = Tables<"exercise_sessions">;
+
+type PlanAction = { plan: "free" | "premium"; days?: number; label: string };
 
 export default function PatientDetail() {
   const { userId } = useParams<{ userId: string }>();
@@ -27,16 +35,22 @@ export default function PatientDetail() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Confirm dialog for plan changes
+  const [pendingAction, setPendingAction] = useState<PlanAction | null>(null);
+  const [reason, setReason] = useState("");
+
   const load = () => {
     if (!userId) return;
     Promise.all([
-      supabase.from("patient_app_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      // Use the admin RPC for the profile (server-side role check + future-proof for new fields).
+      supabase.rpc("admin_get_patient", { _user_id: userId }),
       supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
       supabase.from("daily_checkins").select("*").eq("user_id", userId).order("checkin_date", { ascending: false }).limit(30),
       supabase.from("test_results").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       supabase.from("exercise_sessions").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
     ]).then(([profileRes, roleRes, checkinsRes, testsRes, exercisesRes]) => {
-      setProfile(profileRes.data);
+      const profileRow = Array.isArray(profileRes.data) ? profileRes.data[0] : profileRes.data;
+      setProfile((profileRow as Profile) ?? null);
       setIsAdmin(!!roleRes.data);
       setCheckins(checkinsRes.data ?? []);
       setTests(testsRes.data ?? []);
@@ -47,27 +61,41 @@ export default function PatientDetail() {
 
   useEffect(load, [userId]);
 
-  const setPlan = async (plan: "free" | "premium", days?: number) => {
-    if (!userId) return;
+  const requestPlan = (plan: "free" | "premium", days?: number) => {
+    setReason("");
+    setPendingAction({
+      plan,
+      days,
+      label: plan === "free"
+        ? "Revocar Premium"
+        : days ? `Otorgar Premium ${days} días` : "Premium sin vencimiento",
+    });
+  };
+
+  const confirmPlan = async () => {
+    if (!userId || !pendingAction) return;
     setSaving(true);
-    const expires = plan === "premium" && days
-      ? new Date(Date.now() + days * 86400000).toISOString()
+    const expires = pendingAction.plan === "premium" && pendingAction.days
+      ? new Date(Date.now() + pendingAction.days * 86400000).toISOString()
       : null;
     const { error } = await supabase.rpc("admin_set_plan", {
       _user_id: userId,
-      _plan: plan,
+      _plan: pendingAction.plan,
       _expires_at: expires,
+      _reason: reason.trim() || null,
     });
     setSaving(false);
+    setPendingAction(null);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {
-      toast({ title: `Plan actualizado a ${plan}` });
+      toast({ title: `Plan actualizado a ${pendingAction.plan}` });
       load();
     }
   };
 
   const toggleAdmin = async (next: boolean) => {
     if (!userId) return;
+    if (!confirm(next ? "¿Otorgar rol administrador?" : "¿Revocar rol administrador?")) return;
     setSaving(true);
     const { error } = await supabase.rpc("admin_set_admin_role", { _user_id: userId, _is_admin: next });
     setSaving(false);
