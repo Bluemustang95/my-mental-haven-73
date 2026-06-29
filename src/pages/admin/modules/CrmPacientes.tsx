@@ -191,38 +191,57 @@ export default function CrmPacientes() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left font-admin-label text-[10px] text-slate-500 border-b border-slate-100">
+                <th className="pl-5 pr-2 py-3 w-8">
+                  <input
+                    type="checkbox"
+                    checked={allPickedInView}
+                    onChange={toggleAll}
+                    className="h-4 w-4 rounded border-slate-300 text-resma-teal focus:ring-resma-teal"
+                  />
+                </th>
                 <th className="px-5 py-3">Paciente</th>
                 <th className="px-5 py-3">Plan</th>
-                <th className="px-5 py-3">Estado</th>
+                <th className="px-5 py-3">País</th>
                 <th className="px-5 py-3">Alta</th>
                 <th className="px-5 py-3 text-right">Acción</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
-                <tr key={p.user_id} className="border-b border-slate-50 hover:bg-slate-50 transition">
-                  <td className="px-5 py-4">
-                    <div className="font-semibold text-resma-navy">{p.display_name ?? "Sin nombre"}</div>
-                    <div className="text-xs text-slate-500">{p.email}</div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
-                      p.plan === "premium" ? "bg-resma-gold/15 text-amber-700" : "bg-slate-100 text-slate-600"
-                    }`}>{p.plan ?? "free"}</span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700">Activo</span>
-                  </td>
-                  <td className="px-5 py-4 text-slate-500 text-xs">
-                    {new Date(p.created_at).toLocaleDateString("es-AR")}
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <AdminButton variant="secondary" onClick={() => setSelected(p)}>Ver Ficha</AdminButton>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((p) => {
+                const isPicked = picked.has(p.user_id);
+                return (
+                  <tr key={p.user_id} className={`border-b border-slate-50 transition ${isPicked ? "bg-resma-teal/5" : "hover:bg-slate-50"}`}>
+                    <td className="pl-5 pr-2 py-4">
+                      <input
+                        type="checkbox"
+                        checked={isPicked}
+                        onChange={() => togglePick(p.user_id)}
+                        className="h-4 w-4 rounded border-slate-300 text-resma-teal focus:ring-resma-teal"
+                      />
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="font-semibold text-resma-navy">{p.display_name ?? "Sin nombre"}</div>
+                      <div className="text-xs text-slate-500">{p.email}</div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                        p.plan === "premium" ? "bg-resma-gold/15 text-amber-700" : "bg-slate-100 text-slate-600"
+                      }`}>{p.plan ?? "free"}</span>
+                    </td>
+                    <td className="px-5 py-4 text-slate-600 text-xs">
+                      {p.country ?? "—"}
+                    </td>
+                    <td className="px-5 py-4 text-slate-500 text-xs">
+                      {new Date(p.created_at).toLocaleDateString("es-AR")}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <AdminButton variant="secondary" onClick={() => setSelected(p)}>Ver Ficha</AdminButton>
+                    </td>
+                  </tr>
+                );
+              })}
               {!filtered.length && (
-                <tr><td colSpan={5} className="px-5 py-10 text-center text-slate-400 text-sm">Sin pacientes que coincidan.</td></tr>
+                <tr><td colSpan={6} className="px-5 py-10 text-center text-slate-400 text-sm">Sin pacientes que coincidan.</td></tr>
               )}
             </tbody>
           </table>
