@@ -231,11 +231,37 @@ export default function PatientDetail() {
         </div>
       )}
 
+      {/* Recent activity feed (cross-module) */}
+      {recent.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Actividad reciente · últimos 30 días</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y">
+              {recent.slice(0, 10).map((a) => (
+                <li key={a.id} className="flex items-center justify-between py-2 text-sm">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{a.title}</p>
+                    {a.subtitle && <p className="text-xs text-muted-foreground truncate">{a.subtitle}</p>}
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                    {new Date(a.at).toLocaleDateString("es-AR", { day: "2-digit", month: "short" })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="checkins">
         <TabsList>
           <TabsTrigger value="checkins">Check-ins ({checkins.length})</TabsTrigger>
           <TabsTrigger value="tests">Tests ({tests.length})</TabsTrigger>
           <TabsTrigger value="exercises">Ejercicios ({exercises.length})</TabsTrigger>
+          <TabsTrigger value="thoughts">Pensamientos ({thoughts.length})</TabsTrigger>
+          <TabsTrigger value="dbt">DBT ({dbt.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="checkins" className="mt-4">
@@ -303,6 +329,61 @@ export default function PatientDetail() {
                     {e.mood_before !== null && e.mood_after !== null && (
                       <p className="text-sm text-muted-foreground">{e.mood_before} → {e.mood_after}</p>
                     )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="thoughts" className="mt-4">
+          {thoughts.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4">Sin registros de pensamientos.</p>
+          ) : (
+            <div className="space-y-2">
+              {thoughts.map((t: any) => (
+                <Card key={t.id}>
+                  <CardContent className="py-3">
+                    <div className="flex items-start gap-3">
+                      <Brain size={16} className="text-[#0e8a92] mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{t.situation ?? "(sin descripción)"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t.created_at ? new Date(t.created_at).toLocaleDateString("es-AR") : "—"}
+                          {t.emotion ? ` · ${t.emotion}` : ""}
+                          {t.distortion_label ? ` · ${t.distortion_label}` : ""}
+                        </p>
+                      </div>
+                      {t.emotion_intensity != null && (
+                        <Badge variant="outline">{t.emotion_intensity}/10</Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="dbt" className="mt-4">
+          {dbt.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4">Sin sesiones DBT.</p>
+          ) : (
+            <div className="space-y-2">
+              {dbt.map((d: any) => (
+                <Card key={d.id}>
+                  <CardContent className="py-3">
+                    <div className="flex items-start gap-3">
+                      <Heart size={16} className="text-pink-600 mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{d.emotion ?? "Emoción"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {d.created_at ? new Date(d.created_at).toLocaleDateString("es-AR") : "—"}
+                          {d.path ? ` · ${d.path}` : ""}
+                          {d.fits_facts != null ? ` · ${d.fits_facts ? "Encaja con hechos" : "No encaja"}` : ""}
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
