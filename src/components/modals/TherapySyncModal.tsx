@@ -207,15 +207,6 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
               </div>
             )}
 
-            {view === "tracking" && trackedPhone && (
-              <TherapyTrackingView
-                phone={trackedPhone}
-                status={status}
-                loading={statusLoading}
-                onRefetch={refetch}
-              />
-            )}
-
             {view === "intake" && (
               <div className="relative">
                 <h2 className="font-display text-2xl font-bold text-foreground">
@@ -265,30 +256,6 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
                   className="mt-3 w-full text-center text-xs font-semibold text-foreground/55"
                 >
                   ← Volver
-                </button>
-              </div>
-            )}
-
-            {view === "intake-success" && (
-              <div className="relative py-4 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                  <ArrowRight size={32} strokeWidth={2.2} />
-                </div>
-                <h2 className="font-display text-2xl font-bold text-foreground">
-                  Solicitud enviada
-                </h2>
-                <p className="mt-2 px-4 text-sm leading-relaxed text-foreground/65">
-                  Estamos buscando un profesional para vos. Te avisamos en cuanto lo asignemos.
-                </p>
-                <button
-                  onClick={() => {
-                    setTrackedPhone(intakePhone.trim());
-                    onSynced({ lastName: fullName.split(/\s+/).slice(1).join(" ") || "—", phone: intakePhone.trim() });
-                    setView("tracking");
-                  }}
-                  className="mt-6 w-full rounded-2xl bg-[#101927] py-4 text-base font-bold text-white transition active:scale-[0.98]"
-                >
-                  Ver mi seguimiento
                 </button>
               </div>
             )}
