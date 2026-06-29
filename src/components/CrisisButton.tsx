@@ -1,14 +1,23 @@
-import { useState } from "react";
-import { Phone, X, Lifebuoy } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { Phone, X, Lifebuoy, ShieldCheck } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const emergencyLines = [
-  { label: "Centro de Asistencia al Suicida", number: "135" },
-  { label: "Línea contra la Violencia", number: "137" },
-];
+import { useNavigate } from "react-router-dom";
+import { loadHotlines, detectUserCountry, type Hotline } from "@/lib/crisisHotlines";
 
 export function CrisisButton() {
   const [open, setOpen] = useState(false);
+  const [hotlines, setHotlines] = useState<Hotline[]>([]);
+  const [country, setCountry] = useState<string>("AR");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    (async () => {
+      const c = (await detectUserCountry()) ?? "AR";
+      setCountry(c);
+      const hl = await loadHotlines(c);
+      setHotlines(hl);
+    })();
+  }, []);
 
   return (
     <>
@@ -37,7 +46,7 @@ export function CrisisButton() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md rounded-t-3xl bg-card p-6 pb-10"
             >
-              <div className="mb-6 flex items-center justify-between">
+              <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-display text-lg font-semibold">
                   ¿Necesitás ayuda ahora?
                 </h2>
@@ -46,27 +55,37 @@ export function CrisisButton() {
                 </button>
               </div>
 
-              <p className="mb-6 text-sm text-muted-foreground font-body">
-                Si estás en crisis o conocés a alguien que lo está, estas líneas son gratuitas, confidenciales y funcionan las 24 horas.
+              <p className="mb-4 text-sm text-muted-foreground font-body">
+                Líneas gratuitas y confidenciales en <strong>{country}</strong>. Atienden 24h.
               </p>
 
               <div className="space-y-3">
-                {emergencyLines.map((line) => (
+                {hotlines.map((line) => (
                   <a
-                    key={line.number}
-                    href={`tel:${line.number}`}
+                    key={line.id}
+                    href={`tel:${line.phone.replace(/\s+/g, "")}`}
                     className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4 transition-colors active:bg-muted"
                   >
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
                       <Phone size={20} weight="fill" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-display text-sm font-medium">{line.label}</p>
-                      <p className="font-display text-lg font-bold">{line.number}</p>
+                      <p className="font-display text-lg font-bold">{line.phone}</p>
                     </div>
                   </a>
                 ))}
+                {hotlines.length === 0 && (
+                  <p className="text-xs text-muted-foreground">Cargando líneas…</p>
+                )}
               </div>
+
+              <button
+                onClick={() => { setOpen(false); navigate("/herramientas/plan-seguridad"); }}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 py-3 text-sm font-medium"
+              >
+                <ShieldCheck size={16} /> Ver mi plan de seguridad
+              </button>
             </motion.div>
           </motion.div>
         )}
