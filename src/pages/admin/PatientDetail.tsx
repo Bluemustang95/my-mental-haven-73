@@ -178,16 +178,16 @@ export default function PatientDetail() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" disabled={saving} onClick={() => setPlan("premium", 30)}>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => requestPlan("premium", 30)}>
               Otorgar Premium 30 días
             </Button>
-            <Button size="sm" variant="outline" disabled={saving} onClick={() => setPlan("premium", 365)}>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => requestPlan("premium", 365)}>
               Premium 1 año
             </Button>
-            <Button size="sm" variant="outline" disabled={saving} onClick={() => setPlan("premium")}>
+            <Button size="sm" variant="outline" disabled={saving} onClick={() => requestPlan("premium")}>
               Premium sin vencimiento
             </Button>
-            <Button size="sm" variant="ghost" disabled={saving || !isPremium} onClick={() => setPlan("free")}>
+            <Button size="sm" variant="ghost" disabled={saving || !isPremium} onClick={() => requestPlan("free")}>
               Revocar
             </Button>
           </div>
