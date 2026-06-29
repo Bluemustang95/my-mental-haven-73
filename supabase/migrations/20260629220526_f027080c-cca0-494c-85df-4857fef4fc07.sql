@@ -1,0 +1,1 @@
+ALTER TABLE public.patient_app_profiles ADD COLUMN IF NOT EXISTS bridge_last_state text;
