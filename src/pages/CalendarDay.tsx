@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Brain, Flag, Flower, Heart, Heartbeat, Notebook, Target, Trophy, BookOpen } from "@phosphor-icons/react";
+import { ArrowLeft, Brain, Flag, Flower, Heart, Heartbeat, Notebook, Target, Trophy, BookOpen, Moon, Pill } from "@phosphor-icons/react";
 import { format, isValid, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,9 @@ const activityConfig: Record<CalendarActivity["type"], { icon: typeof Brain; col
   dream: { icon: Flower, color: "text-[hsl(var(--mood-4))]" },
   goal: { icon: Target, color: "text-accent" },
   reading: { icon: BookOpen, color: "text-[hsl(28_70%_45%)]" },
+  dbt: { icon: Heart, color: "text-[hsl(340_60%_55%)]" },
+  medication: { icon: Pill, color: "text-[hsl(193_50%_45%)]" },
+  sleep: { icon: Moon, color: "text-[hsl(220_60%_45%)]" },
 };
 
 function capitalizeFirst(text: string): string {
