@@ -41,8 +41,13 @@ export default function MiProceso() {
   const [inTherapy, setInTherapy] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [linkedLastName, setLinkedLastName] = useState<string | null>(null);
-  const [therapist, setTherapist] = useState<Therapist>({ name: null, phone: null, email: null, license: null });
+  const [linkedPhone, setLinkedPhone] = useState<string | null>(null);
+  const [bridgeLastState, setBridgeLastState] = useState<string | null>(null);
+  const [therapistName, setTherapistName] = useState<string | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
+
+  const [surveyOpen, setSurveyOpen] = useState(false);
+  const { shouldShow: surveyAvailable, dismiss: dismissSurvey, recheck: recheckSurvey } = useSatisfactionSurveyTrigger();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bigFiveOpen, setBigFiveOpen] = useState(false);
