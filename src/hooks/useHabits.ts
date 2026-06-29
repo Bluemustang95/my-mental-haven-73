@@ -78,9 +78,12 @@ export function useHabits() {
   const fetchAll = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+    // Limit completions to the last 180 days for performance.
+    const since = new Date(Date.now() - 180 * 86400000);
+    const sinceStr = localDateStr(since);
     const [{ data: h }, { data: c }, { data: cats }] = await Promise.all([
       supabase.from("habits").select("*").eq("user_id", user.id).is("archived_at", null).order("created_at"),
-      supabase.from("habit_completions").select("*").eq("user_id", user.id),
+      supabase.from("habit_completions").select("*").eq("user_id", user.id).gte("completed_date", sinceStr),
       supabase.from("habit_categories").select("*").eq("user_id", user.id),
     ]);
     setHabits((h ?? []) as unknown as Habit[]);
@@ -169,15 +172,19 @@ export function useHabits() {
 
 export function computeStreak(completions: Completion[], habitId: string): number {
   const dates = new Set(completions.filter(c => c.habit_id === habitId).map(c => c.completed_date));
+  if (dates.size === 0) return 0;
   let streak = 0;
   const d = new Date();
-  while (true) {
+  const today = localDateStr();
+  // Hard cap at 365 iterations to avoid any chance of infinite loop.
+  for (let i = 0; i < 365; i++) {
     const s = localDateStr(d);
     if (dates.has(s)) {
       streak++;
       d.setDate(d.getDate() - 1);
     } else {
-      if (streak === 0 && s === localDateStr()) {
+      // Si hoy todavía no se hizo, dar 1 día de gracia y seguir desde ayer.
+      if (streak === 0 && s === today) {
         d.setDate(d.getDate() - 1);
         continue;
       }

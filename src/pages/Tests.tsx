@@ -5,6 +5,25 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { CrisisModal } from "@/components/CrisisModal";
+
+/**
+ * Scoring corrections per test id.
+ * - PSS-10: items 4,5,7,8 (0-indexed 3,4,6,7) son inversos (0-4 → 4-v).
+ * - Rosenberg: items 3,5,8,9,10 (0-indexed 2,4,7,8,9) son inversos (0-3 → 3-v).
+ */
+const REVERSE_PSS10 = new Set([3, 4, 6, 7]);
+const REVERSE_ROSENBERG = new Set([2, 4, 7, 8, 9]);
+
+function computeScore(testId: string, answers: number[]): number {
+  if (testId === "PSS-10") {
+    return answers.reduce((acc, v, i) => acc + (REVERSE_PSS10.has(i) ? 4 - v : v), 0);
+  }
+  if (testId === "Rosenberg") {
+    return answers.reduce((acc, v, i) => acc + (REVERSE_ROSENBERG.has(i) ? 3 - v : v), 0);
+  }
+  return answers.reduce((a, b) => a + b, 0);
+}
 
 type TestDef = {
   id: string;
@@ -183,6 +202,7 @@ export default function Tests() {
   const [questionIdx, setQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [result, setResult] = useState<{ score: number; severity: string; color: string; message: string } | null>(null);
+  const [crisisOpen, setCrisisOpen] = useState(false);
 
   const startTest = (test: TestDef) => {
     setActiveTest(test);
@@ -195,10 +215,15 @@ export default function Tests() {
     const newAnswers = [...answers, value];
     setAnswers(newAnswers);
 
+    // PHQ-9 Q9 (ideación) → activar protocolo en cuanto se responde, sin esperar al final.
+    if (activeTest?.id === "PHQ-9" && questionIdx === 8 && value >= 1) {
+      setCrisisOpen(true);
+    }
+
     if (activeTest && questionIdx < activeTest.questions.length - 1) {
       setQuestionIdx(questionIdx + 1);
     } else if (activeTest) {
-      const score = newAnswers.reduce((a, b) => a + b, 0);
+      const score = computeScore(activeTest.id, newAnswers);
       const interp = activeTest.interpret(score);
       setResult({ score, ...interp });
 
@@ -334,6 +359,7 @@ export default function Tests() {
           </div>
         </motion.div>
       </AnimatePresence>
+      <CrisisModal open={crisisOpen} onAcknowledge={() => setCrisisOpen(false)} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   Check, Info, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ------------------------------------------------------------------ */
 /* Clinical data — DBT Ficha 9 (Linehan)                              */
@@ -155,7 +156,25 @@ export default function RegulacionDbt() {
     else navigate(-1);
   };
 
-  const finish = () => {
+  const finish = async () => {
+    // Persist clinical session to Supabase before clearing local state.
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && state.emotion) {
+        await supabase.from("dbt_emotion_sessions").insert({
+          user_id: user.id,
+          emotion: state.emotion,
+          nuance: state.nuance,
+          story: state.story,
+          fits_facts: state.fit === "yes",
+          effective_to_act: state.effective === "yes",
+          chosen_path: planLabel.title,
+          plan: state.plan,
+        } as never);
+      }
+    } catch (e) {
+      console.warn("[RegulacionDbt] failed to persist session", e);
+    }
     toast.success("Ficha completada. Buen trabajo.");
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
     setState(EMPTY); setStep(1);
