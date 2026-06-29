@@ -60,23 +60,25 @@ export function BentoGrid() {
             <button
               key={t.slug}
               onClick={() => open(t.slug, t.name, t.target)}
-              className="relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl border border-foreground/5 bg-card/80 p-4 text-left shadow-glass backdrop-blur-3xl transition active:scale-[0.98]"
-              style={isPriority ? { borderColor: "#7cc2c8", boxShadow: "0 12px 28px -12px rgba(124,194,200,0.45)" } : undefined}
+              className="pressable glass-premium relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl p-4 text-left transition"
+              style={isPriority ? { borderColor: "rgba(124,194,200,0.55)", boxShadow: "0 18px 36px -14px rgba(124,194,200,0.45), inset 0 1px 0 rgba(255,255,255,0.7)" } : undefined}
             >
+              {/* Subtle inner sheen */}
+              <span aria-hidden className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full opacity-50 blur-2xl" style={{ background: t.tint === "primary" ? "rgba(124,194,200,0.35)" : "rgba(250,203,96,0.35)" }} />
               {isPriority && (
-                <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#7cc2c8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#7cc2c8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
                   <Sparkles size={9} /> Tu foco
                 </span>
               )}
               {locked && !isPriority && (
-                <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-foreground/85 text-white">
+                <span className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-foreground/85 text-white">
                   <Lock size={11} strokeWidth={2.6} />
                 </span>
               )}
-              <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${tintBg[t.tint]}`}>
+              <div className={`relative flex h-11 w-11 items-center justify-center rounded-2xl ${tintBg[t.tint]}`}>
                 <t.Icon size={20} strokeWidth={2} />
               </div>
-              <div>
+              <div className="relative">
                 <h3 className="font-display text-base font-bold leading-tight text-foreground">{t.name}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">{t.desc}</p>
               </div>
