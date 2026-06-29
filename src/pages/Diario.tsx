@@ -290,19 +290,26 @@ function WriteView({
 
   // Autosave: debounced upsert whenever meaningful content changes
   useEffect(() => {
-    if (!text.trim() && !emo && causes.size === 0) return;
+    if (!text.trim() && !emo && causes.size === 0 && attachments.length === 0) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaveState("saving");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setSaveState("idle"); return; }
       const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
+      // Save only stable (uploaded) attachment metadata, NOT blob URLs.
+      const persistedAttachments = attachments
+        .filter((a) => !!a.path)
+        .map((a) => ({ id: a.id, name: a.name, type: a.type, path: a.path, size: a.size }));
+      const audioAtt = persistedAttachments.find((a) => a.type === "audio");
       const payload = {
         user_id: user.id,
-        content: sanitizeHtml(text) + (recording ? "\n\n[audio]" : ""),
+        content: sanitizeHtml(text),
         entry_date: localDateStr(),
         emotion_tags: tags,
         prompt: prompt?.text ?? null,
+        attachments: persistedAttachments as unknown as never,
+        voice_note_path: audioAtt?.path ?? null,
       };
       if (entryId) {
         const { error } = await supabase.from("journal_entries").update(payload).eq("id", entryId);
@@ -316,7 +323,7 @@ function WriteView({
     }, 1200);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, emo, causes, prompt, recording]);
+  }, [text, emo, causes, prompt, attachments]);
 
 
   /* tone classes */
@@ -488,7 +495,7 @@ function WriteView({
           >
             <div className={cn("mt-2 flex items-center gap-3 rounded-full p-2 pl-3", surfaceCls)}>
               <button
-                onClick={() => setRecording(false)}
+                onClick={stopRecording}
                 className="grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white"
               >
                 <Pause size={12} />
@@ -511,7 +518,7 @@ function WriteView({
         <IconBtn label="Archivo" onClick={() => fileRef.current?.click()} zen={zen}>
           <Paperclip size={17} />
         </IconBtn>
-        <IconBtn label={recording ? "Pausa" : "Audio"} onClick={() => setRecording((r) => !r)} zen={zen} active={recording}>
+        <IconBtn label={recording ? "Detener" : "Audio"} onClick={toggleRecording} zen={zen} active={recording}>
           {recording ? <Pause size={17} /> : <Mic size={17} />}
         </IconBtn>
 
