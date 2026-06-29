@@ -129,7 +129,7 @@ export default function CrmPacientes() {
                 {filtered.length} de {counts.total} pacientes · {counts.premium} premium · {counts.free} free
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
                 <Filter size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <select
@@ -142,11 +142,24 @@ export default function CrmPacientes() {
                   <option value="free">Free</option>
                 </select>
               </div>
-              <div className="relative w-72">
+              <div className="relative">
+                <Globe2 size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <select
+                  value={countryFilter}
+                  onChange={(e) => setCountryFilter(e.target.value)}
+                  className="h-10 pl-8 pr-7 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold focus:outline-none focus:border-resma-teal focus:bg-white"
+                >
+                  <option value="all">Todos los países</option>
+                  {countries.map(([c, n]) => (
+                    <option key={c} value={c}>{c} ({n})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="relative w-64">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   value={q} onChange={(e) => setQ(e.target.value)}
-                  placeholder="Buscar usuario, email o país…"
+                  placeholder="Buscar usuario, email…"
                   className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:border-resma-teal focus:bg-white"
                 />
               </div>
@@ -154,6 +167,26 @@ export default function CrmPacientes() {
                 <Download size={13} /> CSV
               </AdminButton>
             </div>
+          </div>
+
+          {picked.size > 0 && (
+            <div className="flex items-center justify-between bg-resma-teal/10 px-5 py-3 border-b border-resma-teal/20">
+              <p className="text-sm font-semibold text-resma-navy">
+                {picked.size} {picked.size === 1 ? "paciente seleccionado" : "pacientes seleccionados"}
+              </p>
+              <div className="flex items-center gap-2">
+                <AdminButton variant="secondary" onClick={() => setPicked(new Set())}>
+                  Limpiar
+                </AdminButton>
+                <AdminButton onClick={() => bulkSetPlan("premium")}>
+                  <Crown size={13} /> Premium en lote
+                </AdminButton>
+                <AdminButton variant="danger" onClick={() => bulkSetPlan("free")}>
+                  <UserMinus size={13} /> Revocar premium
+                </AdminButton>
+              </div>
+            </div>
+          )}
           </div>
           <table className="w-full text-sm">
             <thead>
