@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Activity, ClipboardList, FileText, NotebookPen, Pill, Mail,
-  BadgeCheck, Sparkles, Crown, Phone, UserPlus,
+  BadgeCheck, Sparkles, Phone, UserPlus,
 } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { PaywallModal } from "@/components/modals/PaywallModal";
@@ -21,7 +21,7 @@ import { BeckTestRunner } from "@/components/proceso/BeckTestRunner";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
-import { RecentActivityFeed } from "@/components/proceso/RecentActivityFeed";
+
 
 type Therapist = {
   name: string | null;
@@ -127,9 +127,6 @@ export default function MiProceso() {
             <BigFiveCard onOpen={() => setBigFiveOpen(true)} />
           </div>
 
-          <div className="mt-5">
-            <RecentActivityFeed limit={8} />
-          </div>
         </PremiumLock>
 
         <div className="my-6 h-px bg-black/[0.06]" />
@@ -223,55 +220,8 @@ export default function MiProceso() {
             </p>
           </div>
         )}
-
-        <section id="suscripcion" className="mt-8 scroll-mt-24">
-          <h2 className="font-serif text-[18px] font-medium text-[#0f172a]">Tu membresía</h2>
-          <p className="mt-0.5 text-[12px] text-[#64748b]">
-            Gestioná tu plan y desbloqueá todo el catálogo cuando quieras.
-          </p>
-
-          {isPremium ? (
-            <div className="mt-3 rounded-[20px] border border-amber-200/60 bg-gradient-to-br from-amber-50 via-white to-amber-50 p-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white">
-                  <Crown size={18} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-display text-[13.5px] font-bold text-[#0f172a]">Plan Premium activo</p>
-                  <p className="text-[11px] text-[#64748b]">
-                    {realPlan === "premium" ? "Acceso ilimitado a todos los recursos." : "Acceso completo de admin."}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => navigate("/configuracion")}
-                className="mt-3 w-full rounded-2xl border border-[#e2e8f0] bg-white py-2.5 text-[12.5px] font-semibold text-[#0f172a]"
-              >
-                Gestionar suscripción
-              </button>
-            </div>
-          ) : (
-            <div className="mt-3 rounded-[20px] border border-white/60 bg-gradient-to-br from-[#facb60]/20 via-white to-[#7cc2c8]/20 p-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white">
-                  <Sparkles size={18} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-display text-[13.5px] font-bold text-[#0f172a]">Estás en el plan Gratuito</p>
-                  <p className="text-[11px] text-[#64748b]">Pasate a Premium para desbloquear todo.</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setPaywallOpen(true)}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#101927] py-3 text-[12.5px] font-bold text-white"
-              >
-                <Sparkles size={14} className="text-amber-300" />
-                Hazte Premium — USD 0.99/sem
-              </button>
-            </div>
-          )}
-        </section>
       </div>
+
 
       <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
       <BigFiveProfileModal open={bigFiveOpen} onClose={() => setBigFiveOpen(false)} />
