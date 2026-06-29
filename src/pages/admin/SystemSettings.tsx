@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Mic, Settings as SettingsIcon, Save, Play, Music, Square, Volume2 } from "lucide-react";
+import { AuditLogSection } from "@/components/admin/AuditLogSection";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
@@ -287,6 +288,8 @@ export default function SystemSettings() {
           ))}
         </div>
       </section>
+
+      <AuditLogSection />
     </div>
   );
 }
