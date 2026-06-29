@@ -187,7 +187,7 @@ export default function CrmPacientes() {
               </div>
             </div>
           )}
-          </div>
+
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left font-admin-label text-[10px] text-slate-500 border-b border-slate-100">
