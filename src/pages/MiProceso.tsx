@@ -21,6 +21,7 @@ import { BeckTestRunner } from "@/components/proceso/BeckTestRunner";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
+import { RecentActivityFeed } from "@/components/proceso/RecentActivityFeed";
 
 type Therapist = {
   name: string | null;
@@ -124,6 +125,10 @@ export default function MiProceso() {
 
           <div className="mt-5">
             <BigFiveCard onOpen={() => setBigFiveOpen(true)} />
+          </div>
+
+          <div className="mt-5">
+            <RecentActivityFeed limit={8} />
           </div>
         </PremiumLock>
 
