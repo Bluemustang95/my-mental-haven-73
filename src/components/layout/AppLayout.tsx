@@ -24,7 +24,8 @@ export function AppLayout() {
     <div className="relative min-h-screen bg-background">
       <AmbientGlows />
       <NotificationRunner />
-      <div className="relative">
+      {/* Keyed wrapper triggers a soft fade/slide on every route change */}
+      <div key={pathname} className="relative route-fade-in">
         <Outlet />
       </div>
       {showCrisis && <CrisisButton />}

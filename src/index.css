@@ -268,12 +268,40 @@ body.zen-mode .diary-editor:empty::before { color: rgba(148, 163, 184, 0.55); }
 .animate-pop { animation: pop 380ms cubic-bezier(.34,1.56,.64,1); }
 
 @keyframes jiggle {
-  0%   { transform: rotate(-0.35deg); }
-  50%  { transform: rotate(0.35deg); }
-  100% { transform: rotate(-0.35deg); }
+  0%   { transform: rotate(-0.5deg) translateY(0); }
+  50%  { transform: rotate(0.5deg) translateY(-1px); }
+  100% { transform: rotate(-0.5deg) translateY(0); }
 }
-.animate-jiggle { animation: jiggle 1.4s ease-in-out infinite; }
-.animate-jiggle-alt { animation: jiggle 1.4s ease-in-out infinite; }
+@keyframes jiggle-alt {
+  0%   { transform: rotate(0.5deg) translateY(-1px); }
+  50%  { transform: rotate(-0.5deg) translateY(0); }
+  100% { transform: rotate(0.5deg) translateY(-1px); }
+}
+.animate-jiggle { animation: jiggle 1.6s ease-in-out infinite; transform-origin: center; }
+.animate-jiggle-alt { animation: jiggle-alt 1.6s ease-in-out infinite; transform-origin: center; }
+/* Desync sibling jiggle so the stack doesn't look mechanical */
+.animate-jiggle:nth-child(2n) { animation-name: jiggle-alt; animation-duration: 1.75s; }
+.animate-jiggle:nth-child(3n) { animation-duration: 1.85s; animation-delay: -0.2s; }
+
+/* Global pressable feedback for tappable surfaces (mobile-first) */
+.pressable { transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease; }
+.pressable:active { transform: scale(0.97); }
+
+/* Soft, low-contrast in-app notification toast */
+.resma-soft-toast {
+  border-radius: 18px !important;
+  border: 1px solid rgba(124,194,200,0.25) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96)) !important;
+  box-shadow: 0 18px 50px -22px rgba(16,25,39,0.25) !important;
+  backdrop-filter: blur(20px);
+}
+
+/* Route transition wrapper */
+.route-fade-in { animation: route-fade .35s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes route-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
