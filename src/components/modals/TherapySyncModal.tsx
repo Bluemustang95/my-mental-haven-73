@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, Phone, User, MessageSquare, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { useTherapyStatus } from "@/hooks/useTherapyStatus";
-import { TherapyTrackingView } from "./TherapyTrackingView";
 
 interface TherapySyncModalProps {
   open: boolean;
@@ -13,7 +11,7 @@ interface TherapySyncModalProps {
   onSynced: (data: { lastName: string; phone: string }) => void;
 }
 
-type View = "sync" | "tracking" | "intake" | "intake-success";
+type View = "sync" | "intake";
 
 export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalProps) {
   const { user } = useAuth();
@@ -21,7 +19,6 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [trackedPhone, setTrackedPhone] = useState<string | null>(null);
 
   // Intake form
   const [fullName, setFullName] = useState("");
@@ -29,19 +26,6 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
   const [intakeEmail, setIntakeEmail] = useState("");
   const [modality, setModality] = useState<"online" | "presencial">("online");
   const [reason, setReason] = useState("");
-
-  const { data: status, loading: statusLoading, refetch } = useTherapyStatus(trackedPhone, {
-    enabled: !!trackedPhone && view === "tracking",
-  });
-
-  // Persist last state cache
-  useEffect(() => {
-    if (!user || !trackedPhone || !status?.state) return;
-    supabase
-      .from("patient_app_profiles")
-      .update({ bridge_last_state: status.state })
-      .eq("user_id", user.id);
-  }, [status?.state, user, trackedPhone]);
 
   const reset = () => {
     setView("sync");
@@ -51,7 +35,6 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
     setIntakePhone("");
     setIntakeEmail("");
     setReason("");
-    setTrackedPhone(null);
   };
 
   const handleClose = () => {
@@ -79,29 +62,32 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
               user_id: user.id,
               linked_last_name: lastName.trim(),
               linked_phone: phone.trim(),
-              in_therapy: !!data?.found,
-              bridge_last_state: data?.state ?? null,
+              in_therapy: true,
+              bridge_last_state: data?.state ?? "searching",
             },
             { onConflict: "user_id" },
           );
       }
 
       if (data?.found) {
+        toast.success("¡Te encontramos! Mirá el seguimiento.");
         onSynced({ lastName: lastName.trim(), phone: phone.trim() });
-        setTrackedPhone(phone.trim());
-        setView("tracking");
+        reset();
+        onClose();
       } else {
         toast.message("No encontramos una derivación con ese teléfono.", {
-          description: "Podés iniciar una solicitud nueva.",
+          description: "Iniciá una solicitud nueva.",
         });
         setIntakePhone(phone.trim());
         setView("intake");
+        setSubmitting(false);
       }
     } catch (e: any) {
       toast.error("No pudimos conectar. Intentá de nuevo.");
-    } finally {
       setSubmitting(false);
+      return;
     }
+    setSubmitting(false);
   };
 
   const handleIntake = async () => {
@@ -147,13 +133,17 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
           );
       }
 
-      setView("intake-success");
+      toast.success("Solicitud enviada. Estamos buscando un profesional para vos.");
+      onSynced({ lastName: last, phone: intakePhone.trim() });
+      reset();
+      onClose();
     } catch (e: any) {
       toast.error("No pudimos enviar la solicitud. Intentá de nuevo.");
     } finally {
       setSubmitting(false);
     }
   };
+
 
   return (
     <AnimatePresence>
