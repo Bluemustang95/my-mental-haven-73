@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowRight, Phone, User, MessageSquare, CheckCircle2 } from "lucide-react";
+import { X, ArrowRight, Phone, User, MessageSquare, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useTherapyStatus } from "@/hooks/useTherapyStatus";
+import { TherapyTrackingView } from "./TherapyTrackingView";
 
 interface TherapySyncModalProps {
   open: boolean;
@@ -11,7 +13,7 @@ interface TherapySyncModalProps {
   onSynced: (data: { lastName: string; phone: string }) => void;
 }
 
-type View = "sync" | "intake" | "success";
+type View = "sync" | "tracking" | "intake" | "intake-success";
 
 export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalProps) {
   const { user } = useAuth();
@@ -19,11 +21,27 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [trackedPhone, setTrackedPhone] = useState<string | null>(null);
 
   // Intake form
   const [fullName, setFullName] = useState("");
   const [intakePhone, setIntakePhone] = useState("");
+  const [intakeEmail, setIntakeEmail] = useState("");
+  const [modality, setModality] = useState<"online" | "presencial">("online");
   const [reason, setReason] = useState("");
+
+  const { data: status, loading: statusLoading, refetch } = useTherapyStatus(trackedPhone, {
+    enabled: !!trackedPhone && view === "tracking",
+  });
+
+  // Persist last state cache
+  useEffect(() => {
+    if (!user || !trackedPhone || !status?.state) return;
+    supabase
+      .from("patient_app_profiles")
+      .update({ bridge_last_state: status.state })
+      .eq("user_id", user.id);
+  }, [status?.state, user, trackedPhone]);
 
   const reset = () => {
     setView("sync");
@@ -31,7 +49,9 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
     setPhone("");
     setFullName("");
     setIntakePhone("");
+    setIntakeEmail("");
     setReason("");
+    setTrackedPhone(null);
   };
 
   const handleClose = () => {
@@ -45,46 +65,94 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
       return;
     }
     setSubmitting(true);
-    if (user) {
-      await supabase
-        .from("patient_app_profiles")
-        .upsert(
-          {
-            user_id: user.id,
-            linked_last_name: lastName.trim(),
-            linked_phone: phone.trim(),
-            in_therapy: true,
-          },
-          { onConflict: "user_id" }
-        );
+    try {
+      const { data, error } = await supabase.functions.invoke("bridge-proxy", {
+        body: { action: "status", payload: { phone: phone.trim(), last_name: lastName.trim() } },
+      });
+      if (error) throw error;
+
+      if (user) {
+        await supabase
+          .from("patient_app_profiles")
+          .upsert(
+            {
+              user_id: user.id,
+              linked_last_name: lastName.trim(),
+              linked_phone: phone.trim(),
+              in_therapy: !!data?.found,
+              bridge_last_state: data?.state ?? null,
+            },
+            { onConflict: "user_id" },
+          );
+      }
+
+      if (data?.found) {
+        onSynced({ lastName: lastName.trim(), phone: phone.trim() });
+        setTrackedPhone(phone.trim());
+        setView("tracking");
+      } else {
+        toast.message("No encontramos una derivación con ese teléfono.", {
+          description: "Podés iniciar una solicitud nueva.",
+        });
+        setIntakePhone(phone.trim());
+        setView("intake");
+      }
+    } catch (e: any) {
+      toast.error("No pudimos conectar. Intentá de nuevo.");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
-    onSynced({ lastName: lastName.trim(), phone: phone.trim() });
-    handleClose();
   };
 
   const handleIntake = async () => {
     if (!fullName.trim() || !intakePhone.trim() || !reason.trim()) {
-      toast.error("Completá todos los campos.");
+      toast.error("Completá nombre, teléfono y motivo.");
       return;
     }
     setSubmitting(true);
-    if (user) {
+    try {
       const parts = fullName.trim().split(/\s+/);
       const first = parts.shift() ?? fullName.trim();
       const last = parts.join(" ") || "—";
-      await supabase.from("patients_intake").insert({
-        user_id: user.id,
-        first_name: first,
-        last_name: last,
-        phone: intakePhone.trim(),
-        email: user.email ?? null,
-        reason: reason.trim(),
-        status: "pending",
-      } as any);
+
+      const { error } = await supabase.functions.invoke("bridge-proxy", {
+        body: {
+          action: "intake",
+          payload: {
+            first_name: first,
+            last_name: last,
+            phone: intakePhone.trim(),
+            email: intakeEmail.trim() || user?.email || null,
+            country: "AR",
+            modality,
+            reason: reason.trim(),
+            source: "resma_app",
+          },
+        },
+      });
+      if (error) throw error;
+
+      if (user) {
+        await supabase
+          .from("patient_app_profiles")
+          .upsert(
+            {
+              user_id: user.id,
+              linked_last_name: last,
+              linked_phone: intakePhone.trim(),
+              in_therapy: true,
+              bridge_last_state: "searching",
+            },
+            { onConflict: "user_id" },
+          );
+      }
+
+      setView("intake-success");
+    } catch (e: any) {
+      toast.error("No pudimos enviar la solicitud. Intentá de nuevo.");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
-    setView("success");
   };
 
   return (
@@ -103,7 +171,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
             exit={{ y: 60, opacity: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md overflow-hidden rounded-t-[32px] border border-white/60 bg-white/85 p-6 shadow-[0_24px_60px_-20px_rgba(16,25,39,0.35)] backdrop-blur-2xl sm:rounded-[32px]"
+            className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-[32px] border border-white/60 bg-white/90 p-6 shadow-[0_24px_60px_-20px_rgba(16,25,39,0.35)] backdrop-blur-2xl sm:rounded-[32px]"
           >
             <div className="pointer-events-none absolute -top-20 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-[#7cc2c8]/30 blur-3xl" />
 
@@ -119,22 +187,12 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
               <div className="relative">
                 <h2 className="font-display text-2xl font-bold text-foreground">Conectá con RESMA</h2>
                 <p className="mt-1 text-sm text-foreground/65">
-                  Verificamos tu cuenta de paciente para sincronizar tu seguimiento.
+                  Te buscamos en el sistema de derivaciones.
                 </p>
 
                 <div className="mt-5 space-y-3">
-                  <PillInput
-                    placeholder="Apellido"
-                    value={lastName}
-                    onChange={setLastName}
-                    autoFocus
-                  />
-                  <PillInput
-                    placeholder="Número de teléfono"
-                    value={phone}
-                    onChange={setPhone}
-                    type="tel"
-                  />
+                  <PillInput placeholder="Apellido" value={lastName} onChange={setLastName} autoFocus />
+                  <PillInput placeholder="Número de teléfono" value={phone} onChange={setPhone} type="tel" />
                 </div>
 
                 <button
@@ -142,10 +200,9 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
                   disabled={submitting}
                   className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#101927] py-4 text-base font-bold text-white shadow-[0_10px_24px_-8px_rgba(16,25,39,0.4)] transition active:scale-[0.98] disabled:opacity-60"
                 >
-                  Verificar y sincronizar <ArrowRight size={18} />
+                  {submitting ? <Loader2 size={18} className="animate-spin" /> : <>Verificar <ArrowRight size={18} /></>}
                 </button>
 
-                {/* CTA admisión */}
                 <button
                   onClick={() => setView("intake")}
                   className="mt-5 w-full rounded-2xl border border-[#7cc2c8]/40 bg-[#7cc2c8]/10 px-4 py-4 text-left transition active:scale-[0.99]"
@@ -154,10 +211,19 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
                     ¿Aún no empezaste tratamiento con nosotros?
                   </p>
                   <p className="mt-0.5 text-xs font-semibold text-[#0e8a92]">
-                    ¡Hacelo Aquí! →
+                    Empezar acá →
                   </p>
                 </button>
               </div>
+            )}
+
+            {view === "tracking" && trackedPhone && (
+              <TherapyTrackingView
+                phone={trackedPhone}
+                status={status}
+                loading={statusLoading}
+                onRefetch={refetch}
+              />
             )}
 
             {view === "intake" && (
@@ -172,6 +238,22 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
                 <div className="mt-5 space-y-3">
                   <PillInput placeholder="Nombre completo" value={fullName} onChange={setFullName} icon={<User size={16} />} />
                   <PillInput placeholder="Teléfono de contacto" value={intakePhone} onChange={setIntakePhone} type="tel" icon={<Phone size={16} />} />
+                  <PillInput placeholder="Email (opcional)" value={intakeEmail} onChange={setIntakeEmail} type="email" icon={<Mail size={16} />} />
+                  <div className="flex gap-2">
+                    {(["online", "presencial"] as const).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setModality(m)}
+                        className={`flex-1 rounded-full py-3 text-sm font-semibold capitalize transition ${
+                          modality === m
+                            ? "bg-[#101927] text-white"
+                            : "border border-foreground/15 bg-white/60 text-foreground/70"
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
                   <PillTextarea
                     placeholder="Motivo de consulta"
                     value={reason}
@@ -185,7 +267,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
                   disabled={submitting}
                   className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#101927] py-4 text-base font-bold text-white shadow-[0_10px_24px_-8px_rgba(16,25,39,0.4)] transition active:scale-[0.98] disabled:opacity-60"
                 >
-                  Enviar solicitud
+                  {submitting ? <Loader2 size={18} className="animate-spin" /> : "Enviar solicitud"}
                 </button>
 
                 <button
@@ -197,22 +279,26 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
               </div>
             )}
 
-            {view === "success" && (
+            {view === "intake-success" && (
               <div className="relative py-4 text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                  <CheckCircle2 size={36} strokeWidth={2.2} />
+                  <ArrowRight size={32} strokeWidth={2.2} />
                 </div>
                 <h2 className="font-display text-2xl font-bold text-foreground">
                   Solicitud enviada
                 </h2>
                 <p className="mt-2 px-4 text-sm leading-relaxed text-foreground/65">
-                  Un coordinador clínico de RESMA te contactará por teléfono a la brevedad.
+                  Estamos buscando un profesional para vos. Te avisamos en cuanto lo asignemos.
                 </p>
                 <button
-                  onClick={handleClose}
+                  onClick={() => {
+                    setTrackedPhone(intakePhone.trim());
+                    onSynced({ lastName: fullName.split(/\s+/).slice(1).join(" ") || "—", phone: intakePhone.trim() });
+                    setView("tracking");
+                  }}
                   className="mt-6 w-full rounded-2xl bg-[#101927] py-4 text-base font-bold text-white transition active:scale-[0.98]"
                 >
-                  Entendido
+                  Ver mi seguimiento
                 </button>
               </div>
             )}
@@ -224,19 +310,10 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
 }
 
 function PillInput({
-  placeholder,
-  value,
-  onChange,
-  type = "text",
-  icon,
-  autoFocus,
+  placeholder, value, onChange, type = "text", icon, autoFocus,
 }: {
-  placeholder: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  icon?: React.ReactNode;
-  autoFocus?: boolean;
+  placeholder: string; value: string; onChange: (v: string) => void;
+  type?: string; icon?: React.ReactNode; autoFocus?: boolean;
 }) {
   return (
     <div className="relative">
@@ -258,15 +335,9 @@ function PillInput({
 }
 
 function PillTextarea({
-  placeholder,
-  value,
-  onChange,
-  icon,
+  placeholder, value, onChange, icon,
 }: {
-  placeholder: string;
-  value: string;
-  onChange: (v: string) => void;
-  icon?: React.ReactNode;
+  placeholder: string; value: string; onChange: (v: string) => void; icon?: React.ReactNode;
 }) {
   return (
     <div className="relative">

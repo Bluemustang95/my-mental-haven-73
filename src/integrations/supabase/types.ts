@@ -1324,6 +1324,7 @@ export type Database = {
       patient_app_profiles: {
         Row: {
           areas_of_interest: string[] | null
+          bridge_last_state: string | null
           country: string | null
           created_at: string | null
           display_name: string | null
@@ -1355,6 +1356,7 @@ export type Database = {
         }
         Insert: {
           areas_of_interest?: string[] | null
+          bridge_last_state?: string | null
           country?: string | null
           created_at?: string | null
           display_name?: string | null
@@ -1386,6 +1388,7 @@ export type Database = {
         }
         Update: {
           areas_of_interest?: string[] | null
+          bridge_last_state?: string | null
           country?: string | null
           created_at?: string | null
           display_name?: string | null
@@ -2315,6 +2318,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: {
           areas_of_interest: string[] | null
+          bridge_last_state: string | null
           country: string | null
           created_at: string | null
           display_name: string | null
