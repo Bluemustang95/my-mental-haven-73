@@ -38,6 +38,7 @@ export default function MiProceso() {
   const [linkedPhone, setLinkedPhone] = useState<string | null>(null);
   const [bridgeLastState, setBridgeLastState] = useState<string | null>(null);
   const [therapistName, setTherapistName] = useState<string | null>(null);
+  const [country, setCountry] = useState<string | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   const [surveyOpen, setSurveyOpen] = useState(false);
@@ -60,7 +61,7 @@ export default function MiProceso() {
     if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("in_therapy, linked_last_name, linked_phone, bridge_last_state, therapist_name")
+      .select("in_therapy, linked_last_name, linked_phone, bridge_last_state, therapist_name, country")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -69,6 +70,7 @@ export default function MiProceso() {
         setLinkedPhone(data?.linked_phone ?? null);
         setBridgeLastState(data?.bridge_last_state ?? null);
         setTherapistName(data?.therapist_name ?? null);
+        setCountry((data?.country ?? "").toUpperCase() || null);
       });
     loadWellbeing().then(setSnap);
   }, [user]);
@@ -130,46 +132,58 @@ export default function MiProceso() {
 
         <div className="my-6 h-px bg-black/[0.06]" />
 
-        <div className="flex items-center justify-between gap-4">
-          <p className="font-[Montserrat] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0f172a]">
-            Terapia y sincronización {inTherapy && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />}
-          </p>
-          <IOSToggle checked={inTherapy} onChange={updateTherapy} label="En terapia" />
-        </div>
-
-        {surveyAvailable && (
-          <button
-            onClick={() => setSurveyOpen(true)}
-            className="mt-3 flex w-full items-center justify-between gap-3 rounded-[18px] border border-[#facb60]/40 bg-[#facb60]/15 px-4 py-3 text-left transition active:scale-[0.99]"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles size={16} className="text-[#b45309]" />
-              <div>
-                <p className="font-display text-[12.5px] font-bold text-[#0f172a]">Contanos cómo fue tu experiencia</p>
-                <p className="text-[10.5px] text-[#64748b]">2 minutos · ayuda a otros pacientes</p>
-              </div>
+        {country === "AR" ? (
+          <>
+            <div className="flex items-center justify-between gap-4">
+              <p className="font-[Montserrat] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0f172a]">
+                Terapia y sincronización {inTherapy && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />}
+              </p>
+              <IOSToggle checked={inTherapy} onChange={updateTherapy} label="En terapia" />
             </div>
-            <span className="text-[18px] text-[#b45309]">→</span>
-          </button>
-        )}
 
-        {inTherapy && linkedPhone ? (
-          <div className="mt-3">
-            <TherapyMiniTracker
-              phone={linkedPhone}
-              initialState={(bridgeLastState as any) ?? "searching"}
-              initialProName={therapistName}
-              linkedLastName={linkedLastName}
-            />
-          </div>
-        ) : inTherapy ? (
-          <div className="mt-3 rounded-[20px] border border-white/70 bg-white/85 p-4 text-center text-[12px] text-[#64748b]">
-            Sincronizando…
-          </div>
+            {surveyAvailable && (
+              <button
+                onClick={() => setSurveyOpen(true)}
+                className="mt-3 flex w-full items-center justify-between gap-3 rounded-[18px] border border-[#facb60]/40 bg-[#facb60]/15 px-4 py-3 text-left transition active:scale-[0.99]"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-[#b45309]" />
+                  <div>
+                    <p className="font-display text-[12.5px] font-bold text-[#0f172a]">Contanos cómo fue tu experiencia</p>
+                    <p className="text-[10.5px] text-[#64748b]">2 minutos · ayuda a otros pacientes</p>
+                  </div>
+                </div>
+                <span className="text-[18px] text-[#b45309]">→</span>
+              </button>
+            )}
+
+            {inTherapy && linkedPhone ? (
+              <div className="mt-3">
+                <TherapyMiniTracker
+                  phone={linkedPhone}
+                  initialState={(bridgeLastState as any) ?? "searching"}
+                  initialProName={therapistName}
+                  linkedLastName={linkedLastName}
+                />
+              </div>
+            ) : inTherapy ? (
+              <div className="mt-3 rounded-[20px] border border-white/70 bg-white/85 p-4 text-center text-[12px] text-[#64748b]">
+                Sincronizando…
+              </div>
+            ) : (
+              <div className="mt-3 rounded-[20px] border-2 border-dashed border-[#e2e8f0] bg-white/40 p-5 text-center">
+                <p className="text-[12px] leading-relaxed text-[#64748b]">
+                  Activá el seguimiento si estás en terapia para ver notas, resúmenes y medicación.
+                </p>
+              </div>
+            )}
+          </>
         ) : (
-          <div className="mt-3 rounded-[20px] border-2 border-dashed border-[#e2e8f0] bg-white/40 p-5 text-center">
-            <p className="text-[12px] leading-relaxed text-[#64748b]">
-              Activá el seguimiento si estás en terapia para ver notas, resúmenes y medicación.
+          <div className="rounded-[20px] border border-white/70 bg-white/70 p-5 text-center backdrop-blur-xl">
+            <p className="font-display text-[13px] font-semibold text-[#0f172a]">Terapia y derivación</p>
+            <p className="mt-1.5 text-[11.5px] leading-relaxed text-[#64748b]">
+              Por ahora la red de profesionales y el seguimiento de tratamiento están disponibles solo para Argentina.
+              Estamos trabajando para sumar tu país pronto.
             </p>
           </div>
         )}
