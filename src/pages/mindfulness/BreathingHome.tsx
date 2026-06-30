@@ -936,7 +936,9 @@ function useBreathingCycle(pattern: PatternMeta, totalSeconds: number, onFinish:
 
   useEffect(() => {
     setPhaseIdx(0); setPhaseElapsed(0); setRemaining(totalSeconds); finishedRef.current = false;
-  }, [pattern.id, totalSeconds]);
+    // Solo reseteo cuando cambia el patrón; el cambio de duración se aplica vía setRemaining.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pattern.id]);
 
   useEffect(() => {
     function tick(now: number) {
@@ -976,6 +978,7 @@ function useBreathingCycle(pattern: PatternMeta, totalSeconds: number, onFinish:
   return {
     paused, toggle: () => setPaused((p) => !p),
     phaseIdx, phaseElapsed, phaseProgress, remaining: Math.max(0, remaining),
+    setRemaining: (s: number) => { finishedRef.current = false; setRemaining(Math.max(1, s)); },
   };
 }
 
