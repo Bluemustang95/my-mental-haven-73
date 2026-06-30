@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+// La encuesta queda disponible apenas el profesional fue asignado (sin esperar 7 días).
+const MIN_WAIT_MS = 0;
 
 export function useSatisfactionSurveyTrigger() {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ export function useSatisfactionSurveyTrigger() {
     if (data.satisfaction_survey_completed_at) return setShouldShow(false);
     if (data.satisfaction_survey_dismissed_at) return setShouldShow(false);
     const assigned = new Date(data.bridge_assigned_at).getTime();
-    setShouldShow(Date.now() - assigned >= SEVEN_DAYS);
+    setShouldShow(Date.now() - assigned >= MIN_WAIT_MS);
   };
 
   useEffect(() => {

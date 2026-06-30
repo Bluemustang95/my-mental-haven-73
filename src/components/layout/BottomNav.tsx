@@ -91,7 +91,24 @@ export function BottomNav() {
         </motion.button>
 
         {rightTabs.map(renderTab)}
+
+        {/* Crisis / SOS — subtle red, expands on tap */}
+        <motion.button
+          onClick={() => setCrisisOpen(true)}
+          whileTap={{ scale: 0.85 }}
+          aria-label="Línea de crisis"
+          className={cn(
+            "ml-0.5 flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+            crisisOpen
+              ? "bg-red-500 text-white"
+              : "bg-red-500/15 text-red-300 hover:bg-red-500/25"
+          )}
+        >
+          <Lifebuoy size={18} weight={crisisOpen ? "fill" : "regular"} />
+        </motion.button>
       </div>
+      <CrisisSheet open={crisisOpen} onClose={() => setCrisisOpen(false)} />
     </nav>
   );
 }
+
