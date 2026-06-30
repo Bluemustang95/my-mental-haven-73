@@ -7,6 +7,14 @@ import { Switch } from "@/components/ui/switch";
 import { useLongPress } from "@/hooks/useLongPress";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DndContext, PointerSensor, TouchSensor, useSensor, useSensors, closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, useSortable, verticalListSortingStrategy, rectSortingStrategy, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export type WidgetId =
   | "morning"
