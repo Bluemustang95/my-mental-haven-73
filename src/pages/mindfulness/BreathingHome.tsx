@@ -695,8 +695,12 @@ function ImmersivePlayer({
           <SessionSettings
             voice={voice}
             setVoice={setVoice}
+            voiceVolume={voiceVolume}
+            setVoiceVolume={setVoiceVolume}
             ambientId={ambientId}
             setAmbientId={setAmbientId}
+            ambientVolume={ambientVolume}
+            setAmbientVolume={setAmbientVolume}
             onClose={() => setSettingsOpen(false)}
           />
         )}
