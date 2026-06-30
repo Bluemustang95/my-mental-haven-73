@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Play } from "lucide-react";
+import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
 
 type Survey = {
   id: string;
@@ -25,6 +28,7 @@ export default function PatientReviews() {
   const [rows, setRows] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Survey | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     supabase
@@ -44,8 +48,15 @@ export default function PatientReviews() {
 
   return (
     <div className="p-6">
-      <h1 className="mb-1 font-display text-2xl font-bold">Reseñas de pacientes</h1>
-      <p className="mb-6 text-sm text-muted-foreground">Encuestas de satisfacción tras la derivación a profesional.</p>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="mb-1 font-display text-2xl font-bold">Reseñas de pacientes</h1>
+          <p className="text-sm text-muted-foreground">Encuestas de satisfacción tras la derivación a profesional.</p>
+        </div>
+        <Button onClick={() => setPreviewOpen(true)} variant="outline" className="gap-2">
+          <Play size={14} /> Probar encuesta
+        </Button>
+      </div>
 
       <div className="mb-6 grid grid-cols-3 gap-3">
         <Card label="Total respuestas" value={String(completed.length)} />
