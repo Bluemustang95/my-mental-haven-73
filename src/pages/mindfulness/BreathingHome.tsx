@@ -746,8 +746,72 @@ function ImmersivePlayer({
             onClose={() => setSettingsOpen(false)}
           />
         )}
+        {timeEditOpen && (
+          <TimeEditSheet
+            initialMinutes={Math.max(1, Math.ceil(cycle.remaining / 60))}
+            onClose={() => setTimeEditOpen(false)}
+            onApply={(m) => {
+              setMinutes(m);
+              cycle.setRemaining(m * 60);
+              setTimeEditOpen(false);
+            }}
+          />
+        )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function TimeEditSheet({
+  initialMinutes, onClose, onApply,
+}: { initialMinutes: number; onClose: () => void; onApply: (m: number) => void }) {
+  const [m, setM] = useState(initialMinutes);
+  return (
+    <motion.div
+      className="absolute inset-0 z-30 flex items-end justify-center bg-black/40 backdrop-blur-sm"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        onClick={(e) => e.stopPropagation()}
+        initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }}
+        transition={{ type: "spring", damping: 22, stiffness: 220 }}
+        className="w-full max-w-md rounded-t-3xl bg-[#101927] border-t border-white/10 p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]"
+      >
+        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/20" />
+        <h3 className="text-white text-[15px] font-semibold">Tiempo restante</h3>
+        <p className="text-white/55 text-[11px] mt-0.5">Modificá los minutos sin interrumpir tu práctica.</p>
+
+        <div className="mt-4 flex items-end justify-between">
+          <span className="text-white/55 text-[10px] uppercase tracking-[0.18em] font-semibold">Duración</span>
+          <div className="text-white text-[26px] font-bold tabular-nums">{m} <span className="text-[13px] font-medium text-white/55">min</span></div>
+        </div>
+        <input
+          type="range" min={1} max={30} value={m}
+          onChange={(e) => setM(parseInt(e.target.value, 10))}
+          className="resma-slider mt-3 w-full"
+          style={{ accentColor: "#7cc2c8" }}
+        />
+        <div className="mt-1 flex justify-between text-[10px] font-semibold text-white/40">
+          {[1, 5, 10, 15, 20, 30].map((v) => <span key={v}>{v}m</span>)}
+        </div>
+
+        <div className="mt-5 flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 h-11 rounded-full bg-white/10 border border-white/15 text-white font-semibold text-[13.5px] active:scale-[0.98]"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onApply(m)}
+            className="flex-1 h-11 rounded-full bg-[#7cc2c8] text-[#101927] font-semibold text-[13.5px] active:scale-[0.98]"
+          >
+            Aplicar
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
