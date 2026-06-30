@@ -2,7 +2,6 @@ export const ARGENTINA_PROVINCES = [
   "Buenos Aires",
   "Chubut",
   "Ciudad Autónoma de Buenos Aires",
-  "Ciudad de Buenos Aires",
   "Córdoba",
   "Entre Ríos",
   "Mendoza",
@@ -38,9 +37,6 @@ const LOCALITIES: Record<string, string[]> = {
   "Mendoza": ["Godoy Cruz","Mendoza Capital"],
   "Neuquén": ["Neuquén Capital"],
 };
-
-// "Ciudad de Buenos Aires" comparte localidades con CABA
-LOCALITIES["Ciudad de Buenos Aires"] = LOCALITIES["Ciudad Autónoma de Buenos Aires"];
 
 export function getLocalities(province: string): string[] {
   return LOCALITIES[province] ?? [];
