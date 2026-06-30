@@ -52,29 +52,31 @@ export function HabitCard({ habit, completions, view, onToggle, onOpenDetail }: 
 
   if (view === "cards") {
     return (
-      <motion.button
+      <motion.div
         layout
         onClick={onOpenDetail}
-        className="flex flex-col rounded-[24px] border border-white/60 bg-white/85 p-4 text-left shadow-[0_10px_30px_-14px_rgba(16,25,39,0.10)] backdrop-blur-[20px]"
+        className="flex cursor-pointer flex-col rounded-[24px] border border-white/60 bg-white/85 p-4 text-left shadow-[0_10px_30px_-14px_rgba(16,25,39,0.10)] backdrop-blur-[20px]"
       >
         <div className="flex items-start justify-between">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[0_4px_10px_-4px_rgba(16,25,39,0.12)] ring-1 ring-[#101927]/8">
             <HabitIcon habit={habit} className="text-xl" />
           </div>
-          <motion.span
-            onClick={(e) => { e.stopPropagation(); onToggle(today); }}
+          <motion.button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggle(today); }}
             whileTap={{ scale: 0.85 }}
             animate={isTodayDone ? { scale: [1, 1.15, 1] } : {}}
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition"
             style={{ backgroundColor: isTodayDone ? habit.color : "#eef1f5" }}
+            aria-label="Completar hoy"
           >
             <Check size={14} strokeWidth={3} className={isTodayDone ? "text-[#101927]" : "text-[#101927]/30"} />
-          </motion.span>
+          </motion.button>
         </div>
         <h3 className="mt-6 font-serif text-[15px] font-bold leading-tight text-[#101927]">{habit.name}</h3>
         <p className="mt-1 font-[Montserrat] text-[9px] font-bold uppercase tracking-[0.16em] text-[#101927]/50">{categoryLabel}</p>
         <p className="mt-2 text-[12px] font-bold" style={{ color: habit.text_color }}>{streak}d racha 🔥</p>
-      </motion.button>
+      </motion.div>
     );
   }
 
@@ -101,7 +103,8 @@ export function HabitCard({ habit, completions, view, onToggle, onOpenDetail }: 
 
         {view === "grid" ? (
           <motion.button
-            onClick={() => onToggle(today)}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggle(today); }}
             whileTap={{ scale: 0.85 }}
             animate={isTodayDone ? { scale: [1, 1.18, 1] } : {}}
             transition={{ duration: 0.25 }}
