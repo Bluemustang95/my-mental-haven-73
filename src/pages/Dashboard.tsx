@@ -320,21 +320,21 @@ function TimelineCard({
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="glass-premium relative flex w-full items-center gap-2.5 rounded-[18px] p-2.5 text-left"
+      className="glass-premium relative flex w-full items-center gap-3 rounded-[20px] p-3 text-left"
     >
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-display text-[12px] font-semibold leading-tight text-resma-navy">{title}</p>
-        <p className="mt-0.5 line-clamp-1 text-[10.5px] leading-snug text-muted-foreground">{subtitle}</p>
+        <p className="font-display text-[13px] font-semibold leading-tight text-resma-navy">{title}</p>
+        <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-muted-foreground">{subtitle}</p>
       </div>
       {done ? (
-        <span className="rounded-full bg-resma-teal/15 px-1.5 py-0.5 text-[8.5px] font-semibold uppercase tracking-[0.1em] text-resma-teal">
+        <span className="rounded-full bg-resma-teal/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-resma-teal">
           Hecho
         </span>
       ) : (
-        <ChevronRight size={13} className="text-muted-foreground/50" />
+        <ChevronRight size={14} className="text-muted-foreground/50" />
       )}
     </motion.button>
   );
