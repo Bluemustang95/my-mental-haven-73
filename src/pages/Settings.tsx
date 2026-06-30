@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History, Crown, RefreshCw, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History, Crown, RefreshCw, Sparkles, Fingerprint } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -9,6 +9,7 @@ import { IOSToggle } from "@/components/ui/IOSToggle";
 import { PaywallModal } from "@/components/modals/PaywallModal";
 import { ManageSubscriptionModal } from "@/components/modals/ManageSubscriptionModal";
 import { toast } from "sonner";
+import { isBiometricSupported, isBiometricEnabled, enrollBiometric, disableBiometric } from "@/lib/biometricAuth";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ export default function Settings() {
   const [notifications, setNotifications] = useState(true);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState<null | "manage" | "restore">(null);
+  const [bioOn, setBioOn] = useState(false);
+  const bioSupported = isBiometricSupported();
 
   const adminFlag = isAdmin || isAdminPlan;
 
@@ -49,6 +52,16 @@ export default function Settings() {
         if (data?.notifications_on != null) setNotifications(!!data.notifications_on);
       });
   }, [user]);
+  useEffect(() => { setBioOn(isBiometricEnabled()); }, []);
+
+  const toggleBio = async (v: boolean) => {
+    if (!v) { disableBiometric(); setBioOn(false); toast("Acceso biométrico desactivado"); return; }
+    if (!user) return;
+    const ok = await enrollBiometric(user.id, name || user.email || "RESMA");
+    if (ok) { setBioOn(true); toast.success("Acceso biométrico activado"); }
+    else toast.error("No pudimos activar el biométrico");
+  };
+
 
   const updateProfile = async (patch: any) => {
     if (!user) return;
@@ -189,6 +202,14 @@ export default function Settings() {
             checked={notifications}
             onChange={toggleNotifs}
           />
+          {bioSupported && (
+            <RowToggle
+              icon={<Fingerprint size={18} />}
+              label="Acceso con Face ID / huella"
+              checked={bioOn}
+              onChange={toggleBio}
+            />
+          )}
         </Group>
 
         {/* Seguridad */}
@@ -214,21 +235,18 @@ export default function Settings() {
           </button>
         </Group>
 
-        {/* Easter egg admin */}
-        <div className="px-5 pt-8">
-          <button
-            onClick={() => navigate("/admin")}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#101927]/15 bg-transparent px-4 py-4 text-xs font-semibold uppercase tracking-widest text-[#101927]/55 transition active:bg-[#101927]/5"
-          >
-            <Wrench size={14} />
-            Acceso Desarrollador / Admin
-          </button>
-          {!isAdmin && (
-            <p className="mt-2 text-center text-[10px] text-muted-foreground/60">
-              Solo accesible con permisos.
-            </p>
-          )}
-        </div>
+        {/* Admin access — only visible for real admins */}
+        {isAdmin && (
+          <div className="px-5 pt-8">
+            <button
+              onClick={() => navigate("/admin")}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#101927]/15 bg-transparent px-4 py-4 text-xs font-semibold uppercase tracking-widest text-[#101927]/55 transition active:bg-[#101927]/5"
+            >
+              <Wrench size={14} />
+              Acceso Desarrollador / Admin
+            </button>
+          </div>
+        )}
       </div>
 
       <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />

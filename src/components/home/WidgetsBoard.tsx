@@ -7,6 +7,14 @@ import { Switch } from "@/components/ui/switch";
 import { useLongPress } from "@/hooks/useLongPress";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DndContext, PointerSensor, TouchSensor, useSensor, useSensors, closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, useSortable, verticalListSortingStrategy, rectSortingStrategy, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export type WidgetId =
   | "morning"
@@ -246,8 +254,55 @@ export function ReorderableStack({
   );
 }
 
-// Lazy import wrapper kept inline to avoid an extra file
-import { Reorder } from "framer-motion";
+// dnd-kit sensors with long-press activation for mobile touch + small drag on desktop
+function useDnDSensors() {
+  return useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } }),
+  );
+}
+
+function SortableRow({
+  id, size, onHide, onToggleSize, children,
+}: {
+  id: WidgetId; size: "full" | "half";
+  onHide: (id: WidgetId) => void;
+  onToggleSize: (id: WidgetId) => void;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    touchAction: "none",
+  };
+  return (
+    <div ref={setNodeRef} style={style} className={cn("relative animate-jiggle", isDragging && "scale-[1.03]")}>
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); onHide(id); }}
+        aria-label="Ocultar widget"
+        className="absolute -left-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
+      >
+        <X size={11} strokeWidth={2.6} />
+      </button>
+      <button
+        type="button"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); onToggleSize(id); }}
+        aria-label="Cambiar tamaño"
+        className="absolute -right-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
+      >
+        {size === "full" ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+      </button>
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+        <div className="pointer-events-none">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 function ReorderInner({
   items,
@@ -261,45 +316,40 @@ function ReorderInner({
   onToggleSize: (id: WidgetId) => void;
 }) {
   const ids = useMemo(() => items.map((i) => i.id), [items]);
+  const sensors = useDnDSensors();
+
+  const handleEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = ids.indexOf(active.id as WidgetId);
+    const newIndex = ids.indexOf(over.id as WidgetId);
+    if (oldIndex < 0 || newIndex < 0) return;
+    try { navigator.vibrate?.(20); } catch {}
+    onReorder(arrayMove(ids, oldIndex, newIndex));
+  };
 
   return (
-    <Reorder.Group
-      axis="y"
-      values={ids}
-      onReorder={(next) => onReorder(next as WidgetId[])}
-      className="flex flex-col gap-3"
-    >
-      {items.map((item) => (
-        <Reorder.Item
-          key={item.id}
-          value={item.id}
-          className="relative animate-jiggle touch-none"
-          whileDrag={{ scale: 1.03, zIndex: 50 }}
-        >
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onHide(item.id); }}
-            aria-label="Ocultar widget"
-            className="absolute -left-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
-          >
-            <X size={11} strokeWidth={2.6} />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onToggleSize(item.id); }}
-            aria-label="Cambiar tamaño"
-            className="absolute -right-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
-          >
-            {item.size === "full" ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
-          </button>
-          <div className="pointer-events-none">{item.render()}</div>
-        </Reorder.Item>
-      ))}
-    </Reorder.Group>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleEnd}>
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <div className="flex flex-col gap-3">
+          {items.map((item) => (
+            <SortableRow
+              key={item.id}
+              id={item.id}
+              size={item.size}
+              onHide={onHide}
+              onToggleSize={onToggleSize}
+            >
+              {item.render()}
+            </SortableRow>
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }
 
-/** Group-based reorder: each Reorder.Item is a whole group (camino, pendientes, sueño, etc.). */
+/** Group-based reorder: each item is a whole group (camino, pendientes, sueño, etc.). */
 export type GroupItem = {
   id: string;
   size: "full" | "half";
@@ -310,6 +360,53 @@ export type GroupItem = {
   render: () => React.ReactNode;
 };
 
+function SortableGroupCell({ item }: { item: GroupItem }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    touchAction: "none",
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "relative animate-jiggle",
+        item.size === "full" ? "col-span-2" : "col-span-1",
+        isDragging && "scale-[1.03]"
+      )}
+    >
+      {item.hideable && (
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); item.onHide?.(); }}
+          aria-label="Ocultar"
+          className="absolute -left-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
+        >
+          <X size={11} strokeWidth={2.6} />
+        </button>
+      )}
+      {item.resizable && (
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); item.onToggleSize?.(); }}
+          aria-label="Cambiar tamaño"
+          className="absolute -right-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
+        >
+          {item.size === "full" ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
+        </button>
+      )}
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+        <div className="pointer-events-none space-y-2.5">{item.render()}</div>
+      </div>
+    </div>
+  );
+}
+
 export function ReorderableGroupStack({
   items,
   onReorder,
@@ -318,47 +415,28 @@ export function ReorderableGroupStack({
   onReorder: (ids: string[]) => void;
 }) {
   const ids = useMemo(() => items.map((i) => i.id), [items]);
+  const sensors = useDnDSensors();
+
+  const handleEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = ids.indexOf(active.id as string);
+    const newIndex = ids.indexOf(over.id as string);
+    if (oldIndex < 0 || newIndex < 0) return;
+    try { navigator.vibrate?.(20); } catch {}
+    onReorder(arrayMove(ids, oldIndex, newIndex));
+  };
+
   return (
-    <Reorder.Group
-      axis="y"
-      values={ids}
-      onReorder={(next) => onReorder(next as string[])}
-      className="grid grid-cols-2 gap-3"
-    >
-      {items.map((item) => (
-        <Reorder.Item
-          key={item.id}
-          value={item.id}
-          className={cn(
-            "relative animate-jiggle touch-none",
-            item.size === "full" ? "col-span-2" : "col-span-1"
-          )}
-          whileDrag={{ scale: 1.03, zIndex: 50 }}
-        >
-          {item.hideable && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); item.onHide?.(); }}
-              aria-label="Ocultar"
-              className="absolute -left-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
-            >
-              <X size={11} strokeWidth={2.6} />
-            </button>
-          )}
-          {item.resizable && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); item.onToggleSize?.(); }}
-              aria-label="Cambiar tamaño"
-              className="absolute -right-1.5 -top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-foreground/10 bg-white text-foreground/60 shadow-sm active:scale-95"
-            >
-              {item.size === "full" ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
-            </button>
-          )}
-          <div className="pointer-events-none space-y-2.5">{item.render()}</div>
-        </Reorder.Item>
-      ))}
-    </Reorder.Group>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleEnd}>
+      <SortableContext items={ids} strategy={rectSortingStrategy}>
+        <div className="grid grid-cols-2 gap-3">
+          {items.map((item) => (
+            <SortableGroupCell key={item.id} item={item} />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }
 

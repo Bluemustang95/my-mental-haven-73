@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, Check, Lock } from "lucide-react";
+import { X, Sparkles, Check, Lock, KeyRound } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { toast } from "sonner";
+import { AccessCodeModal } from "./AccessCodeModal";
 
 interface PaywallModalProps {
   open: boolean;
@@ -18,6 +20,7 @@ const benefits = [
 
 export function PaywallModal({ open, onClose, featureName }: PaywallModalProps) {
   const { setPlan } = usePlan();
+  const [codeOpen, setCodeOpen] = useState(false);
 
   const handleSubscribe = async () => {
     // Simulación de pasarela del sistema operativo
@@ -103,8 +106,19 @@ export function PaywallModal({ open, onClose, featureName }: PaywallModalProps) 
                 Tu suscripción se gestiona de forma segura a través de App Store o Google Play.
                 Podés cancelarla en cualquier momento.
               </p>
+
+              <div className="mt-2 flex justify-end">
+                <button
+                  onClick={() => setCodeOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold text-foreground/55 transition hover:bg-foreground/[0.04] hover:text-foreground/80"
+                >
+                  <KeyRound size={11} />
+                  Tengo un código
+                </button>
+              </div>
             </div>
           </motion.div>
+          <AccessCodeModal open={codeOpen} onClose={() => setCodeOpen(false)} onSuccess={onClose} />
         </motion.div>
       )}
     </AnimatePresence>
