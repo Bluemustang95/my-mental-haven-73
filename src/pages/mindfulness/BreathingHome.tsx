@@ -524,7 +524,7 @@ const PATTERN_TEXT_ACCENT: Record<PatternId, string> = {
   "coherence": "#F5C56A",
 };
 
-const ELEVENLABS_VOICE_ID = "9rvdnhrYoXoUt4igKpBw"; // Nadia (Argentina)
+
 
 function ImmersivePlayer({
   pattern, minutes, voice: initialVoice, ambient: initialAmbient, onBack, onHelp, onStop, onFinish,
