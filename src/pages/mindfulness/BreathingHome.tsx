@@ -519,6 +519,8 @@ const PATTERN_TEXT_ACCENT: Record<PatternId, string> = {
   "coherence": "#F5C56A",
 };
 
+const ELEVENLABS_VOICE_ID = "9rvdnhrYoXoUt4igKpBw"; // Nadia (Argentina)
+
 function ImmersivePlayer({
   pattern, minutes, voice, onBack, onHelp, onStop, onFinish,
 }: {
@@ -530,22 +532,79 @@ function ImmersivePlayer({
   const accent = PATTERN_TEXT_ACCENT[pattern.id];
   const secondsLeftInPhase = Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed));
 
-  // TTS por fase
+  // ----- ElevenLabs cue audio -----
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const cacheRef = useRef<Map<string, string>>(new Map());
+
+  const speakCue = async (text: string) => {
+    try {
+      let url = cacheRef.current.get(text);
+      if (!url) {
+        const { data, error } = await supabase.functions.invoke("mindfulness-tts", {
+          body: { text, voiceId: ELEVENLABS_VOICE_ID, speed: 0.9 },
+        });
+        if (error) throw error;
+        let blob: Blob;
+        if (data instanceof Blob) blob = data;
+        else if (data instanceof ArrayBuffer) blob = new Blob([data], { type: "audio/mpeg" });
+        else throw new Error("Unexpected TTS payload");
+        url = URL.createObjectURL(blob);
+        cacheRef.current.set(text, url);
+      }
+      if (!audioRef.current) audioRef.current = new Audio();
+      audioRef.current.pause();
+      audioRef.current.src = url;
+      audioRef.current.play().catch(() => {});
+    } catch (e) {
+      console.warn("[mindfulness] ElevenLabs fallback", e);
+      if ("speechSynthesis" in window) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "es-AR"; u.rate = 0.9; u.pitch = 1.02;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      }
+    }
+  };
+
+  // Pre-cache all phase cues on mount for snappy first playback
+  useEffect(() => {
+    if (!voice) return;
+    pattern.phases.forEach((p) => {
+      if (!cacheRef.current.has(p.cue)) {
+        supabase.functions
+          .invoke("mindfulness-tts", { body: { text: p.cue, voiceId: ELEVENLABS_VOICE_ID, speed: 0.9 } })
+          .then(({ data, error }) => {
+            if (error || !data) return;
+            const blob = data instanceof Blob ? data : new Blob([data as ArrayBuffer], { type: "audio/mpeg" });
+            cacheRef.current.set(p.cue, URL.createObjectURL(blob));
+          })
+          .catch(() => {});
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pattern.id, voice]);
+
+  // Speak cue when the phase changes
   useEffect(() => {
     if (!voice || cycle.paused) return;
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(phase.cue);
-    u.lang = "es-AR";
-    u.rate = 0.9;
-    u.pitch = 1.02;
-    window.speechSynthesis.speak(u);
-    return () => window.speechSynthesis.cancel();
+    speakCue(phase.cue);
+    return () => { audioRef.current?.pause(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase.cue, voice, cycle.paused]);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      cacheRef.current.forEach((u) => URL.revokeObjectURL(u));
+      cacheRef.current.clear();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    };
+  }, []);
 
   return (
     <div
-      className="fixed inset-0 z-[60] overflow-hidden"
+      className="relative min-h-screen w-full overflow-hidden"
       style={{ background: PATTERN_BG[pattern.id] }}
     >
       {/* Capa 0: animación fondo */}
@@ -557,7 +616,8 @@ function ImmersivePlayer({
       </div>
 
       {/* Capa 1: UI superpuesta */}
-      <div className="relative z-10 flex flex-col h-full justify-between p-5 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.25rem)]">
+      <div className="relative z-10 flex flex-col min-h-screen justify-between p-5 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.25rem)]">
+
         {/* Header */}
         <div className="flex items-start justify-between">
           <button
