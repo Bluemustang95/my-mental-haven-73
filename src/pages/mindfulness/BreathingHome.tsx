@@ -924,53 +924,77 @@ function VisualizerSleep({ phase, progress }: { phase: Phase; progress: number }
 }
 
 function VisualizerSigh({ phase, progress }: { phase: Phase; progress: number }) {
-  // Continuous scrolling sine wave that slides left infinitely.
-  // The ball stays anchored at the screen center; its Y rises on inhale, drops on exhale.
+  // Continuous sine wave (static). The ball travels along the wave path:
+  // it rises on inhale (4s), holds at the crest (2s) and descends slowly on exhale (6s).
   const W = 360, H = 200;
-  const amp = 48;
+  const amp = 50;
   const midY = H / 2;
-  const wavelength = 140;
+  const wavelength = 180;            // exactly 2 waves fit in the viewport
+  const cycleDist = wavelength * 0.75; // ¼ up + ½ down per breath cycle
 
-  // Static sine path that spans 3 wavelengths and gets translated horizontally.
+  // Track how many full cycles have elapsed so the ball keeps moving
+  // smoothly to the right (wrapped) across breaths.
+  const cyclesRef = useRef(0);
+  const prevPhaseRef = useRef<string>(phase.id);
+  useEffect(() => {
+    if (prevPhaseRef.current === "exhale" && phase.id === "inhale") {
+      cyclesRef.current += 1;
+    }
+    prevPhaseRef.current = phase.id;
+  }, [phase.id]);
+
+  // Position within the current cycle (0 → cycleDist)
+  let xInCycle = 0;
+  if (phase.id === "inhale") {
+    xInCycle = progress * (wavelength * 0.25);
+  } else if (phase.id === "hold") {
+    xInCycle = wavelength * 0.25;
+  } else {
+    // exhale (or any other) → travel from crest to next trough
+    xInCycle = wavelength * 0.25 + progress * (wavelength * 0.5);
+  }
+  const xRaw = cyclesRef.current * cycleDist + xInCycle;
+  const ballX = ((xRaw % W) + W) % W;
+  const ballY = midY - Math.sin((ballX / wavelength) * Math.PI * 2) * amp;
+
+  // Static sine path covering the whole viewport width.
   const pathD = useMemo(() => {
-    const steps = 240;
-    const span = W * 2;
+    const steps = 260;
     let d = `M 0 ${midY}`;
     for (let i = 1; i <= steps; i++) {
-      const x = (i / steps) * span;
+      const x = (i / steps) * W;
       const y = midY - Math.sin((x / wavelength) * Math.PI * 2) * amp;
       d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
     }
     return d;
-  }, []);
-
-  // Ball Y: inhale (4s) → goes up; exhale (6s) → goes down. Continuous.
-  const ballY = phase.id === "inhale"
-    ? midY + amp - progress * (amp * 2)        // from low → high
-    : midY - amp + progress * (amp * 2);       // from high → low
+  }, [midY]);
 
   return (
     <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-[100%] h-[70%]" preserveAspectRatio="none">
         <defs>
           <linearGradient id="sighStroke" x1="0" x2="1">
-            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.15" />
+            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.35" />
             <stop offset="0.5" stopColor="#7cc2c8" stopOpacity="0.85" />
-            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0.15" />
+            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0.35" />
           </linearGradient>
           <radialGradient id="sighBall">
             <stop offset="0" stopColor="#fff" />
             <stop offset="1" stopColor="#7cc2c8" />
           </radialGradient>
         </defs>
-        {/* Two stacked paths translated for seamless scrolling */}
-        <g style={{ animation: "wave-scroll 6s linear infinite" }}>
-          <path d={pathD} fill="none" stroke="url(#sighStroke)" strokeWidth={2.4} strokeLinecap="round" />
-        </g>
-        <circle cx={W / 2} cy={ballY} r={10} fill="url(#sighBall)"
-          style={{ filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.7))", transition: "cy 120ms linear" }} />
+        <path d={pathD} fill="none" stroke="url(#sighStroke)" strokeWidth={2.4} strokeLinecap="round" />
+        <circle
+          cx={ballX}
+          cy={ballY}
+          r={9}
+          fill="url(#sighBall)"
+          style={{
+            filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.7))",
+            transition: "cx 120ms linear, cy 120ms linear",
+          }}
+        />
       </svg>
-      <style>{`@keyframes wave-scroll{0%{transform:translateX(0)}100%{transform:translateX(-${wavelength}px)}}`}</style>
     </div>
   );
 }
