@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
    ============================================================ */
 
 type PatternId = "478" | "sigh" | "box" | "coherence";
-type Tab = "respiracion" | "bodyscan";
 type Step = "intention" | "setup" | "player";
 
 type Phase = {
