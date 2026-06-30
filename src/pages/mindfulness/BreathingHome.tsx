@@ -541,8 +541,13 @@ function ImmersivePlayer({
   // Settings live state
   const [voice, setVoice] = useState(initialVoice);
   const [ambientId, setAmbientId] = useState<string>(initialAmbient ? "rain_soft" : "off");
+  const [voiceVolume, setVoiceVolume] = useState(0.9);
+  const [ambientVolume, setAmbientVolume] = useState(0.5);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { voiceId } = useUserVoice();
+
+  // Reflect voice volume to TTS player
+  useEffect(() => { setSpeechVolume(voiceVolume); }, [voiceVolume]);
 
   // ----- Ambient audio (WebAudio) -----
   const ctxRef = useRef<AudioContext | null>(null);
@@ -560,7 +565,7 @@ function ImmersivePlayer({
       const ctx = ctxRef.current;
       if (ctx.state === "suspended") ctx.resume().catch(() => {});
       const sound = getAmbientById(ambientId);
-      const handle = sound.build(ctx, 0.5);
+      const handle = sound.build(ctx, ambientVolume);
       ambientStopRef.current = handle.stop;
     } catch (e) {
       console.warn("[mindfulness] ambient failed", e);
@@ -569,7 +574,7 @@ function ImmersivePlayer({
       ambientStopRef.current?.();
       ambientStopRef.current = null;
     };
-  }, [ambientId]);
+  }, [ambientId, ambientVolume]);
 
   useEffect(() => {
     return () => {
@@ -583,9 +588,10 @@ function ImmersivePlayer({
   useEffect(() => {
     if (!voice || cycle.paused) return;
     primeAudio();
+    setSpeechVolume(voiceVolume);
     speakTTS(phase.cue, voiceId).catch(() => {});
     return () => { stopSpeak(); };
-  }, [phase.cue, voice, cycle.paused, voiceId]);
+  }, [phase.cue, voice, cycle.paused, voiceId, voiceVolume]);
 
   return (
     <div
