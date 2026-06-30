@@ -80,6 +80,10 @@ export default function MiProceso() {
     loadWellbeing().then(setSnap);
   }, [user]);
 
+  useEffect(() => {
+    return subscribeCountryOverride(() => setOverrideCountry(getCountryOverride()));
+  }, []);
+
   const updateTherapy = async (v: boolean) => {
     if (v) return setSyncOpen(true);
     setInTherapy(false);
