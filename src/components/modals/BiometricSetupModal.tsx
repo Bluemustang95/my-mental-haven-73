@@ -51,7 +51,7 @@ export function BiometricSetupModal({ open, userId, displayName, onClose }: Prop
             </button>
 
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#7cc2c8]/15 text-[#0f172a]">
-              <Fingerprint size={30} weight="bold" />
+              <Fingerprint size={30} strokeWidth={2.2} />
             </div>
 
             <h2 className="font-display text-xl font-bold text-foreground">
