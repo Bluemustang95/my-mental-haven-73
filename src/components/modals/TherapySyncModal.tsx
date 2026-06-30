@@ -213,7 +213,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
             initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-[32px] border border-white/60 bg-white/90 p-6 shadow-[0_24px_60px_-20px_rgba(16,25,39,0.35)] backdrop-blur-2xl sm:rounded-[32px]"
+            className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-[32px] border border-white/60 bg-white/90 p-6 pb-28 shadow-[0_24px_60px_-20px_rgba(16,25,39,0.35)] backdrop-blur-2xl sm:rounded-[32px] sm:pb-6"
           >
             <div className="pointer-events-none absolute -top-20 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-[#7cc2c8]/30 blur-3xl" />
 
