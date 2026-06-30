@@ -219,11 +219,12 @@ export default function BreathingHome() {
         <ImmersivePlayer
           pattern={pattern}
           minutes={minutes}
+          setMinutes={setMinutes}
           voice={voice}
           ambient={ambient}
-          onBack={() => setStep("setup")}
+          onBack={() => setStep("intention")}
           onHelp={() => setHelpOpen(true)}
-          onStop={() => setStep("setup")}
+          onStop={() => setStep("intention")}
           onFinish={onFinishSession}
         />
         <AnimatePresence>
