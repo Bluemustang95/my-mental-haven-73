@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Clock, Lock, Sparkles, X, Camera, Image as ImageIcon,
   Paperclip, Mic, Pause, Flower, Volume2, VolumeX, FileText,
-  Smile, Tag, Bold, Italic, Plus, Search,
+  Smile, Tag, Bold, Italic, Plus, Search, Pencil, Trash2,
 } from "lucide-react";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -771,6 +771,11 @@ function HistoryView({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [active, setActive] = useState<Entry | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [toDelete, setToDelete] = useState<Entry | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -790,7 +795,6 @@ function HistoryView({ onBack }: { onBack: () => void }) {
     catch { return s; }
   };
 
-  // Strip HTML for plain-text search/preview.
   const plain = (html: string) => {
     const tmp = document.createElement("div");
     tmp.innerHTML = html;
@@ -807,6 +811,37 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       return text.includes(q) || date.includes(q) || tags.includes(q);
     });
   }, [entries, query]);
+
+  const openDetail = (e: Entry) => {
+    setActive(e);
+    setDraft(plain(e.content ?? ""));
+    setEditing(false);
+  };
+
+  const saveEdit = async () => {
+    if (!active) return;
+    setSaving(true);
+    const newHtml = sanitizeHtml(draft.replace(/\n/g, "<br>"));
+    const { error } = await supabase.from("journal_entries")
+      .update({ content: newHtml }).eq("id", active.id);
+    setSaving(false);
+    if (error) { toast.error("No se pudo guardar"); return; }
+    setEntries((arr) => arr.map((x) => x.id === active.id ? { ...x, content: newHtml } : x));
+    setActive((a) => a ? { ...a, content: newHtml } : a);
+    setEditing(false);
+    toast.success("Bitácora actualizada");
+  };
+
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    const id = toDelete.id;
+    const { error } = await supabase.from("journal_entries").delete().eq("id", id);
+    if (error) { toast.error("No se pudo eliminar"); return; }
+    setEntries((arr) => arr.filter((x) => x.id !== id));
+    if (active?.id === id) setActive(null);
+    setToDelete(null);
+    toast.success("Bitácora eliminada");
+  };
 
   return (
     <motion.div
@@ -879,21 +914,44 @@ function HistoryView({ onBack }: { onBack: () => void }) {
           return (
             <div
               key={e.id}
-              className="flex aspect-square flex-col overflow-hidden rounded-[20px] border border-white/60 bg-white/65 p-3 backdrop-blur-2xl shadow-[0_8px_24px_rgba(16,25,39,0.05)]"
+              className="group relative flex aspect-square flex-col overflow-hidden rounded-[20px] border border-white/60 bg-white/65 p-3 backdrop-blur-2xl shadow-[0_8px_24px_rgba(16,25,39,0.05)]"
             >
-              <p className="font-mindful text-[13px] leading-tight">{fmt(e.created_at ?? e.entry_date)}</p>
-              {emo && (
-                <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#7cc2c8]">
-                  <span className="inline-block h-1 w-1 rounded-full bg-[#7cc2c8]" />
-                  {emo}
+              <button
+                onClick={() => openDetail(e)}
+                className="absolute inset-0 z-0"
+                aria-label="Abrir bitácora"
+              />
+              <div className="pointer-events-none relative z-10">
+                <p className="font-mindful text-[13px] leading-tight">{fmt(e.created_at ?? e.entry_date)}</p>
+                {emo && (
+                  <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#7cc2c8]">
+                    <span className="inline-block h-1 w-1 rounded-full bg-[#7cc2c8]" />
+                    {emo}
+                  </p>
+                )}
+                <p
+                  className="mt-2 overflow-hidden text-[11.5px] leading-relaxed text-[#101927]/75 line-clamp-5"
+                  style={{ fontFamily: "Lora, serif" }}
+                >
+                  {preview || "(sin texto)"}
                 </p>
-              )}
-              <p
-                className="mt-2 flex-1 overflow-hidden text-[11.5px] leading-relaxed text-[#101927]/75 line-clamp-6"
-                style={{ fontFamily: "Lora, serif" }}
-              >
-                {preview || "(sin texto)"}
-              </p>
+              </div>
+              <div className="relative z-10 mt-auto flex justify-end gap-1 pt-1">
+                <button
+                  onClick={(ev) => { ev.stopPropagation(); openDetail(e); setEditing(true); }}
+                  className="grid h-7 w-7 place-items-center rounded-full bg-white/80 text-[#101927] shadow-sm active:scale-95"
+                  aria-label="Editar"
+                >
+                  <Pencil size={12} />
+                </button>
+                <button
+                  onClick={(ev) => { ev.stopPropagation(); setToDelete(e); }}
+                  className="grid h-7 w-7 place-items-center rounded-full bg-red-500/15 text-red-600 shadow-sm active:scale-95"
+                  aria-label="Eliminar"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
             </div>
           );
         })}
@@ -907,7 +965,114 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       >
         ✎ Escribir Diario
       </motion.button>
+
+      {/* Detail / edit sheet */}
+      <AnimatePresence>
+        {active && (
+          <motion.div
+            className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 backdrop-blur-sm"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setActive(null)}
+          >
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ y: 80 }} animate={{ y: 0 }} exit={{ y: 80 }}
+              transition={{ type: "spring", damping: 22, stiffness: 220 }}
+              className="w-full max-w-md max-h-[85vh] overflow-hidden rounded-t-3xl bg-white p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] flex flex-col"
+            >
+              <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-[#101927]/15" />
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-mindful text-[15px] text-[#101927]">{fmt(active.created_at ?? active.entry_date)}</p>
+                  {active.emotion_tags && active.emotion_tags.length > 0 && (
+                    <p className="mt-0.5 text-[11px] text-[#7cc2c8] font-semibold">
+                      {active.emotion_tags.join(" · ")}
+                    </p>
+                  )}
+                </div>
+                <button onClick={() => setActive(null)} className="grid h-8 w-8 place-items-center rounded-full bg-[#101927]/5">
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div className="mt-4 flex-1 overflow-y-auto">
+                {editing ? (
+                  <textarea
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    autoFocus
+                    className="w-full min-h-[240px] resize-none rounded-2xl border border-[#101927]/10 bg-white p-3 text-[14px] leading-relaxed text-[#101927] focus:outline-none focus:ring-2 focus:ring-[#7cc2c8]/40"
+                    style={{ fontFamily: "Lora, serif" }}
+                  />
+                ) : (
+                  <div
+                    className="text-[14px] leading-relaxed text-[#101927] whitespace-pre-wrap"
+                    style={{ fontFamily: "Lora, serif" }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(active.content ?? "") || "<em class='opacity-60'>(sin texto)</em>" }}
+                  />
+                )}
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                {editing ? (
+                  <>
+                    <button
+                      onClick={() => { setEditing(false); setDraft(plain(active.content ?? "")); }}
+                      className="flex-1 h-11 rounded-full bg-[#101927]/5 text-[#101927] font-semibold text-[13.5px] active:scale-[0.98]"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={saveEdit}
+                      disabled={saving}
+                      className="flex-1 h-11 rounded-full bg-[#7cc2c8] text-[#101927] font-semibold text-[13.5px] active:scale-[0.98] disabled:opacity-60"
+                    >
+                      {saving ? "Guardando…" : "Guardar"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setToDelete(active)}
+                      className="flex h-11 items-center justify-center gap-2 rounded-full bg-red-500/10 px-4 text-red-600 font-semibold text-[13.5px] active:scale-[0.98]"
+                    >
+                      <Trash2 size={14} /> Eliminar
+                    </button>
+                    <button
+                      onClick={() => setEditing(true)}
+                      className="flex-1 h-11 rounded-full bg-[#101927] text-white font-semibold text-[13.5px] active:scale-[0.98] inline-flex items-center justify-center gap-2"
+                    >
+                      <Pencil size={14} /> Editar
+                    </button>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta bitácora?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción es permanente. No podrás recuperar el texto ni los adjuntos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-500 text-white hover:bg-red-600"
+            >
+              Eliminar definitivamente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
+
 
