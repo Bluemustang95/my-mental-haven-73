@@ -10,6 +10,7 @@ import { PaywallModal } from "@/components/modals/PaywallModal";
 import { ManageSubscriptionModal } from "@/components/modals/ManageSubscriptionModal";
 import { toast } from "sonner";
 import { isBiometricSupported, isBiometricEnabled, enrollBiometric, disableBiometric } from "@/lib/biometricAuth";
+import { isPushSupported, currentPermission, requestPermissionAndRegister, disablePush } from "@/lib/pushNotifications";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -76,9 +77,23 @@ export default function Settings() {
     updateProfile({ prefers_dark: v });
   };
 
-  const toggleNotifs = (v: boolean) => {
-    setNotifications(v);
-    updateProfile({ notifications_on: v });
+  const toggleNotifs = async (v: boolean) => {
+    if (v) {
+      if (!isPushSupported()) {
+        toast.error("Tu navegador no soporta notificaciones push.");
+        return;
+      }
+      const ok = await requestPermissionAndRegister();
+      if (!ok) return;
+      setNotifications(true);
+      updateProfile({ notifications_on: true });
+      toast.success("Notificaciones activadas");
+    } else {
+      await disablePush();
+      setNotifications(false);
+      updateProfile({ notifications_on: false });
+      toast("Notificaciones desactivadas");
+    }
   };
 
   const handleSignOut = async () => {

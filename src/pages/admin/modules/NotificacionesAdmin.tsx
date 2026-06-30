@@ -159,8 +159,111 @@ export default function NotificacionesAdmin() {
             <PhonePreview title={preview.title} body={preview.body} />
           </div>
         </div>
+
+        <ManualPushSection />
       </div>
     </>
+  );
+}
+
+function ManualPushSection() {
+  const [target, setTarget] = useState<"all" | "country" | "plan">("all");
+  const [country, setCountry] = useState("AR");
+  const [plan, setPlan] = useState<"free" | "premium">("premium");
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [url, setUrl] = useState("/");
+  const [sending, setSending] = useState(false);
+  const [recent, setRecent] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("notification_log")
+        .select("kind, title, body, sent_at, status, user_id")
+        .order("sent_at", { ascending: false })
+        .limit(20);
+      setRecent(data ?? []);
+    })();
+  }, [sending]);
+
+  const send = async () => {
+    if (!title.trim() || !body.trim()) {
+      toast.error("Título y cuerpo son obligatorios");
+      return;
+    }
+    setSending(true);
+    const segment =
+      target === "all" ? { all: true } : target === "country" ? { country } : { plan };
+    const { data, error } = await supabase.functions.invoke("send-push", {
+      body: { segment, title: title.trim(), body: body.trim(), url, kind: "admin" },
+    });
+    setSending(false);
+    if (error) {
+      toast.error("Error al enviar: " + error.message);
+      return;
+    }
+    toast.success(`Enviado a ${data?.sent ?? 0} dispositivos (${data?.targets ?? 0} usuarios)`);
+    setTitle("");
+    setBody("");
+  };
+
+  return (
+    <AdminCard className="p-6 rounded-3xl mt-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-10 w-10 rounded-xl bg-resma-teal/10 text-resma-teal flex items-center justify-center">
+          <Bell size={18} />
+        </div>
+        <div>
+          <div className="font-semibold text-resma-navy">Push manual</div>
+          <div className="text-xs text-slate-500 mt-0.5">Enviar un mensaje a un segmento ahora mismo (Firebase Cloud Messaging).</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 mb-3">
+        <select value={target} onChange={(e) => setTarget(e.target.value as any)} className="h-10 rounded-xl border border-slate-200 px-3 text-sm">
+          <option value="all">Todos los usuarios</option>
+          <option value="country">Por país</option>
+          <option value="plan">Por plan</option>
+        </select>
+        {target === "country" && (
+          <input value={country} onChange={(e) => setCountry(e.target.value.toUpperCase())} placeholder="AR" className="h-10 rounded-xl border border-slate-200 px-3 text-sm" />
+        )}
+        {target === "plan" && (
+          <select value={plan} onChange={(e) => setPlan(e.target.value as any)} className="h-10 rounded-xl border border-slate-200 px-3 text-sm">
+            <option value="premium">Premium</option>
+            <option value="free">Free</option>
+          </select>
+        )}
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="URL destino /" className="h-10 rounded-xl border border-slate-200 px-3 text-sm" />
+      </div>
+
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título" className="w-full h-10 rounded-xl border border-slate-200 px-3 text-sm mb-2" />
+      <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Mensaje" rows={3} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+
+      <div className="flex justify-end mt-3">
+        <AdminButton onClick={send} disabled={sending}>
+          <Bell size={14} /> {sending ? "Enviando…" : "Enviar push"}
+        </AdminButton>
+      </div>
+
+      {recent.length > 0 && (
+        <div className="mt-6">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Envíos recientes</div>
+          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+            {recent.map((r, i) => (
+              <div key={i} className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2 text-xs">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-resma-navy truncate">{r.title} <span className="text-slate-400 font-normal">· {r.kind}</span></div>
+                  <div className="text-slate-500 truncate">{r.body}</div>
+                </div>
+                <div className="text-[10px] text-slate-400 whitespace-nowrap">{new Date(r.sent_at).toLocaleString("es-AR")}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </AdminCard>
   );
 }
 
