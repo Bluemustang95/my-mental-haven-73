@@ -595,7 +595,7 @@ function ImmersivePlayer({
 
   return (
     <div
-      className="relative min-h-screen w-full overflow-hidden"
+      className="fixed inset-0 z-50 overflow-hidden"
       style={{ background: PATTERN_BG[pattern.id] }}
     >
       {/* Capa 0: animación fondo */}
@@ -665,9 +665,6 @@ function ImmersivePlayer({
                 style={{ color: accent }}
               >
                 {phase.label}
-              </div>
-              <div className="text-4xl font-light text-white/90 tabular-nums leading-none">
-                {secondsLeftInPhase}
               </div>
             </motion.div>
           </AnimatePresence>
