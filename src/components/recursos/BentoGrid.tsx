@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Wind, HeartPulse, Brain, Sparkles, Lock, type LucideIcon } from "lucide-react";
+import { Zap, Wind, Sparkles, Lock, Brain, type LucideIcon } from "lucide-react";
 import { readLocalProfile } from "@/lib/clinicalAlgorithm";
 import { usePlan } from "@/hooks/usePlan";
 import { PaywallModal } from "@/components/modals/PaywallModal";
@@ -16,10 +16,9 @@ type Tile = {
 type TileWithTarget = Tile & { target: string };
 
 const tiles: TileWithTarget[] = [
-  { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary", target: "/diario-inteligente/mindfulness" },
-  { slug: "regulacion-emocional", name: "Regulación Emocional", desc: "Habilidades STOP y TIP.", Icon: HeartPulse, tint: "accent", target: "/diario-inteligente/regulacion-emocional" },
-  { slug: "pensamientos", name: "Pensamientos", desc: "Wizard de CBT.", Icon: Brain, tint: "primary", target: "/herramientas/pensamientos" },
-  { slug: "habitos", name: "Hábitos", desc: "Habit Tracker.", Icon: Zap, tint: "accent", target: "/diario-inteligente/gestion-pensamientos/habitos" },
+  { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary", target: "/herramientas/mindfulness" },
+  { slug: "mente-emocion", name: "Mente & Emoción", desc: "CBT + Regulación DBT.", Icon: Brain, tint: "accent", target: "/herramientas/mente-emocion" },
+  { slug: "habitos", name: "Hábitos", desc: "Habit Tracker.", Icon: Zap, tint: "primary", target: "/diario-inteligente/gestion-pensamientos/habitos" },
 ];
 
 const tintBg: Record<Tile["tint"], string> = {
@@ -63,7 +62,6 @@ export function BentoGrid() {
               className="pressable glass-premium relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl p-4 text-left transition"
               style={isPriority ? { borderColor: "rgba(124,194,200,0.55)", boxShadow: "0 18px 36px -14px rgba(124,194,200,0.45), inset 0 1px 0 rgba(255,255,255,0.7)" } : undefined}
             >
-              {/* Subtle inner sheen */}
               <span aria-hidden className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full opacity-50 blur-2xl" style={{ background: t.tint === "primary" ? "rgba(124,194,200,0.35)" : "rgba(250,203,96,0.35)" }} />
               {isPriority && (
                 <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#7cc2c8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
@@ -87,7 +85,6 @@ export function BentoGrid() {
         })}
       </div>
 
-      {/* Pack Actividades */}
       <button
         onClick={() => open("pack", "Pack de Actividades", "/herramientas/pack")}
         className="relative flex w-full items-center justify-between overflow-hidden rounded-3xl bg-primary p-5 text-left text-primary-foreground shadow-primary-glow"
