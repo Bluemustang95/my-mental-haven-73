@@ -109,6 +109,20 @@ const PATTERNS: PatternMeta[] = [
 
 const FAV_KEY = "resma.mindfulness.favs.v1";
 const SESSION_KEY = "resma.mindfulness.session.v1";
+const DEFAULTS_KEY = "resma.mindfulness.defaults.v1";
+const ONBOARDED_KEY = "resma.mindfulness.onboarded.v1";
+
+type Defaults = { minutes: number; voice: boolean; ambient: boolean };
+function loadDefaults(): Defaults {
+  try {
+    const raw = localStorage.getItem(DEFAULTS_KEY);
+    if (raw) return { minutes: 5, voice: true, ambient: false, ...JSON.parse(raw) };
+  } catch {}
+  return { minutes: 5, voice: true, ambient: false };
+}
+function saveDefaults(d: Defaults) {
+  try { localStorage.setItem(DEFAULTS_KEY, JSON.stringify(d)); } catch {}
+}
 
 function getPattern(id: PatternId): PatternMeta {
   return PATTERNS.find((p) => p.id === id) ?? PATTERNS[0];
@@ -121,9 +135,26 @@ export default function BreathingHome() {
 
   const [step, setStep] = useState<Step>("intention");
   const [patternId, setPatternId] = useState<PatternId>("478");
-  const [minutes, setMinutes] = useState(5);
-  const [voice, setVoice] = useState(true);
-  const [ambient, setAmbient] = useState(false);
+  const initialDefaults = useMemo(() => loadDefaults(), []);
+  const [minutes, setMinutes] = useState(initialDefaults.minutes);
+  const [voice, setVoice] = useState(initialDefaults.voice);
+  const [ambient, setAmbient] = useState(initialDefaults.ambient);
+
+  // Persistí los ajustes globales para que la próxima vez sean los defaults.
+  useEffect(() => { saveDefaults({ minutes, voice, ambient }); }, [minutes, voice, ambient]);
+
+  // True Quick Start: al elegir un ejercicio, arrancar directo al reproductor.
+  // Excepción: la primera vez de todas se muestra el setup para que la persona
+  // configure sus preferencias por defecto.
+  const handlePick = (pid: PatternId) => {
+    setPatternId(pid);
+    const onboarded = (() => { try { return localStorage.getItem(ONBOARDED_KEY) === "1"; } catch { return false; } })();
+    setStep(onboarded ? "player" : "setup");
+  };
+  const markOnboardedAndPlay = () => {
+    try { localStorage.setItem(ONBOARDED_KEY, "1"); } catch {}
+    setStep("player");
+  };
 
   const [helpOpen, setHelpOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
