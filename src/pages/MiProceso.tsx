@@ -115,6 +115,11 @@ export default function MiProceso() {
       <div className="relative mx-auto w-full max-w-md flex-1 px-5 pt-7 pb-24">
         <h1 className="font-serif text-[20px] font-medium text-[#0f172a]">Mi Proceso</h1>
         <p className="mt-0.5 text-[12px] italic text-[#64748b]">Tu evolución, paso a paso.</p>
+        {isAdmin && overrideCountry && (
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-800">
+            👁 Vista admin · país simulado: {overrideCountry}
+          </div>
+        )}
 
         <p className="mt-5 mb-2.5 flex items-center gap-1.5 font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.18em] text-[#94a3b8]">
           <Activity size={11} /> Estadísticas de impacto
