@@ -112,13 +112,24 @@ const SESSION_KEY = "resma.mindfulness.session.v1";
 const DEFAULTS_KEY = "resma.mindfulness.defaults.v1";
 const ONBOARDED_KEY = "resma.mindfulness.onboarded.v1";
 
-type Defaults = { minutes: number; voice: boolean; ambient: boolean };
+type Defaults = {
+  minutes: number;
+  voice: boolean;
+  ambient: boolean;
+  voiceVolume: number;
+  ambientId: string;
+  ambientVolume: number;
+};
+const DEFAULT_VALUES: Defaults = {
+  minutes: 5, voice: true, ambient: false,
+  voiceVolume: 0.9, ambientId: "rain_soft", ambientVolume: 0.5,
+};
 function loadDefaults(): Defaults {
   try {
     const raw = localStorage.getItem(DEFAULTS_KEY);
-    if (raw) return { minutes: 5, voice: true, ambient: false, ...JSON.parse(raw) };
+    if (raw) return { ...DEFAULT_VALUES, ...JSON.parse(raw) };
   } catch {}
-  return { minutes: 5, voice: true, ambient: false };
+  return DEFAULT_VALUES;
 }
 function saveDefaults(d: Defaults) {
   try { localStorage.setItem(DEFAULTS_KEY, JSON.stringify(d)); } catch {}
@@ -139,9 +150,14 @@ export default function BreathingHome() {
   const [minutes, setMinutes] = useState(initialDefaults.minutes);
   const [voice, setVoice] = useState(initialDefaults.voice);
   const [ambient, setAmbient] = useState(initialDefaults.ambient);
+  const [voiceVolume, setVoiceVolume] = useState(initialDefaults.voiceVolume);
+  const [ambientId, setAmbientId] = useState(initialDefaults.ambientId);
+  const [ambientVolume, setAmbientVolume] = useState(initialDefaults.ambientVolume);
 
   // Persistí los ajustes globales para que la próxima vez sean los defaults.
-  useEffect(() => { saveDefaults({ minutes, voice, ambient }); }, [minutes, voice, ambient]);
+  useEffect(() => {
+    saveDefaults({ minutes, voice, ambient, voiceVolume, ambientId, ambientVolume });
+  }, [minutes, voice, ambient, voiceVolume, ambientId, ambientVolume]);
 
   // True Quick Start: al elegir un ejercicio, arrancar directo al reproductor.
   // Excepción: la primera vez de todas se muestra el setup para que la persona
