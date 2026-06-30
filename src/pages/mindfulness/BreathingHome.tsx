@@ -885,58 +885,57 @@ function VisualizerSleep({ phase, progress }: { phase: Phase; progress: number }
 }
 
 function VisualizerSigh({ phase, progress }: { phase: Phase; progress: number }) {
-  // Sine wave + sliding ball; 0..1 across the curve depending on phase
-  const totalDur = 9; // 2+1+6
-  const tStart = phase.id === "inhale" ? 0 : phase.id === "inhale2" ? 2 / totalDur : 3 / totalDur;
-  const tEnd   = phase.id === "inhale" ? 2 / totalDur : phase.id === "inhale2" ? 3 / totalDur : 1;
-  const t = tStart + (tEnd - tStart) * progress;
+  // Continuous scrolling sine wave that slides left infinitely.
+  // The ball stays anchored at the screen center; its Y rises on inhale, drops on exhale.
+  const W = 360, H = 200;
+  const amp = 48;
+  const midY = H / 2;
+  const wavelength = 140;
 
-  const W = 320, H = 180, padX = 16;
-  const x = padX + t * (W - 2 * padX);
-  // y: rises through first 1/3, micro jump, then long descent
-  const yFor = (tt: number) => {
-    if (tt < 2 / totalDur) {
-      const k = tt / (2 / totalDur);
-      return H - 30 - k * 70;
-    }
-    if (tt < 3 / totalDur) {
-      const k = (tt - 2 / totalDur) / (1 / totalDur);
-      return H - 100 - k * 40;
-    }
-    const k = (tt - 3 / totalDur) / (6 / totalDur);
-    return H - 140 + k * 110;
-  };
-  const y = yFor(t);
+  // Static sine path that spans 3 wavelengths and gets translated horizontally.
   const pathD = useMemo(() => {
-    let d = `M ${padX} ${yFor(0)}`;
-    const steps = 80;
+    const steps = 240;
+    const span = W * 2;
+    let d = `M 0 ${midY}`;
     for (let i = 1; i <= steps; i++) {
-      const tt = i / steps;
-      const xx = padX + tt * (W - 2 * padX);
-      d += ` L ${xx.toFixed(1)} ${yFor(tt).toFixed(1)}`;
+      const x = (i / steps) * span;
+      const y = midY - Math.sin((x / wavelength) * Math.PI * 2) * amp;
+      d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
     }
     return d;
   }, []);
 
+  // Ball Y: inhale (4s) → goes up; exhale (6s) → goes down. Continuous.
+  const ballY = phase.id === "inhale"
+    ? midY + amp - progress * (amp * 2)        // from low → high
+    : midY - amp + progress * (amp * 2);       // from high → low
+
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-[88%] h-[80%]">
+    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-[100%] h-[70%]" preserveAspectRatio="none">
         <defs>
           <linearGradient id="sighStroke" x1="0" x2="1">
-            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.25" />
-            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0.9" />
+            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.15" />
+            <stop offset="0.5" stopColor="#7cc2c8" stopOpacity="0.85" />
+            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0.15" />
           </linearGradient>
           <radialGradient id="sighBall">
             <stop offset="0" stopColor="#fff" />
             <stop offset="1" stopColor="#7cc2c8" />
           </radialGradient>
         </defs>
-        <path d={pathD} fill="none" stroke="url(#sighStroke)" strokeWidth={2.5} strokeLinecap="round" />
-        <circle cx={x} cy={y} r={9} fill="url(#sighBall)" style={{ filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.6))" }} />
+        {/* Two stacked paths translated for seamless scrolling */}
+        <g style={{ animation: "wave-scroll 6s linear infinite" }}>
+          <path d={pathD} fill="none" stroke="url(#sighStroke)" strokeWidth={2.4} strokeLinecap="round" />
+        </g>
+        <circle cx={W / 2} cy={ballY} r={10} fill="url(#sighBall)"
+          style={{ filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.7))", transition: "cy 120ms linear" }} />
       </svg>
+      <style>{`@keyframes wave-scroll{0%{transform:translateX(0)}100%{transform:translateX(-${wavelength}px)}}`}</style>
     </div>
   );
 }
+
 
 function VisualizerBox({ phase, progress }: { phase: Phase; progress: number }) {
   const S = 200, X = 60, Y = 40;
