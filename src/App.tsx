@@ -112,6 +112,8 @@ import NotificacionesAdmin from "@/pages/admin/modules/NotificacionesAdmin";
 import PatientReviews from "@/pages/admin/PatientReviews";
 import CrisisHotlinesManager from "@/pages/admin/CrisisHotlinesManager";
 import CountryViewSwitcher from "@/pages/admin/CountryViewSwitcher";
+import MenteEmocion from "@/pages/MenteEmocion";
+import { NotificationForegroundListener } from "@/components/system/NotificationForegroundListener";
 
 
 const queryClient = new QueryClient();
@@ -135,6 +137,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <NotificationForegroundListener />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -186,6 +189,7 @@ const App = () => (
               <Route path="/herramientas/grounding" element={<Grounding />} />
               <Route path="/herramientas/mindfulness" element={<MindfulnessHub />} />
               <Route path="/herramientas/pensamientos" element={<PensamientosHub />} />
+              <Route path="/herramientas/mente-emocion" element={<MenteEmocion />} />
               <Route path="/herramientas/mindfulness/respiracion" element={<BreathingHome />} />
               <Route path="/herramientas/mindfulness/observar" element={<ObservarHome />} />
               <Route path="/herramientas/mindfulness/describir" element={<DescribirHome />} />
