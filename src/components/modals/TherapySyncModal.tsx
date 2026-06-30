@@ -15,7 +15,7 @@ interface TherapySyncModalProps {
 
 type View = "sync" | "intake";
 type Gender = "masculino" | "femenino" | "otro" | "no_responde";
-type TreatmentType = "individual" | "pareja" | "familiar" | "ninos";
+type TreatmentType = "psicologico" | "psiquiatrico" | "psicopedagogico";
 type Modality = "Online" | "Presencial";
 
 const GENDERS: { value: Gender; label: string }[] = [
