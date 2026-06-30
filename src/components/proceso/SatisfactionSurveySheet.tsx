@@ -10,6 +10,7 @@ interface Props {
   onClose: () => void;
   onCompleted: () => void;
   onDismiss: () => void;
+  previewMode?: boolean;
 }
 
 const NOT_STARTED_REASONS = [
@@ -22,7 +23,7 @@ const NOT_STARTED_REASONS = [
 const SESSION_OPTIONS = ["0", "1", "2-3", "4+"];
 const MODALITY_OPTIONS = ["Sí, la que pedí", "No coincidió", "Cambió y está bien"];
 
-export function SatisfactionSurveySheet({ open, onClose, onCompleted, onDismiss }: Props) {
+export function SatisfactionSurveySheet({ open, onClose, onCompleted, onDismiss, previewMode = false }: Props) {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -42,6 +43,12 @@ export function SatisfactionSurveySheet({ open, onClose, onCompleted, onDismiss 
     setReasons((arr) => (arr.includes(r) ? arr.filter((x) => x !== r) : [...arr, r]));
 
   const handleSave = async () => {
+    if (previewMode) {
+      toast.message("Modo preview: respuestas no guardadas.");
+      setStep(99);
+      onCompleted();
+      return;
+    }
     if (!user) return;
     setSubmitting(true);
     const { error } = await supabase.from("therapy_satisfaction_surveys").insert({
@@ -73,7 +80,7 @@ export function SatisfactionSurveySheet({ open, onClose, onCompleted, onDismiss 
   };
 
   const handleDismiss = async () => {
-    if (user) {
+    if (!previewMode && user) {
       await supabase
         .from("patient_app_profiles")
         .update({ satisfaction_survey_dismissed_at: new Date().toISOString() })
