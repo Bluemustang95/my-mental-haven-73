@@ -795,6 +795,36 @@ export type Database = {
         }
         Relationships: []
       }
+      device_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: string | null
+          token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string | null
+          token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string | null
+          token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       dream_log: {
         Row: {
           created_at: string | null
@@ -1285,6 +1315,81 @@ export type Database = {
           enabled_ids?: Json
           id?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_log: {
+        Row: {
+          body: string
+          data: Json | null
+          error: string | null
+          id: string
+          kind: string
+          sent_at: string
+          status: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          data?: Json | null
+          error?: string | null
+          id?: string
+          kind: string
+          sent_at?: string
+          status?: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          data?: Json | null
+          error?: string | null
+          id?: string
+          kind?: string
+          sent_at?: string
+          status?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          admin_enabled: boolean
+          checkin_enabled: boolean
+          checkin_time: string
+          habits_enabled: boolean
+          medication_enabled: boolean
+          push_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_enabled?: boolean
+          checkin_enabled?: boolean
+          checkin_time?: string
+          habits_enabled?: boolean
+          medication_enabled?: boolean
+          push_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_enabled?: boolean
+          checkin_enabled?: boolean
+          checkin_time?: string
+          habits_enabled?: boolean
+          medication_enabled?: boolean
+          push_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
