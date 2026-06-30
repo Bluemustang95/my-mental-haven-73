@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { speak as speakTTS, stopSpeak, primeAudio } from "@/lib/elevenLabsTTS";
+import { speak as speakTTS, stopSpeak, primeAudio, setSpeechVolume } from "@/lib/elevenLabsTTS";
 import { useUserVoice } from "@/hooks/useUserVoice";
 import { AMBIENT_SOUNDS, getAmbientById } from "@/lib/ambientLibrary";
 
