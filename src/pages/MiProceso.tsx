@@ -146,7 +146,7 @@ export default function MiProceso() {
 
         <div className="my-6 h-px bg-black/[0.06]" />
 
-        {country === "AR" ? (
+        {(!country || country === "AR") ? (
           <>
             <div className="flex items-center justify-between gap-4">
               <p className="font-[Montserrat] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0f172a]">
