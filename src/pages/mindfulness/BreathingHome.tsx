@@ -348,57 +348,31 @@ function ModuleNav({ step, setStep, hasSelection }: { step: Step; setStep: (s: S
    Pantalla 1 · Intención
    ============================================================ */
 function IntentionScreen({
-  tab, onTab, favs, onToggleFav, onPick,
+  favs, onToggleFav, onPick,
 }: {
-  tab: Tab;
-  onTab: (t: Tab) => void;
   favs: Record<string, boolean>;
   onToggleFav: (id: PatternId) => void;
   onPick: (id: PatternId) => void;
 }) {
   return (
     <div className="pt-2">
-      {/* Segmented control */}
-      <div className="mx-auto max-w-[320px] bg-white/70 backdrop-blur-md border border-white/70 rounded-full p-1.5 flex shadow-sm">
-        {(["respiracion", "bodyscan"] as Tab[]).map((t) => {
-          const active = tab === t;
-          return (
-            <button
-              key={t}
-              onClick={() => onTab(t)}
-              className={`flex-1 h-10 rounded-full text-[13px] font-semibold transition ${
-                active ? "bg-[#101927] text-white shadow" : "text-[#101927]/55"
-              }`}
-            >
-              {t === "respiracion" ? "Respiración" : "Body Scan"}
-            </button>
-          );
-        })}
+      <div className="text-center mt-2">
+        <h1 className="font-serifElegant text-[26px] leading-tight text-[#101927]">¿Qué necesitás ahora?</h1>
+        <p className="text-[12.5px] text-[#101927]/55 mt-1.5 px-4">
+          Elegí una intención y te sugerimos el patrón adecuado.
+        </p>
       </div>
-
-      {tab === "respiracion" ? (
-        <>
-          <div className="text-center mt-6">
-            <h1 className="font-serifElegant text-[26px] leading-tight text-[#101927]">¿Qué necesitás ahora?</h1>
-            <p className="text-[12.5px] text-[#101927]/55 mt-1.5 px-4">
-              Elegí una intención y te sugerimos el patrón adecuado.
-            </p>
-          </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            {PATTERNS.map((p) => (
-              <PatternCard
-                key={p.id}
-                p={p}
-                fav={!!favs[p.id]}
-                onToggleFav={() => onToggleFav(p.id)}
-                onPick={() => onPick(p.id)}
-              />
-            ))}
-          </div>
-        </>
-      ) : (
-        <BodyScanEmpty />
-      )}
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        {PATTERNS.map((p) => (
+          <PatternCard
+            key={p.id}
+            p={p}
+            fav={!!favs[p.id]}
+            onToggleFav={() => onToggleFav(p.id)}
+            onPick={() => onPick(p.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -410,7 +384,7 @@ function PatternCard({
   return (
     <button
       onClick={onPick}
-      className="relative text-left rounded-[22px] p-4 bg-white/55 backdrop-blur-xl border border-white/70 shadow-[0_10px_28px_-12px_rgba(16,25,39,0.12)] active:scale-[0.98] transition"
+      className="relative text-left rounded-3xl p-4 bg-white border border-[#101927]/5 shadow-[0_6px_20px_-10px_rgba(16,25,39,0.18)] active:scale-[0.98] transition"
     >
       <span
         role="button"
@@ -422,27 +396,13 @@ function PatternCard({
       >
         <Star size={16} fill={fav ? "#7cc2c8" : "transparent"} strokeWidth={1.8} />
       </span>
-      <div className={`h-11 w-11 rounded-2xl ${p.iconBg} flex items-center justify-center`}>
-        <Icon size={20} className={p.iconColor} />
+      <div className={`h-12 w-12 rounded-full ${p.iconBg} flex items-center justify-center`}>
+        <Icon size={22} className={p.iconColor} />
       </div>
-      <div className="mt-3 font-semibold text-[14.5px] text-[#101927] leading-tight">{p.title}</div>
+      <div className="mt-3 font-semibold text-[15px] text-[#101927] leading-tight">{p.title}</div>
       <div className="text-[11.5px] text-[#101927]/55 mt-1 leading-snug line-clamp-2">{p.description}</div>
+      <div className="text-[10px] uppercase tracking-[0.16em] text-[#101927]/40 font-semibold mt-2">{p.short}</div>
     </button>
-  );
-}
-
-function BodyScanEmpty() {
-  return (
-    <div className="mt-12 text-center px-6">
-      <div className="mx-auto h-16 w-16 rounded-full bg-white/60 backdrop-blur-md border border-white/70 flex items-center justify-center text-[#7cc2c8]">
-        <Sparkles size={26} />
-      </div>
-      <h2 className="font-serifElegant text-[22px] text-[#101927] mt-4">Próximamente</h2>
-      <p className="text-[13px] text-[#101927]/60 mt-2 leading-relaxed">
-        El módulo clínico de <em>Body Scan</em> está en desarrollo. Lo estamos diseñando con
-        protocolos guiados, ritmo lento y narración terapéutica.
-      </p>
-    </div>
   );
 }
 
