@@ -151,7 +151,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
       country: "AR",
       consultation_reason: "Psicológica",
     };
-    if (email.trim()) payload.email = email.trim();
+    payload.email = email.trim();
     if (modality === "Presencial") {
       payload.province = province;
       payload.locality = locality;
