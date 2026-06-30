@@ -214,21 +214,18 @@ export default function Settings() {
           </button>
         </Group>
 
-        {/* Easter egg admin */}
-        <div className="px-5 pt-8">
-          <button
-            onClick={() => navigate("/admin")}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#101927]/15 bg-transparent px-4 py-4 text-xs font-semibold uppercase tracking-widest text-[#101927]/55 transition active:bg-[#101927]/5"
-          >
-            <Wrench size={14} />
-            Acceso Desarrollador / Admin
-          </button>
-          {!isAdmin && (
-            <p className="mt-2 text-center text-[10px] text-muted-foreground/60">
-              Solo accesible con permisos.
-            </p>
-          )}
-        </div>
+        {/* Admin access — only visible for real admins */}
+        {isAdmin && (
+          <div className="px-5 pt-8">
+            <button
+              onClick={() => navigate("/admin")}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#101927]/15 bg-transparent px-4 py-4 text-xs font-semibold uppercase tracking-widest text-[#101927]/55 transition active:bg-[#101927]/5"
+            >
+              <Wrench size={14} />
+              Acceso Desarrollador / Admin
+            </button>
+          </div>
+        )}
       </div>
 
       <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />
