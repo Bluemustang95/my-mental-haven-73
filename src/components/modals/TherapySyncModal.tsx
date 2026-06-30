@@ -312,7 +312,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
                       )}
                     </div>
                     <div>
-                      <label className="ml-4 text-xs font-semibold text-foreground/55">Email (opcional)</label>
+                      <label className="ml-4 text-xs font-semibold text-foreground/55">Email</label>
                       <PillInput placeholder="tu@email.com" value={email} onChange={setEmail} type="email" />
                     </div>
                   </div>
