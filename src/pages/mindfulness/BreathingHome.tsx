@@ -568,15 +568,16 @@ const PATTERN_TEXT_ACCENT: Record<PatternId, string> = {
 
 
 function ImmersivePlayer({
-  pattern, minutes, voice: initialVoice, ambient: initialAmbient, onBack, onHelp, onStop, onFinish,
+  pattern, minutes, setMinutes, voice: initialVoice, ambient: initialAmbient, onBack, onHelp, onStop, onFinish,
 }: {
-  pattern: PatternMeta; minutes: number; voice: boolean; ambient: boolean;
+  pattern: PatternMeta; minutes: number; setMinutes: (m: number) => void; voice: boolean; ambient: boolean;
   onBack: () => void; onHelp: () => void; onStop: () => void; onFinish: () => void;
 }) {
   const cycle = useBreathingCycle(pattern, minutes * 60, onFinish);
   const phase = pattern.phases[cycle.phaseIdx];
   const accent = PATTERN_TEXT_ACCENT[pattern.id];
   const secondsLeftInPhase = Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed));
+  const [timeEditOpen, setTimeEditOpen] = useState(false);
 
   // Settings live state
   const [voice, setVoice] = useState(initialVoice);
