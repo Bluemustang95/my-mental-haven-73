@@ -55,17 +55,16 @@ const PATTERNS: PatternMeta[] = [
   {
     id: "sigh",
     title: "Bajar ansiedad",
-    short: "Suspiro Fisiológico",
-    description: "Doble inhalación rápida para desinflar el estado de pánico.",
-    pattern: "Inhalá 2s · Inhalá+ 1s · Exhalá 6s",
+    short: "Onda continua",
+    description: "Inhalación de 4s y exhalación larga de 6s en ritmo continuo.",
+    pattern: "Inhalá 4s · Exhalá 6s",
     Icon: Wind,
     iconBg: "bg-[#E0F4F5]",
     iconColor: "text-[#1B8A92]",
     accent: "#7cc2c8",
     phases: [
-      { id: "inhale",  label: "Inhalá",       seconds: 2, cue: "Inhalá por la nariz." },
-      { id: "inhale2", label: "Inhalá +",     seconds: 1, cue: "Una pizca más de aire." },
-      { id: "exhale",  label: "Exhalá largo", seconds: 6, cue: "Exhalá lento por la boca." },
+      { id: "inhale",  label: "Inhalá", seconds: 4, cue: "Inhalá suave por la nariz." },
+      { id: "exhale",  label: "Exhalá", seconds: 6, cue: "Exhalá lento por la boca." },
     ],
   },
   {
