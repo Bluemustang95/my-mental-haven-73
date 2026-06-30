@@ -114,7 +114,6 @@ export default function BreathingHome() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [tab, setTab] = useState<Tab>("respiracion");
   const [step, setStep] = useState<Step>("intention");
   const [patternId, setPatternId] = useState<PatternId>("478");
   const [minutes, setMinutes] = useState(5);
@@ -156,10 +155,47 @@ export default function BreathingHome() {
 
   const pattern = getPattern(patternId);
 
-  const close = () => navigate("/herramientas/mindfulness");
+  const close = () => navigate("/herramientas");
 
   const toggleFav = (id: PatternId) =>
     setFavs((f) => ({ ...f, [id]: !f[id] }));
+
+  const onFinishSession = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("exercise_sessions").insert({
+          user_id: user.id,
+          exercise_type: "mindfulness",
+          exercise_name: pattern.title,
+          duration_seconds: minutes * 60,
+        } as never);
+      }
+    } catch (e) { console.warn("[Mindfulness] persist failed", e); }
+    toast.success("Sesión completada. Buen trabajo.");
+    setStep("intention");
+  };
+
+  // ---- Modo inmersivo: ocupa toda la pantalla ----
+  if (step === "player") {
+    return (
+      <>
+        <ImmersivePlayer
+          pattern={pattern}
+          minutes={minutes}
+          voice={voice}
+          ambient={ambient}
+          onBack={() => setStep("setup")}
+          onHelp={() => setHelpOpen(true)}
+          onStop={() => setStep("setup")}
+          onFinish={onFinishSession}
+        />
+        <AnimatePresence>
+          {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+        </AnimatePresence>
+      </>
+    );
+  }
 
   return (
     <div className="relative min-h-screen w-full bg-[#f9f9fb]">
@@ -182,8 +218,7 @@ export default function BreathingHome() {
         <Header
           step={step}
           onBack={() => {
-            if (step === "player") setStep("setup");
-            else if (step === "setup") setStep("intention");
+            if (step === "setup") setStep("intention");
             else close();
           }}
           onHelp={() => setHelpOpen(true)}
@@ -192,7 +227,7 @@ export default function BreathingHome() {
         <div className="relative flex-1 overflow-y-auto no-scrollbar pb-28 px-5 smooth-scroll">
           <AnimatePresence mode="wait">
             <motion.div
-              key={step + tab + patternId}
+              key={step + patternId}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -200,8 +235,6 @@ export default function BreathingHome() {
             >
               {step === "intention" && (
                 <IntentionScreen
-                  tab={tab}
-                  onTab={setTab}
                   favs={favs}
                   onToggleFav={toggleFav}
                   onPick={(pid) => { setPatternId(pid); setStep("setup"); }}
@@ -217,30 +250,6 @@ export default function BreathingHome() {
                   ambient={ambient}
                   setAmbient={setAmbient}
                   onStart={() => setStep("player")}
-                />
-              )}
-              {step === "player" && (
-                <PlayerScreen
-                  pattern={pattern}
-                  minutes={minutes}
-                  voice={voice}
-                  ambient={ambient}
-                  onFinish={async () => {
-                    try {
-                      const { data: { user } } = await supabase.auth.getUser();
-                      if (user) {
-                        await supabase.from("exercise_sessions").insert({
-                          user_id: user.id,
-                          exercise_type: "mindfulness",
-                          exercise_name: pattern.title,
-                          duration_seconds: minutes * 60,
-                        } as never);
-                      }
-                    } catch (e) { console.warn("[Mindfulness] persist failed", e); }
-                    toast.success("Sesión completada. Buen trabajo.");
-                    setStep("intention");
-                  }}
-                  onStop={() => setStep("setup")}
                 />
               )}
             </motion.div>
