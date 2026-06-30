@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { speak as speakTTS, stopSpeak, primeAudio } from "@/lib/elevenLabsTTS";
+import { speak as speakTTS, stopSpeak, primeAudio, setSpeechVolume } from "@/lib/elevenLabsTTS";
 import { useUserVoice } from "@/hooks/useUserVoice";
 import { AMBIENT_SOUNDS, getAmbientById } from "@/lib/ambientLibrary";
 
@@ -60,15 +60,16 @@ const PATTERNS: PatternMeta[] = [
     id: "sigh",
     title: "Bajar ansiedad",
     short: "Onda continua",
-    description: "Inhalación de 4s y exhalación larga de 6s en ritmo continuo.",
-    pattern: "Inhalá 4s · Exhalá 6s",
+    description: "Inhalá 4s, sostené 2s y exhalá lento 6s en ritmo continuo.",
+    pattern: "Inhalá 4s · Sostené 2s · Exhalá 6s",
     Icon: Wind,
     iconBg: "bg-[#E0F4F5]",
     iconColor: "text-[#1B8A92]",
     accent: "#7cc2c8",
     phases: [
-      { id: "inhale",  label: "Inhalá", seconds: 4, cue: "Inhalá suave por la nariz." },
-      { id: "exhale",  label: "Exhalá", seconds: 6, cue: "Exhalá lento por la boca." },
+      { id: "inhale", label: "Inhalá",  seconds: 4, cue: "Inhalá suave por la nariz." },
+      { id: "hold",   label: "Sostené", seconds: 2, cue: "Sostené un instante." },
+      { id: "exhale", label: "Exhalá",  seconds: 6, cue: "Exhalá lento por la boca." },
     ],
   },
   {
@@ -540,8 +541,13 @@ function ImmersivePlayer({
   // Settings live state
   const [voice, setVoice] = useState(initialVoice);
   const [ambientId, setAmbientId] = useState<string>(initialAmbient ? "rain_soft" : "off");
+  const [voiceVolume, setVoiceVolume] = useState(0.9);
+  const [ambientVolume, setAmbientVolume] = useState(0.5);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { voiceId } = useUserVoice();
+
+  // Reflect voice volume to TTS player
+  useEffect(() => { setSpeechVolume(voiceVolume); }, [voiceVolume]);
 
   // ----- Ambient audio (WebAudio) -----
   const ctxRef = useRef<AudioContext | null>(null);
@@ -559,7 +565,7 @@ function ImmersivePlayer({
       const ctx = ctxRef.current;
       if (ctx.state === "suspended") ctx.resume().catch(() => {});
       const sound = getAmbientById(ambientId);
-      const handle = sound.build(ctx, 0.5);
+      const handle = sound.build(ctx, ambientVolume);
       ambientStopRef.current = handle.stop;
     } catch (e) {
       console.warn("[mindfulness] ambient failed", e);
@@ -568,7 +574,7 @@ function ImmersivePlayer({
       ambientStopRef.current?.();
       ambientStopRef.current = null;
     };
-  }, [ambientId]);
+  }, [ambientId, ambientVolume]);
 
   useEffect(() => {
     return () => {
@@ -582,9 +588,10 @@ function ImmersivePlayer({
   useEffect(() => {
     if (!voice || cycle.paused) return;
     primeAudio();
+    setSpeechVolume(voiceVolume);
     speakTTS(phase.cue, voiceId).catch(() => {});
     return () => { stopSpeak(); };
-  }, [phase.cue, voice, cycle.paused, voiceId]);
+  }, [phase.cue, voice, cycle.paused, voiceId, voiceVolume]);
 
   return (
     <div
@@ -688,8 +695,12 @@ function ImmersivePlayer({
           <SessionSettings
             voice={voice}
             setVoice={setVoice}
+            voiceVolume={voiceVolume}
+            setVoiceVolume={setVoiceVolume}
             ambientId={ambientId}
             setAmbientId={setAmbientId}
+            ambientVolume={ambientVolume}
+            setAmbientVolume={setAmbientVolume}
             onClose={() => setSettingsOpen(false)}
           />
         )}
@@ -699,12 +710,18 @@ function ImmersivePlayer({
 }
 
 function SessionSettings({
-  voice, setVoice, ambientId, setAmbientId, onClose,
+  voice, setVoice, voiceVolume, setVoiceVolume,
+  ambientId, setAmbientId, ambientVolume, setAmbientVolume, onClose,
 }: {
   voice: boolean; setVoice: (b: boolean) => void;
+  voiceVolume: number; setVoiceVolume: (v: number) => void;
   ambientId: string; setAmbientId: (id: string) => void;
+  ambientVolume: number; setAmbientVolume: (v: number) => void;
   onClose: () => void;
 }) {
+  const ambientOptions = AMBIENT_SOUNDS.filter((s) =>
+    ["off", "rain_soft", "forest_dawn", "waves_soft", "crickets_night", "campfire", "white_noise", "drone_pad"].includes(s.id)
+  );
   return (
     <motion.div
       className="absolute inset-0 z-20 flex items-end justify-center bg-black/40 backdrop-blur-sm"
@@ -720,42 +737,64 @@ function SessionSettings({
         <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/20" />
         <h3 className="text-white text-[15px] font-semibold mb-4">Ajustes de la práctica</h3>
 
-        <div className="flex items-center justify-between py-3 border-b border-white/10">
-          <div>
-            <div className="text-white text-[13.5px] font-semibold">Voz de Guía</div>
-            <div className="text-white/55 text-[11px]">Indicaciones para cada fase</div>
+        {/* Voice toggle + volume */}
+        <div className="py-3 border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-white text-[13.5px] font-semibold">Voz de Guía</div>
+              <div className="text-white/55 text-[11px]">Indicaciones para cada fase</div>
+            </div>
+            <button
+              onClick={() => setVoice(!voice)}
+              className={`relative w-12 h-7 rounded-full transition ${voice ? "bg-[#7cc2c8]" : "bg-white/15"}`}
+              aria-pressed={voice}
+            >
+              <span className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all"
+                    style={{ left: voice ? "22px" : "2px" }} />
+            </button>
           </div>
-          <button
-            onClick={() => setVoice(!voice)}
-            className={`relative w-12 h-7 rounded-full transition ${voice ? "bg-[#7cc2c8]" : "bg-white/15"}`}
-            aria-pressed={voice}
-          >
-            <span className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all"
-                  style={{ left: voice ? "22px" : "2px" }} />
-          </button>
+          <div className={`mt-3 flex items-center gap-3 transition-opacity ${voice ? "opacity-100" : "opacity-40"}`}>
+            <span className="text-white/60 text-[10px] uppercase tracking-[0.18em] font-semibold w-14">Volumen</span>
+            <input
+              type="range" min={0} max={1} step={0.05}
+              value={voiceVolume}
+              onChange={(e) => setVoiceVolume(parseFloat(e.target.value))}
+              disabled={!voice}
+              className="resma-slider flex-1"
+              style={{ accentColor: "#7cc2c8" }}
+            />
+            <span className="text-white/70 text-[11px] tabular-nums w-8 text-right">{Math.round(voiceVolume * 100)}</span>
+          </div>
         </div>
 
+        {/* Ambient dropdown + volume */}
         <div className="mt-4">
           <div className="text-white/70 text-[11px] uppercase tracking-[0.18em] font-semibold mb-2">Sonido de fondo</div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {AMBIENT_SOUNDS.filter(s =>
-              ["off","rain_soft","forest_dawn","waves_soft","crickets_night","campfire","white_noise","drone_pad"].includes(s.id)
-            ).map((s) => {
-              const active = ambientId === s.id;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setAmbientId(s.id)}
-                  className={`shrink-0 px-3.5 h-9 rounded-full text-[12px] font-semibold transition border ${
-                    active
-                      ? "bg-[#7cc2c8] text-[#101927] border-[#7cc2c8]"
-                      : "bg-white/5 text-white/80 border-white/15"
-                  }`}
-                >
+          <div className="relative">
+            <select
+              value={ambientId}
+              onChange={(e) => setAmbientId(e.target.value)}
+              className="w-full h-11 px-4 pr-10 rounded-2xl bg-white/5 border border-white/15 text-white text-[13.5px] font-medium appearance-none focus:outline-none focus:border-[#7cc2c8]"
+            >
+              {ambientOptions.map((s) => (
+                <option key={s.id} value={s.id} className="bg-[#101927] text-white">
                   {s.label}
-                </button>
-              );
-            })}
+                </option>
+              ))}
+            </select>
+            <ChevronRight size={16} className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-white/60 pointer-events-none" />
+          </div>
+          <div className={`mt-3 flex items-center gap-3 transition-opacity ${ambientId !== "off" ? "opacity-100" : "opacity-40"}`}>
+            <span className="text-white/60 text-[10px] uppercase tracking-[0.18em] font-semibold w-14">Volumen</span>
+            <input
+              type="range" min={0} max={1} step={0.05}
+              value={ambientVolume}
+              onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
+              disabled={ambientId === "off"}
+              className="resma-slider flex-1"
+              style={{ accentColor: "#7cc2c8" }}
+            />
+            <span className="text-white/70 text-[11px] tabular-nums w-8 text-right">{Math.round(ambientVolume * 100)}</span>
           </div>
         </div>
 
@@ -885,53 +924,77 @@ function VisualizerSleep({ phase, progress }: { phase: Phase; progress: number }
 }
 
 function VisualizerSigh({ phase, progress }: { phase: Phase; progress: number }) {
-  // Continuous scrolling sine wave that slides left infinitely.
-  // The ball stays anchored at the screen center; its Y rises on inhale, drops on exhale.
+  // Continuous sine wave (static). The ball travels along the wave path:
+  // it rises on inhale (4s), holds at the crest (2s) and descends slowly on exhale (6s).
   const W = 360, H = 200;
-  const amp = 48;
+  const amp = 50;
   const midY = H / 2;
-  const wavelength = 140;
+  const wavelength = 180;            // exactly 2 waves fit in the viewport
+  const cycleDist = wavelength * 0.75; // ¼ up + ½ down per breath cycle
 
-  // Static sine path that spans 3 wavelengths and gets translated horizontally.
+  // Track how many full cycles have elapsed so the ball keeps moving
+  // smoothly to the right (wrapped) across breaths.
+  const cyclesRef = useRef(0);
+  const prevPhaseRef = useRef<string>(phase.id);
+  useEffect(() => {
+    if (prevPhaseRef.current === "exhale" && phase.id === "inhale") {
+      cyclesRef.current += 1;
+    }
+    prevPhaseRef.current = phase.id;
+  }, [phase.id]);
+
+  // Position within the current cycle (0 → cycleDist)
+  let xInCycle = 0;
+  if (phase.id === "inhale") {
+    xInCycle = progress * (wavelength * 0.25);
+  } else if (phase.id === "hold") {
+    xInCycle = wavelength * 0.25;
+  } else {
+    // exhale (or any other) → travel from crest to next trough
+    xInCycle = wavelength * 0.25 + progress * (wavelength * 0.5);
+  }
+  const xRaw = cyclesRef.current * cycleDist + xInCycle;
+  const ballX = ((xRaw % W) + W) % W;
+  const ballY = midY - Math.sin((ballX / wavelength) * Math.PI * 2) * amp;
+
+  // Static sine path covering the whole viewport width.
   const pathD = useMemo(() => {
-    const steps = 240;
-    const span = W * 2;
+    const steps = 260;
     let d = `M 0 ${midY}`;
     for (let i = 1; i <= steps; i++) {
-      const x = (i / steps) * span;
+      const x = (i / steps) * W;
       const y = midY - Math.sin((x / wavelength) * Math.PI * 2) * amp;
       d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
     }
     return d;
-  }, []);
-
-  // Ball Y: inhale (4s) → goes up; exhale (6s) → goes down. Continuous.
-  const ballY = phase.id === "inhale"
-    ? midY + amp - progress * (amp * 2)        // from low → high
-    : midY - amp + progress * (amp * 2);       // from high → low
+  }, [midY]);
 
   return (
     <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-[100%] h-[70%]" preserveAspectRatio="none">
         <defs>
           <linearGradient id="sighStroke" x1="0" x2="1">
-            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.15" />
+            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.35" />
             <stop offset="0.5" stopColor="#7cc2c8" stopOpacity="0.85" />
-            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0.15" />
+            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0.35" />
           </linearGradient>
           <radialGradient id="sighBall">
             <stop offset="0" stopColor="#fff" />
             <stop offset="1" stopColor="#7cc2c8" />
           </radialGradient>
         </defs>
-        {/* Two stacked paths translated for seamless scrolling */}
-        <g style={{ animation: "wave-scroll 6s linear infinite" }}>
-          <path d={pathD} fill="none" stroke="url(#sighStroke)" strokeWidth={2.4} strokeLinecap="round" />
-        </g>
-        <circle cx={W / 2} cy={ballY} r={10} fill="url(#sighBall)"
-          style={{ filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.7))", transition: "cy 120ms linear" }} />
+        <path d={pathD} fill="none" stroke="url(#sighStroke)" strokeWidth={2.4} strokeLinecap="round" />
+        <circle
+          cx={ballX}
+          cy={ballY}
+          r={9}
+          fill="url(#sighBall)"
+          style={{
+            filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.7))",
+            transition: "cx 120ms linear, cy 120ms linear",
+          }}
+        />
       </svg>
-      <style>{`@keyframes wave-scroll{0%{transform:translateX(0)}100%{transform:translateX(-${wavelength}px)}}`}</style>
     </div>
   );
 }
