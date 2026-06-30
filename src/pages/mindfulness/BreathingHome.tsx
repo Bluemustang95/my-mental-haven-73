@@ -924,97 +924,100 @@ function VisualizerSleep({ phase, progress }: { phase: Phase; progress: number }
 }
 
 function VisualizerSigh({ phase, progress }: { phase: Phase; progress: number }) {
-  // Single centered bell curve (gaussian) that "breathes" together with a ball
-  // anchored at the horizontal center. No wrap-around, no repeated wavelengths.
-  const W = 360, H = 200;
-  const midX = W / 2;
-  const midY = H / 2 + 30;     // resting baseline (curve sits in lower-mid)
-  const restAmp = 6;            // gentle resting bump
-  const peakAmp = 78;           // full inhale peak
-  const sigma = 70;             // gaussian width (controls bell spread)
+  // Curva única tipo campana (gaussiana modulada) que respira con la bola.
+  // La bola es SIEMPRE un círculo (r constante). El halo es un radialGradient
+  // cuyo radio escalar cambia — nunca se deforma.
+  const W = 340;
+  const H = 280;
+  const CX = W / 2;
+  const BASE_Y = 140;
+  const REST_AMP = 60;
+  const PEAK_AMP = 100;
+  const REST_Y = BASE_Y - REST_AMP;
+  const PEAK_Y = BASE_Y - PEAK_AMP;
+  const BALL_RADIUS = 9;
+  const GLOW_RADIUS_MIN = 28;
+  const GLOW_RADIUS_RANGE = 0.15;
 
   const easeInOutSine = (t: number) =>
     -(Math.cos(Math.PI * Math.min(1, Math.max(0, t))) - 1) / 2;
 
-  // t = 0 (rest) → 1 (peak); same easing drives amp, ballY and halo radius.
-  let t = 0;
-  if (phase.id === "inhale") t = easeInOutSine(progress);
-  else if (phase.id === "hold") t = 1;
-  else if (phase.id === "exhale") t = easeInOutSine(1 - progress);
+  let amplitude = REST_AMP;
+  let ballY = REST_Y;
+  if (phase.id === "inhale") {
+    const e = easeInOutSine(progress);
+    amplitude = REST_AMP + (PEAK_AMP - REST_AMP) * e;
+    ballY = REST_Y + (PEAK_Y - REST_Y) * e;
+  } else if (phase.id === "hold") {
+    amplitude = PEAK_AMP;
+    ballY = PEAK_Y;
+  } else if (phase.id === "exhale") {
+    const e = easeInOutSine(progress);
+    amplitude = PEAK_AMP - (PEAK_AMP - REST_AMP) * e;
+    ballY = PEAK_Y + (REST_Y - PEAK_Y) * e;
+  }
+  const glowRadius = GLOW_RADIUS_MIN + (amplitude - REST_AMP) * GLOW_RADIUS_RANGE;
 
-  const amp = restAmp + (peakAmp - restAmp) * t;
-  const ballY = midY - amp;
-  const haloR = 22 + 26 * t;
-
-  // Gaussian bell path — recomputed when amplitude changes so the curve "breathes".
-  const pathD = useMemo(() => {
-    const steps = 220;
-    let d = "";
+  const { wave, fill } = useMemo(() => {
+    const halfW = W * 0.62;
+    const left = CX - halfW;
+    const right = CX + halfW;
+    const steps = 60;
+    const pts: [number, number][] = [];
     for (let i = 0; i <= steps; i++) {
-      const x = (i / steps) * W;
-      const y = midY - amp * Math.exp(-((x - midX) ** 2) / (2 * sigma * sigma));
-      d += (i === 0 ? "M " : " L ") + x.toFixed(1) + " " + y.toFixed(2);
+      const t = i / steps;
+      const x = left + (right - left) * t;
+      const bell = Math.exp(-Math.pow((t - 0.5) * 2.6, 2));
+      const y = BASE_Y - amplitude * bell;
+      pts.push([x, y]);
     }
-    return d;
-  }, [amp, midX, midY]);
-
-  // Closed path for the soft area gradient under the curve.
-  const fillD = pathD + ` L ${W} ${H} L 0 ${H} Z`;
+    let w = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+    for (let i = 1; i < pts.length; i++) {
+      w += ` L ${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)}`;
+    }
+    const f = `${w} L ${pts[pts.length - 1][0].toFixed(1)} ${H} L ${pts[0][0].toFixed(1)} ${H} Z`;
+    return { wave: w, fill: f };
+  }, [amplitude]);
 
   return (
     <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-[100%] h-[80%]" preserveAspectRatio="none">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        style={{
+          width: "100%",
+          display: "block",
+          background: "linear-gradient(180deg, #0d1f1f 0%, #1a3838 60%, #16302f 100%)",
+        }}
+        role="img"
+        aria-label="Animación de respiración guiada"
+      >
         <defs>
-          {/* Lateral fade: opacity 0 at edges, 100% in the middle */}
-          <linearGradient id="sighFadeMask" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0" stopColor="#000" />
-            <stop offset="0.18" stopColor="#fff" />
-            <stop offset="0.82" stopColor="#fff" />
-            <stop offset="1" stopColor="#000" />
+          <linearGradient id="sigh-fade-mask" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="white" stopOpacity={0} />
+            <stop offset="15%" stopColor="white" stopOpacity={1} />
+            <stop offset="85%" stopColor="white" stopOpacity={1} />
+            <stop offset="100%" stopColor="white" stopOpacity={0} />
           </linearGradient>
-          <mask id="sighMask" maskUnits="userSpaceOnUse" x="0" y="0" width={W} height={H}>
-            <rect x="0" y="0" width={W} height={H} fill="url(#sighFadeMask)" />
+          <mask id="sigh-edge-fade">
+            <rect x={0} y={0} width={W} height={H} fill="url(#sigh-fade-mask)" />
           </mask>
-
-          <linearGradient id="sighArea" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.12" />
-            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0" />
+          <radialGradient id="sigh-ball-glow">
+            <stop offset="0%" stopColor="#9fe0e0" stopOpacity={0.55} />
+            <stop offset="100%" stopColor="#9fe0e0" stopOpacity={0} />
+          </radialGradient>
+          <linearGradient id="sigh-fill-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#7cc2c8" stopOpacity={0.12} />
+            <stop offset="100%" stopColor="#7cc2c8" stopOpacity={0} />
           </linearGradient>
-
-          <radialGradient id="sighBall">
-            <stop offset="0" stopColor="#ffffff" />
-            <stop offset="1" stopColor="#7cc2c8" />
-          </radialGradient>
-
-          <radialGradient id="sighHalo">
-            <stop offset="0" stopColor="#bfeef1" stopOpacity="0.55" />
-            <stop offset="0.55" stopColor="#7cc2c8" stopOpacity="0.18" />
-            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0" />
-          </radialGradient>
         </defs>
 
-        <g mask="url(#sighMask)">
-          <path d={fillD} fill="url(#sighArea)" />
-          <path
-            d={pathD}
-            fill="none"
-            stroke="#7cc2c8"
-            strokeOpacity={0.9}
-            strokeWidth={1.8}
-            strokeLinecap="round"
-          />
+        <g mask="url(#sigh-edge-fade)">
+          <path d={fill} fill="url(#sigh-fill-grad)" />
+          <path d={wave} fill="none" stroke="#7cc2c8" strokeWidth={1.8} strokeLinecap="round" />
         </g>
 
-        {/* Halo behind the ball — radius interpolated with the same easing */}
-        <circle cx={midX} cy={ballY} r={haloR} fill="url(#sighHalo)" />
-        {/* Ball anchored at horizontal center; only cy animates */}
-        <circle
-          cx={midX}
-          cy={ballY}
-          r={9}
-          fill="url(#sighBall)"
-          style={{ filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.55))" }}
-        />
+        <circle cx={CX} cy={ballY} r={glowRadius} fill="url(#sigh-ball-glow)" />
+        <circle cx={CX} cy={ballY} r={BALL_RADIUS} fill="#cdeeee" />
       </svg>
     </div>
   );
