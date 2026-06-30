@@ -187,7 +187,7 @@ const App = () => (
               <Route path="/herramientas/intro/:slug" element={<ResourceIntro />} />
               
               <Route path="/herramientas/grounding" element={<Grounding />} />
-              <Route path="/herramientas/mindfulness" element={<MindfulnessHub />} />
+              <Route path="/herramientas/mindfulness" element={<Navigate to="/herramientas/mindfulness/respiracion" replace />} />
               <Route path="/herramientas/pensamientos" element={<PensamientosHub />} />
               <Route path="/herramientas/mente-emocion" element={<MenteEmocion />} />
               <Route path="/herramientas/mindfulness/respiracion" element={<BreathingHome />} />
