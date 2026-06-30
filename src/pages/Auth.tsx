@@ -262,6 +262,17 @@ export default function Auth() {
           )}
         </div>
       </div>
+
+      <BiometricSetupModal
+        open={!!bioPromptUser}
+        userId={bioPromptUser?.id ?? ""}
+        displayName={bioPromptUser?.name ?? ""}
+        onClose={(result) => {
+          if (result === "never") localStorage.setItem(BIO_PROMPTED_KEY, "never");
+          setBioPromptUser(null);
+          navigate("/", { replace: true });
+        }}
+      />
     </div>
   );
 }
