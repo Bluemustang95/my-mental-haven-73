@@ -123,6 +123,14 @@ export default function PatientReviews() {
           )}
         </DialogContent>
       </Dialog>
+
+      <SatisfactionSurveySheet
+        open={previewOpen}
+        previewMode
+        onClose={() => setPreviewOpen(false)}
+        onCompleted={() => setPreviewOpen(false)}
+        onDismiss={() => setPreviewOpen(false)}
+      />
     </div>
   );
 }
