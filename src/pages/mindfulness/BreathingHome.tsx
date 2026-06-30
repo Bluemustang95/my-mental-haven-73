@@ -935,7 +935,7 @@ function VisualizerSigh({ phase, progress }: { phase: Phase; progress: number })
   const W = 340;
   const H = 280;
   const CX = W / 2;
-  const BASE_Y = 140;
+  const BASE_Y = 180;
   const REST_AMP = 60;
   const PEAK_AMP = 100;
   const REST_Y = BASE_Y - REST_AMP;
