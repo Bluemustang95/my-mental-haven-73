@@ -98,7 +98,7 @@ export default function Diario() {
         </>
       )}
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-28 pt-8">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-3 pb-28 pt-6">
         <AnimatePresence mode="wait">
           {view === "write" && (
             <WriteView
@@ -414,7 +414,7 @@ function WriteView({
           onInput={onEditorInput}
           data-placeholder="¿Qué tenés hoy en la cabeza? Soltalo acá…"
           className={cn(
-            "diary-editor h-full min-h-[300px] w-full flex-1 resize-none bg-transparent p-2 pt-1 pr-24 text-[15px] leading-relaxed focus:outline-none whitespace-pre-wrap break-words",
+            "diary-editor h-full min-h-[300px] w-full flex-1 resize-none bg-transparent px-1 pt-1 pr-20 text-[15px] leading-relaxed focus:outline-none whitespace-pre-wrap break-words",
             zen ? "text-slate-100" : "text-[#101927]",
           )}
           style={{ fontFamily: "Lora, serif" }}
