@@ -1055,42 +1055,75 @@ function VisualizerBox({ phase, progress }: { phase: Phase; progress: number }) 
 }
 
 function VisualizerCoherence({ phase, progress }: { phase: Phase; progress: number }) {
-  const expand = phase.id === "inhale" ? 0.6 + progress * 0.5 : 1.1 - progress * 0.5;
+  // Smooth ease so inhale↔exhale transition is continuous
+  const eased = 0.5 - Math.cos(Math.PI * progress) / 2;
+  const expand = phase.id === "inhale" ? 0.65 + eased * 0.5 : 1.15 - eased * 0.5;
   const positions = [
-    [0, 0],
     [0, -1], [0, 1],
     [-0.87, -0.5], [0.87, -0.5],
     [-0.87, 0.5], [0.87, 0.5],
   ] as const;
   return (
     <div className="absolute inset-0 flex items-center justify-center">
+      {/* Soft radial halo behind everything */}
+      <div
+        className="absolute"
+        style={{
+          width: `${260 * expand}px`,
+          height: `${260 * expand}px`,
+          borderRadius: "9999px",
+          background:
+            "radial-gradient(circle, rgba(250,203,96,0.35) 0%, rgba(250,203,96,0.12) 40%, rgba(250,203,96,0) 70%)",
+          filter: "blur(8px)",
+          transition: "width 200ms linear, height 200ms linear",
+        }}
+      />
       <motion.svg
         viewBox="-100 -100 200 200"
-        className="w-[80%] h-[80%]"
+        className="relative w-[85%] h-[85%]"
         animate={{ rotate: 360 }}
-        transition={{ duration: 80, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
       >
         <defs>
           <radialGradient id="cohFill">
-            <stop offset="0" stopColor="#facb60" stopOpacity="0.18" />
+            <stop offset="0" stopColor="#fff5d8" stopOpacity="0.55" />
+            <stop offset="0.6" stopColor="#facb60" stopOpacity="0.25" />
+            <stop offset="1" stopColor="#facb60" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="cohCore">
+            <stop offset="0" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="0.5" stopColor="#facb60" stopOpacity="0.6" />
             <stop offset="1" stopColor="#facb60" stopOpacity="0" />
           </radialGradient>
         </defs>
+
+        {/* Outer ring guide */}
+        <circle cx={0} cy={0} r={62} fill="none" stroke="#facb60" strokeOpacity={0.18} strokeWidth={1} />
+
         {positions.map(([dx, dy], i) => (
           <motion.circle
             key={i}
-            cx={dx * 30 * expand}
-            cy={dy * 30 * expand}
-            r={30 * expand}
             fill="url(#cohFill)"
             stroke="#facb60"
-            strokeOpacity={0.55}
-            strokeWidth={1}
+            strokeOpacity={0.9}
+            strokeWidth={1.6}
             initial={false}
-            animate={{ cx: dx * 30 * expand, cy: dy * 30 * expand, r: 30 * expand }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
+            animate={{ cx: dx * 32 * expand, cy: dy * 32 * expand, r: 28 * expand }}
+            transition={{ duration: 0.45, ease: "easeInOut" }}
+            style={{ filter: "drop-shadow(0 0 8px rgba(250,203,96,0.55))" }}
           />
         ))}
+
+        {/* Pulsing central core */}
+        <motion.circle
+          cx={0}
+          cy={0}
+          fill="url(#cohCore)"
+          initial={false}
+          animate={{ r: 14 * expand }}
+          transition={{ duration: 0.45, ease: "easeInOut" }}
+          style={{ filter: "drop-shadow(0 0 14px rgba(255,235,170,0.7))" }}
+        />
       </motion.svg>
     </div>
   );
