@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -182,7 +183,7 @@ export default function BreathingHome() {
 
   // ---- Modo inmersivo: ocupa toda la pantalla ----
   if (step === "player") {
-    return (
+    const player = (
       <>
         <ImmersivePlayer
           pattern={pattern}
@@ -199,6 +200,13 @@ export default function BreathingHome() {
         </AnimatePresence>
       </>
     );
+
+    // Importante: AppLayout aplica una animación con `transform` al Outlet.
+    // En iOS/Safari eso convierte a los hijos `position: fixed` en relativos
+    // al contenedor animado; como el player no tiene contenido en flujo, el
+    // overlay quedaba con alto 0 y la pantalla se veía blanca. Portaleamos el
+    // reproductor al body para que el fixed sea realmente viewport completo.
+    return createPortal(player, document.body);
   }
 
   return (
@@ -595,7 +603,7 @@ function ImmersivePlayer({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-hidden"
+      className="fixed inset-0 z-[9999] overflow-hidden"
       style={{ background: PATTERN_BG[pattern.id] }}
     >
       {/* Capa 0: animación fondo */}
@@ -1136,7 +1144,7 @@ function HelpModal({ onClose }: { onClose: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="absolute inset-0 z-40 bg-[#101927]/40 backdrop-blur-sm flex items-center justify-center px-6"
+      className="fixed inset-0 z-[10000] bg-[#101927]/40 backdrop-blur-sm flex items-center justify-center px-6"
       onClick={onClose}
     >
       <motion.div
