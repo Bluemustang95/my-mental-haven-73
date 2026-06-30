@@ -125,7 +125,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
 
   const canNextStep1 =
     firstName.trim() && lastName.trim() && /^\d{4}-\d{2}-\d{2}$/.test(birthDate) && gender;
-  const canNextStep2 = E164_REGEX.test(normalizePhone(phone));
+  const canNextStep2 = E164_REGEX.test(normalizePhone(phone)) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const canSubmit =
     treatmentType &&
     modality &&
