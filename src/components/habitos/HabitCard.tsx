@@ -134,15 +134,15 @@ export function HabitCard({ habit, completions, view, onToggle, onOpenDetail }: 
                 Racha: {streak}d 🔥
               </p>
             </div>
-            <div className="grid grid-cols-10 gap-1.5">
-              {monthCells().slice(0, 20).map(({ date }) => {
+            <div className="grid grid-cols-7 gap-1.5">
+              {monthCells().map(({ date }) => {
                 const isDone = doneSet.has(date);
                 return (
                   <motion.button
                     key={date}
                     onClick={() => onToggle(date)}
                     whileTap={{ scale: 0.8 }}
-                    className="aspect-square rounded-md"
+                    className="aspect-square rounded-full"
                     style={{
                       backgroundColor: isDone ? habit.color : "#eef1f5",
                       boxShadow: isDone ? `0 2px 6px -2px ${habit.color}80` : undefined,

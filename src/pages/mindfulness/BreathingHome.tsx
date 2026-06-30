@@ -7,6 +7,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { speak as speakTTS, stopSpeak, primeAudio } from "@/lib/elevenLabsTTS";
+import { useUserVoice } from "@/hooks/useUserVoice";
+import { AMBIENT_SOUNDS, getAmbientById } from "@/lib/ambientLibrary";
+
 
 /* ============================================================
    RESMA · Mindfulness — Respiración Consciente (rediseño premium)
@@ -55,17 +59,16 @@ const PATTERNS: PatternMeta[] = [
   {
     id: "sigh",
     title: "Bajar ansiedad",
-    short: "Suspiro Fisiológico",
-    description: "Doble inhalación rápida para desinflar el estado de pánico.",
-    pattern: "Inhalá 2s · Inhalá+ 1s · Exhalá 6s",
+    short: "Onda continua",
+    description: "Inhalación de 4s y exhalación larga de 6s en ritmo continuo.",
+    pattern: "Inhalá 4s · Exhalá 6s",
     Icon: Wind,
     iconBg: "bg-[#E0F4F5]",
     iconColor: "text-[#1B8A92]",
     accent: "#7cc2c8",
     phases: [
-      { id: "inhale",  label: "Inhalá",       seconds: 2, cue: "Inhalá por la nariz." },
-      { id: "inhale2", label: "Inhalá +",     seconds: 1, cue: "Una pizca más de aire." },
-      { id: "exhale",  label: "Exhalá largo", seconds: 6, cue: "Exhalá lento por la boca." },
+      { id: "inhale",  label: "Inhalá", seconds: 4, cue: "Inhalá suave por la nariz." },
+      { id: "exhale",  label: "Exhalá", seconds: 6, cue: "Exhalá lento por la boca." },
     ],
   },
   {
@@ -355,14 +358,8 @@ function IntentionScreen({
   onPick: (id: PatternId) => void;
 }) {
   return (
-    <div className="pt-2">
-      <div className="text-center mt-2">
-        <h1 className="font-serifElegant text-[26px] leading-tight text-[#101927]">¿Qué necesitás ahora?</h1>
-        <p className="text-[12.5px] text-[#101927]/55 mt-1.5 px-4">
-          Elegí una intención y te sugerimos el patrón adecuado.
-        </p>
-      </div>
-      <div className="mt-5 grid grid-cols-2 gap-3">
+    <div className="pt-6">
+      <div className="grid grid-cols-2 gap-3">
         {PATTERNS.map((p) => (
           <PatternCard
             key={p.id}
@@ -377,31 +374,39 @@ function IntentionScreen({
   );
 }
 
+// Per-pattern card fill (semi-transparent tint of the accent)
+const CARD_FILL: Record<PatternId, { bg: string; border: string }> = {
+  "478":       { bg: "linear-gradient(160deg,#F1EEFF 0%,#E1DBFB 100%)", border: "#C9C0F4" },
+  "sigh":      { bg: "linear-gradient(160deg,#E6F6F7 0%,#C7EBEE 100%)", border: "#9FD9DE" },
+  "box":       { bg: "linear-gradient(160deg,#E8F5EB 0%,#C8E5CF 100%)", border: "#A4D2B0" },
+  "coherence": { bg: "linear-gradient(160deg,#FFF3DA 0%,#FCE3AE 100%)", border: "#F2CE82" },
+};
+
 function PatternCard({
   p, fav, onToggleFav, onPick,
 }: { p: PatternMeta; fav: boolean; onToggleFav: () => void; onPick: () => void }) {
   const { Icon } = p;
+  const fill = CARD_FILL[p.id];
   return (
     <button
       onClick={onPick}
-      className="relative text-left rounded-3xl p-4 bg-white border border-[#101927]/5 shadow-[0_6px_20px_-10px_rgba(16,25,39,0.18)] active:scale-[0.98] transition"
+      className="relative text-left rounded-3xl p-5 min-h-[150px] flex flex-col justify-between active:scale-[0.98] transition shadow-[0_8px_24px_-12px_rgba(16,25,39,0.18)]"
+      style={{ background: fill.bg, border: `1px solid ${fill.border}` }}
     >
       <span
         role="button"
         tabIndex={0}
         onClick={(e) => { e.stopPropagation(); onToggleFav(); }}
         onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onToggleFav(); } }}
-        className="absolute top-3 right-3 text-[#7cc2c8]"
+        className="absolute top-3 right-3 text-[#101927]/55"
         aria-label="Marcar favorito"
       >
-        <Star size={16} fill={fav ? "#7cc2c8" : "transparent"} strokeWidth={1.8} />
+        <Star size={16} fill={fav ? "#101927" : "transparent"} strokeWidth={1.8} />
       </span>
-      <div className={`h-12 w-12 rounded-full ${p.iconBg} flex items-center justify-center`}>
+      <div className={`h-12 w-12 rounded-full bg-white/70 flex items-center justify-center shadow-sm`}>
         <Icon size={22} className={p.iconColor} />
       </div>
-      <div className="mt-3 font-semibold text-[15px] text-[#101927] leading-tight">{p.title}</div>
-      <div className="text-[11.5px] text-[#101927]/55 mt-1 leading-snug line-clamp-2">{p.description}</div>
-      <div className="text-[10px] uppercase tracking-[0.16em] text-[#101927]/40 font-semibold mt-2">{p.short}</div>
+      <div className="mt-4 font-semibold text-[16px] text-[#101927] leading-tight">{p.title}</div>
     </button>
   );
 }
@@ -519,10 +524,10 @@ const PATTERN_TEXT_ACCENT: Record<PatternId, string> = {
   "coherence": "#F5C56A",
 };
 
-const ELEVENLABS_VOICE_ID = "9rvdnhrYoXoUt4igKpBw"; // Nadia (Argentina)
+
 
 function ImmersivePlayer({
-  pattern, minutes, voice, onBack, onHelp, onStop, onFinish,
+  pattern, minutes, voice: initialVoice, ambient: initialAmbient, onBack, onHelp, onStop, onFinish,
 }: {
   pattern: PatternMeta; minutes: number; voice: boolean; ambient: boolean;
   onBack: () => void; onHelp: () => void; onStop: () => void; onFinish: () => void;
@@ -532,75 +537,54 @@ function ImmersivePlayer({
   const accent = PATTERN_TEXT_ACCENT[pattern.id];
   const secondsLeftInPhase = Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed));
 
-  // ----- ElevenLabs cue audio -----
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const cacheRef = useRef<Map<string, string>>(new Map());
+  // Settings live state
+  const [voice, setVoice] = useState(initialVoice);
+  const [ambientId, setAmbientId] = useState<string>(initialAmbient ? "rain_soft" : "off");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { voiceId } = useUserVoice();
 
-  const speakCue = async (text: string) => {
+  // ----- Ambient audio (WebAudio) -----
+  const ctxRef = useRef<AudioContext | null>(null);
+  const ambientStopRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    // teardown previous
+    ambientStopRef.current?.();
+    ambientStopRef.current = null;
+    if (ambientId === "off") return;
     try {
-      let url = cacheRef.current.get(text);
-      if (!url) {
-        const { data, error } = await supabase.functions.invoke("mindfulness-tts", {
-          body: { text, voiceId: ELEVENLABS_VOICE_ID, speed: 0.9 },
-        });
-        if (error) throw error;
-        let blob: Blob;
-        if (data instanceof Blob) blob = data;
-        else if (data instanceof ArrayBuffer) blob = new Blob([data], { type: "audio/mpeg" });
-        else throw new Error("Unexpected TTS payload");
-        url = URL.createObjectURL(blob);
-        cacheRef.current.set(text, url);
+      if (!ctxRef.current) {
+        ctxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       }
-      if (!audioRef.current) audioRef.current = new Audio();
-      audioRef.current.pause();
-      audioRef.current.src = url;
-      audioRef.current.play().catch(() => {});
+      const ctx = ctxRef.current;
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      const sound = getAmbientById(ambientId);
+      const handle = sound.build(ctx, 0.5);
+      ambientStopRef.current = handle.stop;
     } catch (e) {
-      console.warn("[mindfulness] ElevenLabs fallback", e);
-      if ("speechSynthesis" in window) {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = "es-AR"; u.rate = 0.9; u.pitch = 1.02;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(u);
-      }
+      console.warn("[mindfulness] ambient failed", e);
     }
-  };
+    return () => {
+      ambientStopRef.current?.();
+      ambientStopRef.current = null;
+    };
+  }, [ambientId]);
 
-  // Pre-cache all phase cues on mount for snappy first playback
-  useEffect(() => {
-    if (!voice) return;
-    pattern.phases.forEach((p) => {
-      if (!cacheRef.current.has(p.cue)) {
-        supabase.functions
-          .invoke("mindfulness-tts", { body: { text: p.cue, voiceId: ELEVENLABS_VOICE_ID, speed: 0.9 } })
-          .then(({ data, error }) => {
-            if (error || !data) return;
-            const blob = data instanceof Blob ? data : new Blob([data as ArrayBuffer], { type: "audio/mpeg" });
-            cacheRef.current.set(p.cue, URL.createObjectURL(blob));
-          })
-          .catch(() => {});
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pattern.id, voice]);
-
-  // Speak cue when the phase changes
-  useEffect(() => {
-    if (!voice || cycle.paused) return;
-    speakCue(phase.cue);
-    return () => { audioRef.current?.pause(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase.cue, voice, cycle.paused]);
-
-  // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
-      audioRef.current?.pause();
-      cacheRef.current.forEach((u) => URL.revokeObjectURL(u));
-      cacheRef.current.clear();
-      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      ambientStopRef.current?.();
+      ctxRef.current?.close().catch(() => {});
+      stopSpeak();
     };
   }, []);
+
+  // Speak cue when phase changes (ElevenLabs via shared TTS helper)
+  useEffect(() => {
+    if (!voice || cycle.paused) return;
+    primeAudio();
+    speakTTS(phase.cue, voiceId).catch(() => {});
+    return () => { stopSpeak(); };
+  }, [phase.cue, voice, cycle.paused, voiceId]);
 
   return (
     <div
@@ -637,41 +621,47 @@ function ImmersivePlayer({
             </span>
           </div>
 
-          <button
-            onClick={onHelp}
-            aria-label="Ayuda"
-            className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
-          >
-            <HelpCircle size={20} />
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Ajustes"
+              className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
+            >
+              <Settings2 size={18} />
+            </button>
+            <button
+              onClick={onHelp}
+              aria-label="Ayuda"
+              className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
+            >
+              <HelpCircle size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Centro libre */}
         <div className="flex-1" />
 
-        {/* Bloque inferior: instrucción + contador + cue + controles */}
-        <div className="flex flex-col items-center text-center gap-4">
+        {/* Bloque inferior: instrucción + contador + controles */}
+        <div className="flex flex-col items-center text-center gap-3">
           <AnimatePresence mode="wait">
             <motion.div
               key={phase.id + cycle.phaseIdx}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.4 }}
-              className="flex flex-col items-center gap-2"
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.35 }}
+              className="flex flex-col items-center gap-1"
             >
               <div
-                className="text-5xl font-light uppercase tracking-[0.08em]"
+                className="text-2xl font-medium uppercase tracking-[0.18em]"
                 style={{ color: accent }}
               >
                 {phase.label}
               </div>
-              <div className="text-6xl font-light text-white/90 tabular-nums leading-none">
+              <div className="text-4xl font-light text-white/90 tabular-nums leading-none">
                 {secondsLeftInPhase}
               </div>
-              {voice && (
-                <p className="text-sm italic text-white/70 px-6 max-w-[320px]">{phase.cue}</p>
-              )}
             </motion.div>
           </AnimatePresence>
 
@@ -691,9 +681,95 @@ function ImmersivePlayer({
           </div>
         </div>
       </div>
+
+      {/* Panel de ajustes */}
+      <AnimatePresence>
+        {settingsOpen && (
+          <SessionSettings
+            voice={voice}
+            setVoice={setVoice}
+            ambientId={ambientId}
+            setAmbientId={setAmbientId}
+            onClose={() => setSettingsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+
+function SessionSettings({
+  voice, setVoice, ambientId, setAmbientId, onClose,
+}: {
+  voice: boolean; setVoice: (b: boolean) => void;
+  ambientId: string; setAmbientId: (id: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <motion.div
+      className="absolute inset-0 z-20 flex items-end justify-center bg-black/40 backdrop-blur-sm"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        onClick={(e) => e.stopPropagation()}
+        initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }}
+        transition={{ type: "spring", damping: 22, stiffness: 220 }}
+        className="w-full max-w-md rounded-t-3xl bg-[#101927] border-t border-white/10 p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]"
+      >
+        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/20" />
+        <h3 className="text-white text-[15px] font-semibold mb-4">Ajustes de la práctica</h3>
+
+        <div className="flex items-center justify-between py-3 border-b border-white/10">
+          <div>
+            <div className="text-white text-[13.5px] font-semibold">Voz de Guía</div>
+            <div className="text-white/55 text-[11px]">Indicaciones para cada fase</div>
+          </div>
+          <button
+            onClick={() => setVoice(!voice)}
+            className={`relative w-12 h-7 rounded-full transition ${voice ? "bg-[#7cc2c8]" : "bg-white/15"}`}
+            aria-pressed={voice}
+          >
+            <span className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all"
+                  style={{ left: voice ? "22px" : "2px" }} />
+          </button>
+        </div>
+
+        <div className="mt-4">
+          <div className="text-white/70 text-[11px] uppercase tracking-[0.18em] font-semibold mb-2">Sonido de fondo</div>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            {AMBIENT_SOUNDS.filter(s =>
+              ["off","rain_soft","forest_dawn","waves_soft","crickets_night","campfire","white_noise","drone_pad"].includes(s.id)
+            ).map((s) => {
+              const active = ambientId === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setAmbientId(s.id)}
+                  className={`shrink-0 px-3.5 h-9 rounded-full text-[12px] font-semibold transition border ${
+                    active
+                      ? "bg-[#7cc2c8] text-[#101927] border-[#7cc2c8]"
+                      : "bg-white/5 text-white/80 border-white/15"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="mt-5 w-full h-11 rounded-full bg-white text-[#101927] font-semibold text-[13.5px] active:scale-[0.98]"
+        >
+          Listo
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 
 function formatTime(s: number) {
   const m = Math.floor(s / 60);
@@ -809,58 +885,57 @@ function VisualizerSleep({ phase, progress }: { phase: Phase; progress: number }
 }
 
 function VisualizerSigh({ phase, progress }: { phase: Phase; progress: number }) {
-  // Sine wave + sliding ball; 0..1 across the curve depending on phase
-  const totalDur = 9; // 2+1+6
-  const tStart = phase.id === "inhale" ? 0 : phase.id === "inhale2" ? 2 / totalDur : 3 / totalDur;
-  const tEnd   = phase.id === "inhale" ? 2 / totalDur : phase.id === "inhale2" ? 3 / totalDur : 1;
-  const t = tStart + (tEnd - tStart) * progress;
+  // Continuous scrolling sine wave that slides left infinitely.
+  // The ball stays anchored at the screen center; its Y rises on inhale, drops on exhale.
+  const W = 360, H = 200;
+  const amp = 48;
+  const midY = H / 2;
+  const wavelength = 140;
 
-  const W = 320, H = 180, padX = 16;
-  const x = padX + t * (W - 2 * padX);
-  // y: rises through first 1/3, micro jump, then long descent
-  const yFor = (tt: number) => {
-    if (tt < 2 / totalDur) {
-      const k = tt / (2 / totalDur);
-      return H - 30 - k * 70;
-    }
-    if (tt < 3 / totalDur) {
-      const k = (tt - 2 / totalDur) / (1 / totalDur);
-      return H - 100 - k * 40;
-    }
-    const k = (tt - 3 / totalDur) / (6 / totalDur);
-    return H - 140 + k * 110;
-  };
-  const y = yFor(t);
+  // Static sine path that spans 3 wavelengths and gets translated horizontally.
   const pathD = useMemo(() => {
-    let d = `M ${padX} ${yFor(0)}`;
-    const steps = 80;
+    const steps = 240;
+    const span = W * 2;
+    let d = `M 0 ${midY}`;
     for (let i = 1; i <= steps; i++) {
-      const tt = i / steps;
-      const xx = padX + tt * (W - 2 * padX);
-      d += ` L ${xx.toFixed(1)} ${yFor(tt).toFixed(1)}`;
+      const x = (i / steps) * span;
+      const y = midY - Math.sin((x / wavelength) * Math.PI * 2) * amp;
+      d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
     }
     return d;
   }, []);
 
+  // Ball Y: inhale (4s) → goes up; exhale (6s) → goes down. Continuous.
+  const ballY = phase.id === "inhale"
+    ? midY + amp - progress * (amp * 2)        // from low → high
+    : midY - amp + progress * (amp * 2);       // from high → low
+
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-[88%] h-[80%]">
+    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-[100%] h-[70%]" preserveAspectRatio="none">
         <defs>
           <linearGradient id="sighStroke" x1="0" x2="1">
-            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.25" />
-            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0.9" />
+            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.15" />
+            <stop offset="0.5" stopColor="#7cc2c8" stopOpacity="0.85" />
+            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0.15" />
           </linearGradient>
           <radialGradient id="sighBall">
             <stop offset="0" stopColor="#fff" />
             <stop offset="1" stopColor="#7cc2c8" />
           </radialGradient>
         </defs>
-        <path d={pathD} fill="none" stroke="url(#sighStroke)" strokeWidth={2.5} strokeLinecap="round" />
-        <circle cx={x} cy={y} r={9} fill="url(#sighBall)" style={{ filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.6))" }} />
+        {/* Two stacked paths translated for seamless scrolling */}
+        <g style={{ animation: "wave-scroll 6s linear infinite" }}>
+          <path d={pathD} fill="none" stroke="url(#sighStroke)" strokeWidth={2.4} strokeLinecap="round" />
+        </g>
+        <circle cx={W / 2} cy={ballY} r={10} fill="url(#sighBall)"
+          style={{ filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.7))", transition: "cy 120ms linear" }} />
       </svg>
+      <style>{`@keyframes wave-scroll{0%{transform:translateX(0)}100%{transform:translateX(-${wavelength}px)}}`}</style>
     </div>
   );
 }
+
 
 function VisualizerBox({ phase, progress }: { phase: Phase; progress: number }) {
   const S = 200, X = 60, Y = 40;
