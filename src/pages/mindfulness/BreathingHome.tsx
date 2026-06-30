@@ -484,19 +484,28 @@ function PatternCard({
    Pantalla 2 · Ajuste de sesión
    ============================================================ */
 function SetupScreen({
-  pattern, minutes, setMinutes, voice, setVoice, ambient, setAmbient, onStart,
+  pattern, minutes, setMinutes, voice, setVoice, ambient, setAmbient,
+  voiceVolume, setVoiceVolume, ambientId, setAmbientId, ambientVolume, setAmbientVolume,
+  onStart,
 }: {
   pattern: PatternMeta;
   minutes: number; setMinutes: (n: number) => void;
   voice: boolean; setVoice: (b: boolean) => void;
   ambient: boolean; setAmbient: (b: boolean) => void;
+  voiceVolume: number; setVoiceVolume: (n: number) => void;
+  ambientId: string; setAmbientId: (id: string) => void;
+  ambientVolume: number; setAmbientVolume: (n: number) => void;
   onStart: () => void;
 }) {
   const { Icon } = pattern;
   const marks = [1, 5, 10, 15, 20];
+  const ambientOptions = AMBIENT_SOUNDS;
   return (
     <div className="pt-2">
-      <h1 className="text-center font-serifElegant text-[24px] text-[#101927] mt-3">¿Cuánto tiempo tenés?</h1>
+      <h1 className="text-center font-serifElegant text-[24px] text-[#101927] mt-3">Tus ajustes</h1>
+      <p className="text-center text-[11.5px] text-[#101927]/55 mt-1">
+        Se guardan como predeterminados para tus próximas prácticas.
+      </p>
 
       {/* Resumen ejercicio */}
       <div className="mt-5 rounded-[20px] bg-white/70 backdrop-blur-xl border border-white/70 p-3.5 flex items-center gap-3 shadow-sm">
@@ -509,17 +518,14 @@ function SetupScreen({
         </div>
       </div>
 
-      {/* Slider */}
+      {/* Tiempo */}
       <div className="mt-4 rounded-[20px] bg-white/70 backdrop-blur-xl border border-white/70 p-4 shadow-sm">
         <div className="flex items-end justify-between">
           <div className="text-[10px] tracking-[0.2em] uppercase text-[#101927]/50 font-semibold">Tiempo de práctica</div>
           <div className="text-[22px] font-bold text-[#101927]">{minutes} <span className="text-[13px] font-medium text-[#101927]/55">Minutos</span></div>
         </div>
         <input
-          type="range"
-          min={1}
-          max={20}
-          value={minutes}
+          type="range" min={1} max={20} value={minutes}
           onChange={(e) => setMinutes(parseInt(e.target.value, 10))}
           className="resma-slider mt-3 w-full"
           style={{ accentColor: "#7cc2c8" }}
@@ -529,20 +535,66 @@ function SetupScreen({
         </div>
       </div>
 
-      {/* Toggles */}
-      <div className="mt-4 rounded-[20px] bg-white/70 backdrop-blur-xl border border-white/70 p-1 shadow-sm divide-y divide-[#101927]/5">
+      {/* Voz */}
+      <div className="mt-4 rounded-[20px] bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm overflow-hidden">
         <ToggleRow
-          title="Activar Voz de Guía"
+          title="Voz de guía"
           sub="Indicaciones sutiles para inspirar y exhalar"
           value={voice}
           onChange={setVoice}
         />
+        {voice && (
+          <div className="px-3.5 pb-3.5">
+            <div className="flex items-center justify-between text-[10px] tracking-[0.18em] uppercase text-[#101927]/50 font-semibold">
+              <span>Volumen voz</span>
+              <span className="tabular-nums text-[#101927]/70">{Math.round(voiceVolume * 100)}%</span>
+            </div>
+            <input
+              type="range" min={0} max={1} step={0.05} value={voiceVolume}
+              onChange={(e) => setVoiceVolume(parseFloat(e.target.value))}
+              className="resma-slider mt-2 w-full"
+              style={{ accentColor: "#7cc2c8" }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Ambiente */}
+      <div className="mt-4 rounded-[20px] bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm overflow-hidden">
         <ToggleRow
-          title="Sonido de Fondo (Ambiente)"
-          sub="Lluvia tenue para aislar el entorno"
+          title="Sonido ambiente"
+          sub="Acompañá tu respiración con un fondo sonoro"
           value={ambient}
           onChange={setAmbient}
         />
+        {ambient && (
+          <div className="px-3.5 pb-3.5 space-y-3">
+            <div>
+              <div className="text-[10px] tracking-[0.18em] uppercase text-[#101927]/50 font-semibold mb-1.5">Paisaje sonoro</div>
+              <select
+                value={ambientId}
+                onChange={(e) => setAmbientId(e.target.value)}
+                className="w-full h-10 rounded-xl border border-[#101927]/10 bg-white px-3 text-[13px] text-[#101927] focus:outline-none focus:ring-2 focus:ring-[#7cc2c8]/40"
+              >
+                {ambientOptions.map((s) => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <div className="flex items-center justify-between text-[10px] tracking-[0.18em] uppercase text-[#101927]/50 font-semibold">
+                <span>Volumen ambiente</span>
+                <span className="tabular-nums text-[#101927]/70">{Math.round(ambientVolume * 100)}%</span>
+              </div>
+              <input
+                type="range" min={0} max={1} step={0.05} value={ambientVolume}
+                onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
+                className="resma-slider mt-2 w-full"
+                style={{ accentColor: "#7cc2c8" }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* CTA */}
