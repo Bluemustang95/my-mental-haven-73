@@ -666,9 +666,6 @@ function ImmersivePlayer({
               >
                 {phase.label}
               </div>
-              <div className="text-4xl font-light text-white/90 tabular-nums leading-none">
-                {secondsLeftInPhase}
-              </div>
             </motion.div>
           </AnimatePresence>
 
