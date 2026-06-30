@@ -664,9 +664,13 @@ function ImmersivePlayer({
             <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold">
               {pattern.title}
             </span>
-            <span className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-semibold text-[15px] tabular-nums">
+            <button
+              onClick={() => setTimeEditOpen(true)}
+              aria-label="Ajustar tiempo de esta sesión"
+              className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-semibold text-[15px] tabular-nums active:scale-95 transition"
+            >
               {formatTime(cycle.remaining)}
-            </span>
+            </button>
           </div>
 
           <div className="flex gap-2">
