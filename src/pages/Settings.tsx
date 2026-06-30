@@ -202,6 +202,14 @@ export default function Settings() {
             checked={notifications}
             onChange={toggleNotifs}
           />
+          {bioSupported && (
+            <RowToggle
+              icon={<Fingerprint size={18} />}
+              label="Acceso con Face ID / huella"
+              checked={bioOn}
+              onChange={toggleBio}
+            />
+          )}
         </Group>
 
         {/* Seguridad */}
