@@ -522,7 +522,7 @@ function ToggleRow({ title, sub, value, onChange }: { title: string; sub: string
    ============================================================ */
 const PATTERN_BG: Record<PatternId, string> = {
   "478":       "linear-gradient(180deg,#0c1530 0%,#162447 100%)",
-  "sigh":      "linear-gradient(180deg,#0b2a2c 0%,#14545a 100%)",
+  "sigh":      "linear-gradient(180deg,#0d1f1f 0%,#16302f 60%,#0d1f1f 100%)",
   "box":       "linear-gradient(180deg,#0e2418 0%,#1F3B26 100%)",
   "coherence": "linear-gradient(180deg,#2b1d05 0%,#4a3210 100%)",
 };
