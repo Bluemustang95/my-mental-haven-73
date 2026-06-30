@@ -354,14 +354,8 @@ function IntentionScreen({
   onPick: (id: PatternId) => void;
 }) {
   return (
-    <div className="pt-2">
-      <div className="text-center mt-2">
-        <h1 className="font-serifElegant text-[26px] leading-tight text-[#101927]">¿Qué necesitás ahora?</h1>
-        <p className="text-[12.5px] text-[#101927]/55 mt-1.5 px-4">
-          Elegí una intención y te sugerimos el patrón adecuado.
-        </p>
-      </div>
-      <div className="mt-5 grid grid-cols-2 gap-3">
+    <div className="pt-6">
+      <div className="grid grid-cols-2 gap-3">
         {PATTERNS.map((p) => (
           <PatternCard
             key={p.id}
@@ -376,31 +370,39 @@ function IntentionScreen({
   );
 }
 
+// Per-pattern card fill (semi-transparent tint of the accent)
+const CARD_FILL: Record<PatternId, { bg: string; border: string }> = {
+  "478":       { bg: "linear-gradient(160deg,#F1EEFF 0%,#E1DBFB 100%)", border: "#C9C0F4" },
+  "sigh":      { bg: "linear-gradient(160deg,#E6F6F7 0%,#C7EBEE 100%)", border: "#9FD9DE" },
+  "box":       { bg: "linear-gradient(160deg,#E8F5EB 0%,#C8E5CF 100%)", border: "#A4D2B0" },
+  "coherence": { bg: "linear-gradient(160deg,#FFF3DA 0%,#FCE3AE 100%)", border: "#F2CE82" },
+};
+
 function PatternCard({
   p, fav, onToggleFav, onPick,
 }: { p: PatternMeta; fav: boolean; onToggleFav: () => void; onPick: () => void }) {
   const { Icon } = p;
+  const fill = CARD_FILL[p.id];
   return (
     <button
       onClick={onPick}
-      className="relative text-left rounded-3xl p-4 bg-white border border-[#101927]/5 shadow-[0_6px_20px_-10px_rgba(16,25,39,0.18)] active:scale-[0.98] transition"
+      className="relative text-left rounded-3xl p-5 min-h-[150px] flex flex-col justify-between active:scale-[0.98] transition shadow-[0_8px_24px_-12px_rgba(16,25,39,0.18)]"
+      style={{ background: fill.bg, border: `1px solid ${fill.border}` }}
     >
       <span
         role="button"
         tabIndex={0}
         onClick={(e) => { e.stopPropagation(); onToggleFav(); }}
         onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onToggleFav(); } }}
-        className="absolute top-3 right-3 text-[#7cc2c8]"
+        className="absolute top-3 right-3 text-[#101927]/55"
         aria-label="Marcar favorito"
       >
-        <Star size={16} fill={fav ? "#7cc2c8" : "transparent"} strokeWidth={1.8} />
+        <Star size={16} fill={fav ? "#101927" : "transparent"} strokeWidth={1.8} />
       </span>
-      <div className={`h-12 w-12 rounded-full ${p.iconBg} flex items-center justify-center`}>
+      <div className={`h-12 w-12 rounded-full bg-white/70 flex items-center justify-center shadow-sm`}>
         <Icon size={22} className={p.iconColor} />
       </div>
-      <div className="mt-3 font-semibold text-[15px] text-[#101927] leading-tight">{p.title}</div>
-      <div className="text-[11.5px] text-[#101927]/55 mt-1 leading-snug line-clamp-2">{p.description}</div>
-      <div className="text-[10px] uppercase tracking-[0.16em] text-[#101927]/40 font-semibold mt-2">{p.short}</div>
+      <div className="mt-4 font-semibold text-[16px] text-[#101927] leading-tight">{p.title}</div>
     </button>
   );
 }
