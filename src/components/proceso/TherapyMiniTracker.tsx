@@ -56,7 +56,7 @@ export function TherapyMiniTracker({
       });
   }, [assigned, user, proName, pro?.phone, pro?.email, pro?.license, state]);
 
-  // Once contact is confirmed → render full professional card
+  // Once contact is confirmed → render full professional card (with bento)
   if (contactConfirmed && assigned && proName) {
     return (
       <FullProfessionalCard
@@ -127,6 +127,14 @@ export function TherapyMiniTracker({
           Estamos buscando un profesional ideal para vos. Te avisamos apenas se asigne.
         </p>
       )}
+
+      {/* Acceso a herramientas siempre disponible cuando el toggle está activo */}
+      <div className="grid grid-cols-2 gap-2.5 pt-1">
+        <MiniBento icon={<Mail size={15} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Soporte RESMA" sub="Asistencia técnica y clínica." onClick={() => (window.location.href = "mailto:support@resma.com.ar")} />
+        <MiniBento icon={<FileText size={15} className="text-[#b45309]" />} iconBg="bg-[#facb60]/20" title="Resumen Psico" sub="Reportes y hábitos." onClick={() => navigate("/mi-proceso/resumen")} />
+        <MiniBento icon={<NotebookPen size={15} className="text-[#7c3aed]" />} iconBg="bg-[#7c3aed]/12" title="Notas de Sesión" sub="Temas y dudas." onClick={() => navigate("/mi-proceso/terapia")} />
+        <MiniBento icon={<Pill size={15} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Medicación" sub="Próxima toma: Al día" onClick={() => navigate("/mi-proceso/medicacion")} />
+      </div>
 
       <ContactConfirmDialog
         open={confirmOpen}
