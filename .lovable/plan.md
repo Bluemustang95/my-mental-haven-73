@@ -1,14 +1,17 @@
-## Plan de ajustes: Reproductor Inmersivo (Bajar Ansiedad)
+## Fix "Bajar Ansiedad": fondo unificado a pantalla completa
 
-### Cambios
-1. **Fondo pantalla completa**
-   - En `ImmersivePlayer` (`src/pages/mindfulness/BreathingHome.tsx`), cambiar el contenedor raíz de `relative min-h-screen w-full` a `fixed inset-0 z-50` para garantizar que el fondo gradiente cubra toda la pantalla sin importar el layout padre (`AppLayout`) ni barras de navegación del sistema.
+**Problema**: el SVG de `VisualizerSigh` pinta su propio gradiente verde (`#0d1f1f → #1a3838`) sobre un rectángulo `340×280` con aspect ratio preservado, mientras el contenedor del player usa otro gradiente (`#0b2a2c → #14545a`). Resultado: una franja verde más clara con bordes verdes oscuros arriba y abajo.
 
-2. **Eliminar contador numérico de fase**
-   - En el bloque inferior del `ImmersivePlayer`, remover el `<div>` que renderiza `secondsLeftInPhase` (el número grande debajo de "Inhalá"/"Exhalá"). Solo se conserva la etiqueta de texto de la fase (`phase.label`).
+### Cambios en `src/pages/mindfulness/BreathingHome.tsx`
 
-### Archivos a editar
-- `src/pages/mindfulness/BreathingHome.tsx` (líneas del contenedor `ImmersivePlayer` y del bloque inferior de UI)
+1. **`VisualizerSigh`**: eliminar el `background` del `<svg>` y hacer que el SVG cubra todo el área disponible.
+   - Contenedor wrapper `absolute inset-0` sin `flex/justify-center`.
+   - `<svg>` con `width:"100%" height:"100%"` y `preserveAspectRatio="xMidYMid slice"` para que el viewBox se estire/cropee y no deje bandas.
+   - Quitar el `style={{ background: ... }}` del SVG por completo (el fondo lo aporta el contenedor padre del player).
 
-### Sin cambios en
-- Lógica de respiración, timers, visualizadores SVG, ajustes de voz/ambiente, ni schema de base de datos.
+2. **`PATTERN_BG.sigh`** (línea 525): unificar al mismo verde profundo que usa el visualizador para que la transición sea imperceptible y sea un único tono. Nuevo gradiente vertical:
+   `linear-gradient(180deg, #0d1f1f 0%, #16302f 60%, #0d1f1f 100%)`.
+
+### Sin cambios
+- Lógica de respiración, fases, halo, bola, máscara de fade.
+- Otros visualizadores ni UI superpuesta.
