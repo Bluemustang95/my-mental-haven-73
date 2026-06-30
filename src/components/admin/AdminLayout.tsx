@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, Brain, Sparkles, Wind, Palette, Activity,
   TrendingUp, BookOpen, Zap, Bell, ChevronDown, LogOut, ShieldCheck, Plus,
+  ClipboardList, Star, LifeBuoy,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -18,7 +19,16 @@ const SECTIONS: NavSection[] = [
     label: "Principal",
     items: [
       { title: "Dashboard Global", url: "/admin/dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    id: "pacientes",
+    label: "Pacientes",
+    items: [
       { title: "CRM Pacientes", url: "/admin/pacientes", icon: Users },
+      { title: "Solicitudes tratamiento", url: "/admin/solicitudes", icon: ClipboardList },
+      { title: "Reseñas", url: "/admin/resenas", icon: Star },
+      { title: "Líneas de crisis", url: "/admin/lineas-crisis", icon: LifeBuoy },
     ],
   },
   {
@@ -61,7 +71,7 @@ export function AdminLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState<Record<string, boolean>>({
-    principal: true, recursos: true, monitoreo: true, cms: true, comms: true,
+    principal: true, pacientes: true, recursos: true, monitoreo: true, cms: true, comms: true,
   });
 
   return (

@@ -109,6 +109,8 @@ import EscanerAdmin from "@/pages/admin/modules/EscanerAdmin";
 import HabitosAdmin from "@/pages/admin/modules/HabitosAdmin";
 import ProgresoAdmin from "@/pages/admin/modules/ProgresoAdmin";
 import NotificacionesAdmin from "@/pages/admin/modules/NotificacionesAdmin";
+import PatientReviews from "@/pages/admin/PatientReviews";
+import CrisisHotlinesManager from "@/pages/admin/CrisisHotlinesManager";
 
 
 const queryClient = new QueryClient();
@@ -241,6 +243,8 @@ const App = () => (
               <Route path="/admin/recursos" element={<ResourcesManager />} />
               <Route path="/admin/recursos/:slug" element={<ResourceDetail />} />
               <Route path="/admin/solicitudes" element={<TreatmentRequests />} />
+              <Route path="/admin/resenas" element={<PatientReviews />} />
+              <Route path="/admin/lineas-crisis" element={<CrisisHotlinesManager />} />
               <Route path="/admin/cuestionario" element={<QuestionnaireManager />} />
               <Route path="/admin/configuracion" element={<SystemSettings />} />
               <Route path="/admin/estadisticas" element={<AdminStats />} />
