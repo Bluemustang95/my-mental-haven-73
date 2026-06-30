@@ -111,6 +111,7 @@ import ProgresoAdmin from "@/pages/admin/modules/ProgresoAdmin";
 import NotificacionesAdmin from "@/pages/admin/modules/NotificacionesAdmin";
 import PatientReviews from "@/pages/admin/PatientReviews";
 import CrisisHotlinesManager from "@/pages/admin/CrisisHotlinesManager";
+import CountryViewSwitcher from "@/pages/admin/CountryViewSwitcher";
 
 
 const queryClient = new QueryClient();
@@ -245,6 +246,7 @@ const App = () => (
               <Route path="/admin/solicitudes" element={<TreatmentRequests />} />
               <Route path="/admin/resenas" element={<PatientReviews />} />
               <Route path="/admin/lineas-crisis" element={<CrisisHotlinesManager />} />
+              <Route path="/admin/vista-pais" element={<CountryViewSwitcher />} />
               <Route path="/admin/cuestionario" element={<QuestionnaireManager />} />
               <Route path="/admin/configuracion" element={<SystemSettings />} />
               <Route path="/admin/estadisticas" element={<AdminStats />} />

@@ -172,6 +172,26 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
             },
             { onConflict: "user_id" },
           );
+
+          // Mirror submission into patients_intake so admin sees every form submitted.
+          const age = birthDate
+            ? Math.max(0, new Date().getFullYear() - Number(birthDate.slice(0, 4)))
+            : null;
+          const zone = modality === "Presencial" && province
+            ? `${province}${locality ? ` / ${locality}` : ""}`
+            : modality === "Online" ? "Online" : null;
+          await supabase.from("patients_intake").insert({
+            user_id: user.id,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            email: email.trim() || null,
+            phone: normPhone,
+            modality: modality || null,
+            age,
+            zone,
+            reason: description.trim().slice(0, 2000) || null,
+            status: result.data?.deduplicated ? "contacted" : "pending",
+          });
         }
         toast.success(
           result.data?.deduplicated

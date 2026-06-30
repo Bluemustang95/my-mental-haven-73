@@ -23,6 +23,8 @@ import { BeckTestRunner } from "@/components/proceso/BeckTestRunner";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
 
 
 
@@ -38,7 +40,10 @@ export default function MiProceso() {
   const [linkedPhone, setLinkedPhone] = useState<string | null>(null);
   const [bridgeLastState, setBridgeLastState] = useState<string | null>(null);
   const [therapistName, setTherapistName] = useState<string | null>(null);
-  const [country, setCountry] = useState<string | null>(null);
+  const [realCountry, setRealCountry] = useState<string | null>(null);
+  const [overrideCountry, setOverrideCountry] = useState<string | null>(getCountryOverride());
+  const { isAdmin } = useAdminRole();
+  const country = isAdmin && overrideCountry ? overrideCountry : realCountry;
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   const [surveyOpen, setSurveyOpen] = useState(false);
@@ -70,10 +75,14 @@ export default function MiProceso() {
         setLinkedPhone(data?.linked_phone ?? null);
         setBridgeLastState(data?.bridge_last_state ?? null);
         setTherapistName(data?.therapist_name ?? null);
-        setCountry((data?.country ?? "").toUpperCase() || null);
+        setRealCountry((data?.country ?? "").toUpperCase() || null);
       });
     loadWellbeing().then(setSnap);
   }, [user]);
+
+  useEffect(() => {
+    return subscribeCountryOverride(() => setOverrideCountry(getCountryOverride()));
+  }, []);
 
   const updateTherapy = async (v: boolean) => {
     if (v) return setSyncOpen(true);
@@ -106,6 +115,11 @@ export default function MiProceso() {
       <div className="relative mx-auto w-full max-w-md flex-1 px-5 pt-7 pb-24">
         <h1 className="font-serif text-[20px] font-medium text-[#0f172a]">Mi Proceso</h1>
         <p className="mt-0.5 text-[12px] italic text-[#64748b]">Tu evolución, paso a paso.</p>
+        {isAdmin && overrideCountry && (
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-800">
+            👁 Vista admin · país simulado: {overrideCountry}
+          </div>
+        )}
 
         <p className="mt-5 mb-2.5 flex items-center gap-1.5 font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.18em] text-[#94a3b8]">
           <Activity size={11} /> Estadísticas de impacto
