@@ -504,66 +504,132 @@ function ToggleRow({ title, sub, value, onChange }: { title: string; sub: string
 }
 
 /* ============================================================
-   Pantalla 3 · Reproductor
+   Pantalla 3 · Reproductor Inmersivo (full-screen)
    ============================================================ */
-function PlayerScreen({
-  pattern, minutes, voice, onFinish, onStop,
+const PATTERN_BG: Record<PatternId, string> = {
+  "478":       "linear-gradient(180deg,#0c1530 0%,#162447 100%)",
+  "sigh":      "linear-gradient(180deg,#0b2a2c 0%,#14545a 100%)",
+  "box":       "linear-gradient(180deg,#0e2418 0%,#1F3B26 100%)",
+  "coherence": "linear-gradient(180deg,#2b1d05 0%,#4a3210 100%)",
+};
+const PATTERN_TEXT_ACCENT: Record<PatternId, string> = {
+  "478":       "#A7D8A3",
+  "sigh":      "#7CC2C8",
+  "box":       "#7FCB8E",
+  "coherence": "#F5C56A",
+};
+
+function ImmersivePlayer({
+  pattern, minutes, voice, onBack, onHelp, onStop, onFinish,
 }: {
   pattern: PatternMeta; minutes: number; voice: boolean; ambient: boolean;
-  onFinish: () => void; onStop: () => void;
+  onBack: () => void; onHelp: () => void; onStop: () => void; onFinish: () => void;
 }) {
   const cycle = useBreathingCycle(pattern, minutes * 60, onFinish);
   const phase = pattern.phases[cycle.phaseIdx];
+  const accent = PATTERN_TEXT_ACCENT[pattern.id];
+  const secondsLeftInPhase = Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed));
+
+  // TTS por fase
+  useEffect(() => {
+    if (!voice || cycle.paused) return;
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(phase.cue);
+    u.lang = "es-AR";
+    u.rate = 0.9;
+    u.pitch = 1.02;
+    window.speechSynthesis.speak(u);
+    return () => window.speechSynthesis.cancel();
+  }, [phase.cue, voice, cycle.paused]);
 
   return (
-    <div className="pt-4">
-      {/* Visualizer */}
-      <div className="relative h-[300px] rounded-[26px] overflow-hidden border border-white/70"
-           style={{ background: pattern.id === "478"
-             ? "linear-gradient(180deg,#0c1530 0%,#162447 100%)"
-             : "linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.35))" }}>
-        {pattern.id === "478"      && <VisualizerSleep phase={phase} progress={cycle.phaseProgress} />}
-        {pattern.id === "sigh"     && <VisualizerSigh phase={phase} progress={cycle.phaseProgress} />}
-        {pattern.id === "box"      && <VisualizerBox phase={phase} progress={cycle.phaseProgress} />}
-        {pattern.id === "coherence"&& <VisualizerCoherence phase={phase} progress={cycle.phaseProgress} />}
-        <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2">
-          <span className="text-[12px] font-semibold tracking-[0.28em] uppercase"
-                style={{ color: pattern.id === "478" ? "#a7d8a3" : pattern.accent }}>
-            {phase.label}
-          </span>
-          <span className={`text-[24px] font-bold ${pattern.id === "478" ? "text-white" : "text-[#101927]"}`}>
-            {Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed))}s
-          </span>
-        </div>
+    <div
+      className="fixed inset-0 z-[60] overflow-hidden"
+      style={{ background: PATTERN_BG[pattern.id] }}
+    >
+      {/* Capa 0: animación fondo */}
+      <div className="absolute inset-0">
+        {pattern.id === "478"       && <VisualizerSleep phase={phase} progress={cycle.phaseProgress} />}
+        {pattern.id === "sigh"      && <VisualizerSigh phase={phase} progress={cycle.phaseProgress} />}
+        {pattern.id === "box"       && <VisualizerBox phase={phase} progress={cycle.phaseProgress} />}
+        {pattern.id === "coherence" && <VisualizerCoherence phase={phase} progress={cycle.phaseProgress} />}
       </div>
 
-      {/* Subtítulos dinámicos */}
-      {voice && (
-        <div className="mt-3 rounded-2xl bg-white/65 backdrop-blur-xl border border-white/70 px-4 py-3 text-center">
-          <p className="font-serifElegant italic text-[13.5px] text-[#101927]/80 leading-snug">{phase.cue}</p>
+      {/* Capa 1: UI superpuesta */}
+      <div className="relative z-10 flex flex-col h-full justify-between p-5 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.25rem)]">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <button
+            onClick={onBack}
+            aria-label="Volver"
+            className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          <div className="flex flex-col items-center gap-1.5 pt-1">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold">
+              {pattern.title}
+            </span>
+            <span className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-semibold text-[15px] tabular-nums">
+              {formatTime(cycle.remaining)}
+            </span>
+          </div>
+
+          <button
+            onClick={onHelp}
+            aria-label="Ayuda"
+            className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
+          >
+            <HelpCircle size={20} />
+          </button>
         </div>
-      )}
 
-      {/* Timer */}
-      <div className="mt-5 text-center">
-        <div className="text-[10px] tracking-[0.28em] uppercase font-semibold text-[#101927]/45">Tiempo restante</div>
-        <div className="text-[34px] font-bold text-[#101927] mt-1 tabular-nums">{formatTime(cycle.remaining)}</div>
-      </div>
+        {/* Centro libre */}
+        <div className="flex-1" />
 
-      {/* Controles */}
-      <div className="mt-3 flex items-center justify-center gap-3">
-        <button
-          onClick={cycle.toggle}
-          className="px-5 h-11 rounded-full bg-white/85 backdrop-blur-md border border-white/70 text-[#101927] font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
-        >
-          {cycle.paused ? <><Play size={14} /> Reanudar</> : <><Pause size={14} /> Pausar</>}
-        </button>
-        <button
-          onClick={onStop}
-          className="px-5 h-11 rounded-full bg-white/85 backdrop-blur-md border border-white/70 text-[#101927] font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
-        >
-          <X size={14} /> Detener
-        </button>
+        {/* Bloque inferior: instrucción + contador + cue + controles */}
+        <div className="flex flex-col items-center text-center gap-4">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={phase.id + cycle.phaseIdx}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col items-center gap-2"
+            >
+              <div
+                className="text-5xl font-light uppercase tracking-[0.08em]"
+                style={{ color: accent }}
+              >
+                {phase.label}
+              </div>
+              <div className="text-6xl font-light text-white/90 tabular-nums leading-none">
+                {secondsLeftInPhase}
+              </div>
+              {voice && (
+                <p className="text-sm italic text-white/70 px-6 max-w-[320px]">{phase.cue}</p>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="mt-2 flex items-center justify-center gap-3">
+            <button
+              onClick={cycle.toggle}
+              className="px-5 h-11 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
+            >
+              {cycle.paused ? <><Play size={14} /> Reanudar</> : <><Pause size={14} /> Pausar</>}
+            </button>
+            <button
+              onClick={onStop}
+              className="px-5 h-11 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
+            >
+              <X size={14} /> Detener
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
