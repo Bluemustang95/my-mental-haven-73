@@ -590,9 +590,19 @@ const PATTERN_TEXT_ACCENT: Record<PatternId, string> = {
 
 
 function ImmersivePlayer({
-  pattern, minutes, setMinutes, voice: initialVoice, ambient: initialAmbient, onBack, onHelp, onStop, onFinish,
+  pattern, minutes, setMinutes,
+  voice, setVoice,
+  voiceVolume, setVoiceVolume,
+  ambientId, setAmbientId,
+  ambientVolume, setAmbientVolume,
+  onBack, onHelp, onStop, onFinish,
 }: {
-  pattern: PatternMeta; minutes: number; setMinutes: (m: number) => void; voice: boolean; ambient: boolean;
+  pattern: PatternMeta;
+  minutes: number; setMinutes: (m: number) => void;
+  voice: boolean; setVoice: (b: boolean) => void;
+  voiceVolume: number; setVoiceVolume: (n: number) => void;
+  ambientId: string; setAmbientId: (id: string) => void;
+  ambientVolume: number; setAmbientVolume: (n: number) => void;
   onBack: () => void; onHelp: () => void; onStop: () => void; onFinish: () => void;
 }) {
   const cycle = useBreathingCycle(pattern, minutes * 60, onFinish);
@@ -600,12 +610,6 @@ function ImmersivePlayer({
   const accent = PATTERN_TEXT_ACCENT[pattern.id];
   const secondsLeftInPhase = Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed));
   const [timeEditOpen, setTimeEditOpen] = useState(false);
-
-  // Settings live state
-  const [voice, setVoice] = useState(initialVoice);
-  const [ambientId, setAmbientId] = useState<string>(initialAmbient ? "rain_soft" : "off");
-  const [voiceVolume, setVoiceVolume] = useState(0.9);
-  const [ambientVolume, setAmbientVolume] = useState(0.5);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { voiceId } = useUserVoice();
 
