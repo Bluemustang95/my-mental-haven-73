@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, Brain, Sparkles, Wind, Palette, Activity,
   TrendingUp, BookOpen, Zap, Bell, ChevronDown, LogOut, ShieldCheck, Plus,
-  ClipboardList, Star, LifeBuoy,
+  ClipboardList, Star, LifeBuoy, Globe2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -29,6 +29,7 @@ const SECTIONS: NavSection[] = [
       { title: "Solicitudes tratamiento", url: "/admin/solicitudes", icon: ClipboardList },
       { title: "Reseñas", url: "/admin/resenas", icon: Star },
       { title: "Líneas de crisis", url: "/admin/lineas-crisis", icon: LifeBuoy },
+      { title: "Vista por país", url: "/admin/vista-pais", icon: Globe2 },
     ],
   },
   {
