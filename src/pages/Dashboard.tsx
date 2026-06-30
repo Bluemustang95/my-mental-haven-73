@@ -23,7 +23,7 @@ import {
 import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
 import { PendingBento } from "@/components/home/PendingBento";
 
-const GROUP_ORDER_KEY = "home_groups_order_v1";
+const GROUP_ORDER_KEY = "home_groups_order_v2";
 function loadGroupOrder(): string[] {
   try { return JSON.parse(localStorage.getItem(GROUP_ORDER_KEY) || "[]"); } catch { return []; }
 }
@@ -217,55 +217,29 @@ export default function Dashboard() {
         </div>
 
         {widgets.editMode ? (() => {
-          /* Build groups from visible widgets. Camino + Pendientes move as a single block; others are individual. */
-          const visibleIds = new Set(visibleOrdered.map((w) => w.id));
-          const groups: GroupItem[] = [];
-          const caminoIds: WidgetId[] = ["morning", "recommended", "night"];
-          if (caminoIds.some((id) => visibleIds.has(id))) {
-            groups.push({
-              id: "camino",
-              size: "full",
-              render: () => <div className="space-y-2.5">{caminoIds.filter((id) => visibleIds.has(id)).map((id) => <div key={id}>{renderWidget(id)}</div>)}</div>,
-            });
-          }
-          if (visibleIds.has("pending")) {
-            groups.push({
-              id: "pendientes",
-              size: "full",
-              hideable: true,
-              onHide: () => widgets.hide("pending"),
-              render: () => renderWidget("pending"),
-            });
-          }
-          // Individual movable widgets (sueño, mini hábitos, gratitud, notas)
-          const individualIds: WidgetId[] = ["sleep_zone", "mini_habits", "gratitude", "contention_notes"];
-          // Respect persisted order
+          /* Every visible widget is independently draggable + resizable. */
           const persistedOrder = loadGroupOrder();
-          individualIds.forEach((id) => {
-            const w = visibleOrdered.find((x) => x.id === id);
-            if (!w) return;
-            groups.push({
-              id,
-              size: w.size,
-              resizable: true,
-              hideable: true,
-              onHide: () => widgets.hide(id),
-              onToggleSize: () => widgets.setSize(id, w.size === "full" ? "half" : "full"),
-              render: () => renderWidget(id),
-            });
+          const ordered = [...visibleOrdered].sort((a, b) => {
+            const ia = persistedOrder.indexOf(a.id);
+            const ib = persistedOrder.indexOf(b.id);
+            return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
           });
-          // Sort by persisted order
-          if (persistedOrder.length) {
-            groups.sort((a, b) => {
-              const ia = persistedOrder.indexOf(a.id);
-              const ib = persistedOrder.indexOf(b.id);
-              return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-            });
-          }
+          const groups: GroupItem[] = ordered.map((w) => ({
+            id: w.id,
+            size: w.size,
+            resizable: true,
+            hideable: true,
+            onHide: () => widgets.hide(w.id),
+            onToggleSize: () => widgets.setSize(w.id, w.size === "full" ? "half" : "full"),
+            render: () => renderWidget(w.id),
+          }));
           return (
             <ReorderableGroupStack
               items={groups}
-              onReorder={(ids) => saveGroupOrder(ids)}
+              onReorder={(ids) => {
+                saveGroupOrder(ids);
+                widgets.reorder(ids as WidgetId[]);
+              }}
             />
           );
         })() : (
@@ -346,21 +320,21 @@ function TimelineCard({
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="glass-premium relative flex w-full items-center gap-2.5 rounded-[18px] p-2.5 text-left"
+      className="glass-premium relative flex w-full items-center gap-3 rounded-[20px] p-3 text-left"
     >
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-display text-[12px] font-semibold leading-tight text-resma-navy">{title}</p>
-        <p className="mt-0.5 line-clamp-1 text-[10.5px] leading-snug text-muted-foreground">{subtitle}</p>
+        <p className="font-display text-[13px] font-semibold leading-tight text-resma-navy">{title}</p>
+        <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-muted-foreground">{subtitle}</p>
       </div>
       {done ? (
-        <span className="rounded-full bg-resma-teal/15 px-1.5 py-0.5 text-[8.5px] font-semibold uppercase tracking-[0.1em] text-resma-teal">
+        <span className="rounded-full bg-resma-teal/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-resma-teal">
           Hecho
         </span>
       ) : (
-        <ChevronRight size={13} className="text-muted-foreground/50" />
+        <ChevronRight size={14} className="text-muted-foreground/50" />
       )}
     </motion.button>
   );

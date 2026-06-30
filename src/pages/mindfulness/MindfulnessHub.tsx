@@ -1,26 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Wind, Eye, MessageSquare, Plus } from "lucide-react";
+import { ArrowLeft, Wind, Eye, MessageSquare, Sparkles, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { localDateStr } from "@/lib/utils";
 import { addDays, startOfWeek, subDays } from "date-fns";
-import { DayHistorySheet } from "@/components/mindfulness/DayHistorySheet";
 import { QuickAddSheet } from "@/components/mindfulness/QuickAddSheet";
-import { OpenMindfulnessList } from "@/components/mindfulness/OpenMindfulnessList";
-import { RecommendedNowChip } from "@/components/mindfulness/RecommendedNowChip";
-import { StreakBadge } from "@/components/mindfulness/StreakBadge";
 
 export default function MindfulnessHub() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [progressByDate, setProgressByDate] = useState<Record<string, number>>({});
-  const [historyDate, setHistoryDate] = useState<Date | null>(null);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  // (Se eliminó la tarjeta "Continuar" superior — usar OpenMindfulnessList al pie)
 
   useEffect(() => {
     if (!user) return;
@@ -43,12 +36,18 @@ export default function MindfulnessHub() {
     })();
   }, [user]);
 
-  // (La detección de sesión abandonada ahora vive en OpenMindfulnessList)
-
   const todayKey = localDateStr(new Date());
   const didSomethingToday = (progressByDate[todayKey] ?? 0) > 0;
 
   const modules = [
+    {
+      to: "/herramientas/mindfulness/respiracion?intention=balance",
+      icon: Sparkles,
+      title: "Recomendado ahora",
+      desc: "Mira el presente · 2 min",
+      from: "#FCD34D",
+      to2: "#FBBF24",
+    },
     {
       to: "/herramientas/mindfulness/respiracion",
       icon: Wind,
@@ -88,7 +87,7 @@ export default function MindfulnessHub() {
           <p className="font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
             Atención plena
           </p>
-          <StreakBadge progressByDate={progressByDate} />
+          <span className="h-10 w-10" />
         </div>
 
         <div className="mt-5">
@@ -102,12 +101,9 @@ export default function MindfulnessHub() {
             Tres caminos para estar más presente.
           </p>
         </div>
-
-        <RecommendedNowChip />
       </div>
 
-
-      <div className="mx-auto mt-4 max-w-md space-y-2 px-5">
+      <div className="mx-auto mt-5 max-w-md space-y-2 px-5">
         {modules.map((m) => (
           <motion.button
             key={m.to}
@@ -129,10 +125,6 @@ export default function MindfulnessHub() {
             </div>
           </motion.button>
         ))}
-
-        <div className="pt-2">
-          <OpenMindfulnessList />
-        </div>
       </div>
 
       {didSomethingToday && (
@@ -148,12 +140,6 @@ export default function MindfulnessHub() {
         </motion.button>
       )}
 
-      <DayHistorySheet
-        date={historyDate}
-        scope="mindfulness"
-        open={historyOpen}
-        onOpenChange={setHistoryOpen}
-      />
       <QuickAddSheet open={quickAddOpen} onOpenChange={setQuickAddOpen} />
     </div>
   );

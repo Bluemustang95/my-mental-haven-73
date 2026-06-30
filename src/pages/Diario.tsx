@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Clock, Lock, Sparkles, X, Camera, Image as ImageIcon,
   Paperclip, Mic, Pause, Flower, Volume2, VolumeX, FileText,
-  Smile, Tag, Bold, Italic, Plus,
+  Smile, Tag, Bold, Italic, Plus, Search,
 } from "lucide-react";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,7 +98,7 @@ export default function Diario() {
         </>
       )}
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-28 pt-8">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-3 pb-28 pt-6">
         <AnimatePresence mode="wait">
           {view === "write" && (
             <WriteView
@@ -414,7 +414,7 @@ function WriteView({
           onInput={onEditorInput}
           data-placeholder="¿Qué tenés hoy en la cabeza? Soltalo acá…"
           className={cn(
-            "diary-editor h-full min-h-[300px] w-full flex-1 resize-none bg-transparent p-2 pt-1 pr-24 text-[15px] leading-relaxed focus:outline-none whitespace-pre-wrap break-words",
+            "diary-editor h-full min-h-[300px] w-full flex-1 resize-none bg-transparent px-1 pt-1 pr-20 text-[15px] leading-relaxed focus:outline-none whitespace-pre-wrap break-words",
             zen ? "text-slate-100" : "text-[#101927]",
           )}
           style={{ fontFamily: "Lora, serif" }}
@@ -769,6 +769,9 @@ type Entry = { id: string; content: string; entry_date: string | null; emotion_t
 function HistoryView({ onBack }: { onBack: () => void }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -780,85 +783,131 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       setLoading(false);
     })();
   }, []);
+
   const fmt = (s: string | null) => {
     if (!s) return "";
     try { return new Date(s).toLocaleDateString("es-AR", { day: "numeric", month: "long" }); }
     catch { return s; }
   };
+
+  // Strip HTML for plain-text search/preview.
+  const plain = (html: string) => {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return (tmp.textContent ?? "").replace(/\[audio\]/g, "").trim();
+  };
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return entries;
+    return entries.filter((e) => {
+      const text = plain(e.content ?? "").toLowerCase();
+      const date = fmt(e.created_at ?? e.entry_date).toLowerCase();
+      const tags = (e.emotion_tags ?? []).join(" ").toLowerCase();
+      return text.includes(q) || date.includes(q) || tags.includes(q);
+    });
+  }, [entries, query]);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }}
       transition={{ duration: 0.3 }}
       className="flex flex-1 flex-col"
     >
-      <div className="mb-5 flex items-start justify-between">
+      <div className="mb-4 flex items-start justify-between px-1">
         <div>
-          <h1 className="font-mindful text-4xl leading-none">Diario</h1>
-          <p className="mt-1 text-sm text-slate-500">Tu espacio seguro para escribir.</p>
+          <h1 className="font-mindful text-3xl leading-none">Diario</h1>
+          <p className="mt-1 text-xs text-slate-500">Tu espacio seguro para escribir.</p>
         </div>
         <div className="flex gap-2">
-          <button className="grid h-10 w-10 place-items-center rounded-full border border-white/60 bg-white/70 text-[#101927] shadow-sm" aria-label="Privacidad">
-            <Lock size={16} />
+          <button
+            onClick={() => setSearchOpen((v) => !v)}
+            className={cn(
+              "grid h-9 w-9 place-items-center rounded-full border shadow-sm",
+              searchOpen ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#7cc2c8]" : "border-white/60 bg-white/70 text-[#101927]"
+            )}
+            aria-label="Buscar"
+          >
+            <Search size={15} />
           </button>
-          <button onClick={onBack} className="grid h-10 w-10 place-items-center rounded-full bg-[#7cc2c8] text-[#101927] shadow-[0_8px_24px_-10px_rgba(124,194,200,0.7)]" aria-label="Cerrar historial">
-            <Clock size={16} />
+          <button className="grid h-9 w-9 place-items-center rounded-full border border-white/60 bg-white/70 text-[#101927] shadow-sm" aria-label="Privacidad">
+            <Lock size={14} />
+          </button>
+          <button onClick={onBack} className="grid h-9 w-9 place-items-center rounded-full bg-[#7cc2c8] text-[#101927] shadow-[0_8px_24px_-10px_rgba(124,194,200,0.7)]" aria-label="Cerrar historial">
+            <Clock size={14} />
           </button>
         </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
-        <p className="font-display text-[11px] font-bold uppercase tracking-[0.2em] text-[#7cc2c8]">
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por palabra, fecha o emoción…"
+              className="mb-3 w-full rounded-full border border-white/60 bg-white/80 px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#7cc2c8]/40"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="mb-3 flex items-center justify-between px-1">
+        <p className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-[#7cc2c8]">
           Historial de bitácoras
         </p>
-        <span className="text-xs text-slate-500">{entries.length} {entries.length === 1 ? "entrada" : "entradas"}</span>
+        <span className="text-[11px] text-slate-500">{filtered.length} {filtered.length === 1 ? "entrada" : "entradas"}</span>
       </div>
 
-      <div className="space-y-3">
-        {loading && <p className="text-sm text-slate-500">Cargando…</p>}
-        {!loading && entries.length === 0 && (
-          <div className="rounded-3xl border border-white/60 bg-white/45 p-6 text-center text-sm text-slate-500 backdrop-blur-2xl">
-            Aún no registraste bitácoras. Empezá hoy.
-          </div>
-        )}
-        {entries.map((e) => {
+      {loading && <p className="text-sm text-slate-500">Cargando…</p>}
+      {!loading && filtered.length === 0 && (
+        <div className="rounded-3xl border border-white/60 bg-white/45 p-6 text-center text-sm text-slate-500 backdrop-blur-2xl">
+          {query ? "Sin resultados para tu búsqueda." : "Aún no registraste bitácoras. Empezá hoy."}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2.5">
+        {filtered.map((e) => {
           const emo = e.emotion_tags?.[0];
-          const triggers = (e.emotion_tags ?? []).slice(1);
+          const preview = plain(e.content ?? "");
           return (
-            <div key={e.id} className="rounded-3xl border border-white/60 bg-white/55 p-4 backdrop-blur-2xl shadow-[0_8px_32px_rgba(16,25,39,0.05)]">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-mindful text-base">{fmt(e.created_at ?? e.entry_date)}</p>
-                  {emo && (
-                    <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-[#7cc2c8]">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7cc2c8] shadow-[0_0_10px_rgba(124,194,200,0.8)]" />
-                      {emo}
-                    </p>
-                  )}
-                </div>
-                {triggers.length > 0 && (
-                  <span className="rounded-full bg-[#101927]/[0.05] px-3 py-1 text-xs text-[#101927]/70">
-                    {triggers[0]}
-                  </span>
-                )}
-              </div>
-              <div
-                className="mt-3 line-clamp-3 text-sm leading-relaxed text-[#101927]/80"
+            <div
+              key={e.id}
+              className="flex aspect-square flex-col overflow-hidden rounded-[20px] border border-white/60 bg-white/65 p-3 backdrop-blur-2xl shadow-[0_8px_24px_rgba(16,25,39,0.05)]"
+            >
+              <p className="font-mindful text-[13px] leading-tight">{fmt(e.created_at ?? e.entry_date)}</p>
+              {emo && (
+                <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#7cc2c8]">
+                  <span className="inline-block h-1 w-1 rounded-full bg-[#7cc2c8]" />
+                  {emo}
+                </p>
+              )}
+              <p
+                className="mt-2 flex-1 overflow-hidden text-[11.5px] leading-relaxed text-[#101927]/75 line-clamp-6"
                 style={{ fontFamily: "Lora, serif" }}
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(e.content.replace("[audio]", "").trim()) }}
-              />
+              >
+                {preview || "(sin texto)"}
+              </p>
             </div>
           );
         })}
       </div>
 
-      <div className="flex-1" />
+      <div className="h-4" />
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={onBack}
-        className="mt-6 grid h-14 w-full place-items-center rounded-full bg-[#101927] font-semibold text-white shadow-lg"
+        className="mt-6 grid h-13 w-full place-items-center rounded-full bg-[#101927] py-3.5 font-semibold text-white shadow-lg"
       >
         ✎ Escribir Diario
       </motion.button>
     </motion.div>
   );
 }
+

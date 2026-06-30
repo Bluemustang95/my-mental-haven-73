@@ -163,10 +163,11 @@ export default function BreathingHome() {
     setFavs((f) => ({ ...f, [id]: !f[id] }));
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#f9f9fb] flex items-center justify-center">
+    <div className="relative min-h-screen w-full bg-[#f9f9fb]">
       {/* Mobile blinded shell */}
-      <div className="relative w-full h-full md:h-[90vh] md:max-h-[820px] md:max-w-md md:rounded-[36px] md:shadow-2xl overflow-hidden flex flex-col"
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden md:my-6 md:min-h-0 md:h-[90vh] md:max-h-[820px] md:rounded-[36px] md:shadow-2xl"
            style={{ background: "linear-gradient(170deg,#f9f9fb 0%,#eef2f1 100%)" }}>
+
         {/* Atmospheric orbs */}
         <div
           aria-hidden

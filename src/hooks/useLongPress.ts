@@ -31,6 +31,5 @@ export function useLongPress(onLongPress: () => void, delay = 800) {
     onTouchStart: start,
     onTouchEnd: clear,
     onTouchCancel: clear,
-    didLongPress: () => fired.current,
   };
 }
