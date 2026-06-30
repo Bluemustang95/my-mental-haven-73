@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { ArrowRight, Envelope, GoogleLogo, Fingerprint } from "@phosphor-icons/react";
 import { isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometricAuth";
+import { BiometricSetupModal } from "@/components/modals/BiometricSetupModal";
 
 const TEAL = "#7cc2c8";
 const INK = "#101927";
@@ -17,6 +18,24 @@ export default function Auth() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [bioReady, setBioReady] = useState(false);
+  const [bioPromptUser, setBioPromptUser] = useState<{ id: string; name: string } | null>(null);
+
+  const BIO_PROMPTED_KEY = "resma:bio_prompted";
+
+  const maybePromptBiometric = async () => {
+    const isStandalone =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(display-mode: standalone)").matches ||
+        // iOS Safari
+        // @ts-ignore
+        window.navigator.standalone === true);
+    if (!isStandalone) return navigate("/", { replace: true });
+    if (!isBiometricSupported() || isBiometricEnabled()) return navigate("/", { replace: true });
+    if (localStorage.getItem(BIO_PROMPTED_KEY) === "never") return navigate("/", { replace: true });
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return navigate("/", { replace: true });
+    setBioPromptUser({ id: data.user.id, name: data.user.email?.split("@")[0] || "RESMA" });
+  };
 
   useEffect(() => {
     setBioReady(isBiometricSupported() && isBiometricEnabled());
