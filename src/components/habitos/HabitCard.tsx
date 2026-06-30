@@ -134,8 +134,8 @@ export function HabitCard({ habit, completions, view, onToggle, onOpenDetail }: 
                 Racha: {streak}d 🔥
               </p>
             </div>
-            <div className="grid grid-cols-10 gap-1.5">
-              {monthCells().slice(0, 20).map(({ date }) => {
+            <div className="grid grid-cols-7 gap-1.5">
+              {monthCells().map(({ date }) => {
                 const isDone = doneSet.has(date);
                 return (
                   <motion.button
