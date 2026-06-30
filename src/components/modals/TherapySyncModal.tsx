@@ -15,7 +15,7 @@ interface TherapySyncModalProps {
 
 type View = "sync" | "intake";
 type Gender = "masculino" | "femenino" | "otro" | "no_responde";
-type TreatmentType = "individual" | "pareja" | "familiar" | "ninos";
+type TreatmentType = "psicologico" | "psiquiatrico" | "psicopedagogico";
 type Modality = "Online" | "Presencial";
 
 const GENDERS: { value: Gender; label: string }[] = [
@@ -26,10 +26,9 @@ const GENDERS: { value: Gender; label: string }[] = [
 ];
 
 const TREATMENTS: { value: TreatmentType; label: string }[] = [
-  { value: "individual", label: "Individual" },
-  { value: "pareja", label: "Pareja" },
-  { value: "familiar", label: "Familiar" },
-  { value: "ninos", label: "Niños" },
+  { value: "psicologico", label: "Psicológico" },
+  { value: "psiquiatrico", label: "Psiquiátrico" },
+  { value: "psicopedagogico", label: "Psicopedagógico" },
 ];
 
 const E164_REGEX = /^\+\d{8,15}$/;
@@ -126,7 +125,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
 
   const canNextStep1 =
     firstName.trim() && lastName.trim() && /^\d{4}-\d{2}-\d{2}$/.test(birthDate) && gender;
-  const canNextStep2 = E164_REGEX.test(normalizePhone(phone));
+  const canNextStep2 = E164_REGEX.test(normalizePhone(phone)) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const canSubmit =
     treatmentType &&
     modality &&
@@ -152,7 +151,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
       country: "AR",
       consultation_reason: "Psicológica",
     };
-    if (email.trim()) payload.email = email.trim();
+    payload.email = email.trim();
     if (modality === "Presencial") {
       payload.province = province;
       payload.locality = locality;
@@ -214,7 +213,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
             initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-[32px] border border-white/60 bg-white/90 p-6 shadow-[0_24px_60px_-20px_rgba(16,25,39,0.35)] backdrop-blur-2xl sm:rounded-[32px]"
+            className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-[32px] border border-white/60 bg-white/90 p-6 pb-28 shadow-[0_24px_60px_-20px_rgba(16,25,39,0.35)] backdrop-blur-2xl sm:rounded-[32px] sm:pb-6"
           >
             <div className="pointer-events-none absolute -top-20 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-[#7cc2c8]/30 blur-3xl" />
 
@@ -313,7 +312,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
                       )}
                     </div>
                     <div>
-                      <label className="ml-4 text-xs font-semibold text-foreground/55">Email (opcional)</label>
+                      <label className="ml-4 text-xs font-semibold text-foreground/55">Email</label>
                       <PillInput placeholder="tu@email.com" value={email} onChange={setEmail} type="email" />
                     </div>
                   </div>
@@ -323,7 +322,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
                   <div className="mt-5 space-y-4">
                     <div>
                       <p className="ml-1 mb-2 text-xs font-semibold text-foreground/55">Tipo de tratamiento</p>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 gap-2">
                         {TREATMENTS.map((t) => (
                           <PillToggle
                             key={t.value}
