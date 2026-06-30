@@ -710,12 +710,18 @@ function ImmersivePlayer({
 }
 
 function SessionSettings({
-  voice, setVoice, ambientId, setAmbientId, onClose,
+  voice, setVoice, voiceVolume, setVoiceVolume,
+  ambientId, setAmbientId, ambientVolume, setAmbientVolume, onClose,
 }: {
   voice: boolean; setVoice: (b: boolean) => void;
+  voiceVolume: number; setVoiceVolume: (v: number) => void;
   ambientId: string; setAmbientId: (id: string) => void;
+  ambientVolume: number; setAmbientVolume: (v: number) => void;
   onClose: () => void;
 }) {
+  const ambientOptions = AMBIENT_SOUNDS.filter((s) =>
+    ["off", "rain_soft", "forest_dawn", "waves_soft", "crickets_night", "campfire", "white_noise", "drone_pad"].includes(s.id)
+  );
   return (
     <motion.div
       className="absolute inset-0 z-20 flex items-end justify-center bg-black/40 backdrop-blur-sm"
@@ -731,42 +737,64 @@ function SessionSettings({
         <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/20" />
         <h3 className="text-white text-[15px] font-semibold mb-4">Ajustes de la práctica</h3>
 
-        <div className="flex items-center justify-between py-3 border-b border-white/10">
-          <div>
-            <div className="text-white text-[13.5px] font-semibold">Voz de Guía</div>
-            <div className="text-white/55 text-[11px]">Indicaciones para cada fase</div>
+        {/* Voice toggle + volume */}
+        <div className="py-3 border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-white text-[13.5px] font-semibold">Voz de Guía</div>
+              <div className="text-white/55 text-[11px]">Indicaciones para cada fase</div>
+            </div>
+            <button
+              onClick={() => setVoice(!voice)}
+              className={`relative w-12 h-7 rounded-full transition ${voice ? "bg-[#7cc2c8]" : "bg-white/15"}`}
+              aria-pressed={voice}
+            >
+              <span className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all"
+                    style={{ left: voice ? "22px" : "2px" }} />
+            </button>
           </div>
-          <button
-            onClick={() => setVoice(!voice)}
-            className={`relative w-12 h-7 rounded-full transition ${voice ? "bg-[#7cc2c8]" : "bg-white/15"}`}
-            aria-pressed={voice}
-          >
-            <span className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all"
-                  style={{ left: voice ? "22px" : "2px" }} />
-          </button>
+          <div className={`mt-3 flex items-center gap-3 transition-opacity ${voice ? "opacity-100" : "opacity-40"}`}>
+            <span className="text-white/60 text-[10px] uppercase tracking-[0.18em] font-semibold w-14">Volumen</span>
+            <input
+              type="range" min={0} max={1} step={0.05}
+              value={voiceVolume}
+              onChange={(e) => setVoiceVolume(parseFloat(e.target.value))}
+              disabled={!voice}
+              className="resma-slider flex-1"
+              style={{ accentColor: "#7cc2c8" }}
+            />
+            <span className="text-white/70 text-[11px] tabular-nums w-8 text-right">{Math.round(voiceVolume * 100)}</span>
+          </div>
         </div>
 
+        {/* Ambient dropdown + volume */}
         <div className="mt-4">
           <div className="text-white/70 text-[11px] uppercase tracking-[0.18em] font-semibold mb-2">Sonido de fondo</div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {AMBIENT_SOUNDS.filter(s =>
-              ["off","rain_soft","forest_dawn","waves_soft","crickets_night","campfire","white_noise","drone_pad"].includes(s.id)
-            ).map((s) => {
-              const active = ambientId === s.id;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setAmbientId(s.id)}
-                  className={`shrink-0 px-3.5 h-9 rounded-full text-[12px] font-semibold transition border ${
-                    active
-                      ? "bg-[#7cc2c8] text-[#101927] border-[#7cc2c8]"
-                      : "bg-white/5 text-white/80 border-white/15"
-                  }`}
-                >
+          <div className="relative">
+            <select
+              value={ambientId}
+              onChange={(e) => setAmbientId(e.target.value)}
+              className="w-full h-11 px-4 pr-10 rounded-2xl bg-white/5 border border-white/15 text-white text-[13.5px] font-medium appearance-none focus:outline-none focus:border-[#7cc2c8]"
+            >
+              {ambientOptions.map((s) => (
+                <option key={s.id} value={s.id} className="bg-[#101927] text-white">
                   {s.label}
-                </button>
-              );
-            })}
+                </option>
+              ))}
+            </select>
+            <ChevronRight size={16} className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-white/60 pointer-events-none" />
+          </div>
+          <div className={`mt-3 flex items-center gap-3 transition-opacity ${ambientId !== "off" ? "opacity-100" : "opacity-40"}`}>
+            <span className="text-white/60 text-[10px] uppercase tracking-[0.18em] font-semibold w-14">Volumen</span>
+            <input
+              type="range" min={0} max={1} step={0.05}
+              value={ambientVolume}
+              onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
+              disabled={ambientId === "off"}
+              className="resma-slider flex-1"
+              style={{ accentColor: "#7cc2c8" }}
+            />
+            <span className="text-white/70 text-[11px] tabular-nums w-8 text-right">{Math.round(ambientVolume * 100)}</span>
           </div>
         </div>
 
