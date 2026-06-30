@@ -237,7 +237,13 @@ export default function BreathingHome() {
           minutes={minutes}
           setMinutes={setMinutes}
           voice={voice}
-          ambient={ambient}
+          setVoice={setVoice}
+          voiceVolume={voiceVolume}
+          setVoiceVolume={setVoiceVolume}
+          ambientId={ambient ? ambientId : "off"}
+          setAmbientId={(id) => { setAmbient(id !== "off"); if (id !== "off") setAmbientId(id); }}
+          ambientVolume={ambientVolume}
+          setAmbientVolume={setAmbientVolume}
           onBack={() => setStep("intention")}
           onHelp={() => setHelpOpen(true)}
           onStop={() => setStep("intention")}
