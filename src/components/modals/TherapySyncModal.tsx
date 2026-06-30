@@ -322,7 +322,7 @@ export function TherapySyncModal({ open, onClose, onSynced }: TherapySyncModalPr
                   <div className="mt-5 space-y-4">
                     <div>
                       <p className="ml-1 mb-2 text-xs font-semibold text-foreground/55">Tipo de tratamiento</p>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 gap-2">
                         {TREATMENTS.map((t) => (
                           <PillToggle
                             key={t.value}
