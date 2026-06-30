@@ -23,6 +23,8 @@ import { BeckTestRunner } from "@/components/proceso/BeckTestRunner";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
 
 
 
@@ -38,7 +40,10 @@ export default function MiProceso() {
   const [linkedPhone, setLinkedPhone] = useState<string | null>(null);
   const [bridgeLastState, setBridgeLastState] = useState<string | null>(null);
   const [therapistName, setTherapistName] = useState<string | null>(null);
-  const [country, setCountry] = useState<string | null>(null);
+  const [realCountry, setRealCountry] = useState<string | null>(null);
+  const [overrideCountry, setOverrideCountry] = useState<string | null>(getCountryOverride());
+  const { isAdmin } = useAdminRole();
+  const country = isAdmin && overrideCountry ? overrideCountry : realCountry;
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   const [surveyOpen, setSurveyOpen] = useState(false);
@@ -70,7 +75,7 @@ export default function MiProceso() {
         setLinkedPhone(data?.linked_phone ?? null);
         setBridgeLastState(data?.bridge_last_state ?? null);
         setTherapistName(data?.therapist_name ?? null);
-        setCountry((data?.country ?? "").toUpperCase() || null);
+        setRealCountry((data?.country ?? "").toUpperCase() || null);
       });
     loadWellbeing().then(setSnap);
   }, [user]);
