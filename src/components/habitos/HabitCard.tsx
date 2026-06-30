@@ -142,7 +142,7 @@ export function HabitCard({ habit, completions, view, onToggle, onOpenDetail }: 
                     key={date}
                     onClick={() => onToggle(date)}
                     whileTap={{ scale: 0.8 }}
-                    className="aspect-square rounded-md"
+                    className="aspect-square rounded-full"
                     style={{
                       backgroundColor: isDone ? habit.color : "#eef1f5",
                       boxShadow: isDone ? `0 2px 6px -2px ${habit.color}80` : undefined,
