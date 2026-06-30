@@ -26,10 +26,9 @@ const GENDERS: { value: Gender; label: string }[] = [
 ];
 
 const TREATMENTS: { value: TreatmentType; label: string }[] = [
-  { value: "individual", label: "Individual" },
-  { value: "pareja", label: "Pareja" },
-  { value: "familiar", label: "Familiar" },
-  { value: "ninos", label: "Niños" },
+  { value: "psicologico", label: "Psicológico" },
+  { value: "psiquiatrico", label: "Psiquiátrico" },
+  { value: "psicopedagogico", label: "Psicopedagógico" },
 ];
 
 const E164_REGEX = /^\+\d{8,15}$/;
