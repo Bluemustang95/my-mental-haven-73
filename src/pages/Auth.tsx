@@ -89,12 +89,12 @@ export default function Auth() {
         options: { emailRedirectTo: window.location.origin },
       });
       if (error) setError(error.message);
-      else if (data.session) navigate("/");
+      else if (data.session) await maybePromptBiometric();
       else setMessage("Cuenta creada. Ya podés iniciar sesión.");
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
-      else navigate("/");
+      else await maybePromptBiometric();
     }
     setLoading(false);
   };
