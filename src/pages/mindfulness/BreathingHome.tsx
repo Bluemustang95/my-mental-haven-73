@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
    ============================================================ */
 
 type PatternId = "478" | "sigh" | "box" | "coherence";
-type Tab = "respiracion" | "bodyscan";
 type Step = "intention" | "setup" | "player";
 
 type Phase = {
@@ -115,7 +114,6 @@ export default function BreathingHome() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [tab, setTab] = useState<Tab>("respiracion");
   const [step, setStep] = useState<Step>("intention");
   const [patternId, setPatternId] = useState<PatternId>("478");
   const [minutes, setMinutes] = useState(5);
@@ -157,10 +155,47 @@ export default function BreathingHome() {
 
   const pattern = getPattern(patternId);
 
-  const close = () => navigate("/herramientas/mindfulness");
+  const close = () => navigate("/herramientas");
 
   const toggleFav = (id: PatternId) =>
     setFavs((f) => ({ ...f, [id]: !f[id] }));
+
+  const onFinishSession = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("exercise_sessions").insert({
+          user_id: user.id,
+          exercise_type: "mindfulness",
+          exercise_name: pattern.title,
+          duration_seconds: minutes * 60,
+        } as never);
+      }
+    } catch (e) { console.warn("[Mindfulness] persist failed", e); }
+    toast.success("Sesión completada. Buen trabajo.");
+    setStep("intention");
+  };
+
+  // ---- Modo inmersivo: ocupa toda la pantalla ----
+  if (step === "player") {
+    return (
+      <>
+        <ImmersivePlayer
+          pattern={pattern}
+          minutes={minutes}
+          voice={voice}
+          ambient={ambient}
+          onBack={() => setStep("setup")}
+          onHelp={() => setHelpOpen(true)}
+          onStop={() => setStep("setup")}
+          onFinish={onFinishSession}
+        />
+        <AnimatePresence>
+          {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+        </AnimatePresence>
+      </>
+    );
+  }
 
   return (
     <div className="relative min-h-screen w-full bg-[#f9f9fb]">
@@ -183,8 +218,7 @@ export default function BreathingHome() {
         <Header
           step={step}
           onBack={() => {
-            if (step === "player") setStep("setup");
-            else if (step === "setup") setStep("intention");
+            if (step === "setup") setStep("intention");
             else close();
           }}
           onHelp={() => setHelpOpen(true)}
@@ -193,7 +227,7 @@ export default function BreathingHome() {
         <div className="relative flex-1 overflow-y-auto no-scrollbar pb-28 px-5 smooth-scroll">
           <AnimatePresence mode="wait">
             <motion.div
-              key={step + tab + patternId}
+              key={step + patternId}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -201,8 +235,6 @@ export default function BreathingHome() {
             >
               {step === "intention" && (
                 <IntentionScreen
-                  tab={tab}
-                  onTab={setTab}
                   favs={favs}
                   onToggleFav={toggleFav}
                   onPick={(pid) => { setPatternId(pid); setStep("setup"); }}
@@ -218,30 +250,6 @@ export default function BreathingHome() {
                   ambient={ambient}
                   setAmbient={setAmbient}
                   onStart={() => setStep("player")}
-                />
-              )}
-              {step === "player" && (
-                <PlayerScreen
-                  pattern={pattern}
-                  minutes={minutes}
-                  voice={voice}
-                  ambient={ambient}
-                  onFinish={async () => {
-                    try {
-                      const { data: { user } } = await supabase.auth.getUser();
-                      if (user) {
-                        await supabase.from("exercise_sessions").insert({
-                          user_id: user.id,
-                          exercise_type: "mindfulness",
-                          exercise_name: pattern.title,
-                          duration_seconds: minutes * 60,
-                        } as never);
-                      }
-                    } catch (e) { console.warn("[Mindfulness] persist failed", e); }
-                    toast.success("Sesión completada. Buen trabajo.");
-                    setStep("intention");
-                  }}
-                  onStop={() => setStep("setup")}
                 />
               )}
             </motion.div>
@@ -340,57 +348,31 @@ function ModuleNav({ step, setStep, hasSelection }: { step: Step; setStep: (s: S
    Pantalla 1 · Intención
    ============================================================ */
 function IntentionScreen({
-  tab, onTab, favs, onToggleFav, onPick,
+  favs, onToggleFav, onPick,
 }: {
-  tab: Tab;
-  onTab: (t: Tab) => void;
   favs: Record<string, boolean>;
   onToggleFav: (id: PatternId) => void;
   onPick: (id: PatternId) => void;
 }) {
   return (
     <div className="pt-2">
-      {/* Segmented control */}
-      <div className="mx-auto max-w-[320px] bg-white/70 backdrop-blur-md border border-white/70 rounded-full p-1.5 flex shadow-sm">
-        {(["respiracion", "bodyscan"] as Tab[]).map((t) => {
-          const active = tab === t;
-          return (
-            <button
-              key={t}
-              onClick={() => onTab(t)}
-              className={`flex-1 h-10 rounded-full text-[13px] font-semibold transition ${
-                active ? "bg-[#101927] text-white shadow" : "text-[#101927]/55"
-              }`}
-            >
-              {t === "respiracion" ? "Respiración" : "Body Scan"}
-            </button>
-          );
-        })}
+      <div className="text-center mt-2">
+        <h1 className="font-serifElegant text-[26px] leading-tight text-[#101927]">¿Qué necesitás ahora?</h1>
+        <p className="text-[12.5px] text-[#101927]/55 mt-1.5 px-4">
+          Elegí una intención y te sugerimos el patrón adecuado.
+        </p>
       </div>
-
-      {tab === "respiracion" ? (
-        <>
-          <div className="text-center mt-6">
-            <h1 className="font-serifElegant text-[26px] leading-tight text-[#101927]">¿Qué necesitás ahora?</h1>
-            <p className="text-[12.5px] text-[#101927]/55 mt-1.5 px-4">
-              Elegí una intención y te sugerimos el patrón adecuado.
-            </p>
-          </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            {PATTERNS.map((p) => (
-              <PatternCard
-                key={p.id}
-                p={p}
-                fav={!!favs[p.id]}
-                onToggleFav={() => onToggleFav(p.id)}
-                onPick={() => onPick(p.id)}
-              />
-            ))}
-          </div>
-        </>
-      ) : (
-        <BodyScanEmpty />
-      )}
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        {PATTERNS.map((p) => (
+          <PatternCard
+            key={p.id}
+            p={p}
+            fav={!!favs[p.id]}
+            onToggleFav={() => onToggleFav(p.id)}
+            onPick={() => onPick(p.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -402,7 +384,7 @@ function PatternCard({
   return (
     <button
       onClick={onPick}
-      className="relative text-left rounded-[22px] p-4 bg-white/55 backdrop-blur-xl border border-white/70 shadow-[0_10px_28px_-12px_rgba(16,25,39,0.12)] active:scale-[0.98] transition"
+      className="relative text-left rounded-3xl p-4 bg-white border border-[#101927]/5 shadow-[0_6px_20px_-10px_rgba(16,25,39,0.18)] active:scale-[0.98] transition"
     >
       <span
         role="button"
@@ -414,27 +396,13 @@ function PatternCard({
       >
         <Star size={16} fill={fav ? "#7cc2c8" : "transparent"} strokeWidth={1.8} />
       </span>
-      <div className={`h-11 w-11 rounded-2xl ${p.iconBg} flex items-center justify-center`}>
-        <Icon size={20} className={p.iconColor} />
+      <div className={`h-12 w-12 rounded-full ${p.iconBg} flex items-center justify-center`}>
+        <Icon size={22} className={p.iconColor} />
       </div>
-      <div className="mt-3 font-semibold text-[14.5px] text-[#101927] leading-tight">{p.title}</div>
+      <div className="mt-3 font-semibold text-[15px] text-[#101927] leading-tight">{p.title}</div>
       <div className="text-[11.5px] text-[#101927]/55 mt-1 leading-snug line-clamp-2">{p.description}</div>
+      <div className="text-[10px] uppercase tracking-[0.16em] text-[#101927]/40 font-semibold mt-2">{p.short}</div>
     </button>
-  );
-}
-
-function BodyScanEmpty() {
-  return (
-    <div className="mt-12 text-center px-6">
-      <div className="mx-auto h-16 w-16 rounded-full bg-white/60 backdrop-blur-md border border-white/70 flex items-center justify-center text-[#7cc2c8]">
-        <Sparkles size={26} />
-      </div>
-      <h2 className="font-serifElegant text-[22px] text-[#101927] mt-4">Próximamente</h2>
-      <p className="text-[13px] text-[#101927]/60 mt-2 leading-relaxed">
-        El módulo clínico de <em>Body Scan</em> está en desarrollo. Lo estamos diseñando con
-        protocolos guiados, ritmo lento y narración terapéutica.
-      </p>
-    </div>
   );
 }
 
@@ -536,66 +504,132 @@ function ToggleRow({ title, sub, value, onChange }: { title: string; sub: string
 }
 
 /* ============================================================
-   Pantalla 3 · Reproductor
+   Pantalla 3 · Reproductor Inmersivo (full-screen)
    ============================================================ */
-function PlayerScreen({
-  pattern, minutes, voice, onFinish, onStop,
+const PATTERN_BG: Record<PatternId, string> = {
+  "478":       "linear-gradient(180deg,#0c1530 0%,#162447 100%)",
+  "sigh":      "linear-gradient(180deg,#0b2a2c 0%,#14545a 100%)",
+  "box":       "linear-gradient(180deg,#0e2418 0%,#1F3B26 100%)",
+  "coherence": "linear-gradient(180deg,#2b1d05 0%,#4a3210 100%)",
+};
+const PATTERN_TEXT_ACCENT: Record<PatternId, string> = {
+  "478":       "#A7D8A3",
+  "sigh":      "#7CC2C8",
+  "box":       "#7FCB8E",
+  "coherence": "#F5C56A",
+};
+
+function ImmersivePlayer({
+  pattern, minutes, voice, onBack, onHelp, onStop, onFinish,
 }: {
   pattern: PatternMeta; minutes: number; voice: boolean; ambient: boolean;
-  onFinish: () => void; onStop: () => void;
+  onBack: () => void; onHelp: () => void; onStop: () => void; onFinish: () => void;
 }) {
   const cycle = useBreathingCycle(pattern, minutes * 60, onFinish);
   const phase = pattern.phases[cycle.phaseIdx];
+  const accent = PATTERN_TEXT_ACCENT[pattern.id];
+  const secondsLeftInPhase = Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed));
+
+  // TTS por fase
+  useEffect(() => {
+    if (!voice || cycle.paused) return;
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(phase.cue);
+    u.lang = "es-AR";
+    u.rate = 0.9;
+    u.pitch = 1.02;
+    window.speechSynthesis.speak(u);
+    return () => window.speechSynthesis.cancel();
+  }, [phase.cue, voice, cycle.paused]);
 
   return (
-    <div className="pt-4">
-      {/* Visualizer */}
-      <div className="relative h-[300px] rounded-[26px] overflow-hidden border border-white/70"
-           style={{ background: pattern.id === "478"
-             ? "linear-gradient(180deg,#0c1530 0%,#162447 100%)"
-             : "linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.35))" }}>
-        {pattern.id === "478"      && <VisualizerSleep phase={phase} progress={cycle.phaseProgress} />}
-        {pattern.id === "sigh"     && <VisualizerSigh phase={phase} progress={cycle.phaseProgress} />}
-        {pattern.id === "box"      && <VisualizerBox phase={phase} progress={cycle.phaseProgress} />}
-        {pattern.id === "coherence"&& <VisualizerCoherence phase={phase} progress={cycle.phaseProgress} />}
-        <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2">
-          <span className="text-[12px] font-semibold tracking-[0.28em] uppercase"
-                style={{ color: pattern.id === "478" ? "#a7d8a3" : pattern.accent }}>
-            {phase.label}
-          </span>
-          <span className={`text-[24px] font-bold ${pattern.id === "478" ? "text-white" : "text-[#101927]"}`}>
-            {Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed))}s
-          </span>
-        </div>
+    <div
+      className="fixed inset-0 z-[60] overflow-hidden"
+      style={{ background: PATTERN_BG[pattern.id] }}
+    >
+      {/* Capa 0: animación fondo */}
+      <div className="absolute inset-0">
+        {pattern.id === "478"       && <VisualizerSleep phase={phase} progress={cycle.phaseProgress} />}
+        {pattern.id === "sigh"      && <VisualizerSigh phase={phase} progress={cycle.phaseProgress} />}
+        {pattern.id === "box"       && <VisualizerBox phase={phase} progress={cycle.phaseProgress} />}
+        {pattern.id === "coherence" && <VisualizerCoherence phase={phase} progress={cycle.phaseProgress} />}
       </div>
 
-      {/* Subtítulos dinámicos */}
-      {voice && (
-        <div className="mt-3 rounded-2xl bg-white/65 backdrop-blur-xl border border-white/70 px-4 py-3 text-center">
-          <p className="font-serifElegant italic text-[13.5px] text-[#101927]/80 leading-snug">{phase.cue}</p>
+      {/* Capa 1: UI superpuesta */}
+      <div className="relative z-10 flex flex-col h-full justify-between p-5 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.25rem)]">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <button
+            onClick={onBack}
+            aria-label="Volver"
+            className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          <div className="flex flex-col items-center gap-1.5 pt-1">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold">
+              {pattern.title}
+            </span>
+            <span className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-semibold text-[15px] tabular-nums">
+              {formatTime(cycle.remaining)}
+            </span>
+          </div>
+
+          <button
+            onClick={onHelp}
+            aria-label="Ayuda"
+            className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
+          >
+            <HelpCircle size={20} />
+          </button>
         </div>
-      )}
 
-      {/* Timer */}
-      <div className="mt-5 text-center">
-        <div className="text-[10px] tracking-[0.28em] uppercase font-semibold text-[#101927]/45">Tiempo restante</div>
-        <div className="text-[34px] font-bold text-[#101927] mt-1 tabular-nums">{formatTime(cycle.remaining)}</div>
-      </div>
+        {/* Centro libre */}
+        <div className="flex-1" />
 
-      {/* Controles */}
-      <div className="mt-3 flex items-center justify-center gap-3">
-        <button
-          onClick={cycle.toggle}
-          className="px-5 h-11 rounded-full bg-white/85 backdrop-blur-md border border-white/70 text-[#101927] font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
-        >
-          {cycle.paused ? <><Play size={14} /> Reanudar</> : <><Pause size={14} /> Pausar</>}
-        </button>
-        <button
-          onClick={onStop}
-          className="px-5 h-11 rounded-full bg-white/85 backdrop-blur-md border border-white/70 text-[#101927] font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
-        >
-          <X size={14} /> Detener
-        </button>
+        {/* Bloque inferior: instrucción + contador + cue + controles */}
+        <div className="flex flex-col items-center text-center gap-4">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={phase.id + cycle.phaseIdx}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col items-center gap-2"
+            >
+              <div
+                className="text-5xl font-light uppercase tracking-[0.08em]"
+                style={{ color: accent }}
+              >
+                {phase.label}
+              </div>
+              <div className="text-6xl font-light text-white/90 tabular-nums leading-none">
+                {secondsLeftInPhase}
+              </div>
+              {voice && (
+                <p className="text-sm italic text-white/70 px-6 max-w-[320px]">{phase.cue}</p>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="mt-2 flex items-center justify-center gap-3">
+            <button
+              onClick={cycle.toggle}
+              className="px-5 h-11 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
+            >
+              {cycle.paused ? <><Play size={14} /> Reanudar</> : <><Pause size={14} /> Pausar</>}
+            </button>
+            <button
+              onClick={onStop}
+              className="px-5 h-11 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
+            >
+              <X size={14} /> Detener
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

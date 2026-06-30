@@ -1,61 +1,77 @@
+# Mindfulness: Hub unificado + Reproductor Inmersivo
 
-# Correcciones RESMA — Sprint UX/Bugs
+## 1) Entrada a Mindfulness → directo a Respiración (sin Body Scan)
 
-## 1. Notificaciones push en primer plano
-**Problema:** No se renderizan ni se pueden "actuar" cuando la PWA está abierta.
+**Ruta**: `/herramientas/mindfulness` redirige a `/herramientas/mindfulness/respiracion`.
 
-- En `src/lib/pushNotifications.ts`: agregar `onMessage(messaging, payload => ...)` que dispare un toast (`sonner`) con título/body y un botón "Abrir" que navegue al `data.url`.
-- Inicializar el listener una sola vez desde `src/App.tsx` (o un `NotificationForegroundListener` montado en `AppLayout`).
-- Asegurar que el SW `firebase-messaging-sw.js` use `notificationclick` con `clients.openWindow` (ya está). Verificar permiso de notificación pidiéndolo explícitamente desde el toggle de Settings.
-- Si el navegador bloqueó permisos, mostrar mensaje claro en Settings (no fallar en silencio).
+- `src/App.tsx`: cambiar el `Route` del hub por un `<Navigate to="/herramientas/mindfulness/respiracion" replace />`. Quitar import de `MindfulnessHub`.
+- Eliminar también referencias a `/observar` y `/describir` del hub (las rutas siguen existiendo por compatibilidad pero ya no son accesibles desde Mindfulness).
+- En `BreathingHome.tsx`:
+  - Quitar el segmented control "Respiración / Body Scan" del `IntentionScreen` (eliminar `tab` y `BodyScanEmpty`).
+  - El header ya muestra "MINDFULNESS · RESMA" como en imagen 2 → mantener.
 
-## 2. Widgets Inicio estilo iOS (drag + resize)
-**Problema:** No se pueden arrastrar ni redimensionar; el "Camino de hoy" se ve chico.
+## 2) Cards de intención con estilo "inventarios"
 
-- Reemplazar el board de widgets (`src/components/home/WidgetsBoard.tsx`) por un **grid 2 columnas** con **`react-grid-layout`** (`react-grid-layout` + `react-resizable`) en modo edición: cada widget admite tamaños `1x1`, `2x1`, `2x2`. Drag con long-press (250 ms) en mobile, resize handle visible solo en modo edición.
-- Persistir layout en tabla existente `home_layouts` (campo JSON con `{i, x, y, w, h}` por widget).
-- Aumentar ligeramente el tamaño del bloque "Camino de hoy" (≈ +15% altura, padding interno 16→20, título `text-base`→`text-lg`).
-- Mantener vibración háptica al entrar en modo edición.
+Las 4 tarjetas (Dormir mejor / Bajar ansiedad / Concentrarme / Equilibrar) pasan al estilo de los tests psicométricos (`AllTests.tsx`):
 
-## 3. Respiración pantalla en blanco
-**Problema:** `/herramientas/mindfulness/respiracion` queda en blanco al entrar.
+- Fondo blanco sólido limpio (no glass translúcido), bordes redondeados `rounded-3xl`, sombra suave.
+- Icono circular pastel arriba a la izquierda (manteniendo los colores actuales por patrón).
+- Título en bold y descripción en gris claro, **sin truncar** el detalle del patrón ("4-7-8", "Suspiro fisiológico", etc.) como segunda línea.
+- Estrella de favorito chiquita arriba a la derecha (se conserva).
 
-- Revisar `src/pages/mindfulness/BreathingHome.tsx` para crash en montaje (probable: `primeAudio()` o un visualizer sin `data`). Envolver render en `<ErrorBoundary>` y loguear.
-- Reproducir con Playwright en `localhost:8080/herramientas/mindfulness/respiracion`, capturar console + screenshot, corregir el error específico.
+## 3) Reproductor Inmersivo (Full-Screen)
 
-## 4. Hub Mindfulness simplificado
-- En `src/pages/mindfulness/MindfulnessHub.tsx`: **eliminar el hero con imagen** y dejar SOLO las 4 tarjetas (Recomendado + Respiración + Mira el presente + Ver los hechos) con el estilo claro de la captura.
-- Mantener el orden y los iconos circulares en gradiente.
+Reescribir `PlayerScreen` dentro de `BreathingHome.tsx` para ocupar **toda la pantalla** sobre el gradiente del ejercicio (sin contenedores blancos, sin module-nav inferior, sin orbs, sin scroll). Mientras `step === "player"`, el shell del módulo entra en modo inmersivo:
 
-## 5. Hub "Mente & Emoción" (nuevo)
-**Problema:** Pensamientos y Regulación Emocional son dos boxes separados; Pensamientos está en tema oscuro feo y muestra "0 registros".
+- Ocultar `ModuleNav` y el botón flotante de IA durante el player.
+- Ocultar los orbs decorativos y el `Header` global; el player renderiza su propio header.
+- Contenedor: `fixed inset-0 z-50` con el gradiente por patrón (el oscuro de "Dormir" se extiende al resto, adaptando el accent).
 
-- Crear `src/pages/MenteEmocion.tsx` (ruta `/herramientas/mente-emocion`) con el **mismo estilo claro** del hub Mindfulness (4 tarjetas en lista).
-- Dentro: dos tarjetas — "Modificá tus pensamientos · Wizard CBT con IA" y "Regulá tus emociones · Ficha DBT".
-- **Quitar** la sección "ÚLTIMOS 7 DÍAS — 0 registros" del módulo de Pensamientos.
-- Convertir `PensamientosHub.tsx` a tema claro (sin fondo `#0F172A`), heredando tokens del hub Mindfulness.
-- En `Recursos` reemplazar los dos boxes (Pensamientos / Regulación) por un único box **"Mente & Emoción"** que abre el nuevo hub.
+### Capas (z-index)
 
-## 6. Hábitos — tilde no funciona
-**Problema:** Click en el botón ✓ no marca completado.
+**Capa 0 — Fondo**: gradiente full-screen del patrón + animación SVG/motion centrada (los 4 visualizadores actuales `VisualizerSleep / Sigh / Box / Coherence` se mantienen tal cual, escalados a `absolute inset-0`).
 
-- Revisar `src/components/habitos/HabitCard.tsx` y el handler `toggle` en `useHabits.ts`. Sospecha: el botón está dentro de un elemento con `onClick` padre que abre el sheet → falta `e.stopPropagation()`.
-- Confirmar con Playwright (click + verificar fila en `habit_completions`).
+**Capa 1 — UI superpuesta** (`relative z-10 flex flex-col h-full justify-between p-5`):
 
-## 7. Diario — ancho completo + bento 2x2 + búsqueda
-**Problemas:** No usa ancho completo; historial no se ve bien.
+- **Header (arriba)**:
+  - Izquierda: botón circular glass con `ChevronLeft` (vuelve a setup).
+  - Centro: columna con
+    - título del ejercicio en `text-[10px] uppercase tracking-[0.2em] text-white/50` (ej. "BAJAR ANSIEDAD").
+    - debajo, **píldora glassmorphic** (`bg-white/10 backdrop-blur-md rounded-full px-4 py-1.5`) con el tiempo restante de la sesión (`4:47`) en blanco semibold.
+  - Derecha: botón circular glass con `HelpCircle`.
 
-- En `src/pages/Diario.tsx`:
-  - Editor: remover `max-w-md`/padding lateral excesivo, usar `w-full` real (respetando safe-area).
-  - Historial: cambiar lista vertical por **bento grid 2 columnas** (`grid-cols-2 gap-3`), cada card con fecha + preview 3 líneas, altura uniforme.
-  - Agregar **ícono lupa** arriba a la derecha (junto al reloj) que expande un input de búsqueda (`Command`-like) que filtra por contenido y fecha en cliente.
+- **Centro libre** (`flex-1`): vacío, deja respirar la animación.
 
-## Detalles técnicos
-- Dependencias nuevas: `react-grid-layout` + `react-resizable` + tipos.
-- Sin cambios de schema salvo posible ampliación de columna `layout` en `home_layouts` para soportar `w,h` (ya es JSON, probablemente alcanza).
-- Estilo: respetar tokens cream/dark-blue existentes; no introducir colores nuevos.
-- Verificación: Playwright para Respiración (smoke), Hábitos (toggle), Diario (búsqueda), e inspección visual de Inicio en viewport 390×746.
+- **Bloque inferior** (apilado, centrado):
+  - Instrucción grande: `text-5xl font-light` en el color de acento del patrón (`pattern.accent`), animada con fade entre fases ("EXHALÁ", "INHALÁ", "SOSTENÉ"…).
+  - Contador de fase debajo: número grande en blanco/serif claro (`text-6xl font-light text-white/90`) con los segundos restantes de la fase actual (`Math.ceil(phase.seconds - phaseElapsed)`).
+  - Guion de soporte (cue) en `text-sm italic text-white/70` debajo del número.
+  - Botonera base: dos píldoras glass (`bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-5 h-11`) → **Pausar/Reanudar** y **Detener**.
 
-## Fuera de scope (confirmar si los querés ahora)
-- Notificaciones nativas iOS sin instalar como PWA (requiere Capacitor).
-- Sincronización del layout de widgets entre dispositivos (ya queda en DB pero sin realtime).
+- Sin caja para los subtítulos ni timers separados — todo flota directo sobre la animación.
+
+### Gradientes por patrón
+
+| Patrón | Gradiente fondo | Accent texto |
+|---|---|---|
+| 478 (Dormir) | `#0c1530 → #162447` | `#A7D8A3` |
+| Sigh (Ansiedad) | `#0b2a2c → #14545a` | `#7CC2C8` |
+| Box (Concentrar) | `#0e2418 → #1F3B26` | `#7FCB8E` |
+| Coherence (Equilibrar) | `#2b1d05 → #4a3210` | `#F5C56A` |
+
+## 4) Detalles técnicos
+
+- `BreathingHome.tsx`:
+  - Nuevo render condicional: si `step === "player"`, devolver un fragmento `<ImmersivePlayer />` aparte (fuera del shell mobile) usando `createPortal` o simplemente un `<div className="fixed inset-0 z-50">` antes del shell normal.
+  - Mover `useBreathingCycle` y los 4 `Visualizer*` al nuevo `ImmersivePlayer`. Eliminar `<div className="absolute bottom-3 ...">` con label+segundos (ahora viven en el bloque inferior).
+  - Conservar `voice` (TTS por fase) y `ambient` tal como están.
+  - Mantener `HelpModal` y `AiDrawer`; en modo player, el botón de ayuda abre el `HelpModal` por encima del fullscreen (`z-[60]`).
+  - Mantener `document.body.classList.add("zen-mode")` para ocultar la `BottomNav` global.
+
+- `src/App.tsx`: añadir `import { Navigate } from "react-router-dom"` y reemplazar el route del hub.
+
+## 5) Fuera de alcance (no se toca)
+
+- Rutas `/observar` y `/describir` se dejan en código (no se borran archivos) pero quedan huérfanas.
+- Animaciones de respiración: misma matemática y SVGs, solo escalados a fullscreen.
+- Setup screen (intención → minutos → voz/ambiente) sin cambios visuales.
