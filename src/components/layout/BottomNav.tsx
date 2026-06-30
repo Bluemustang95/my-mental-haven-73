@@ -1,7 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { House, Notebook, Toolbox, ChartLineUp, BookOpen } from "@phosphor-icons/react";
+import { House, Notebook, Toolbox, ChartLineUp, BookOpen, Lifebuoy } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { CrisisSheet } from "@/components/CrisisButton";
 
 const leftTabs = [
   { path: "/", label: "Inicio", icon: House },
@@ -16,6 +18,7 @@ const rightTabs = [
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [crisisOpen, setCrisisOpen] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
