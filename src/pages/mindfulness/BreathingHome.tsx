@@ -924,75 +924,96 @@ function VisualizerSleep({ phase, progress }: { phase: Phase; progress: number }
 }
 
 function VisualizerSigh({ phase, progress }: { phase: Phase; progress: number }) {
-  // Continuous sine wave (static). The ball travels along the wave path:
-  // it rises on inhale (4s), holds at the crest (2s) and descends slowly on exhale (6s).
+  // Single centered bell curve (gaussian) that "breathes" together with a ball
+  // anchored at the horizontal center. No wrap-around, no repeated wavelengths.
   const W = 360, H = 200;
-  const amp = 50;
-  const midY = H / 2;
-  const wavelength = 180;            // exactly 2 waves fit in the viewport
-  const cycleDist = wavelength * 0.75; // ¼ up + ½ down per breath cycle
+  const midX = W / 2;
+  const midY = H / 2 + 30;     // resting baseline (curve sits in lower-mid)
+  const restAmp = 6;            // gentle resting bump
+  const peakAmp = 78;           // full inhale peak
+  const sigma = 70;             // gaussian width (controls bell spread)
 
-  // Track how many full cycles have elapsed so the ball keeps moving
-  // smoothly to the right (wrapped) across breaths.
-  const cyclesRef = useRef(0);
-  const prevPhaseRef = useRef<string>(phase.id);
-  useEffect(() => {
-    if (prevPhaseRef.current === "exhale" && phase.id === "inhale") {
-      cyclesRef.current += 1;
-    }
-    prevPhaseRef.current = phase.id;
-  }, [phase.id]);
+  const easeInOutSine = (t: number) =>
+    -(Math.cos(Math.PI * Math.min(1, Math.max(0, t))) - 1) / 2;
 
-  // Position within the current cycle (0 → cycleDist)
-  let xInCycle = 0;
-  if (phase.id === "inhale") {
-    xInCycle = progress * (wavelength * 0.25);
-  } else if (phase.id === "hold") {
-    xInCycle = wavelength * 0.25;
-  } else {
-    // exhale (or any other) → travel from crest to next trough
-    xInCycle = wavelength * 0.25 + progress * (wavelength * 0.5);
-  }
-  const xRaw = cyclesRef.current * cycleDist + xInCycle;
-  const ballX = ((xRaw % W) + W) % W;
-  const ballY = midY - Math.sin((ballX / wavelength) * Math.PI * 2) * amp;
+  // t = 0 (rest) → 1 (peak); same easing drives amp, ballY and halo radius.
+  let t = 0;
+  if (phase.id === "inhale") t = easeInOutSine(progress);
+  else if (phase.id === "hold") t = 1;
+  else if (phase.id === "exhale") t = easeInOutSine(1 - progress);
 
-  // Static sine path covering the whole viewport width.
+  const amp = restAmp + (peakAmp - restAmp) * t;
+  const ballY = midY - amp;
+  const haloR = 22 + 26 * t;
+
+  // Gaussian bell path — recomputed when amplitude changes so the curve "breathes".
   const pathD = useMemo(() => {
-    const steps = 260;
-    let d = `M 0 ${midY}`;
-    for (let i = 1; i <= steps; i++) {
+    const steps = 220;
+    let d = "";
+    for (let i = 0; i <= steps; i++) {
       const x = (i / steps) * W;
-      const y = midY - Math.sin((x / wavelength) * Math.PI * 2) * amp;
-      d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+      const y = midY - amp * Math.exp(-((x - midX) ** 2) / (2 * sigma * sigma));
+      d += (i === 0 ? "M " : " L ") + x.toFixed(1) + " " + y.toFixed(2);
     }
     return d;
-  }, [midY]);
+  }, [amp, midX, midY]);
+
+  // Closed path for the soft area gradient under the curve.
+  const fillD = pathD + ` L ${W} ${H} L 0 ${H} Z`;
 
   return (
     <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-[100%] h-[70%]" preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-[100%] h-[80%]" preserveAspectRatio="none">
         <defs>
-          <linearGradient id="sighStroke" x1="0" x2="1">
-            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.35" />
-            <stop offset="0.5" stopColor="#7cc2c8" stopOpacity="0.85" />
-            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0.35" />
+          {/* Lateral fade: opacity 0 at edges, 100% in the middle */}
+          <linearGradient id="sighFadeMask" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stopColor="#000" />
+            <stop offset="0.18" stopColor="#fff" />
+            <stop offset="0.82" stopColor="#fff" />
+            <stop offset="1" stopColor="#000" />
           </linearGradient>
+          <mask id="sighMask" maskUnits="userSpaceOnUse" x="0" y="0" width={W} height={H}>
+            <rect x="0" y="0" width={W} height={H} fill="url(#sighFadeMask)" />
+          </mask>
+
+          <linearGradient id="sighArea" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stopColor="#7cc2c8" stopOpacity="0.12" />
+            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0" />
+          </linearGradient>
+
           <radialGradient id="sighBall">
-            <stop offset="0" stopColor="#fff" />
+            <stop offset="0" stopColor="#ffffff" />
             <stop offset="1" stopColor="#7cc2c8" />
           </radialGradient>
+
+          <radialGradient id="sighHalo">
+            <stop offset="0" stopColor="#bfeef1" stopOpacity="0.55" />
+            <stop offset="0.55" stopColor="#7cc2c8" stopOpacity="0.18" />
+            <stop offset="1" stopColor="#7cc2c8" stopOpacity="0" />
+          </radialGradient>
         </defs>
-        <path d={pathD} fill="none" stroke="url(#sighStroke)" strokeWidth={2.4} strokeLinecap="round" />
+
+        <g mask="url(#sighMask)">
+          <path d={fillD} fill="url(#sighArea)" />
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#7cc2c8"
+            strokeOpacity={0.9}
+            strokeWidth={1.8}
+            strokeLinecap="round"
+          />
+        </g>
+
+        {/* Halo behind the ball — radius interpolated with the same easing */}
+        <circle cx={midX} cy={ballY} r={haloR} fill="url(#sighHalo)" />
+        {/* Ball anchored at horizontal center; only cy animates */}
         <circle
-          cx={ballX}
+          cx={midX}
           cy={ballY}
           r={9}
           fill="url(#sighBall)"
-          style={{
-            filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.7))",
-            transition: "cx 120ms linear, cy 120ms linear",
-          }}
+          style={{ filter: "drop-shadow(0 4px 14px rgba(124,194,200,0.55))" }}
         />
       </svg>
     </div>
