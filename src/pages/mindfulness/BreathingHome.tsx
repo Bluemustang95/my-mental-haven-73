@@ -985,14 +985,11 @@ function VisualizerSigh({ phase, progress }: { phase: Phase; progress: number })
   }, [amplitude]);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+    <div className="absolute inset-0 overflow-hidden">
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        style={{
-          width: "100%",
-          display: "block",
-          background: "linear-gradient(180deg, #0d1f1f 0%, #1a3838 60%, #16302f 100%)",
-        }}
+        preserveAspectRatio="xMidYMid slice"
+        style={{ width: "100%", height: "100%", display: "block" }}
         role="img"
         aria-label="Animación de respiración guiada"
       >
