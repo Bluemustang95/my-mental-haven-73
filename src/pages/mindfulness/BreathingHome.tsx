@@ -281,7 +281,7 @@ export default function BreathingHome() {
                 <IntentionScreen
                   favs={favs}
                   onToggleFav={toggleFav}
-                  onPick={(pid) => { setPatternId(pid); setStep("setup"); }}
+                  onPick={handlePick}
                 />
               )}
               {step === "setup" && (
@@ -293,7 +293,7 @@ export default function BreathingHome() {
                   setVoice={setVoice}
                   ambient={ambient}
                   setAmbient={setAmbient}
-                  onStart={() => setStep("player")}
+                  onStart={markOnboardedAndPlay}
                 />
               )}
             </motion.div>
