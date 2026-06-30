@@ -315,6 +315,12 @@ export default function BreathingHome() {
                   setVoice={setVoice}
                   ambient={ambient}
                   setAmbient={setAmbient}
+                  voiceVolume={voiceVolume}
+                  setVoiceVolume={setVoiceVolume}
+                  ambientId={ambientId}
+                  setAmbientId={setAmbientId}
+                  ambientVolume={ambientVolume}
+                  setAmbientVolume={setAmbientVolume}
                   onStart={markOnboardedAndPlay}
                 />
               )}
