@@ -38,7 +38,7 @@ export function BottomNav() {
         whileTap={{ scale: 0.85, opacity: 0.7 }}
         aria-label={tab.label}
         className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+          "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
           active
             ? "bg-white text-primary shadow-sm"
             : "text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
@@ -48,7 +48,7 @@ export function BottomNav() {
           animate={active ? { scale: 1.1 } : { scale: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
         >
-          <Icon size={20} weight={active ? "fill" : "bold"} />
+          <Icon size={22} weight={active ? "fill" : "bold"} />
         </motion.div>
       </motion.button>
     );
