@@ -136,6 +136,7 @@ export function useHabits() {
       time_slot: input.time_slot ?? "all",
       cadence: input.cadence ?? "every_day",
       reminders_enabled: input.reminders_enabled ?? false,
+      stack_after_habit_id: input.stack_after_habit_id ?? null,
     }).select().single();
     if (data) setHabits(prev => [...prev, data as unknown as Habit]);
   }, [user]);
