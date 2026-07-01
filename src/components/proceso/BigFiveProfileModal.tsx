@@ -25,7 +25,45 @@ const DEFAULTS: Record<string, number> = {
 };
 
 export function BigFiveProfileModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { user } = useAuth();
   const [values, setValues] = useState<Record<string, number>>(DEFAULTS);
+  const [running, setRunning] = useState(false);
+  useHideBottomNav(open);
+
+  // Map OCEAN letters (from test_results.answers.subscales) to trait keys
+  const OCEAN_TO_KEY: Record<string, string> = {
+    O: "openness",
+    C: "conscientiousness",
+    E: "extraversion",
+    A: "agreeableness",
+    N: "neuroticism",
+  };
+
+  const loadLatest = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("test_results")
+      .select("answers, created_at")
+      .eq("user_id", user.id)
+      .eq("test_type", "BIGFIVE")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const subs = (data as any)?.answers?.subscales as Record<string, number> | undefined;
+    if (!subs) return;
+    const next: Record<string, number> = { ...DEFAULTS };
+    Object.entries(subs).forEach(([k, v]) => {
+      const key = OCEAN_TO_KEY[k];
+      if (key) next[key] = Math.round((v as number) * 100);
+    });
+    setValues(next);
+  };
+
+  useEffect(() => {
+    if (open) loadLatest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user]);
+
 
   const points = useMemo(() => {
     const cx = 160, cy = 160, R = 110;
