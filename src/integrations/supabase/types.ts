@@ -1364,6 +1364,7 @@ export type Database = {
           push_enabled: boolean
           quiet_hours_end: string
           quiet_hours_start: string
+          timezone: string
           updated_at: string
           user_id: string
         }
@@ -1376,6 +1377,7 @@ export type Database = {
           push_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
+          timezone?: string
           updated_at?: string
           user_id: string
         }
@@ -1388,6 +1390,7 @@ export type Database = {
           push_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
+          timezone?: string
           updated_at?: string
           user_id?: string
         }
@@ -1628,6 +1631,7 @@ export type Database = {
           description: string | null
           emoji: string | null
           id: string
+          is_premium: boolean
           is_published: boolean
           sort_order: number
           title: string
@@ -1640,6 +1644,7 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          is_premium?: boolean
           is_published?: boolean
           sort_order?: number
           title: string
@@ -1652,6 +1657,7 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          is_premium?: boolean
           is_published?: boolean
           sort_order?: number
           title?: string
