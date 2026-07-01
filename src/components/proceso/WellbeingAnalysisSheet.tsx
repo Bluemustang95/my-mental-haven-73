@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Book, ClipboardList, Moon, Smile, Target, X } from "lucide-react";
+import { Book, ClipboardList, Moon, Pill, Smile, Target, X } from "lucide-react";
 import { Sparkline } from "./Sparkline";
 import { PeriodStats } from "./PeriodStats";
+import { RecentActivityFeed } from "./RecentActivityFeed";
 import type { WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +16,7 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
   const { user } = useAuth();
   const [rangeMode, setRangeMode] = useState<"week" | "month">("week");
   const [mindMinutes, setMindMinutes] = useState<number>(0);
+  const [medAdh, setMedAdh] = useState<{ taken: number; total: number } | null>(null);
   const trend = snapshot?.trend?.length ? snapshot.trend : [0,0,0,0,0,0,0];
   const score = snapshot?.score ?? 0;
   const delta = snapshot?.delta ?? 0;
@@ -40,6 +42,16 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
       .then(({ data }) => {
         const total = (data ?? []).reduce((s: number, r: any) => s + (r.duration_seconds ?? 0), 0);
         setMindMinutes(Math.round(total / 60));
+      });
+    supabase
+      .from("medication_logs")
+      .select("taken")
+      .eq("user_id", user.id)
+      .gte("created_at", since)
+      .then(({ data }) => {
+        const rows = (data ?? []) as { taken: boolean | null }[];
+        const taken = rows.filter((r) => r.taken === true).length;
+        setMedAdh({ taken, total: rows.length });
       });
   }, [open, user, rangeMode]);
 
@@ -139,8 +151,26 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
                   </div>
                   <p className="font-display text-[22px] font-bold text-[#0f172a] tabular-nums">{mindMinutes}<span className="ml-1 text-[11px] font-medium text-[#64748b]">min</span></p>
                 </div>
+                {medAdh && medAdh.total > 0 && (
+                  <div className="mb-2 rounded-2xl bg-[#f8fafc] p-4 flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#facb60]/25 text-[#b45309]">
+                      <Pill size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[13px] font-medium text-[#0f172a]">Adherencia a medicación</p>
+                      <p className="text-[11px] text-[#64748b]">{medAdh.taken} de {medAdh.total} tomas</p>
+                    </div>
+                    <p className="font-display text-[22px] font-bold text-[#0f172a] tabular-nums">
+                      {Math.round((medAdh.taken / Math.max(1, medAdh.total)) * 100)}<span className="ml-0.5 text-[11px] font-medium text-[#64748b]">%</span>
+                    </p>
+                  </div>
+                )}
                 <PeriodStats range={rangeMode === "week" ? "week" : "month"} hideToggle />
+                <div className="mt-2">
+                  <RecentActivityFeed limit={6} />
+                </div>
               </div>
+
 
 
               {/* Section C - 2x2 pillars */}
