@@ -226,6 +226,7 @@ const App = () => (
               <Route path="/mi-proceso/medicacion/biblioteca/:categoryId" element={<MedCategoryList />} />
               <Route path="/mi-proceso/medicacion/biblioteca/:categoryId/:drugId" element={<MedDrugDetail />} />
               <Route path="/mi-proceso/medicacion/ajustes/:categoryId/:drugId" element={<DoseSetup />} />
+              <Route path="/mi-proceso/medicacion/agregar" element={<AddMedication />} />
               <Route path="/mi-proceso/espejo" element={<WeeklyReflection />} />
               <Route path="/mi-proceso/resumen" element={<ResumenPsico />} />
 
