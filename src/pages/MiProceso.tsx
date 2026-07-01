@@ -58,28 +58,12 @@ export default function MiProceso() {
   const [directTestCode, setDirectTestCode] = useState<string | null>(null);
 
   const [snap, setSnap] = useState<WellbeingSnapshot | null>(null);
-  const [weekMindMinutes, setWeekMindMinutes] = useState<number>(0);
 
   useEffect(() => {
     if (location.hash === "#suscripcion") {
       setTimeout(() => document.getElementById("suscripcion")?.scrollIntoView({ behavior: "smooth" }), 300);
     }
   }, [location.hash]);
-
-  useEffect(() => {
-    if (!user) return;
-    const since = new Date(Date.now() - 7 * 86400000).toISOString();
-    supabase
-      .from("exercise_sessions")
-      .select("duration_seconds")
-      .eq("user_id", user.id)
-      .eq("exercise_type", "mindfulness")
-      .gte("created_at", since)
-      .then(({ data }) => {
-        const total = (data ?? []).reduce((s: number, r: any) => s + (r.duration_seconds ?? 0), 0);
-        setWeekMindMinutes(Math.round(total / 60));
-      });
-  }, [user]);
 
   useEffect(() => {
     if (!user) return;
