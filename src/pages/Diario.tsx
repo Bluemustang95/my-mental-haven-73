@@ -773,7 +773,7 @@ function SoundscapePopover() {
 
 
 /* ────────────── History View ────────────── */
-type Entry = { id: string; content: string; entry_date: string | null; emotion_tags: string[] | null; created_at: string | null };
+type Entry = { id: string; content: string; entry_date: string | null; emotion_tags: string[] | null; created_at: string | null; is_encrypted?: boolean; _locked?: boolean };
 
 function HistoryView({ onBack }: { onBack: () => void }) {
   const [entries, setEntries] = useState<Entry[]>([]);
