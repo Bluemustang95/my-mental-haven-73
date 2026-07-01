@@ -160,7 +160,7 @@ export default function Resmita() {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-        {messages.length === 0 && (
+        {messages.length === 0 && !loadingHistory && (
           <div className="flex h-full items-center justify-center text-center">
             <div>
               <p className="mb-2 font-display text-sm font-medium">Estoy acá para acompañarte</p>
