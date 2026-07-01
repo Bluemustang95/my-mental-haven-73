@@ -178,6 +178,7 @@ export function TherapyMiniTracker({
         phone={phone}
         onClose={() => setConfirmOpen(false)}
         onConfirmed={() => {
+          setOptimisticConfirmed(true);
           refetch();
         }}
       />
