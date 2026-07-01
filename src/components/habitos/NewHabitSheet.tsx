@@ -317,6 +317,7 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
                       )}
 
                       {/* Reminders toggle */}
+                      <div className="flex items-center justify-between rounded-xl bg-[#f7f8fa] p-3">
                         <div>
                           <p className="text-[13px] font-bold text-[#101927]">Recordatorios diarios</p>
                           <p className="text-[11px] text-[#101927]/55">Notificaciones suaves para no olvidarlo</p>
