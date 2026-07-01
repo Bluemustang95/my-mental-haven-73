@@ -117,6 +117,23 @@ export default function MindfulnessHub() {
       </div>
 
       <div className="mx-auto mt-5 max-w-md space-y-2 px-5">
+        {lastExercise && (
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate(lastExercise.path)}
+            className="flex w-full items-center justify-between rounded-2xl border border-[#e2e8f0] bg-gradient-to-br from-white to-[#f8fafc] p-3 text-left shadow-sm"
+          >
+            <div>
+              <p className="font-[Montserrat] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-[#7cc2c8]">
+                Continuar donde dejaste
+              </p>
+              <p className="mt-0.5 font-display text-[14px] font-semibold text-[#0f172a]">
+                {lastExercise.label}
+              </p>
+            </div>
+            <span className="text-[18px] text-[#7cc2c8]">→</span>
+          </motion.button>
+        )}
         {modules.map((m) => (
           <motion.button
             key={m.to}
