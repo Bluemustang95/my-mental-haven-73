@@ -24,7 +24,9 @@ export type WidgetId =
   | "pending"
   | "mini_habits"
   | "gratitude"
-  | "contention_notes";
+  | "contention_notes"
+  | "daily_quote"
+  | "psy_news";
 
 export type WidgetState = {
   id: WidgetId;
@@ -40,6 +42,8 @@ const DEFAULT_WIDGETS: WidgetState[] = [
   { id: "sleep_zone", enabled: true, hidden: false, size: "full" },
   { id: "pending", enabled: true, hidden: false, size: "full" },
   { id: "mini_habits", enabled: true, hidden: false, size: "full" },
+  { id: "daily_quote", enabled: false, hidden: false, size: "full" },
+  { id: "psy_news", enabled: false, hidden: false, size: "full" },
   { id: "gratitude", enabled: false, hidden: false, size: "half" },
   { id: "contention_notes", enabled: false, hidden: false, size: "full" },
 ];
@@ -53,7 +57,10 @@ const LABELS: Record<WidgetId, string> = {
   mini_habits: "Mini Hábitos",
   gratitude: "Agradecimiento",
   contention_notes: "Notas de contención",
+  daily_quote: "Frase del día",
+  psy_news: "Noticias de psicología",
 };
+
 
 const STORAGE_KEY = "home_widgets_v2";
 
