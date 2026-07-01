@@ -173,6 +173,10 @@ export default function Dashboard() {
         return <GratitudeWidget />;
       case "contention_notes":
         return <ContentionNotesWidget />;
+      case "daily_quote":
+        return <DailyQuoteWidget />;
+      case "psy_news":
+        return <PsyNewsWidget />;
       default:
         return null;
     }
