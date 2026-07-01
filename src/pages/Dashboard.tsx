@@ -374,8 +374,8 @@ function TimelineCard({
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-display text-[13px] font-semibold leading-tight text-resma-navy">{title}</p>
-        <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-muted-foreground">{subtitle}</p>
+        <p className="font-display text-[14px] font-semibold leading-tight text-resma-navy">{title}</p>
+        <p className="mt-0.5 line-clamp-1 text-[11.5px] leading-snug text-muted-foreground">{subtitle}</p>
       </div>
       {done ? (
         <span className="rounded-full bg-resma-teal/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-resma-teal">
@@ -402,7 +402,7 @@ function SleepZoneCard({ onClick }: { onClick: () => void }) {
         </div>
         <div>
           <p className="text-[9.5px] font-semibold uppercase tracking-[0.18em] text-white/70">Zona de descanso</p>
-          <p className="font-serifElegant text-[14.5px] font-semibold">Santuario del sueño</p>
+          <p className="font-display text-[14px] font-semibold">Santuario del sueño</p>
           <p className="text-[10.5px] text-white/70">Ruidos blancos y protocolos nocturnos.</p>
         </div>
       </div>
