@@ -148,7 +148,7 @@ export function CheckinModal({
   );
 
   const Slider = () => (
-    <div className="space-y-3">
+    <div className="relative z-20 space-y-3">
       <input
         type="range"
         min={0}
@@ -156,7 +156,7 @@ export function CheckinModal({
         value={sliderValue}
         onChange={(e) => setSliderValue(parseInt(e.target.value))}
         className="w-full accent-resma-teal"
-        style={{ accentColor: isMorning ? "#7cc2c8" : "#facb60" }}
+        style={{ accentColor: isMorning ? "#7cc2c8" : "#facb60", touchAction: "pan-x" }}
       />
       <div className="flex justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
         <span>Mínimo</span>
@@ -320,7 +320,7 @@ export function CheckinModal({
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
-            className="resma-bg-gradient relative mx-auto min-h-screen w-full max-w-md px-5 pt-10 pb-32"
+            className="resma-bg-gradient relative mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 pt-10 pb-4"
           >
             <div className="glow-blob animate-blob-a" style={{ background: "#7cc2c8", width: 240, height: 240, top: -60, left: -40 }} />
             <div className="glow-blob animate-blob-b" style={{ background: "#facb60", width: 220, height: 220, bottom: 80, right: -60 }} />
@@ -355,12 +355,15 @@ export function CheckinModal({
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.28 }}
-              className="relative"
+              className="relative flex flex-1 flex-col justify-center"
             >
               {stepContent()}
             </motion.div>
 
-            <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md px-5 pb-6 pt-4">
+            <div
+              className="sticky bottom-0 z-30 mt-6 pt-2"
+              style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+            >
               <button
                 disabled={saving}
                 onClick={next}
