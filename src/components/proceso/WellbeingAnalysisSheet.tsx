@@ -43,6 +43,16 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
         const total = (data ?? []).reduce((s: number, r: any) => s + (r.duration_seconds ?? 0), 0);
         setMindMinutes(Math.round(total / 60));
       });
+    supabase
+      .from("medication_logs")
+      .select("taken")
+      .eq("user_id", user.id)
+      .gte("created_at", since)
+      .then(({ data }) => {
+        const rows = (data ?? []) as { taken: boolean | null }[];
+        const taken = rows.filter((r) => r.taken === true).length;
+        setMedAdh({ taken, total: rows.length });
+      });
   }, [open, user, rangeMode]);
 
 
