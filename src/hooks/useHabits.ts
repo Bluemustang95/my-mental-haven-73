@@ -36,6 +36,7 @@ export type Habit = {
   cadence: string;
   reminders_enabled: boolean;
   best_streak: number;
+  stack_after_habit_id?: string | null;
   created_at: string;
 };
 
