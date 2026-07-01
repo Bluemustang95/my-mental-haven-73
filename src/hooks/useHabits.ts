@@ -170,29 +170,6 @@ export function useHabits() {
   };
 }
 
-export function computeStreak(completions: Completion[], habitId: string): number {
-  const dates = new Set(completions.filter(c => c.habit_id === habitId).map(c => c.completed_date));
-  if (dates.size === 0) return 0;
-  let streak = 0;
-  const d = new Date();
-  const today = localDateStr();
-  // Hard cap at 365 iterations to avoid any chance of infinite loop.
-  for (let i = 0; i < 365; i++) {
-    const s = localDateStr(d);
-    if (dates.has(s)) {
-      streak++;
-      d.setDate(d.getDate() - 1);
-    } else {
-      // Si hoy todavía no se hizo, dar 1 día de gracia y seguir desde ayer.
-      if (streak === 0 && s === today) {
-        d.setDate(d.getDate() - 1);
-        continue;
-      }
-      break;
-    }
-  }
-  return streak;
-}
 
 export function computeStreak(completions: Completion[], habitId: string): number {
   // Racha con "perdón": 1 día perdido cada 7 no rompe la racha (James Clear).
