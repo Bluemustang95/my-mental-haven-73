@@ -57,6 +57,8 @@ export default function Dashboard() {
   const [monthOpen, setMonthOpen] = useState(false);
   const [weekProgress, setWeekProgress] = useState<Record<string, number>>({});
 
+  const [loading, setLoading] = useState(true);
+
   const widgets = useHomeWidgets();
 
   useEffect(() => {
