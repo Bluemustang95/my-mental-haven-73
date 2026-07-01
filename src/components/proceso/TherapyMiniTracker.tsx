@@ -73,13 +73,13 @@ export function TherapyMiniTracker({
   }, [assigned, user, proName, pro?.phone, pro?.email, pro?.license, rawState]);
 
   // Once contact is confirmed → render full professional card (with bento)
-  if (contactConfirmed && assigned && proName) {
+  if (contactConfirmed && assigned) {
     return (
       <FullProfessionalCard
-        proName={proName}
-        license={pro?.license ?? null}
-        phone={pro?.phone ?? null}
-        email={pro?.email ?? null}
+        proName={proName ?? "Tu profesional"}
+        license={pro?.license ?? storedPro?.license ?? null}
+        phone={pro?.phone ?? storedPro?.phone ?? null}
+        email={pro?.email ?? storedPro?.email ?? null}
         linkedLastName={linkedLastName}
         onAdd={() => navigate("/configuracion")}
       />
@@ -116,8 +116,29 @@ export function TherapyMiniTracker({
         </div>
       </div>
 
-      {/* Aviso amarillo 24h */}
-      {assigned && (
+      {/* Aviso: asignado, esperando 24 hs */}
+      {assigned && !canConfirmContact && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-[18px] border border-[#bae6fd] bg-[#f0f9ff] p-3.5"
+        >
+          <div className="flex items-start gap-2">
+            <Clock size={15} className="mt-0.5 shrink-0 text-[#0369a1]" />
+            <p className="text-[12px] leading-snug text-[#0c4a6e]">
+              <span className="font-bold">{proName ?? "Tu profesional"}</span> aceptó tu caso y se contactará en las próximas <span className="font-bold">24 hs hábiles</span>.
+              {assignedAt && (
+                <span className="mt-1 block text-[11px] font-medium text-[#0369a1]">
+                  Podrás confirmar el contacto en ~{hoursRemaining} h.
+                </span>
+              )}
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Aviso amarillo: ya pasaron 24 hs, pedimos confirmación */}
+      {canConfirmContact && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -126,7 +147,7 @@ export function TherapyMiniTracker({
           <div className="flex items-start gap-2">
             <Clock size={15} className="mt-0.5 shrink-0 text-amber-700" />
             <p className="text-[12px] leading-snug text-amber-900">
-              <span className="font-bold">{proName ?? "Tu profesional"}</span> se contactará contigo en las próximas <span className="font-bold">24 hs hábiles</span>.
+              Ya pasaron 24 hs desde la asignación. ¿<span className="font-bold">{proName ?? "Tu profesional"}</span> se contactó con vos?
             </p>
           </div>
           <button
