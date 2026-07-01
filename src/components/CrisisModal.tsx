@@ -68,7 +68,7 @@ export function CrisisModal({ open, onAcknowledge }: { open: boolean; onAcknowle
             </div>
 
             <button
-              onClick={() => navigate("/herramientas/plan-seguridad")}
+              onClick={() => { navigate("/herramientas/plan-seguridad"); setTimeout(() => onAcknowledge(), 0); }}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-border py-2.5 text-sm font-medium"
             >
               <ShieldCheck size={16} /> Activar mi plan de seguridad
