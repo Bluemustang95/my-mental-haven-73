@@ -25,28 +25,43 @@ export function TherapyMiniTracker({
   const { user } = useAuth();
   const { data: status, refetch } = useTherapyStatus(phone, { enabled: true });
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [optimisticConfirmed, setOptimisticConfirmed] = useState(false);
+  const [assignedAt, setAssignedAt] = useState<Date | null>(null);
+  const [storedProName, setStoredProName] = useState<string | null>(null);
+  const [storedPro, setStoredPro] = useState<{ phone?: string | null; email?: string | null; license?: string | null } | null>(null);
 
-  const state: BridgeState = status?.state ?? initialState ?? "searching";
+  const rawState: BridgeState = status?.state ?? initialState ?? "searching";
+  const state: BridgeState = optimisticConfirmed && (rawState === "assigned" || rawState === "coordinating") ? "coordinating" : rawState;
   const pro = status?.professional;
-  const proName = pro?.name ?? initialProName ?? null;
+  const proName = pro?.name ?? initialProName ?? storedProName ?? null;
   const assigned = state === "assigned" || state === "coordinating" || state === "concretized";
   const contactConfirmed = state === "coordinating" || state === "concretized";
 
-  // Persist assigned_at first time we see assigned
+  // 24h gate: only allow "¿Ya te contactó?" once 24h passed since assignment
+  const hoursSinceAssigned = assignedAt ? (Date.now() - assignedAt.getTime()) / 3600000 : 0;
+  const canConfirmContact = assigned && !contactConfirmed && !!assignedAt && hoursSinceAssigned >= 24;
+  const hoursRemaining = assignedAt ? Math.max(0, Math.ceil(24 - hoursSinceAssigned)) : 24;
+
+  // Load assigned_at + persisted pro info; persist first time we see assigned
   useEffect(() => {
-    if (!user || !assigned) return;
+    if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("bridge_assigned_at")
+      .select("bridge_assigned_at, therapist_name, therapist_phone, therapist_email, therapist_license")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (!data?.bridge_assigned_at) {
+        if (data?.bridge_assigned_at) setAssignedAt(new Date(data.bridge_assigned_at));
+        if (data?.therapist_name) setStoredProName(data.therapist_name);
+        if (data) setStoredPro({ phone: data.therapist_phone, email: data.therapist_email, license: data.therapist_license });
+        if (assigned && !data?.bridge_assigned_at) {
+          const nowIso = new Date().toISOString();
+          setAssignedAt(new Date(nowIso));
           supabase
             .from("patient_app_profiles")
             .update({
-              bridge_assigned_at: new Date().toISOString(),
-              bridge_last_state: state,
+              bridge_assigned_at: nowIso,
+              bridge_last_state: rawState,
               therapist_name: proName,
               therapist_phone: pro?.phone ?? null,
               therapist_email: pro?.email ?? null,
@@ -55,7 +70,7 @@ export function TherapyMiniTracker({
             .eq("user_id", user.id);
         }
       });
-  }, [assigned, user, proName, pro?.phone, pro?.email, pro?.license, state]);
+  }, [assigned, user, proName, pro?.phone, pro?.email, pro?.license, rawState]);
 
   // Once contact is confirmed → render full professional card (with bento)
   if (contactConfirmed && assigned && proName) {
