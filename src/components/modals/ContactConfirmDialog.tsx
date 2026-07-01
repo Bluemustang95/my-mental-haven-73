@@ -3,6 +3,8 @@ import { CheckCircle2, MessageCircle, X } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
+
 
 const WHATSAPP_NUMBER = "5491138940804";
 
@@ -15,6 +17,8 @@ interface Props {
 
 export function ContactConfirmDialog({ open, phone, onClose, onConfirmed }: Props) {
   const [busy, setBusy] = useState(false);
+  useHideBottomNav(open);
+
 
   const handleYes = async () => {
     setBusy(true);

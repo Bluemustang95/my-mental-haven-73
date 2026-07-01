@@ -71,7 +71,7 @@ export default function MedicationTracker() {
   const takenCount = meds.filter((m) => isTaken(m.id)).length;
 
   return (
-    <div className="px-5 pt-14 pb-28 safe-area-top bg-[hsl(var(--background))]">
+    <div className="px-5 pt-14 pb-36 safe-area-top bg-[hsl(var(--background))]">
       <div className="flex items-center justify-between mb-1">
         <button onClick={() => navigate("/mi-proceso")} className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <ArrowLeft size={16} /> Mi Proceso
@@ -227,7 +227,8 @@ export default function MedicationTracker() {
       <button
         onClick={() => navigate("/mi-proceso/medicacion/agregar")}
         aria-label="Agregar medicación"
-        className="fixed bottom-6 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-lg shadow-black/20 active:scale-95 transition-transform"
+        style={{ bottom: "calc(6rem + env(safe-area-inset-bottom))" }}
+        className="fixed right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-lg shadow-black/20 active:scale-95 transition-transform"
       >
         <Plus size={24} strokeWidth={2.5} />
       </button>
