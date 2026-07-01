@@ -1,0 +1,1 @@
+ALTER TABLE public.habits ADD COLUMN IF NOT EXISTS stack_after_habit_id uuid REFERENCES public.habits(id) ON DELETE SET NULL;

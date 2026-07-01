@@ -984,6 +984,7 @@ export type Database = {
           id: string
           name: string
           reminders_enabled: boolean
+          stack_after_habit_id: string | null
           text_color: string
           time_slot: string
           updated_at: string
@@ -1005,6 +1006,7 @@ export type Database = {
           id?: string
           name: string
           reminders_enabled?: boolean
+          stack_after_habit_id?: string | null
           text_color?: string
           time_slot?: string
           updated_at?: string
@@ -1026,13 +1028,22 @@ export type Database = {
           id?: string
           name?: string
           reminders_enabled?: boolean
+          stack_after_habit_id?: string | null
           text_color?: string
           time_slot?: string
           updated_at?: string
           user_id?: string
           value_key?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "habits_stack_after_habit_id_fkey"
+            columns: ["stack_after_habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       home_layouts: {
         Row: {
