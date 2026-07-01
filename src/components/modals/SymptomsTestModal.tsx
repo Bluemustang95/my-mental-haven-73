@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { TestRunner } from "@/components/tests/TestRunner";
 import { BigFiveHexagon } from "@/components/tests/BigFiveHexagon";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 
 type Def = { id: string; code: string; name: string; kind: string };
 
