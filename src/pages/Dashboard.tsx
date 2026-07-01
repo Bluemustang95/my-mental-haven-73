@@ -186,6 +186,10 @@ export default function Dashboard() {
 
       <EditTopBar visible={widgets.editMode} onDone={() => widgets.setEditMode(false)} onReset={widgets.reset} />
 
+      {loading ? (
+        <HomeSkeleton />
+      ) : (
+      <PullToRefresh onRefresh={loadToday}>
       <div className="relative mx-auto max-w-md px-5 pt-5">
         {/* Header */}
         <div className="flex items-center justify-between">
