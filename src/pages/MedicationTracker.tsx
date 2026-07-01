@@ -227,7 +227,7 @@ export default function MedicationTracker() {
       <button
         onClick={() => navigate("/mi-proceso/medicacion/agregar")}
         aria-label="Agregar medicación"
-        className="fixed bottom-28 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-lg shadow-black/20 active:scale-95 transition-transform"
+        className="fixed bottom-20 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-lg shadow-black/20 active:scale-95 transition-transform"
       >
         <Plus size={24} strokeWidth={2.5} />
       </button>
