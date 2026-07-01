@@ -123,6 +123,31 @@ export default function MedicationTracker() {
       )}
 
 
+      {/* Adherencia mensual */}
+      {monthAdherence !== null && meds.length > 0 && (
+        <div className="mb-5 rounded-2xl bg-card p-4 shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground font-display">Adherencia este mes</span>
+            <span className={cn(
+              "text-xs font-semibold font-display",
+              monthAdherence >= 80 ? "text-[hsl(var(--mood-5))]" : monthAdherence >= 50 ? "text-[hsl(var(--mood-3))]" : "text-[hsl(var(--mood-1))]"
+            )}>{monthAdherence}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${Math.min(100, monthAdherence)}%`,
+                background: monthAdherence >= 80 ? "hsl(var(--mood-5))" : monthAdherence >= 50 ? "hsl(var(--mood-3))" : "hsl(var(--mood-1))",
+              }}
+            />
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            Sobre las tomas esperadas en los días transcurridos del mes.
+          </p>
+        </div>
+      )}
+
       {/* Medications by time slot */}
       {meds.length === 0 ? (
         <div className="rounded-2xl bg-card p-8 text-center shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
