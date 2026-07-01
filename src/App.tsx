@@ -114,6 +114,7 @@ import CrisisHotlinesManager from "@/pages/admin/CrisisHotlinesManager";
 import CountryViewSwitcher from "@/pages/admin/CountryViewSwitcher";
 import MenteEmocion from "@/pages/MenteEmocion";
 import { NotificationForegroundListener } from "@/components/system/NotificationForegroundListener";
+import { UiChromeProvider } from "@/hooks/useUiChrome";
 
 
 const queryClient = new QueryClient();
@@ -137,6 +138,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <UiChromeProvider>
           <NotificationForegroundListener />
           <Routes>
             <Route path="/auth" element={<Auth />} />
@@ -260,6 +262,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </UiChromeProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
