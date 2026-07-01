@@ -839,8 +839,10 @@ function HistoryView({ onBack }: { onBack: () => void }) {
     if (!active) return;
     setSaving(true);
     const newHtml = sanitizeHtml(draft.replace(/\n/g, "<br>"));
+    const encrypted = active.is_encrypted && e2e.isE2EEnabled();
+    const contentForDb = encrypted ? await e2e.encryptText(newHtml) : newHtml;
     const { error } = await supabase.from("journal_entries")
-      .update({ content: newHtml }).eq("id", active.id);
+      .update({ content: contentForDb, is_encrypted: !!encrypted }).eq("id", active.id);
     setSaving(false);
     if (error) { toast.error("No se pudo guardar"); return; }
     setEntries((arr) => arr.map((x) => x.id === active.id ? { ...x, content: newHtml } : x));
