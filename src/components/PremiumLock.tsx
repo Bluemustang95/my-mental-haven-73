@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Lock, Sparkles } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { PaywallModal } from "@/components/modals/PaywallModal";
 
 interface PremiumLockProps {
@@ -25,9 +26,10 @@ export function PremiumLock({
   className = "",
 }: PremiumLockProps) {
   const { isPremium } = usePlan();
+  const { isAdmin } = useAdminRole();
   const [open, setOpen] = useState(false);
 
-  if (isPremium && !forceLocked) return <>{children}</>;
+  if ((isPremium || isAdmin) && !forceLocked) return <>{children}</>;
 
   const blurClass =
     variant === "inline" ? "blur-[4px]" : variant === "section" ? "blur-[6px]" : "blur-[5px]";

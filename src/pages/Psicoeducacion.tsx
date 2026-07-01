@@ -13,6 +13,7 @@ type Category = {
   emoji: string | null;
   accent_color: string | null;
   sort_order: number;
+  is_premium?: boolean | null;
 };
 
 type Item = {
@@ -144,7 +145,7 @@ export default function Psicoeducacion() {
             <div className="mt-8">
               <h3 className="mb-3 px-1 font-display text-base font-semibold text-white">Seguir conociendo</h3>
               <div className="space-y-3">
-                {courseCats.map((cat, idx) => {
+                {courseCats.map((cat) => {
                   const accent = cat.accent_color ?? "#A78BFA";
                   const prog = progressByCat[cat.id] ?? 0;
                   const card = (
@@ -167,7 +168,7 @@ export default function Psicoeducacion() {
                       <div className="text-4xl">{cat.emoji ?? "📘"}</div>
                     </motion.button>
                   );
-                  if (idx === 0) return card;
+                  if (!cat.is_premium) return card;
                   return (
                     <PremiumLock key={cat.id} featureName={cat.title} variant="card">
                       {card}
