@@ -93,7 +93,7 @@ export function BigFiveProfileModal({ open, onClose }: { open: boolean; onClose:
           className="fixed inset-0 z-[100] overflow-y-auto bg-[#f9f9fb]"
         >
           <div className="mx-auto max-w-md px-5 pt-10 pb-32">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <button
                 onClick={onClose}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm"
@@ -101,10 +101,19 @@ export function BigFiveProfileModal({ open, onClose }: { open: boolean; onClose:
               >
                 <ChevronLeft size={20} className="text-[#0f172a]" />
               </button>
-              <p className="font-[Montserrat] text-[12px] font-semibold uppercase tracking-[0.2em] text-[#0f172a]">
+              <p className="flex-1 truncate text-center font-[Montserrat] text-[12px] font-semibold uppercase tracking-[0.2em] text-[#0f172a]">
                 Tu perfil Big Five
               </p>
+              <button
+                onClick={() => setRunning(true)}
+                className="flex h-10 items-center gap-1.5 rounded-full bg-[#7c3aed] px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white shadow-sm active:scale-95"
+                aria-label="Hacer o repetir test"
+              >
+                <RefreshCw size={13} />
+                <span>Repetir</span>
+              </button>
             </div>
+
 
             {/* Radar */}
             <div className="mt-6 rounded-[28px] bg-white p-5 shadow-sm">
