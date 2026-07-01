@@ -303,14 +303,18 @@ function WriteView({
         .filter((a) => !!a.path)
         .map((a) => ({ id: a.id, name: a.name, type: a.type, path: a.path, size: a.size }));
       const audioAtt = persistedAttachments.find((a) => a.type === "audio");
+      const encEnabled = e2e.isE2EEnabled();
+      const rawContent = sanitizeHtml(text);
+      const contentForDb = encEnabled ? await e2e.encryptText(rawContent) : rawContent;
       const payload = {
         user_id: user.id,
-        content: sanitizeHtml(text),
+        content: contentForDb,
         entry_date: localDateStr(),
         emotion_tags: tags,
         prompt: prompt?.text ?? null,
         attachments: persistedAttachments as unknown as never,
         voice_note_path: audioAtt?.path ?? null,
+        is_encrypted: encEnabled,
       };
       if (entryId) {
         const { error } = await supabase.from("journal_entries").update(payload).eq("id", entryId);
