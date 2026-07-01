@@ -6,7 +6,7 @@ import {
   EMOJI_ICONS, LINE_ICONS, STREAK_COLORS, DBT_CATEGORIES,
   TIME_SLOTS, FREQUENCY_OPTIONS, CADENCE_OPTIONS,
 } from "@/lib/habitsIcons";
-import type { HabitInput, HabitCategory } from "@/hooks/useHabits";
+import type { HabitInput, HabitCategory, Habit } from "@/hooks/useHabits";
 
 interface Props {
   open: boolean;
@@ -14,6 +14,7 @@ interface Props {
   onCreate: (input: HabitInput) => Promise<void>;
   customCategories: HabitCategory[];
   onAddCategory: (label: string) => Promise<string | undefined>;
+  existingHabits?: Habit[];
 }
 
 export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAddCategory }: Props) {
