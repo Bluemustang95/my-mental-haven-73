@@ -179,6 +179,10 @@ export default function MiProceso() {
 
         </PremiumLock>
 
+        <div className="mt-5">
+          <PeriodStats />
+        </div>
+
         <div className="my-6 h-px bg-black/[0.06]" />
 
         {(!country || country === "AR") ? (
