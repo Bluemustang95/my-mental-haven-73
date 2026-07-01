@@ -1,378 +1,203 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CalendarBlank, DownloadSimple } from "@phosphor-icons/react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, Shield, HeartPulse, NotebookPen, ClipboardList, Activity, Target, BookHeart, Sparkles } from "lucide-react";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { useResumenData } from "@/hooks/useResumenData";
+import { buildReport, countSelected, type Selection, type CategoryId } from "@/components/resumen/reportBuilder";
+import { CategoryAccordion, type Item } from "@/components/resumen/CategoryAccordion";
+import { LoadingScreen } from "@/components/resumen/LoadingScreen";
+import { ReportEditor } from "@/components/resumen/ReportEditor";
 
-interface SummaryData {
-  displayName: string;
-  moodAvg: number | null;
-  moodEntries: { date: string; score: number }[];
-  goals: { text: string; completed: boolean }[];
-  highlighted: { date: string; content: string; prompt: string | null }[];
-  tests: { type: string; score: number; severity: string | null; date: string }[];
-}
+const fmt = (d: string) => format(new Date(d), "d MMM", { locale: es });
+
+const moodTxt = (m: number | null) => (m == null ? "sin registro" : `${m}/5`);
 
 export default function ResumenPsico() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [from, setFrom] = useState<Date>(subDays(new Date(), 7));
-  const [to, setTo] = useState<Date>(new Date());
-  const [data, setData] = useState<SummaryData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
+  const { data, loading } = useResumenData();
+  const [screen, setScreen] = useState<"select" | "loading" | "editor">("select");
+  const [selection, setSelection] = useState<Selection>({});
+  const [reportText, setReportText] = useState("");
 
-  const fetchData = async () => {
-    if (!user) return;
-    setLoading(true);
-    const since = startOfDay(from).toISOString();
-    const until = endOfDay(to).toISOString();
-
-    const [profileRes, checkinsRes, goalsRes, journalRes, testsRes] = await Promise.all([
-      supabase.from("patient_app_profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
-      supabase.from("daily_checkins").select("checkin_date, mood_score").eq("user_id", user.id)
-        .gte("created_at", since).lte("created_at", until).order("checkin_date"),
-      supabase.from("weekly_goals").select("goal_text, completed").eq("user_id", user.id)
-        .gte("created_at", since).lte("created_at", until),
-      supabase.from("journal_entries").select("entry_date, content, prompt, created_at").eq("user_id", user.id)
-        .eq("highlighted", true).gte("created_at", since).lte("created_at", until)
-        .order("created_at", { ascending: false }),
-      supabase.from("test_results").select("test_type, score, severity, created_at").eq("user_id", user.id)
-        .gte("created_at", since).lte("created_at", until).order("created_at", { ascending: false }),
-    ]);
-
-    const checkins = (checkinsRes.data ?? []).filter(c => c.mood_score != null);
-    const moodAvg = checkins.length > 0
-      ? Math.round((checkins.reduce((s, c) => s + c.mood_score!, 0) / checkins.length) * 10) / 10
-      : null;
-
-    setData({
-      displayName: profileRes.data?.display_name || "Usuario",
-      moodAvg,
-      moodEntries: checkins.map(c => ({
-        date: format(new Date(c.checkin_date), "dd/MM", { locale: es }),
-        score: c.mood_score!,
+  const items = useMemo(() => {
+    if (!data) return null;
+    return {
+      checkins: data.checkins.map<Item>(c => ({
+        id: c.id,
+        label: `${fmt(c.date)} · ánimo ${moodTxt(c.mood)}`,
+        sub: c.note || (c.emotions?.length ? c.emotions.join(", ") : undefined),
       })),
-      goals: (goalsRes.data ?? []).map(g => ({ text: g.goal_text, completed: g.completed ?? false })),
-      highlighted: (journalRes.data ?? []).map(j => ({
-        date: format(new Date(j.entry_date || j.created_at!), "d MMM", { locale: es }),
-        content: j.content,
-        prompt: j.prompt,
+      notes: [
+        ...data.prepNotes.map<Item>(n => ({ id: `prep-${n.id}`, label: `Nota (${fmt(n.created_at)})`, sub: n.note })),
+        ...data.sessionNotes.map<Item>(n => ({ id: `sess-${n.id}`, label: `Sesión (${fmt(n.session_date)})`, sub: n.note })),
+      ],
+      tests: data.tests.map<Item>(t => ({
+        id: t.id,
+        label: `${t.type} · ${t.score} pts`,
+        sub: `${t.severity ?? "resultado registrado"} · ${fmt(t.created_at)}`,
       })),
-      tests: (testsRes.data ?? []).map(t => ({
-        type: t.test_type,
-        score: t.score,
-        severity: t.severity,
-        date: format(new Date(t.created_at!), "dd/MM", { locale: es }),
+      resources: [
+        { id: "exercises", label: "Ejercicios de mindfulness", sub: `${data.exerciseSessions} sesiones` },
+        { id: "habits", label: "Hábitos completados", sub: `${data.habitCompletions} registros` },
+        { id: "dbt", label: "Regulación emocional (DBT)", sub: `${data.dbtSessions} sesiones` },
+        { id: "thoughts", label: "Registros de pensamientos", sub: `${data.thoughtRecords} entradas` },
+        {
+          id: "meds",
+          label: "Medicación",
+          sub: `${data.medicationLogs.taken}/${data.medicationLogs.total} tomas`,
+        },
+      ].filter(r => {
+        if (r.id === "exercises") return data.exerciseSessions > 0;
+        if (r.id === "habits") return data.habitCompletions > 0;
+        if (r.id === "dbt") return data.dbtSessions > 0;
+        if (r.id === "thoughts") return data.thoughtRecords > 0;
+        if (r.id === "meds") return data.medicationLogs.total > 0;
+        return true;
+      }) as Item[],
+      goals: data.goals.map<Item>(g => ({
+        id: g.id,
+        label: g.text,
+        sub: g.completed ? "Cumplido" : "En curso",
       })),
-    });
-    setLoading(false);
+      journal: data.journal.map<Item>(j => ({
+        id: j.id,
+        label: `${fmt(j.date)}${j.prompt ? ` · ${j.prompt}` : ""}`,
+        sub: j.content,
+      })),
+    };
+  }, [data]);
+
+  const total = countSelected(selection);
+
+  const toggleCategory = (cat: CategoryId, v: boolean) => {
+    setSelection(prev => ({
+      ...prev,
+      [cat]: { enabled: v, items: prev[cat]?.items ?? {} },
+    }));
   };
 
-  useEffect(() => { fetchData(); }, [user, from, to]);
-
-  const moodLabel = (avg: number) => {
-    if (avg <= 1.5) return "Muy bajo";
-    if (avg <= 2.5) return "Bajo";
-    if (avg <= 3.5) return "Moderado";
-    if (avg <= 4.5) return "Bueno";
-    return "Muy bueno";
+  const toggleItem = (cat: CategoryId, id: string, v: boolean) => {
+    setSelection(prev => ({
+      ...prev,
+      [cat]: {
+        enabled: v ? true : prev[cat]?.enabled ?? true,
+        items: { ...(prev[cat]?.items ?? {}), [id]: v },
+      },
+    }));
   };
 
-  const generatePDF = async () => {
+  const generate = () => {
     if (!data) return;
-    setGenerating(true);
-    try {
-      const { jsPDF } = await import("jspdf");
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const w = doc.internal.pageSize.getWidth();
-      const margin = 18;
-      const contentW = w - margin * 2;
-      let y = 20;
-
-      const addPage = () => { doc.addPage(); y = 20; };
-      const checkY = (needed: number) => { if (y + needed > 270) addPage(); };
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(16, 25, 39);
-      doc.text("Bitácora de Trabajo Personal", margin, y);
-      y += 8;
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "normal");
-      doc.text(data.displayName, margin, y);
-      y += 6;
-      doc.setFontSize(9);
-      doc.setTextColor(120, 120, 120);
-      doc.text(
-        `Período: ${format(from, "d MMM yyyy", { locale: es })} — ${format(to, "d MMM yyyy", { locale: es })}`,
-        margin, y
-      );
-      y += 4;
-      doc.setDrawColor(200, 190, 170);
-      doc.line(margin, y, w - margin, y);
-      y += 10;
-
-      const sectionTitle = (title: string) => {
-        checkY(14);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.setTextColor(16, 25, 39);
-        doc.text(title, margin, y);
-        y += 7;
-      };
-
-      sectionTitle("Estado de Ánimo");
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      if (data.moodAvg !== null) {
-        doc.text(`Promedio semanal: ${data.moodAvg}/5 — ${moodLabel(data.moodAvg)}`, margin, y);
-        y += 6;
-        if (data.moodEntries.length > 0) {
-          doc.setFontSize(9);
-          doc.setTextColor(100, 100, 100);
-          const moodLine = data.moodEntries.map(m => `${m.date}: ${m.score}`).join("  |  ");
-          const lines = doc.splitTextToSize(moodLine, contentW);
-          doc.text(lines, margin, y);
-          y += lines.length * 4.5 + 4;
-        }
-      } else {
-        doc.text("Sin registros de ánimo en este período.", margin, y);
-        y += 8;
-      }
-
-      sectionTitle("Objetivos de la Semana");
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      if (data.goals.length > 0) {
-        for (const g of data.goals) {
-          checkY(8);
-          const icon = g.completed ? "✓" : "○";
-          const status = g.completed ? "(Cumplido)" : "(En curso)";
-          doc.text(`${icon}  ${g.text}  ${status}`, margin + 2, y);
-          y += 6;
-        }
-        y += 2;
-      } else {
-        doc.text("Sin objetivos registrados en este período.", margin, y);
-        y += 8;
-      }
-
-      sectionTitle("Notas Destacadas del Diario");
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      if (data.highlighted.length > 0) {
-        for (const h of data.highlighted) {
-          checkY(20);
-          doc.setFont("helvetica", "italic");
-          doc.setFontSize(9);
-          doc.setTextColor(140, 130, 110);
-          doc.text(h.date, margin, y);
-          if (h.prompt) {
-            doc.text(` — "${h.prompt}"`, margin + doc.getTextWidth(h.date) + 2, y);
-          }
-          y += 5;
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(10);
-          doc.setTextColor(60, 60, 60);
-          const contentLines = doc.splitTextToSize(h.content, contentW - 4);
-          checkY(contentLines.length * 4.5 + 4);
-          doc.text(contentLines, margin + 2, y);
-          y += contentLines.length * 4.5 + 4;
-        }
-      } else {
-        doc.text("Sin notas destacadas. Podés marcar entradas con ★ en tu diario.", margin, y);
-        y += 8;
-      }
-
-      sectionTitle("Resultados de Tests Clínicos");
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      if (data.tests.length > 0) {
-        for (const t of data.tests) {
-          checkY(8);
-          const sev = t.severity ? ` — ${t.severity}` : "";
-          doc.text(`${t.type}: ${t.score} pts${sev}  (${t.date})`, margin + 2, y);
-          y += 6;
-        }
-        y += 2;
-      } else {
-        doc.text("Sin tests realizados en este período.", margin, y);
-        y += 8;
-      }
-
-      const totalPages = doc.getNumberOfPages();
-      for (let p = 1; p <= totalPages; p++) {
-        doc.setPage(p);
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(7);
-        doc.setTextColor(160, 160, 160);
-        doc.text(
-          "Este documento es para uso exclusivo en el marco del proceso terapéutico y su contenido es confidencial.",
-          w / 2, 288, { align: "center" }
-        );
-      }
-
-      doc.save(`Bitacora_${data.displayName.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf`);
-      toast.success("PDF generado correctamente");
-    } catch (err) {
-      console.error(err);
-      toast.error("Error al generar el PDF");
-    } finally {
-      setGenerating(false);
-    }
+    setScreen("loading");
+    setTimeout(() => {
+      setReportText(buildReport(selection, data));
+      setScreen("editor");
+    }, 1700);
   };
 
-  const rangeLabel = `${format(from, "d MMM", { locale: es })} — ${format(to, "d MMM", { locale: es })}`;
+  const cats: {
+    id: CategoryId;
+    title: string;
+    subtitle: string;
+    icon: React.ReactNode;
+    empty: string;
+  }[] = [
+    { id: "checkins", title: "Estado de ánimo", subtitle: "check-ins diarios", icon: <HeartPulse size={17} />, empty: "Sin check-ins esta semana" },
+    { id: "notes", title: "Notas para sesión", subtitle: "temas a hablar", icon: <NotebookPen size={17} />, empty: "Sin notas guardadas" },
+    { id: "tests", title: "Inventarios y Tests", subtitle: "resultados clínicos", icon: <ClipboardList size={17} />, empty: "Sin tests recientes" },
+    { id: "resources", title: "Uso de recursos", subtitle: "actividad en la app", icon: <Activity size={17} />, empty: "Sin actividad registrada" },
+    { id: "goals", title: "Objetivos semanales", subtitle: "compromisos", icon: <Target size={17} />, empty: "Sin objetivos esta semana" },
+    { id: "journal", title: "Fragmentos del diario", subtitle: "solo destacados ★", icon: <BookHeart size={17} />, empty: "Marcá entradas con ★ para verlas" },
+  ];
 
   return (
-    <div className="pb-28 safe-area-top">
-      <div className="flex items-center gap-3 px-5 pt-14 pb-3">
-        <button onClick={() => navigate(-1)} className="rounded-xl p-1.5 active:bg-foreground/5">
-          <ArrowLeft size={22} weight="bold" className="text-foreground" />
-        </button>
-        <div>
-          <h1 className="font-display text-lg font-semibold">Resumen para mi Psico</h1>
-          <p className="text-xs text-muted-foreground">Generá un reporte de tu semana</p>
+    <div className="relative min-h-screen bg-[#f9f9fb]">
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-8 pt-14">
+        <div className="mb-4 flex items-center gap-3">
+          <button
+            onClick={() => (screen === "select" ? navigate(-1) : setScreen("select"))}
+            className="rounded-xl p-1.5 active:bg-black/5"
+          >
+            <ArrowLeft size={22} className="text-[#0f172a]" />
+          </button>
+          <div>
+            <h1 className="font-display text-[17px] font-semibold text-[#0f172a]">Resumen para mi Psico</h1>
+            <p className="text-[11.5px] text-[#64748b]">Últimos 7 días · elegí qué compartir</p>
+          </div>
         </div>
+
+        <AnimatePresence mode="wait">
+          {screen === "select" && (
+            <motion.div
+              key="select"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="flex-1 pb-24"
+            >
+              <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-[#7cc2c8]/25 bg-[#7cc2c8]/10 p-3.5">
+                <Shield size={16} className="mt-0.5 shrink-0 text-[#0e7c8a]" />
+                <p className="text-[11.5px] leading-relaxed text-[#0f172a]">
+                  <strong>Solo se envía lo que marques.</strong> Nada se comparte sin tu confirmación.
+                </p>
+              </div>
+
+              {loading || !items ? (
+                <div className="flex justify-center py-16">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#7cc2c8] border-t-transparent" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cats.map(c => (
+                    <CategoryAccordion
+                      key={c.id}
+                      icon={c.icon}
+                      title={c.title}
+                      subtitle={c.subtitle}
+                      items={items[c.id]}
+                      enabled={!!selection[c.id]?.enabled}
+                      selectedItems={selection[c.id]?.items ?? {}}
+                      onToggleCategory={(v) => toggleCategory(c.id, v)}
+                      onToggleItem={(id, v) => toggleItem(c.id, id, v)}
+                      emptyText={c.empty}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {screen === "loading" && <LoadingScreen key="loading" />}
+
+          {screen === "editor" && (
+            <motion.div
+              key="editor"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex-1"
+            >
+              <ReportEditor initialText={reportText} displayName={data?.displayName ?? "Paciente"} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <section className="px-5 mb-6">
-        <h2 className="mb-2 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Rango de fechas
-        </h2>
-        <div className="flex items-center gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="flex items-center gap-2 rounded-2xl bg-card px-4 py-2.5 text-sm shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
-                <CalendarBlank size={16} weight="duotone" className="text-muted-foreground" />
-                <span>{rangeLabel}</span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                selected={{ from, to }}
-                onSelect={(range) => {
-                  if (range?.from) setFrom(range.from);
-                  if (range?.to) setTo(range.to);
-                }}
-                disabled={(date) => date > new Date()}
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
+      {screen === "select" && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/5 bg-white/95 px-5 pb-6 pt-3 backdrop-blur-xl">
+          <div className="mx-auto max-w-md">
+            <button
+              onClick={generate}
+              disabled={total === 0}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7cc2c8] py-3.5 font-display text-[13.5px] font-semibold text-white shadow-[0_6px_20px_rgba(124,194,200,0.35)] transition-opacity disabled:opacity-40 disabled:shadow-none"
+            >
+              <Sparkles size={16} />
+              {total === 0 ? "Seleccioná al menos un ítem" : `Generar resumen (${total})`}
+            </button>
+          </div>
         </div>
-      </section>
-
-      {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        </div>
-      ) : data ? (
-        <div className="space-y-5 px-5">
-          <div className="rounded-3xl bg-card p-5 shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
-            <h3 className="mb-2 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Estado de ánimo
-            </h3>
-            {data.moodAvg !== null ? (
-              <div className="flex items-baseline gap-2">
-                <span className="font-display text-3xl font-bold text-foreground">{data.moodAvg}</span>
-                <span className="text-sm text-muted-foreground">/ 5 — {moodLabel(data.moodAvg)}</span>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">Sin registros</p>
-            )}
-          </div>
-
-          <div className="rounded-3xl bg-card p-5 shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
-            <h3 className="mb-3 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Objetivos ({data.goals.filter(g => g.completed).length}/{data.goals.length})
-            </h3>
-            {data.goals.length > 0 ? (
-              <ul className="space-y-2">
-                {data.goals.map((g, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className={cn("mt-0.5 text-xs", g.completed ? "text-green-600" : "text-muted-foreground")}>
-                      {g.completed ? "✓" : "○"}
-                    </span>
-                    <span className={cn(g.completed && "line-through text-muted-foreground")}>{g.text}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">Sin objetivos</p>
-            )}
-          </div>
-
-          <div className="rounded-3xl bg-card p-5 shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
-            <h3 className="mb-3 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Notas destacadas ({data.highlighted.length})
-            </h3>
-            {data.highlighted.length > 0 ? (
-              <div className="space-y-3">
-                {data.highlighted.map((h, i) => (
-                  <div key={i} className="rounded-2xl bg-secondary/30 p-3">
-                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{h.date}</p>
-                    <p className="mt-1 text-sm leading-relaxed text-foreground/85 line-clamp-3">{h.content}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">
-                Marcá entradas con ★ en tu diario para verlas acá.
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-3xl bg-card p-5 shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
-            <h3 className="mb-3 font-display text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Tests clínicos
-            </h3>
-            {data.tests.length > 0 ? (
-              <div className="space-y-2">
-                {data.tests.map((t, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{t.type}</span>
-                    <span className="text-muted-foreground">
-                      {t.score} pts{t.severity ? ` · ${t.severity}` : ""} — {t.date}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">Sin tests en este período</p>
-            )}
-          </div>
-
-          <button
-            onClick={generatePDF}
-            disabled={generating}
-            className="flex w-full items-center justify-center gap-2.5 rounded-3xl bg-accent py-4 font-display text-sm font-semibold text-accent-foreground shadow-[0_4px_16px_hsl(var(--accent)/0.25)] transition-all active:scale-[0.98] disabled:opacity-60"
-          >
-            {generating ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-foreground border-t-transparent" />
-            ) : (
-              <DownloadSimple size={20} weight="bold" />
-            )}
-            {generating ? "Generando…" : "Generar PDF"}
-          </button>
-
-          <p className="text-center text-[10px] text-muted-foreground/60 pb-4">
-            Este documento es para uso exclusivo en el marco del proceso terapéutico.
-          </p>
-        </div>
-      ) : null}
+      )}
     </div>
   );
 }
