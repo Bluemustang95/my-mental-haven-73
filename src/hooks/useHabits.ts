@@ -194,6 +194,42 @@ export function computeStreak(completions: Completion[], habitId: string): numbe
   return streak;
 }
 
+export function computeStreak(completions: Completion[], habitId: string): number {
+  // Racha con "perdón": 1 día perdido cada 7 no rompe la racha (James Clear).
+  const dates = new Set(completions.filter(c => c.habit_id === habitId).map(c => c.completed_date));
+  if (dates.size === 0) return 0;
+  let streak = 0;
+  let forgivenessLeft = 1;
+  let daysWindow = 0;
+  const d = new Date();
+  const today = localDateStr();
+  for (let i = 0; i < 365; i++) {
+    const s = localDateStr(d);
+    // reset forgiveness cada 7 días de ventana
+    if (daysWindow > 0 && daysWindow % 7 === 0) forgivenessLeft = 1;
+    if (dates.has(s)) {
+      streak++;
+      daysWindow++;
+      d.setDate(d.getDate() - 1);
+    } else {
+      // Hoy sin marcar → gracia inicial
+      if (streak === 0 && s === today) {
+        d.setDate(d.getDate() - 1);
+        continue;
+      }
+      // Usar perdón semanal
+      if (forgivenessLeft > 0 && streak > 0) {
+        forgivenessLeft--;
+        daysWindow++;
+        d.setDate(d.getDate() - 1);
+        continue;
+      }
+      break;
+    }
+  }
+  return streak;
+}
+
 export function computeBestStreak(completions: Completion[], habitId: string): number {
   const dates = [...new Set(completions.filter(c => c.habit_id === habitId).map(c => c.completed_date))].sort();
   let best = 0, cur = 0;
