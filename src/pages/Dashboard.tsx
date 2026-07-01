@@ -76,7 +76,7 @@ export default function Dashboard() {
       .from("daily_checkins")
       .select("mode, sleep_score, balance_improve, checkin_date")
       .eq("user_id", user.id)
-      .gte("checkin_date", localDateStr(new Date(Date.now() - 7 * 86400000)));
+      .gte("checkin_date", localDateStr(new Date(Date.now() - 45 * 86400000)));
     const today = (ci ?? []).filter((c: any) => c.checkin_date === todayStr);
     setMorningDone(today.some((c: any) => c.mode === "morning" || (!c.mode && c.sleep_score != null)));
     setNightDone(today.some((c: any) => c.mode === "night"));
