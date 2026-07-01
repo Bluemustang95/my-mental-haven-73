@@ -67,6 +67,7 @@ export type HabitInput = {
   time_slot?: string;
   cadence?: string;
   reminders_enabled?: boolean;
+  stack_after_habit_id?: string | null;
 };
 
 export function useHabits() {
