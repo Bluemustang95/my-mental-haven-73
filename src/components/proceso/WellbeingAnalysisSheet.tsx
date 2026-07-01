@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Book, ClipboardList, Moon, Smile, Target, X } from "lucide-react";
+import { Book, ClipboardList, Moon, Pill, Smile, Target, X } from "lucide-react";
 import { Sparkline } from "./Sparkline";
 import { PeriodStats } from "./PeriodStats";
+import { RecentActivityFeed } from "./RecentActivityFeed";
 import type { WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
