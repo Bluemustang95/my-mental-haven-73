@@ -108,7 +108,8 @@ export async function encryptText(plain: string): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const enc = new TextEncoder().encode(plain);
   const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc);
-  return JSON.stringify({ v: 1, iv: b64(iv.buffer), ct: b64(ct) });
+  const ivBuf = new Uint8Array(iv).buffer;
+  return JSON.stringify({ v: 1, iv: b64(ivBuf), ct: b64(ct) });
 }
 
 /** Devuelve null si la clave no está disponible o el payload es inválido. */
