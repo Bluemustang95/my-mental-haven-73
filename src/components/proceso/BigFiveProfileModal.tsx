@@ -1,6 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
+import { TestRunner } from "@/components/tests/TestRunner";
 
 type Trait = { key: string; label: string; short: string; color: string };
 
@@ -21,7 +25,45 @@ const DEFAULTS: Record<string, number> = {
 };
 
 export function BigFiveProfileModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { user } = useAuth();
   const [values, setValues] = useState<Record<string, number>>(DEFAULTS);
+  const [running, setRunning] = useState(false);
+  useHideBottomNav(open);
+
+  // Map OCEAN letters (from test_results.answers.subscales) to trait keys
+  const OCEAN_TO_KEY: Record<string, string> = {
+    O: "openness",
+    C: "conscientiousness",
+    E: "extraversion",
+    A: "agreeableness",
+    N: "neuroticism",
+  };
+
+  const loadLatest = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("test_results")
+      .select("answers, created_at")
+      .eq("user_id", user.id)
+      .eq("test_type", "BIGFIVE")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const subs = (data as any)?.answers?.subscales as Record<string, number> | undefined;
+    if (!subs) return;
+    const next: Record<string, number> = { ...DEFAULTS };
+    Object.entries(subs).forEach(([k, v]) => {
+      const key = OCEAN_TO_KEY[k];
+      if (key) next[key] = Math.round((v as number) * 100);
+    });
+    setValues(next);
+  };
+
+  useEffect(() => {
+    if (open) loadLatest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user]);
+
 
   const points = useMemo(() => {
     const cx = 160, cy = 160, R = 110;
@@ -51,7 +93,7 @@ export function BigFiveProfileModal({ open, onClose }: { open: boolean; onClose:
           className="fixed inset-0 z-[100] overflow-y-auto bg-[#f9f9fb]"
         >
           <div className="mx-auto max-w-md px-5 pt-10 pb-32">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <button
                 onClick={onClose}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm"
@@ -59,10 +101,19 @@ export function BigFiveProfileModal({ open, onClose }: { open: boolean; onClose:
               >
                 <ChevronLeft size={20} className="text-[#0f172a]" />
               </button>
-              <p className="font-[Montserrat] text-[12px] font-semibold uppercase tracking-[0.2em] text-[#0f172a]">
+              <p className="flex-1 truncate text-center font-[Montserrat] text-[12px] font-semibold uppercase tracking-[0.2em] text-[#0f172a]">
                 Tu perfil Big Five
               </p>
+              <button
+                onClick={() => setRunning(true)}
+                className="flex h-10 items-center gap-1.5 rounded-full bg-[#7c3aed] px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white shadow-sm active:scale-95"
+                aria-label="Hacer o repetir test"
+              >
+                <RefreshCw size={13} />
+                <span>Repetir</span>
+              </button>
             </div>
+
 
             {/* Radar */}
             <div className="mt-6 rounded-[28px] bg-white p-5 shadow-sm">
@@ -168,6 +219,16 @@ export function BigFiveProfileModal({ open, onClose }: { open: boolean; onClose:
               Cerrar Perfil
             </button>
           </div>
+
+          {running && (
+            <TestRunner
+              testCode="BIGFIVE"
+              onClose={() => {
+                setRunning(false);
+                loadLatest();
+              }}
+            />
+          )}
         </motion.div>
       )}
     </AnimatePresence>

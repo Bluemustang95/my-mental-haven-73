@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { BigFiveHexagon } from "./BigFiveHexagon";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 
 type Def = {
   id: string;
@@ -40,6 +41,7 @@ export function TestRunner({
   const [result, setResult] = useState<{ total: number; subs: Record<string, number>; interpretation: string } | null>(
     null
   );
+  useHideBottomNav(true);
 
   useEffect(() => {
     (async () => {
@@ -115,7 +117,7 @@ export function TestRunner({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[110] overflow-y-auto bg-[#0F0F12] text-white"
+      className="fixed inset-0 z-[9999] overflow-y-auto bg-[#0F0F12] text-white"
     >
       <div className="pointer-events-none absolute -top-32 -right-24 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl" />

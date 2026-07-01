@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { TestRunner } from "@/components/tests/TestRunner";
 import { BigFiveHexagon } from "@/components/tests/BigFiveHexagon";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 
 type Def = { id: string; code: string; name: string; kind: string };
 
@@ -25,6 +26,8 @@ export function SymptomsTestModal({
 }) {
   const [defs, setDefs] = useState<Def[]>([]);
   const [running, setRunning] = useState<string | null>(null);
+  useHideBottomNav(open);
+
 
   useEffect(() => {
     if (!open) return;
@@ -47,7 +50,7 @@ export function SymptomsTestModal({
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[100] overflow-y-auto bg-[#0F0F12] text-white"
         >
-          <div className="relative mx-auto min-h-screen max-w-md px-6 pt-12 pb-12">
+          <div className={`relative mx-auto min-h-screen max-w-md px-6 pt-12 pb-12 ${running ? "hidden" : ""}`}>
             <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-violet-500/20 blur-3xl" />
             <div className="relative mb-8 flex items-center justify-between">
               <div>

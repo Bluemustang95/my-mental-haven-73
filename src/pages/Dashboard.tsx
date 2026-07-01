@@ -96,12 +96,28 @@ export default function Dashboard() {
     loadToday();
   }, [loadToday]);
 
+  // Determine position within the "camino" sequence (morning → recommended → night)
+  // so we can draw a dashed connector line between the visible ones.
+  const CAMINO_IDS: WidgetId[] = ["morning", "recommended", "night"];
+  const visibleCamino = (widgets as any).widgets
+    ? (widgets as any).widgets.filter((w: any) => w.enabled && CAMINO_IDS.includes(w.id)).map((w: any) => w.id as WidgetId)
+    : CAMINO_IDS;
+  const caminoPos = (id: WidgetId) => {
+    const idx = visibleCamino.indexOf(id);
+    return {
+      isFirst: idx === 0,
+      isLast: idx === visibleCamino.length - 1,
+      inPath: idx !== -1,
+    };
+  };
+
   // Renderers per widget id so the same definition feeds grid + reorder list.
   const renderWidget = (id: WidgetId): React.ReactNode => {
     switch (id) {
-      case "morning":
+      case "morning": {
+        const p = caminoPos("morning");
         return (
-          <BulletRow done={morningDone}>
+          <BulletRow done={morningDone} isFirst={p.isFirst} isLast={p.isLast}>
             <TimelineCard
               onClick={() => setCheckinOpen("morning")}
               icon={<Sun size={15} className="text-amber-600" />}
@@ -112,15 +128,19 @@ export default function Dashboard() {
             />
           </BulletRow>
         );
-      case "recommended":
+      }
+      case "recommended": {
+        const p = caminoPos("recommended");
         return (
-          <BulletRow done={false}>
+          <BulletRow done={false} isFirst={p.isFirst} isLast={p.isLast}>
             <div id="widget-recommended"><RecommendedResourceCard /></div>
           </BulletRow>
         );
-      case "night":
+      }
+      case "night": {
+        const p = caminoPos("night");
         return (
-          <BulletRow done={nightDone}>
+          <BulletRow done={nightDone} isFirst={p.isFirst} isLast={p.isLast}>
             <TimelineCard
               onClick={() => setCheckinOpen("night")}
               icon={<MoonIcon size={15} className="text-indigo-600" />}
@@ -131,6 +151,7 @@ export default function Dashboard() {
             />
           </BulletRow>
         );
+      }
       case "sleep_zone":
         return <SleepZoneCard onClick={() => navigate("/herramientas/sueno")} />;
       case "pending":
@@ -283,20 +304,47 @@ export default function Dashboard() {
   );
 }
 
-function BulletRow({ done, children }: { done: boolean; children: React.ReactNode }) {
+function BulletRow({
+  done,
+  children,
+  isFirst = true,
+  isLast = true,
+}: {
+  done: boolean;
+  children: React.ReactNode;
+  isFirst?: boolean;
+  isLast?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span
-        className={
-          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] transition " +
-          (done
-            ? "border-resma-teal bg-resma-teal text-white"
-            : "border-foreground/25 bg-white text-transparent")
-        }
-      >
-        {done && <Check size={9} strokeWidth={3} />}
-      </span>
-      <div className="min-w-0 flex-1">{children}</div>
+    <div className="relative flex items-stretch gap-2.5">
+      {/* Dashed connector rail behind the bullet column */}
+      <div className="relative flex w-4 shrink-0 flex-col items-center">
+        {/* segment above bullet */}
+        <div
+          className={
+            "w-px flex-1 " +
+            (!isFirst ? "border-l border-dashed border-foreground/25" : "")
+          }
+        />
+        <span
+          className={
+            "my-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] transition " +
+            (done
+              ? "border-resma-teal bg-resma-teal text-white"
+              : "border-foreground/25 bg-white text-transparent")
+          }
+        >
+          {done && <Check size={9} strokeWidth={3} />}
+        </span>
+        {/* segment below bullet */}
+        <div
+          className={
+            "w-px flex-1 " +
+            (!isLast ? "border-l border-dashed border-foreground/25" : "")
+          }
+        />
+      </div>
+      <div className="min-w-0 flex-1 py-1">{children}</div>
     </div>
   );
 }
