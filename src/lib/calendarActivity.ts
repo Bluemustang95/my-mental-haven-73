@@ -68,7 +68,10 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
   completedGoals.data?.forEach((g: any) => activities.push({ type: "goal", label: "Objetivo cumplido", detail: g.goal_text?.slice(0, 100) || "", time: format(new Date(g.created_at), "HH:mm") }));
   readings.data?.forEach((r: any) => activities.push({ type: "reading", label: r.psychoeducation_content?.title ? `Lectura: ${r.psychoeducation_content.title}` : "Lectura completada", detail: r.psychoeducation_content?.content_type === "video" ? "Video" : "Artículo", time: r.completed_at ? format(new Date(r.completed_at), "HH:mm") : "" }));
   dbt.data?.forEach((d: any) => activities.push({ type: "dbt", label: "Regulación emocional (DBT)", detail: d.emotion ? `Emoción: ${d.emotion}${d.path ? ` · ${d.path}` : ""}` : (d.path ?? "Sesión completada"), time: format(new Date(d.created_at), "HH:mm") }));
-  meds.data?.forEach((m: any) => activities.push({ type: "medication", label: m.taken ? "Medicación tomada" : "Toma saltada", detail: m.note?.slice(0, 80) || "", time: format(new Date(m.taken_at), "HH:mm") }));
+  meds.data?.forEach((m: any) => {
+    const ts = m.taken_at || m.created_at;
+    activities.push({ type: "medication", label: m.taken ? "Medicación tomada" : "Toma saltada", detail: m.note?.slice(0, 80) || "", time: ts ? format(new Date(ts), "HH:mm") : "" });
+  });
   sleep.data?.forEach((s: any) => activities.push({ type: "sleep", label: "Registro de sueño", detail: `${s.quality ?? ""}${s.score != null ? ` · ${s.score}/10` : ""}${s.notes ? ` · ${s.notes.slice(0, 60)}` : ""}`.replace(/^ · /, "") || "Registrado", time: format(new Date(s.created_at), "HH:mm") }));
 
   const bodyPartLabels: Record<string, string> = {
