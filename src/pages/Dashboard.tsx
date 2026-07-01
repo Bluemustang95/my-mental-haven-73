@@ -96,12 +96,28 @@ export default function Dashboard() {
     loadToday();
   }, [loadToday]);
 
+  // Determine position within the "camino" sequence (morning → recommended → night)
+  // so we can draw a dashed connector line between the visible ones.
+  const CAMINO_IDS: WidgetId[] = ["morning", "recommended", "night"];
+  const visibleCamino = (widgets as any).widgets
+    ? (widgets as any).widgets.filter((w: any) => w.enabled && CAMINO_IDS.includes(w.id)).map((w: any) => w.id as WidgetId)
+    : CAMINO_IDS;
+  const caminoPos = (id: WidgetId) => {
+    const idx = visibleCamino.indexOf(id);
+    return {
+      isFirst: idx === 0,
+      isLast: idx === visibleCamino.length - 1,
+      inPath: idx !== -1,
+    };
+  };
+
   // Renderers per widget id so the same definition feeds grid + reorder list.
   const renderWidget = (id: WidgetId): React.ReactNode => {
     switch (id) {
-      case "morning":
+      case "morning": {
+        const p = caminoPos("morning");
         return (
-          <BulletRow done={morningDone}>
+          <BulletRow done={morningDone} isFirst={p.isFirst} isLast={p.isLast}>
             <TimelineCard
               onClick={() => setCheckinOpen("morning")}
               icon={<Sun size={15} className="text-amber-600" />}
@@ -112,15 +128,19 @@ export default function Dashboard() {
             />
           </BulletRow>
         );
-      case "recommended":
+      }
+      case "recommended": {
+        const p = caminoPos("recommended");
         return (
-          <BulletRow done={false}>
+          <BulletRow done={false} isFirst={p.isFirst} isLast={p.isLast}>
             <div id="widget-recommended"><RecommendedResourceCard /></div>
           </BulletRow>
         );
-      case "night":
+      }
+      case "night": {
+        const p = caminoPos("night");
         return (
-          <BulletRow done={nightDone}>
+          <BulletRow done={nightDone} isFirst={p.isFirst} isLast={p.isLast}>
             <TimelineCard
               onClick={() => setCheckinOpen("night")}
               icon={<MoonIcon size={15} className="text-indigo-600" />}
@@ -131,6 +151,7 @@ export default function Dashboard() {
             />
           </BulletRow>
         );
+      }
       case "sleep_zone":
         return <SleepZoneCard onClick={() => navigate("/herramientas/sueno")} />;
       case "pending":
