@@ -131,17 +131,31 @@ export default function Resmita() {
       setMessages((prev) => [...prev, { role: "assistant", content: "No pude conectar con el servidor. Revisá tu conexión." }]);
     } finally {
       setIsLoading(false);
+      // Persist assistant reply
+      if (user && assistantSoFar.trim()) {
+        supabase.from("resmita_messages").insert({ user_id: user.id, role: "assistant", content: assistantSoFar });
+      }
     }
   };
 
   return (
     <div className="flex h-screen flex-col safe-area-top">
       {/* Header */}
-      <div className="border-b border-border px-5 pb-3 pt-14">
-        <h1 className="font-display text-lg font-semibold">Resmita</h1>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          No reemplaza terapia profesional
-        </p>
+      <div className="flex items-start justify-between border-b border-border px-5 pb-3 pt-14">
+        <div>
+          <h1 className="font-display text-lg font-semibold">Resmita</h1>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Recuerda tus conversaciones · No reemplaza terapia
+          </p>
+        </div>
+        {messages.length > 0 && (
+          <button
+            onClick={clearHistory}
+            className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive"
+          >
+            Borrar historial
+          </button>
+        )}
       </div>
 
       {/* Messages */}
