@@ -57,12 +57,28 @@ export default function MiProceso() {
   const [directTestCode, setDirectTestCode] = useState<string | null>(null);
 
   const [snap, setSnap] = useState<WellbeingSnapshot | null>(null);
+  const [weekMindMinutes, setWeekMindMinutes] = useState<number>(0);
 
   useEffect(() => {
     if (location.hash === "#suscripcion") {
       setTimeout(() => document.getElementById("suscripcion")?.scrollIntoView({ behavior: "smooth" }), 300);
     }
   }, [location.hash]);
+
+  useEffect(() => {
+    if (!user) return;
+    const since = new Date(Date.now() - 7 * 86400000).toISOString();
+    supabase
+      .from("exercise_sessions")
+      .select("duration_seconds")
+      .eq("user_id", user.id)
+      .eq("exercise_type", "mindfulness")
+      .gte("created_at", since)
+      .then(({ data }) => {
+        const total = (data ?? []).reduce((s: number, r: any) => s + (r.duration_seconds ?? 0), 0);
+        setWeekMindMinutes(Math.round(total / 60));
+      });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -143,6 +159,22 @@ export default function MiProceso() {
           <div className="mt-5">
             <BigFiveCard onOpen={() => setBigFiveOpen(true)} />
           </div>
+
+          {weekMindMinutes > 0 && (
+            <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/70 bg-white/80 p-3.5 backdrop-blur-xl">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7cc2c8]/15 text-[#3d8a90]">
+                🧘
+              </div>
+              <div className="flex-1">
+                <p className="font-[Montserrat] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-[#94a3b8]">
+                  Práctica esta semana
+                </p>
+                <p className="font-display text-[15px] font-semibold text-[#0f172a]">
+                  Meditaste {weekMindMinutes} min
+                </p>
+              </div>
+            </div>
+          )}
 
         </PremiumLock>
 

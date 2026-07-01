@@ -14,6 +14,7 @@ export default function MindfulnessHub() {
   const { user } = useAuth();
   const [progressByDate, setProgressByDate] = useState<Record<string, number>>({});
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [lastExercise, setLastExercise] = useState<{ path: string; label: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -22,17 +23,26 @@ export default function MindfulnessHub() {
       const end = addDays(new Date(), 1);
       const { data } = await supabase
         .from("exercise_sessions")
-        .select("created_at")
+        .select("created_at, exercise_name")
         .eq("user_id", user.id)
         .eq("exercise_type", "mindfulness")
         .gte("created_at", start.toISOString())
-        .lt("created_at", end.toISOString());
+        .lt("created_at", end.toISOString())
+        .order("created_at", { ascending: false });
       const map: Record<string, number> = {};
       (data ?? []).forEach((r: any) => {
         const k = localDateStr(new Date(r.created_at));
         map[k] = Math.min(4, (map[k] ?? 0) + 1);
       });
       setProgressByDate(map);
+      // "Continuar donde dejaste": última sesión (hoy solo respiración se persiste)
+      const last = (data ?? [])[0] as any;
+      if (last) {
+        setLastExercise({
+          path: "/herramientas/mindfulness/respiracion",
+          label: last.exercise_name || "Última práctica",
+        });
+      }
     })();
   }, [user]);
 
@@ -104,6 +114,23 @@ export default function MindfulnessHub() {
       </div>
 
       <div className="mx-auto mt-5 max-w-md space-y-2 px-5">
+        {lastExercise && (
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate(lastExercise.path)}
+            className="flex w-full items-center justify-between rounded-2xl border border-[#e2e8f0] bg-gradient-to-br from-white to-[#f8fafc] p-3 text-left shadow-sm"
+          >
+            <div>
+              <p className="font-[Montserrat] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-[#7cc2c8]">
+                Continuar donde dejaste
+              </p>
+              <p className="mt-0.5 font-display text-[14px] font-semibold text-[#0f172a]">
+                {lastExercise.label}
+              </p>
+            </div>
+            <span className="text-[18px] text-[#7cc2c8]">→</span>
+          </motion.button>
+        )}
         {modules.map((m) => (
           <motion.button
             key={m.to}
