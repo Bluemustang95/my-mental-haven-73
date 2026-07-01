@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Search, UserCheck, Clock, BadgeCheck, Phone, UserPlus, Mail, FileText, NotebookPen, Pill } from "lucide-react";
+import { Check, Search, UserCheck, Clock, BadgeCheck, Phone, UserPlus, FileText, NotebookPen, Pill } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTherapyStatus, BridgeState } from "@/hooks/useTherapyStatus";
 import { ContactConfirmDialog } from "@/components/modals/ContactConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { NextSessionCard } from "./NextSessionCard";
 
 interface Props {
   phone: string;
@@ -130,7 +131,7 @@ export function TherapyMiniTracker({
 
       {/* Acceso a herramientas siempre disponible cuando el toggle está activo */}
       <div className="grid grid-cols-2 gap-2.5 pt-1">
-        <MiniBento icon={<Mail size={15} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Soporte RESMA" sub="Asistencia técnica y clínica." onClick={() => (window.location.href = "mailto:support@resma.com.ar")} />
+        <NextSessionCard />
         <MiniBento icon={<FileText size={15} className="text-[#b45309]" />} iconBg="bg-[#facb60]/20" title="Resumen Psico" sub="Reportes y hábitos." onClick={() => navigate("/mi-proceso/resumen")} />
         <MiniBento icon={<NotebookPen size={15} className="text-[#7c3aed]" />} iconBg="bg-[#7c3aed]/12" title="Notas de Sesión" sub="Temas y dudas." onClick={() => navigate("/mi-proceso/terapia")} />
         <MiniBento icon={<Pill size={15} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Medicación" sub="Próxima toma: Al día" onClick={() => navigate("/mi-proceso/medicacion")} />
@@ -217,7 +218,7 @@ function FullProfessionalCard({
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
-        <MiniBento icon={<Mail size={15} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Soporte RESMA" sub="Asistencia técnica y clínica." onClick={() => (window.location.href = "mailto:support@resma.com.ar")} />
+        <NextSessionCard />
         <MiniBento icon={<FileText size={15} className="text-[#b45309]" />} iconBg="bg-[#facb60]/20" title="Resumen Psico" sub="Reportes y hábitos." onClick={() => navigate("/mi-proceso/resumen")} />
         <MiniBento icon={<NotebookPen size={15} className="text-[#7c3aed]" />} iconBg="bg-[#7c3aed]/12" title="Notas de Sesión" sub="Temas y dudas." onClick={() => navigate("/mi-proceso/terapia")} />
         <MiniBento icon={<Pill size={15} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Medicación" sub="Próxima toma: Al día" onClick={() => navigate("/mi-proceso/medicacion")} />
