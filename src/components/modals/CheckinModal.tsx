@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ReactiveCloud, ReactiveCloudCaption } from "@/components/home/ReactiveCloud";
 import { ReactiveMoon, ReactiveMoonCaption } from "@/components/home/ReactiveMoon";
 import { RadialWeekProgress } from "@/components/home/RadialWeekProgress";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 
 type Mode = "morning" | "night";
 
@@ -40,6 +41,7 @@ export function CheckinModal({
   const isMorning = mode === "morning";
   const totalSteps = isMorning ? 4 : 3;
   const [step, setStep] = useState(0);
+  useHideBottomNav(open);
 
   const [sliderValue, setSliderValue] = useState(60);
   const [emotions, setEmotions] = useState<string[]>([]);
