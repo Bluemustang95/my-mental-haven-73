@@ -70,7 +70,7 @@ export function BottomNav() {
       }}
     >
       <div
-        className="pointer-events-auto mx-4 flex items-center justify-center gap-0.5 rounded-[28px] border border-white/30 bg-primary/40 supports-[backdrop-filter]:bg-primary/30 px-2 py-1.5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.25)] backdrop-blur-2xl"
+        className="pointer-events-auto mx-4 flex items-center justify-center gap-0.5 rounded-[28px] border border-white/20 bg-primary/85 supports-[backdrop-filter]:bg-primary/70 px-2 py-1.5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.35)] backdrop-blur-2xl"
         style={{ maxWidth: "calc(100vw - 2rem)" }}
       >
         {leftTabs.map(renderTab)}
