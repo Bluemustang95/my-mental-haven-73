@@ -18,8 +18,8 @@ export default function ContenidoDiarioAdmin() {
       />
       <AdminTabs
         tabs={[
-          { key: "quotes", label: "Frases del día" },
-          { key: "news", label: "Noticias de psicología" },
+          { id: "quotes", label: "Frases del día" },
+          { id: "news", label: "Noticias de psicología" },
         ]}
         value={tab}
         onChange={(v) => setTab(v as "quotes" | "news")}
