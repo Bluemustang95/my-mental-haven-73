@@ -94,6 +94,7 @@ export default function Dashboard() {
       prog[c.checkin_date] = (prog[c.checkin_date] ?? 0) + 1;
     });
     setWeekProgress(prog);
+    setLoading(false);
   }, [user, todayStr]);
 
   useEffect(() => {
