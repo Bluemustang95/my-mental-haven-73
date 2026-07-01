@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
 import { uploadAttachment, deleteAttachment } from "@/lib/journalAttachments";
+import * as e2e from "@/lib/e2ecipher";
 
 /* ────────────── Sanitizer (whitelist b/strong/i/em/br) ────────────── */
 function sanitizeHtml(html: string): string {
