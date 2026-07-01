@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Search, UserCheck, Clock, BadgeCheck, Phone, UserPlus, Mail, FileText, NotebookPen, Pill } from "lucide-react";
+import { Check, Search, UserCheck, Clock, BadgeCheck, Phone, UserPlus, FileText, NotebookPen, Pill } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTherapyStatus, BridgeState } from "@/hooks/useTherapyStatus";
 import { ContactConfirmDialog } from "@/components/modals/ContactConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { NextSessionCard } from "./NextSessionCard";
 
 interface Props {
   phone: string;
