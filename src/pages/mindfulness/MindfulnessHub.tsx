@@ -23,7 +23,7 @@ export default function MindfulnessHub() {
       const end = addDays(new Date(), 1);
       const { data } = await supabase
         .from("exercise_sessions")
-        .select("created_at, exercise_key")
+        .select("created_at, exercise_name")
         .eq("user_id", user.id)
         .eq("exercise_type", "mindfulness")
         .gte("created_at", start.toISOString())
@@ -35,16 +35,13 @@ export default function MindfulnessHub() {
         map[k] = Math.min(4, (map[k] ?? 0) + 1);
       });
       setProgressByDate(map);
-      // "Continuar donde dejaste": última sesión de mindfulness
+      // "Continuar donde dejaste": última sesión (hoy solo respiración se persiste)
       const last = (data ?? [])[0] as any;
-      if (last?.exercise_key) {
-        const key = String(last.exercise_key);
-        const map2: Record<string, { path: string; label: string }> = {
-          "respiracion": { path: "/herramientas/mindfulness/respiracion", label: "Respiración" },
-          "observar": { path: "/herramientas/mindfulness/observar", label: "Mira el presente" },
-          "describir": { path: "/herramientas/mindfulness/describir", label: "Ver los hechos" },
-        };
-        setLastExercise(map2[key] ?? { path: "/herramientas/mindfulness/respiracion", label: "Última práctica" });
+      if (last) {
+        setLastExercise({
+          path: "/herramientas/mindfulness/respiracion",
+          label: last.exercise_name || "Última práctica",
+        });
       }
     })();
   }, [user]);
