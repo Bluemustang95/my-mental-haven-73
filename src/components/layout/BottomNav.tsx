@@ -102,18 +102,22 @@ export function BottomNav() {
         {rightTabs.map(renderTab)}
       </div>
 
-      {/* Floating SOS button — separate from the pill */}
+      {/* Floating SOS button — separate FAB anchored right */}
       <motion.button
         onClick={() => setCrisisOpen(true)}
         whileTap={{ scale: 0.85 }}
         aria-label="Línea de crisis"
         className={cn(
-          "pointer-events-auto ml-2 mr-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/30 backdrop-blur-xl shadow-[0_10px_24px_-8px_rgba(220,38,38,0.55)] transition-colors",
+          "pointer-events-auto absolute flex h-12 w-12 items-center justify-center rounded-full border border-white/30 backdrop-blur-xl shadow-[0_10px_24px_-8px_rgba(220,38,38,0.55)] transition-colors",
           crisisOpen ? "bg-red-500 text-white" : "bg-red-500/90 text-white"
         )}
-        style={{ marginRight: "max(1rem, env(safe-area-inset-right))" }}
+        style={{
+          right: "max(1rem, env(safe-area-inset-right))",
+          top: "50%",
+          transform: "translateY(-50%)",
+        }}
       >
-        <Lifebuoy size={20} weight={crisisOpen ? "fill" : "bold"} />
+        <Lifebuoy size={22} weight={crisisOpen ? "fill" : "bold"} />
       </motion.button>
 
       <CrisisSheet open={crisisOpen} onClose={() => setCrisisOpen(false)} />
