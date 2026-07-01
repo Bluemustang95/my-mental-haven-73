@@ -1081,7 +1081,11 @@ function HistoryView({ onBack }: { onBack: () => void }) {
                   className="mt-2 overflow-hidden text-[11.5px] leading-relaxed text-[#101927]/75 line-clamp-5"
                   style={{ fontFamily: "Lora, serif" }}
                 >
-                  {preview || "(sin texto)"}
+                  {e._locked ? (
+                    <span className="inline-flex items-center gap-1 text-[#101927]/50">
+                      <Lock size={11} /> Cifrada (clave no disponible en este dispositivo)
+                    </span>
+                  ) : (preview || "(sin texto)")}
                 </p>
               </div>
               <div className="relative z-10 mt-auto flex justify-end gap-1 pt-1">
