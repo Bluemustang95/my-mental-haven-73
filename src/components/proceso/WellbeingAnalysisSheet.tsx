@@ -1,13 +1,24 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Book, ClipboardList, Moon, Smile, Target, X } from "lucide-react";
 import { Sparkline } from "./Sparkline";
+import type { WellbeingSnapshot } from "@/lib/wellbeingScore";
 
-const TREND = [63, 58, 55, 52, 48, 47, 47];
 const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-type Props = { open: boolean; onClose: () => void };
+type Props = { open: boolean; onClose: () => void; snapshot?: WellbeingSnapshot | null };
 
-export function WellbeingAnalysisSheet({ open, onClose }: Props) {
+export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
+  const trend = snapshot?.trend?.length ? snapshot.trend : [0,0,0,0,0,0,0];
+  const score = snapshot?.score ?? 0;
+  const delta = snapshot?.delta ?? 0;
+  const prevScore = delta !== 0 && score > 0 ? Math.max(0, Math.round(score / (1 + delta / 100))) : score;
+  const message = snapshot?.message ?? "Empezá registrando tu día.";
+  const c = snapshot?.components ?? { sleep: null, mood: null, habits: null, tests: null, engagement: null };
+  const pill = (v: number | null): "ok" | "warn" | "none" => v === null ? "none" : v >= 65 ? "ok" : "warn";
+  const state = (v: number | null, okTxt: string, midTxt: string, noneTxt: string) =>
+    v === null ? noneTxt : v >= 65 ? okTxt : midTxt;
+  const dotFor = (v: number | null) => v === null ? "#94a3b8" : v >= 65 ? "#7cc2c8" : "#facb60";
+
   return (
     <AnimatePresence>
       {open && (
