@@ -791,9 +791,17 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
       const { data } = await supabase.from("journal_entries")
-        .select("id, content, entry_date, emotion_tags, created_at")
+        .select("id, content, entry_date, emotion_tags, created_at, is_encrypted")
         .eq("user_id", user.id).order("created_at", { ascending: false });
-      setEntries((data ?? []) as Entry[]);
+      const rows = (data ?? []) as Entry[];
+      const decoded: Entry[] = await Promise.all(rows.map(async (r) => {
+        const encrypted = r.is_encrypted || e2e.looksEncrypted(r.content);
+        if (!encrypted) return r;
+        const dec = await e2e.decryptText(r.content ?? "");
+        if (dec === null) return { ...r, content: "", _locked: true };
+        return { ...r, content: dec, is_encrypted: true };
+      }));
+      setEntries(decoded);
       setLoading(false);
     })();
   }, []);
