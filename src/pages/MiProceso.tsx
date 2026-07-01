@@ -161,29 +161,10 @@ export default function MiProceso() {
             <BigFiveCard onOpen={() => setBigFiveOpen(true)} />
           </div>
 
-          {weekMindMinutes > 0 && (
-            <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/70 bg-white/80 p-3.5 backdrop-blur-xl">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7cc2c8]/15 text-[#3d8a90]">
-                🧘
-              </div>
-              <div className="flex-1">
-                <p className="font-[Montserrat] text-[9.5px] font-semibold uppercase tracking-[0.16em] text-[#94a3b8]">
-                  Práctica esta semana
-                </p>
-                <p className="font-display text-[15px] font-semibold text-[#0f172a]">
-                  Meditaste {weekMindMinutes} min
-                </p>
-              </div>
-            </div>
-          )}
-
         </PremiumLock>
 
-        <div className="mt-5">
-          <PeriodStats />
-        </div>
-
         <div className="my-6 h-px bg-black/[0.06]" />
+
 
         {(!country || country === "AR") ? (
           <>
