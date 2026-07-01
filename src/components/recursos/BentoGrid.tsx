@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Wind, Sparkles, Lock, Brain, type LucideIcon } from "lucide-react";
+import { Zap, Wind, Sparkles, Lock, Brain, ShieldCheck, type LucideIcon } from "lucide-react";
 import { readLocalProfile } from "@/lib/clinicalAlgorithm";
 import { usePlan } from "@/hooks/usePlan";
 import { PaywallModal } from "@/components/modals/PaywallModal";
