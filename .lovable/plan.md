@@ -1,27 +1,33 @@
-## Plan: Fix Bottom Button Covered by BottomNav
+## Objetivo
+Reemplazar la tarjeta "Soporte RESMA" del bento grid en `TherapyMiniTracker.tsx` por una tarjeta interactiva "Próxima Sesión" con modal Bottom Sheet para configurar día, hora, modalidad (presencial/virtual) y ubicación/link.
 
-### Problem
-The fixed action button at the bottom of the "Resumen para mi Psico" flow is visually and functionally covered by the `BottomNav` component (z-50 inline style), preventing the user from tapping it.
+## Cambios
 
-### Root Cause
-- `ResumenPsico.tsx`: the "Generar resumen" button wrapper is `fixed inset-x-0 bottom-0 z-40`.
-- `ReportEditor.tsx`: the "Enviar al profesional" button wrapper is also `fixed inset-x-0 bottom-0 z-40`.
-- `BottomNav.tsx`: the nav pill has `zIndex: 50` inline style.
+**1. Nuevo componente `src/components/proceso/NextSessionCard.tsx`**
+- Tarjeta blanca `rounded-[24px]` con icono calendario azul, badge "Próxima", título Día + Hora, bloque condicional (MapPin+dirección con `line-clamp-2` o Video+"Link de la llamada" subrayado), footer con "Agendar" y "Editar".
+- Toda la tarjeta clickeable → abre el Bottom Sheet.
+- Estado vacío: "Agendar próxima sesión" si no hay datos.
 
-`z-40 < 50`, so the nav renders above the action buttons.
+**2. Nuevo componente `src/components/proceso/NextSessionSheet.tsx`**
+- Bottom Sheet (overlay `bg-slate-900/40 backdrop-blur-sm`, contenedor `rounded-t-[32px] p-6`, animación slide-in from bottom con framer-motion).
+- Segmented control Presencial/Virtual (activo con fondo blanco + `text-blue-600 shadow-sm`).
+- Grid 2 cols: `<input type="date">` + `<input type="time">` con `bg-slate-50 rounded-2xl p-3.5`.
+- Textarea condicional: "Dirección del consultorio" o "Link de la videollamada".
+- Botón guardar `w-full py-4 bg-[#101927] text-white rounded-2xl`.
+- Botón cerrar "✕" superior derecha.
 
-### Fix Steps
+**3. Persistencia (localStorage)**
+- Guardar en `localStorage` key `resma:next-session` con `{ date, time, modality, location }`. Simple, sin tocar backend (Fase 1 similar a otros módulos).
 
-1. **Raise z-index of fixed action bars**
-   - `ResumenPsico.tsx`: change `z-40` to `z-[60]` on the fixed bottom button wrapper.
-   - `ReportEditor.tsx`: change `z-40` to `z-[60]` on the fixed bottom button wrapper.
+**4. Toast**
+- Al guardar: `toast.success("Sesión actualizada correctamente")` usando `sonner` (ya disponible en el proyecto).
 
-2. **Add vertical clearance above the BottomNav pill**
-   - `ResumenPsico.tsx`: increase the scrollable container bottom padding from `pb-24` to `pb-32` (or equivalent `pb-28`) so the last accordion does not hide behind the button.
-   - `ReportEditor.tsx`: increase `pb-32` to `pb-40` so the textarea does not scroll behind the fixed button + BottomNav combined height.
+**5. Editar `src/components/proceso/TherapyMiniTracker.tsx`**
+- Reemplazar la tarjeta "Soporte RESMA" (línea 133 y línea 220) por `<NextSessionCard />` en ambos lugares (estado buscando y estado asignado).
+- Mantener las otras 3 tarjetas del bento (Resumen Psico, Notas, Medicación) intactas.
 
-3. **Verify**
-   - Build compiles without errors.
-   - Visual check on mobile preview confirms the "Generar resumen" and "Enviar al profesional" buttons are fully tappable and sit clearly above the BottomNav pill.
-
-### No schema or dependency changes required.
+## Detalles técnicos
+- Usar `sonner` toast (ya integrado): `import { toast } from "sonner"`.
+- Framer-motion para la animación del sheet (patrón ya usado en el proyecto).
+- Formato de fecha display: "Jueves 15\n14:00 hs" usando `Intl.DateTimeFormat("es-AR", { weekday: "long", day: "numeric" })` + capitalización.
+- Sin cambios de backend ni schema.
