@@ -17,7 +17,7 @@ interface Props {
   existingHabits?: Habit[];
 }
 
-export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAddCategory }: Props) {
+export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAddCategory, existingHabits = [] }: Props) {
   const [iconTab, setIconTab] = useState<"emoji" | "line">("emoji");
   const [icon, setIcon] = useState<string>(EMOJI_ICONS[0]);
   const [name, setName] = useState("");
@@ -31,6 +31,7 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
   const [categoryKey, setCategoryKey] = useState("salud");
   const [cadence, setCadence] = useState("every_day");
   const [reminders, setReminders] = useState(false);
+  const [stackAfter, setStackAfter] = useState<string>("");
   const [newCatInput, setNewCatInput] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
