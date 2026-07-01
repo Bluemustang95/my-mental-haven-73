@@ -151,8 +151,26 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
                   </div>
                   <p className="font-display text-[22px] font-bold text-[#0f172a] tabular-nums">{mindMinutes}<span className="ml-1 text-[11px] font-medium text-[#64748b]">min</span></p>
                 </div>
+                {medAdh && medAdh.total > 0 && (
+                  <div className="mb-2 rounded-2xl bg-[#f8fafc] p-4 flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#facb60]/25 text-[#b45309]">
+                      <Pill size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[13px] font-medium text-[#0f172a]">Adherencia a medicación</p>
+                      <p className="text-[11px] text-[#64748b]">{medAdh.taken} de {medAdh.total} tomas</p>
+                    </div>
+                    <p className="font-display text-[22px] font-bold text-[#0f172a] tabular-nums">
+                      {Math.round((medAdh.taken / Math.max(1, medAdh.total)) * 100)}<span className="ml-0.5 text-[11px] font-medium text-[#64748b]">%</span>
+                    </p>
+                  </div>
+                )}
                 <PeriodStats range={rangeMode === "week" ? "week" : "month"} hideToggle />
+                <div className="mt-2">
+                  <RecentActivityFeed limit={6} />
+                </div>
               </div>
+
 
 
               {/* Section C - 2x2 pillars */}
