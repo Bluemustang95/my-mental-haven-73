@@ -94,22 +94,29 @@ export default function Psicoeducacion() {
   const openCategory = (id: string) => navigate(`/herramientas/contenido/categoria/${id}`);
 
   return (
-    <div className="min-h-screen bg-[#0B0B10] pb-32 text-white safe-area-top">
-      <div className="mx-auto max-w-md px-5 pt-8">
+    <div className="resma-bg-gradient relative min-h-screen overflow-hidden pb-32 safe-area-top">
+      <div className="glow-blob" style={{ background: "#7cc2c8", width: 260, height: 260, top: -80, left: -80, opacity: 0.35 }} />
+      <div className="glow-blob" style={{ background: "#facb60", width: 240, height: 240, top: 180, right: -80, opacity: 0.3 }} />
+
+      <div className="relative mx-auto max-w-md px-5 pt-8">
         <button
           onClick={() => navigate(-1)}
-          className="mb-3 -ml-2 flex h-9 w-9 items-center justify-center text-white/70"
+          className="mb-3 -ml-2 flex h-9 w-9 items-center justify-center text-[#0f172a]/60"
           aria-label="Volver"
         >
           <ArrowLeft size={22} />
         </button>
 
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#E8A365]">Aprende y comprende</p>
-        <h1 className="mt-1 font-mindful text-4xl leading-[1.05] text-white">Psicoeducación</h1>
+        <p className="font-[Montserrat] text-[10px] font-bold uppercase tracking-[0.22em] text-[#b45309]">
+          Aprende y comprende
+        </p>
+        <h1 className="mt-1 font-display text-[32px] font-bold leading-[1.05] text-[#0f172a]">
+          Psicoeducación
+        </h1>
 
         {loading ? (
           <div className="mt-10 flex justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0f172a]/20 border-t-transparent" />
           </div>
         ) : (
           <>
@@ -117,55 +124,64 @@ export default function Psicoeducacion() {
               <motion.button
                 onClick={() => openLesson(featured.id)}
                 whileTap={{ scale: 0.98 }}
-                className="mt-6 block w-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] text-left shadow-[0_8px_28px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+                className="glass-premium mt-6 block w-full overflow-hidden rounded-3xl text-left"
               >
-                <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900">
-                  <div className="absolute inset-0 opacity-30">
-                    <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-indigo-400/40 blur-3xl" />
-                    <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-violet-500/30 blur-3xl" />
-                  </div>
+                <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[#7cc2c8]/60 via-[#c5b8e8]/60 to-[#facb60]/60">
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-md ring-1 ring-white/30">
-                      <Play size={28} className="text-white" fill="white" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/75 shadow-lg ring-1 ring-white">
+                      <Play size={26} className="text-[#0f172a]" fill="currentColor" />
                     </div>
                   </div>
-                  <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+                  <span className="absolute bottom-3 left-3 rounded-full bg-white/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#0f172a]">
                     VIDEO{featured.duration_minutes ? ` · ${featured.duration_minutes} MIN` : featured.duration ? ` · ${featured.duration}` : ""}
                   </span>
                 </div>
                 <div className="p-5">
-                  <h2 className="font-display text-lg font-semibold text-white">{featured.title}</h2>
+                  <h2 className="font-display text-lg font-semibold text-[#0f172a]">{featured.title}</h2>
                   {featured.description && (
-                    <p className="mt-1.5 text-sm leading-relaxed text-white/60 line-clamp-3">{featured.description}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-[#64748b] line-clamp-3">
+                      {featured.description}
+                    </p>
                   )}
                 </div>
               </motion.button>
             )}
 
             <div className="mt-8">
-              <h3 className="mb-3 px-1 font-display text-base font-semibold text-white">Seguir conociendo</h3>
+              <h3 className="mb-3 px-1 font-display text-base font-semibold text-[#0f172a]">
+                Seguir conociendo
+              </h3>
               <div className="space-y-3">
                 {courseCats.map((cat) => {
-                  const accent = cat.accent_color ?? "#A78BFA";
+                  const accent = cat.accent_color ?? "#7cc2c8";
                   const prog = progressByCat[cat.id] ?? 0;
                   const card = (
                     <motion.button
                       key={cat.id}
                       onClick={() => openCategory(cat.id)}
                       whileTap={{ scale: 0.98 }}
-                      className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.06] p-4 text-left"
-                      style={{ background: hexToRgba(accent, 0.14) }}
+                      className="glass-premium flex w-full items-center gap-3 rounded-2xl p-4 text-left"
+                      style={{ background: `linear-gradient(135deg, ${hexToRgba(accent, 0.18)}, rgba(255,255,255,0.85))` }}
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="font-display text-base font-semibold text-white line-clamp-1">{cat.title}</p>
+                        <p className="font-display text-base font-semibold text-[#0f172a] line-clamp-1">
+                          {cat.title}
+                        </p>
                         {cat.description && (
-                          <p className="mt-0.5 text-xs leading-snug text-white/65 line-clamp-2">{cat.description}</p>
+                          <p className="mt-0.5 text-xs leading-snug text-[#64748b] line-clamp-2">
+                            {cat.description}
+                          </p>
                         )}
                         <div className="mt-3 flex items-center gap-2">
-                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/40">
-                            <div className="h-full rounded-full transition-all" style={{ width: `${prog}%`, background: accent }} />
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/[0.06]">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{ width: `${prog}%`, background: accent }}
+                            />
                           </div>
-                          <span className="text-[10px] font-bold tabular-nums text-white/70">{prog}%</span>
+                          <span className="text-[10px] font-bold tabular-nums text-[#0f172a]/60">
+                            {prog}%
+                          </span>
                         </div>
                       </div>
                       <div className="text-4xl">{cat.emoji ?? "📘"}</div>
@@ -179,15 +195,15 @@ export default function Psicoeducacion() {
                   );
                 })}
                 {courseCats.length === 0 && (
-                  <p className="py-6 text-center text-sm text-white/55">Pronto sumaremos categorías.</p>
+                  <p className="py-6 text-center text-sm text-[#94a3b8]">Pronto sumaremos categorías.</p>
                 )}
               </div>
             </div>
 
             {podcasts.length > 0 && (
               <div className="mt-10">
-                <h3 className="mb-3 flex items-center gap-2 px-1 font-display text-base font-semibold text-white">
-                  <Headphones size={18} className="text-[#E8A365]" /> Podcasts
+                <h3 className="mb-3 flex items-center gap-2 px-1 font-display text-base font-semibold text-[#0f172a]">
+                  <Headphones size={18} className="text-[#b45309]" /> Podcasts
                 </h3>
                 <PremiumLock featureName="Podcasts Premium" variant="section">
                   <div className="space-y-2">
@@ -196,14 +212,16 @@ export default function Psicoeducacion() {
                         key={p.id}
                         onClick={() => openLesson(p.id)}
                         whileTap={{ scale: 0.98 }}
-                        className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.04] p-3 text-left"
+                        className="glass-premium flex w-full items-center gap-3 rounded-2xl p-3 text-left"
                       >
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-500/20 text-[#E8A365]">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#facb60]/20 text-[#b45309]">
                           <Play size={18} fill="currentColor" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-display text-sm font-semibold text-white line-clamp-1">{p.title}</p>
-                          <p className="text-xs text-white/55">
+                          <p className="font-display text-sm font-semibold text-[#0f172a] line-clamp-1">
+                            {p.title}
+                          </p>
+                          <p className="text-xs text-[#64748b]">
                             {p.duration_minutes ? `${p.duration_minutes} min.` : p.duration ?? ""}
                           </p>
                         </div>
@@ -219,3 +237,4 @@ export default function Psicoeducacion() {
     </div>
   );
 }
+
