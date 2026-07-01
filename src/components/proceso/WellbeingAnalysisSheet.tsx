@@ -79,6 +79,23 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
             </div>
 
             <div className="space-y-6 px-5 pt-4">
+              {/* Range toggle */}
+              <div className="flex justify-center">
+                <div className="flex rounded-full bg-[#f1f5f9] p-0.5">
+                  {(["week", "month"] as const).map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setRangeMode(r)}
+                      className={`rounded-full px-4 py-1.5 text-[11px] font-semibold transition ${
+                        rangeMode === r ? "bg-white text-[#0f172a] shadow-sm" : "text-[#64748b]"
+                      }`}
+                    >
+                      {r === "week" ? "Semanal" : "Mensual"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Section A - Status banner */}
               <div className="rounded-2xl bg-[#f8fafc] p-4">
                 <div className="flex items-start gap-3">
@@ -86,7 +103,7 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
                     <Smile size={22} className="text-[#7cc2c8]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[16px] font-medium text-[#0f172a]">Tu semana</p>
+                    <p className="text-[16px] font-medium text-[#0f172a]">{rangeMode === "week" ? "Tu semana" : "Tu mes"}</p>
                     <p className="mt-1 text-[13px] leading-snug text-[#64748b]">{message}</p>
                   </div>
                 </div>
@@ -95,7 +112,7 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
               {/* Section B - Big sparkline */}
               <div>
                 <p className="mb-2 font-[Montserrat] text-[11px] font-medium uppercase tracking-[0.12em] text-[#94a3b8]">
-                  Cómo estuvo tu semana
+                  Cómo estuvo tu {rangeMode === "week" ? "semana" : "mes"}
                 </p>
                 <div className="rounded-2xl bg-[#f8fafc] p-4">
                   <Sparkline values={trend} width={320} height={90} showLabels />
@@ -106,6 +123,25 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
                   </div>
                 </div>
               </div>
+
+              {/* Section B2 - Activity + mindfulness */}
+              <div>
+                <p className="mb-2 font-[Montserrat] text-[11px] font-medium uppercase tracking-[0.12em] text-[#94a3b8]">
+                  Actividad de {rangeMode === "week" ? "los últimos 7 días" : "los últimos 30 días"}
+                </p>
+                <div className="mb-2 rounded-2xl bg-[#f8fafc] p-4 flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#7cc2c8]/20 text-[#3d8a90]">
+                    <Moon size={20} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[13px] font-medium text-[#0f172a]">Minutos de práctica</p>
+                    <p className="text-[11px] text-[#64748b]">Mindfulness y respiración</p>
+                  </div>
+                  <p className="font-display text-[22px] font-bold text-[#0f172a] tabular-nums">{mindMinutes}<span className="ml-1 text-[11px] font-medium text-[#64748b]">min</span></p>
+                </div>
+                <PeriodStats range={rangeMode === "week" ? "week" : "month"} hideToggle />
+              </div>
+
 
               {/* Section C - 2x2 pillars */}
               <div>
