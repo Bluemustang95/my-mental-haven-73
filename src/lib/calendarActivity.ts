@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { localDateStr } from "@/lib/utils";
 
 export interface CalendarActivity {
-  type: "journal" | "thought" | "test" | "exercise" | "dream" | "goal" | "reading" | "dbt" | "medication" | "sleep";
+  type: "journal" | "thought" | "test" | "exercise" | "dream" | "goal" | "reading" | "dbt" | "medication" | "sleep" | "habit";
   label: string;
   detail: string;
   time: string;
@@ -26,7 +26,7 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
   const dayEnd = `${nextDayStr}T03:00:00Z`;
   const activities: CalendarActivity[] = [];
 
-  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap, readings, dbt, meds, sleep] = await Promise.all([
+  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap, readings, dbt, meds, sleep, habitDone] = await Promise.all([
     supabase.from("journal_entries").select("id, created_at, content").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("thought_records").select("id, created_at, situation, emotion").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
@@ -40,6 +40,7 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     supabase.from("dbt_emotion_sessions").select("id, created_at, emotion, path").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("medication_logs").select("id, taken_at, taken, note, log_date, created_at").eq("user_id", userId).eq("log_date", ds),
     supabase.from("sleep_log").select("id, created_at, quality, score, notes").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
+    supabase.from("habit_completions").select("id, created_at, completed_date, habits(name, icon)").eq("user_id", userId).eq("completed_date", ds).order("created_at"),
   ]);
 
   journals.data?.forEach((j: any) => activities.push({ type: "journal", label: "Entrada de diario", detail: j.content?.slice(0, 100) || "", time: format(new Date(j.created_at), "HH:mm") }));
@@ -73,6 +74,12 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     activities.push({ type: "medication", label: m.taken ? "Medicación tomada" : "Toma saltada", detail: m.note?.slice(0, 80) || "", time: ts ? format(new Date(ts), "HH:mm") : "" });
   });
   sleep.data?.forEach((s: any) => activities.push({ type: "sleep", label: "Registro de sueño", detail: `${s.quality ?? ""}${s.score != null ? ` · ${s.score}/10` : ""}${s.notes ? ` · ${s.notes.slice(0, 60)}` : ""}`.replace(/^ · /, "") || "Registrado", time: format(new Date(s.created_at), "HH:mm") }));
+  habitDone.data?.forEach((h: any) => activities.push({
+    type: "habit",
+    label: `Hábito: ${h.habits?.name ?? "completado"}`,
+    detail: h.habits?.icon ? `${h.habits.icon}` : "Marcado como hecho",
+    time: h.created_at ? format(new Date(h.created_at), "HH:mm") : "",
+  }));
 
   const bodyPartLabels: Record<string, string> = {
     head: "Cabeza", neck: "Cuello", chest: "Pecho", stomach: "Estómago",
