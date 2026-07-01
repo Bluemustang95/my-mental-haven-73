@@ -60,10 +60,8 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
                     <Smile size={22} className="text-[#7cc2c8]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[16px] font-medium text-[#0f172a]">Semana con altibajos</p>
-                    <p className="mt-1 text-[13px] leading-snug text-[#64748b]">
-                      Tu sueño y metas estuvieron bien, pero tuviste días difíciles. Es normal que el proceso no sea lineal.
-                    </p>
+                    <p className="text-[16px] font-medium text-[#0f172a]">Tu semana</p>
+                    <p className="mt-1 text-[13px] leading-snug text-[#64748b]">{message}</p>
                   </div>
                 </div>
               </div>
@@ -74,7 +72,7 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
                   Cómo estuvo tu semana
                 </p>
                 <div className="rounded-2xl bg-[#f8fafc] p-4">
-                  <Sparkline values={TREND} width={320} height={90} showLabels />
+                  <Sparkline values={trend} width={320} height={90} showLabels />
                   <div className="mt-2 flex justify-between text-[11px] text-[#94a3b8]">
                     {DAYS.map((d) => (
                       <span key={d}>{d}</span>
@@ -89,22 +87,19 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
                   Qué influyó esta semana
                 </p>
                 <div className="grid grid-cols-2 gap-2">
-                  <Pillar icon={<Moon size={20} />} area="Sueño" state="Descansaste bien" sub="6 de 7 noches" dot="#7cc2c8" />
-                  <Pillar icon={<Target size={20} />} area="Metas del día" state="Todas cumplidas" sub="7 de 7 días" dot="#7cc2c8" />
-                  <Pillar
-                    icon={<ClipboardList size={20} />}
-                    area="Evaluación clínica"
-                    state="Pendiente de actualizar"
-                    sub="Hace 9 días"
-                    dot="#facb60"
-                  />
-                  <Pillar
-                    icon={<Book size={20} />}
-                    area="Recursos"
-                    state="Sin explorar aún"
-                    sub="Disponibles cuando quieras"
-                    dot="#94a3b8"
-                  />
+                  <Pillar icon={<Moon size={20} />} area="Sueño"
+                    state={state(c.sleep, "Descansaste bien", "Podés mejorar", "Sin datos aún")}
+                    sub={c.sleep === null ? "Registrá tu sueño" : `${Math.round(c.sleep)}/100`} dot={dotFor(c.sleep)} />
+                  <Pillar icon={<Target size={20} />} area="Estado de ánimo"
+                    state={state(c.mood, "Estable", "Con altibajos", "Sin registros")}
+                    sub={c.mood === null ? "Hacé tu check-in" : `${Math.round(c.mood)}/100`} dot={dotFor(c.mood)} />
+                  <Pillar icon={<ClipboardList size={20} />} area="Evaluación clínica"
+                    state={state(c.tests, "Al día", "Pendiente de actualizar", "Sin tests recientes")}
+                    sub={c.tests === null ? "Hacé un test" : `${Math.round(c.tests)}/100`} dot={dotFor(c.tests)} />
+                  <Pillar icon={<Book size={20} />} area="Recursos y hábitos"
+                    state={state(c.habits ?? c.engagement, "Activo", "Baja actividad", "Sin explorar")}
+                    sub={(c.habits ?? c.engagement) === null ? "Explorá recursos" : `${Math.round((c.habits ?? c.engagement)!)}/100`}
+                    dot={dotFor(c.habits ?? c.engagement)} />
                 </div>
               </div>
 
@@ -114,12 +109,12 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
                   Esta semana vs la anterior
                 </p>
                 <div className="flex gap-2">
-                  <CompareCard label="Semana pasada" value="63" color="#64748b" />
-                  <CompareCard label="Esta semana" value="47" color="#0f172a" />
-                  <CompareCard label="Diferencia" value="-16" color="#e24b4a" diffStyle />
+                  <CompareCard label="Semana pasada" value={String(prevScore)} color="#64748b" />
+                  <CompareCard label="Esta semana" value={String(score)} color="#0f172a" />
+                  <CompareCard label="Diferencia" value={`${delta > 0 ? "+" : ""}${delta}%`} color={delta < 0 ? "#e24b4a" : "#16a34a"} diffStyle />
                 </div>
                 <p className="mt-2 text-[12px] leading-snug text-[#64748b]">
-                  Las bajas temporales son parte del proceso. Tu cuerpo y mente se ajustan constantemente.
+                  Las variaciones son parte del proceso. Tu cuerpo y mente se ajustan constantemente.
                 </p>
               </div>
 
@@ -129,10 +124,10 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
                   De dónde viene tu número
                 </p>
                 <div className="rounded-2xl bg-[#f8fafc] p-4">
-                  <OriginRow label="Sueño y descanso" pct={60} color="#7cc2c8" status="Bien" />
-                  <OriginRow label="Tus metas diarias" pct={100} color="#7cc2c8" status="Excelente" divider />
-                  <OriginRow label="Evaluación emocional" pct={30} color="#facb60" status="Necesita update" divider />
-                  <OriginRow label="Herramientas de apoyo" pct={0} color="#e2e8f0" status="Sin datos aún" divider />
+                  <OriginRow label="Sueño y descanso" pct={Math.round(c.sleep ?? 0)} color={dotFor(c.sleep)} status={c.sleep === null ? "Sin datos" : c.sleep >= 65 ? "Bien" : "Podés mejorar"} />
+                  <OriginRow label="Ánimo y check-ins" pct={Math.round(c.mood ?? 0)} color={dotFor(c.mood)} status={c.mood === null ? "Sin datos" : c.mood >= 65 ? "Estable" : "Con altibajos"} divider />
+                  <OriginRow label="Evaluación emocional" pct={Math.round(c.tests ?? 0)} color={dotFor(c.tests)} status={c.tests === null ? "Sin tests" : c.tests >= 65 ? "Al día" : "Necesita update"} divider />
+                  <OriginRow label="Hábitos y engagement" pct={Math.round((c.habits ?? c.engagement) ?? 0)} color={dotFor(c.habits ?? c.engagement)} status={(c.habits ?? c.engagement) === null ? "Sin datos" : "Activo"} divider />
                 </div>
                 <p className="mt-2 text-[12px] leading-snug text-[#64748b]">
                   Cuando alguna área no tiene datos, el sistema usa las que sí tenés, para no penalizarte.
