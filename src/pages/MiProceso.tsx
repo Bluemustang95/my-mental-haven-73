@@ -131,27 +131,27 @@ export default function MiProceso() {
       <div className="pointer-events-none absolute -top-32 -left-20 h-72 w-72 rounded-full bg-[#7cc2c8]/20 blur-3xl animate-blob-a" />
       <div className="pointer-events-none absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-[#facb60]/15 blur-3xl animate-blob-b" />
 
-      <div className="relative mx-auto w-full max-w-md flex-1 px-5 pt-7 pb-24">
-        <h1 className="font-serif text-[20px] font-medium text-[#0f172a]">Mi Proceso</h1>
-        <p className="mt-0.5 text-[12px] italic text-[#64748b]">Tu evolución, paso a paso.</p>
+      <div className="relative mx-auto w-full max-w-md flex-1 px-5 pt-4 pb-24">
+        <div className="flex items-baseline justify-between gap-3">
+          <h1 className="font-serif text-[17px] font-medium leading-tight text-[#0f172a]">Mi Proceso</h1>
+          <p className="text-[11px] italic text-[#64748b]">Tu evolución, paso a paso.</p>
+        </div>
         {isAdmin && overrideCountry && (
-          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-800">
+          <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-800">
             👁 Vista admin · país simulado: {overrideCountry}
           </div>
         )}
 
-        <p className="mt-5 mb-2.5 flex items-center gap-1.5 font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.18em] text-[#94a3b8]">
-          <Activity size={11} /> Estadísticas de impacto
-        </p>
-
         <PremiumLock featureName="Estadísticas de impacto" variant="section">
-          <WellbeingCardV2
-            score={snap?.score ?? 0}
-            delta={snap?.delta ?? 0}
-            message={snap?.message ?? "Cargando tu evolución…"}
-            trend={snap?.trend ?? [0,0,0,0,0,0,0]}
-            onOpen={() => setSheetOpen(true)}
-          />
+          <div className="mt-3">
+            <WellbeingCardV2
+              score={snap?.score ?? 0}
+              delta={snap?.delta ?? 0}
+              message={snap?.message ?? "Cargando tu evolución…"}
+              trend={snap?.trend ?? [0,0,0,0,0,0,0]}
+              onOpen={() => setSheetOpen(true)}
+            />
+          </div>
 
           <div className="mt-5">
             <PsychometryCarousel onSelect={handleSelectTest} />
