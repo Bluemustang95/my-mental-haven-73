@@ -2130,6 +2130,7 @@ export type Database = {
           id: string
           note: string
           resolved: boolean | null
+          shared_at: string | null
           user_id: string
         }
         Insert: {
@@ -2137,6 +2138,7 @@ export type Database = {
           id?: string
           note: string
           resolved?: boolean | null
+          shared_at?: string | null
           user_id: string
         }
         Update: {
@@ -2144,6 +2146,7 @@ export type Database = {
           id?: string
           note?: string
           resolved?: boolean | null
+          shared_at?: string | null
           user_id?: string
         }
         Relationships: []

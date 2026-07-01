@@ -65,6 +65,7 @@ import MedicationTracker from "@/pages/MedicationTracker";
 import MedLibrary from "@/pages/MedLibrary";
 import MedCategoryList from "@/pages/MedCategoryList";
 import MedDrugDetail from "@/pages/MedDrugDetail";
+import DoseSetup from "@/pages/DoseSetup";
 import WeeklyReflection from "@/pages/WeeklyReflection";
 import WeeklyGoalsPage from "@/pages/WeeklyGoalsPage";
 import InternalDialogueHistory from "@/pages/InternalDialogueHistory";
@@ -223,6 +224,7 @@ const App = () => (
               <Route path="/mi-proceso/medicacion/biblioteca" element={<MedLibrary />} />
               <Route path="/mi-proceso/medicacion/biblioteca/:categoryId" element={<MedCategoryList />} />
               <Route path="/mi-proceso/medicacion/biblioteca/:categoryId/:drugId" element={<MedDrugDetail />} />
+              <Route path="/mi-proceso/medicacion/ajustes/:categoryId/:drugId" element={<DoseSetup />} />
               <Route path="/mi-proceso/espejo" element={<WeeklyReflection />} />
               <Route path="/mi-proceso/resumen" element={<ResumenPsico />} />
 

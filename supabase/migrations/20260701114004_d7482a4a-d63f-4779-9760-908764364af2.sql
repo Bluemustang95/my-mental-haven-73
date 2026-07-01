@@ -1,0 +1,1 @@
+ALTER TABLE public.therapy_prep_notes ADD COLUMN IF NOT EXISTS shared_at timestamptz;

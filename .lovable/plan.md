@@ -1,57 +1,79 @@
+# Plan: Fixes + Refactor Medicación & Notas para Terapia
 
-## 1. "Tu camino de hoy" — línea punteada conectando viñetas
+## 1. BottomNav — Íconos legibles
+`src/components/layout/BottomNav.tsx`: subir contraste sobre el fondo glass translúcido.
+- Íconos/labels inactivos: `text-white/85` (hoy quedan casi invisibles).
+- Ítem activo: pastilla sólida `bg-white text-primary` para destacar.
+- Añadir `drop-shadow-sm` a los íconos para separarlos del fondo cuando hay contenido claro detrás.
+- Mantener el `bg-primary/40 backdrop-blur-2xl` que ya definimos (no volver atrás al glassmorphism).
 
-Archivo: `src/pages/Dashboard.tsx` (`BulletRow`).
+## 2. BAI / PSWQ abren un selector en vez del test
+`src/components/modals/SymptomsTestModal.tsx`: el click sobre BAI/PSWQ está abriendo otra vez la grilla de selección en lugar de disparar `TestRunner`.
+- Revisar handler `onSelect(testCode)`: forzar `setRunning(testCode)` y `setPickerOpen(false)` para todos los inventarios (no solo BDI).
+- Asegurar que `TestRunner` reciba `code` válido y que al cerrarse limpie `running` sin re-abrir el picker.
+- Verificar `test_definitions` (ya confirmado: BAI/PSWQ existen con ítems).
 
-- Envolver los widgets `morning`, `recommended`, `night` en un contenedor con un pseudo-`::before` (o `<span>` absoluto) que dibuje una línea vertical `border-left: 1.5px dashed` en la columna de las viñetas.
-- La línea debe correr solo entre viñetas (no arriba de la primera ni debajo de la última): agregar props `isFirst` / `isLast` a `BulletRow`, y renderizar el segmento superior/inferior en gris (`border-foreground/20`).
-- Efecto visual: cada bullet queda "encadenado" al siguiente, mostrando secuencia mañana → recomendado → noche.
+## 3. Big Five — estética coherente
+`src/components/tests/TestRunner.tsx` + `BigFiveHexagon.tsx`: hoy usa fondo oscuro y violeta (`#a78bfa`) que rompe la línea visual RESMA.
+- Reemplazar violeta por `resma-teal` (#7cc2c8) en polígono, líneas y accents.
+- Fondo del runner: crema/blanco `bg-background` con tipografía navy, igual que BDI/BAI.
+- Textos de ejes en `text-muted-foreground` en lugar de blanco translúcido.
+- Botones de opciones con el mismo estilo pill usado en los otros tests.
 
-## 2. `CheckinModal` (Valoración mañana / noche) — slider, centrado y footer
+## 4. Refactor Módulo Medicación (`src/pages/MedicationTracker.tsx` + subpaths)
 
-Archivo: `src/components/modals/CheckinModal.tsx`.
+### 4a. Split de flujos `flowMode: 'add' | 'info'`
+- FAB `+` (abajo-derecha) → `flowMode='add'`: Categorías → Fármacos → **Ajustes de Toma** (salta la ficha).
+- Nuevo botón `?` (arriba-derecha del header) → `flowMode='info'`: Categorías → Fármacos → **Ficha Informativa** (¿Qué es?, ¿Para qué se usa?). Sin CTA "Configurar toma" al final; solo back.
+- Estado propagado por URL param o context ligero entre pantallas del wizard.
 
-Problemas actuales:
-- El slider no responde bien al drag → el `<input type="range">` está debajo del botón fijo "Siguiente" + BottomNav, que capturan el gesto.
-- El botón "Siguiente" queda tapado por la BottomNav (ambos son `fixed bottom-0`).
-- El contenido está pegado arriba en lugar de centrado verticalmente.
+### 4b. Input de dosis inteligente
+En `MedDrugDetail.tsx` / pantalla Ajustes de Toma:
+- Actualizar `DRUG_DATABASE` (mock en `src/lib/` o donde viva) agregando `standardDoses: string[]` por fármaco (ej. Sertralina: `["25mg","50mg","100mg","150mg","200mg"]`).
+- Reemplazar input libre por `<select>` con esas dosis + última opción `"Otro (Ingreso manual)"`.
+- Si elige "Otro", renderizar debajo `<input type="text">` con `animate-in fade-in slide-in-from-top-1`.
 
-Cambios:
-- Ocultar la BottomNav mientras el modal está abierto: agregar `body.classList.add("hide-bottom-nav")` en `useEffect(open)` y usar CSS global (`body.hide-bottom-nav nav[aria-label], … `) para `display:none`. Alternativa más limpia: pasar `hidden` desde un contexto o simplemente ocultar `nav` mediante un flag en `AppLayout`. Elijo un pequeño store global (`useUiChrome`) con `setBottomNavHidden(true/false)`.
-- Contenedor principal: cambiar `min-h-screen … pt-10 pb-32` por `min-h-[100dvh] flex flex-col`. Cabecera arriba, `stepContent` dentro de un `flex-1 flex flex-col justify-center` para que el emoji + slider queden centrados verticalmente.
-- Aumentar `padding-bottom` del scroll para que el slider quede libre del footer (`pb-40`), y el botón "Siguiente" queda en `sticky bottom` con `safe-area-inset-bottom` (sin BottomNav de fondo).
-- Elevar z-index del slider (`relative z-10`) y asegurar `touch-action: pan-x` para permitir el drag sin scroll vertical.
+### 4c. Automatización del momento del día
+- Eliminar chips "Mañana/Tarde/Noche/Madrugada".
+- Dejar solo `<input type="time">` grande.
+- Helper `computePeriod(time)`:
+  - 05:00–11:59 → Mañana
+  - 12:00–18:59 → Tarde
+  - 19:00–23:59 → Noche
+  - 00:00–04:59 → Madrugada
+- Mostrar badge readonly junto al título "Hora de la toma": `text-resma-teal bg-[#7cc2c8]/10 rounded-full px-2 py-0.5 text-[10px] uppercase`.
 
-## 3. BottomNav — glassmorphism translúcido
+Se conservan: glassmorphism del card "Progreso de hoy", anillo circular, animaciones de check.
 
-Archivo: `src/components/layout/BottomNav.tsx`.
+## 5. Refactor "Notas para Terapia" (`src/components/journal/TherapyNotes.tsx`)
 
-- Cambiar `bg-primary/95` → `bg-primary/45` (o `bg-primary/40 supports-[backdrop-filter]:bg-primary/30`) y reforzar `backdrop-blur-2xl`, `border-white/25`, sombra más suave.
-- Asegurar contraste de íconos activos (mantener `text-foreground` con `drop-shadow`).
-- El fondo detrás se percibirá difuminado sin tapar la UI.
+### 5a. Lienzo expansible
+- Estado inactivo: botón ancho `border-dashed bg-white` con `+ Escribir nueva nota...`.
+- Al tocar → expandir con `animate-in fade-in zoom-in-95` a card con `<textarea min-h-[120px]>` sin bordes internos, `text-sm leading-relaxed`.
+- Footer del card: `Cancelar` (texto gris) + `Guardar Nota` (sólido `bg-[#101927] text-white`).
 
-## 4. Tests BAI y PSWQ — abren pero "vuelven" a la lista
+### 5b. Separación Pendientes vs Historial Compartido
+Añadir campo `shared_at` (nullable) a `therapy_prep_notes` vía migración; también reutilizar `resolved` no — creamos `shared_at` para semántica "compartido con terapeuta".
+- **Pendientes**: tarjetas blancas `border-amber-200/60`, texto `#101927`, botón `Trash2` sutil arriba-derecha.
+- **Historial Compartido**: `opacity-75 bg-slate-50`, sin basurero, footer con `Check` verde + `LEÍDO POR TERAPEUTA` (uppercase, tracking).
 
-Archivo: `src/components/modals/SymptomsTestModal.tsx` + `src/components/tests/TestRunner.tsx`.
+### 5c. Botón flotante de sincronización
+- Contenedor `absolute bottom-0 w-full` con gradiente `from-transparent to-[#f9f9fb]`.
+- Botón teal `#7cc2c8` `Compartir con terapeuta (X)` con X = pendientes.
+- Al pulsar: estado disabled `Enviando... ⏳` por 1.5s, luego update `shared_at = now()` en todas las pendientes → migran a la sección compartida y el botón se oculta.
+- Trust badge debajo: `Lock` + `Cifrado de extremo a extremo` (texto muted xs).
 
-Causa: `TestRunner` se monta con `z-[110]` **dentro** de `SymptomsTestModal` (z-100). En algunos navegadores móviles, el stacking context de `motion.div` con `opacity` rompe el z-index, dejando el runner detrás de la grilla (por eso ves "imagen 3" — la selección). BDI funciona porque… en realidad tampoco: es que el usuario probó BAI/PSWQ. Además, la grilla del modal sigue interactiva por debajo.
+### 5d. Layout
+- `max-w-md mx-auto min-h-screen bg-[#f9f9fb]`.
+- Lista con `overflow-y-auto no-scrollbar pb-32` para no tapar el CTA flotante.
 
-Fix:
-- Mover `TestRunner` fuera del `motion.div` de `SymptomsTestModal` (renderizarlo como sibling con `createPortal(document.body)`), o simplemente devolverlo antes del contenido del modal.
-- Alternativa mínima: cuando `running` no es null, ocultar el contenido interior del modal (`hidden` en la grilla) para que no interfiera y el runner ocupe todo.
+## Detalles técnicos
 
-Elijo la alternativa mínima + `z-[9999]` en `TestRunner` para blindar el stacking.
+- **Migración DB**: `ALTER TABLE therapy_prep_notes ADD COLUMN shared_at timestamptz;` (una sola call, con GRANTs ya existentes).
+- **Medicación**: si `DRUG_DATABASE` está hardcoded en `MedLibrary.tsx`/`MedCategoryList.tsx`, extraerlo a `src/lib/drugDatabase.ts` con el nuevo `standardDoses`.
+- **flowMode**: pasar como query param `?mode=add|info` en las rutas `/medication/*` para preservarlo al navegar back/forward.
+- No se toca la lógica del anillo de progreso ni animaciones de check existentes.
 
-## 5. Big Five — permitir hacer / repetir el test
-
-Archivo: `src/components/proceso/BigFiveProfileModal.tsx`.
-
-- Agregar un botón CTA "Hacer / Repetir test Big Five" en el header de la tarjeta radar que abra `TestRunner` con `testCode="BIGFIVE"`.
-- Al terminar el test, refrescar `values` con los resultados guardados (leyendo `test_results` último BIGFIVE del usuario, subs O/C/E/A/N → % en sliders).
-- Cargar los últimos resultados al abrir el modal (si existen), para que el radar refleje los valores reales del usuario en vez de `DEFAULTS`.
-
-## Notas técnicas
-
-- `useUiChrome` puede ser un simple contexto pequeño en `src/hooks/useUiChrome.tsx` con `bottomNavHidden` + setter; `BottomNav` lee el flag y retorna `null` si `true`. `CheckinModal`, `TestRunner`, `BigFiveProfileModal` lo activan mientras están abiertos.
-- Sin cambios de esquema en Supabase.
-- Sin cambios en `client.ts`, `types.ts` ni `config.toml`.
+## Fuera de alcance
+- No se cambia el modelo de datos de `medications` salvo lo estrictamente necesario para el badge (ya tiene `time_of_day`; se calcula en cliente).
+- No se implementa envío real E2E cifrado — el badge es solo UX; el `shared_at` marca el estado.

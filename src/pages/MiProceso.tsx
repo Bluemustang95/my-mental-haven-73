@@ -21,6 +21,7 @@ import { BigFiveCard } from "@/components/proceso/BigFiveCard";
 import { BigFiveProfileModal } from "@/components/proceso/BigFiveProfileModal";
 import { BeckTestRunner } from "@/components/proceso/BeckTestRunner";
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
+import { TestRunner } from "@/components/tests/TestRunner";
 import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -53,6 +54,7 @@ export default function MiProceso() {
   const [bigFiveOpen, setBigFiveOpen] = useState(false);
   const [beckOpen, setBeckOpen] = useState(false);
   const [genericTest, setGenericTest] = useState<null | "symptom">(null);
+  const [directTestCode, setDirectTestCode] = useState<string | null>(null);
 
   const [snap, setSnap] = useState<WellbeingSnapshot | null>(null);
 
@@ -103,7 +105,7 @@ export default function MiProceso() {
 
   const handleSelectTest = (code: "BDI" | "BAI" | "PSWQ") => {
     if (code === "BDI") setBeckOpen(true);
-    else setGenericTest("symptom");
+    else setDirectTestCode(code);
   };
 
 
@@ -208,6 +210,7 @@ export default function MiProceso() {
       <BigFiveProfileModal open={bigFiveOpen} onClose={() => setBigFiveOpen(false)} />
       <BeckTestRunner open={beckOpen} onClose={() => setBeckOpen(false)} />
       <SymptomsTestModal open={!!genericTest} kind={genericTest ?? "symptom"} onClose={() => setGenericTest(null)} />
+      {directTestCode && <TestRunner testCode={directTestCode} onClose={() => setDirectTestCode(null)} />}
       <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} featureName="Premium" />
       <TherapySyncModal open={syncOpen} onClose={() => setSyncOpen(false)} onSynced={handleSynced} />
       <SatisfactionSurveySheet

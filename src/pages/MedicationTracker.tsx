@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Check, Clock, Trash2, BookOpen, Pill } from "lucide-react";
+import { ArrowLeft, Plus, Check, Clock, Trash2, Pill, HelpCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { localDateStr } from "@/lib/utils";
@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const SIDE_EFFECTS = ["Somnolencia", "Náuseas", "Mareo", "Dolor de cabeza", "Insomnio", "Sequedad bucal", "Cambio de apetito", "Otro"];
-const TIME_SLOTS = ["Mañana", "Tarde", "Noche", "Madrugada"];
+const TIME_SLOTS = ["Madrugada", "Mañana", "Tarde", "Noche"];
 
 type Med = { id: string; name: string; dosage: string | null; frequency: string | null; reminder_time: string | null; active: boolean };
 type MedLog = { id: string; medication_id: string; taken: boolean; side_effects: string[]; note: string | null; log_date: string; taken_at: string | null };
@@ -18,11 +18,6 @@ export default function MedicationTracker() {
   const { user } = useAuth();
   const [meds, setMeds] = useState<Med[]>([]);
   const [logs, setLogs] = useState<MedLog[]>([]);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newDosage, setNewDosage] = useState("");
-  const [newTime, setNewTime] = useState("");
-  const [newSlot, setNewSlot] = useState("Mañana");
   const [expandedMed, setExpandedMed] = useState<string | null>(null);
   const [logSideEffects, setLogSideEffects] = useState<Record<string, string[]>>({});
   const todayStr = localDateStr();
@@ -38,16 +33,7 @@ export default function MedicationTracker() {
     });
   }, [user, todayStr]);
 
-  const addMed = async () => {
-    if (!user || !newName.trim()) return;
-    const { data } = await supabase
-      .from("medications")
-      .insert({ user_id: user.id, name: newName.trim(), dosage: newDosage || null, reminder_time: newTime || null, frequency: newSlot })
-      .select("*")
-      .single();
-    if (data) setMeds((m) => [...m, data as Med]);
-    setNewName(""); setNewDosage(""); setNewTime(""); setNewSlot("Mañana"); setShowAdd(false);
-  };
+  // Adding a medication is now handled in a dedicated flow (biblioteca → dose setup)
 
   const deleteMed = async (id: string) => {
     await supabase.from("medications").delete().eq("id", id);
@@ -86,18 +72,23 @@ export default function MedicationTracker() {
 
   return (
     <div className="px-5 pt-14 pb-28 safe-area-top bg-[hsl(var(--background))]">
-      {/* Header */}
-      <button onClick={() => navigate("/mi-proceso")} className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
-        <ArrowLeft size={16} /> Mi Proceso
-      </button>
-
       <div className="flex items-center justify-between mb-1">
+        <button onClick={() => navigate("/mi-proceso")} className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <ArrowLeft size={16} /> Mi Proceso
+        </button>
+        <button
+          onClick={() => navigate("/mi-proceso/medicacion/biblioteca?mode=info")}
+          aria-label="Información de medicamentos"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-sm text-muted-foreground active:scale-95 transition-transform"
+        >
+          <HelpCircle size={18} />
+        </button>
+      </div>
+
+      <div className="mt-3 mb-1 flex items-center gap-2">
         <h1 className="font-display text-xl font-semibold flex items-center gap-2">
           <Pill size={22} className="text-[hsl(var(--accent))]" /> Medicación
         </h1>
-        <button onClick={() => setShowAdd(!showAdd)} className="rounded-full bg-[hsl(var(--accent))]/15 p-2.5 text-[hsl(var(--accent-foreground))] active:scale-95 transition-transform">
-          <Plus size={18} />
-        </button>
       </div>
       <p className="mb-4 text-sm text-muted-foreground">Registrá tu toma diaria y efectos secundarios.</p>
 
@@ -119,64 +110,13 @@ export default function MedicationTracker() {
         </div>
       )}
 
-      {/* Library CTA */}
-      <button
-        onClick={() => navigate("/mi-proceso/medicacion/biblioteca")}
-        className="mb-5 flex w-full items-center gap-3 rounded-2xl bg-[hsl(var(--accent))]/10 p-4 text-left active:bg-[hsl(var(--accent))]/20 transition-colors"
-      >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--accent))]/20">
-          <BookOpen size={20} className="text-[hsl(var(--accent-foreground))]" />
-        </div>
-        <div className="flex-1">
-          <p className="font-display text-sm font-semibold">Tipo de medicamentos</p>
-          <p className="text-xs text-muted-foreground">Conocé más sobre tu medicación</p>
-        </div>
-        <ArrowLeft size={14} className="text-muted-foreground rotate-180" />
-      </button>
-
-      {/* Add form */}
-      <AnimatePresence>
-        {showAdd && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mb-5 overflow-hidden">
-            <div className="rounded-2xl bg-card p-5 space-y-3 shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
-              <p className="font-display text-sm font-medium mb-1">Nuevo medicamento</p>
-              <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nombre del medicamento" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
-              <div className="flex gap-2">
-                <input value={newDosage} onChange={(e) => setNewDosage(e.target.value)} placeholder="Dosis (ej: 20mg)" className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
-                <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-              </div>
-              {/* Time slot selector */}
-              <div>
-                <p className="text-xs text-muted-foreground mb-1.5">Momento del día</p>
-                <div className="flex gap-2 flex-wrap">
-                  {TIME_SLOTS.map((slot) => (
-                    <button
-                      key={slot}
-                      onClick={() => setNewSlot(slot)}
-                      className={cn(
-                        "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                        newSlot === slot ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]" : "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {slot}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <button onClick={addMed} disabled={!newName.trim()} className="w-full rounded-xl bg-primary py-2.5 text-sm font-display font-medium text-primary-foreground disabled:opacity-40">
-                Agregar medicamento
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Medications by time slot */}
       {meds.length === 0 ? (
         <div className="rounded-2xl bg-card p-8 text-center shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
           <Pill size={32} className="mx-auto mb-3 text-[hsl(var(--accent))]" />
           <p className="font-display text-sm font-medium">Sin medicamentos registrados</p>
-          <p className="mt-1 text-xs text-muted-foreground">Tocá + para agregar tu medicación.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Tocá el botón + para agregar tu medicación.</p>
         </div>
       ) : (
         <div className="space-y-5">
@@ -282,6 +222,15 @@ export default function MedicationTracker() {
       <p className="mt-6 text-center text-[10px] text-muted-foreground">
         Recordá no modificar dosis sin consultar a tu psiquiatra.
       </p>
+
+      {/* FAB para agregar medicación */}
+      <button
+        onClick={() => navigate("/mi-proceso/medicacion/biblioteca?mode=add")}
+        aria-label="Agregar medicación"
+        className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-lg shadow-black/20 active:scale-95 transition-transform"
+      >
+        <Plus size={24} strokeWidth={2.5} />
+      </button>
     </div>
   );
 }
