@@ -23,11 +23,11 @@ function b64(buf: ArrayBuffer): string {
   return btoa(s);
 }
 
-function fromB64(s: string): Uint8Array {
+function fromB64(s: string): ArrayBuffer {
   const bin = atob(s);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
+  return bytes.buffer;
 }
 
 async function importKey(rawB64: string): Promise<CryptoKey> {
