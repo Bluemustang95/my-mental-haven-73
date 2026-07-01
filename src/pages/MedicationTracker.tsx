@@ -47,7 +47,7 @@ export default function MedicationTracker() {
     const effects = logSideEffects[medId] ?? [];
     const { data } = await supabase
       .from("medication_logs")
-      .insert({ user_id: user.id, medication_id: medId, taken: true, side_effects: effects, log_date: todayStr })
+      .insert({ user_id: user.id, medication_id: medId, taken: true, side_effects: effects, log_date: todayStr, taken_at: new Date().toISOString() })
       .select("*")
       .single();
     if (data) setLogs((l) => [...l, data as MedLog]);
@@ -225,9 +225,9 @@ export default function MedicationTracker() {
 
       {/* FAB para agregar medicación */}
       <button
-        onClick={() => navigate("/mi-proceso/medicacion/biblioteca?mode=add")}
+        onClick={() => navigate("/mi-proceso/medicacion/agregar")}
         aria-label="Agregar medicación"
-        className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-lg shadow-black/20 active:scale-95 transition-transform"
+        className="fixed bottom-20 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] shadow-lg shadow-black/20 active:scale-95 transition-transform"
       >
         <Plus size={24} strokeWidth={2.5} />
       </button>

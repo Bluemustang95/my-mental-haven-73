@@ -38,7 +38,7 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     supabase.from("body_map_entries").select("id, created_at, body_part, note").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("content_progress").select("id, last_accessed, psychoeducation_content(title, content_type)").eq("user_id", userId).eq("completed", true).gte("last_accessed", dayStart).lt("last_accessed", dayEnd),
     supabase.from("dbt_emotion_sessions").select("id, created_at, emotion, path").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
-    supabase.from("medication_logs").select("id, taken_at, taken, note").eq("user_id", userId).gte("taken_at", dayStart).lt("taken_at", dayEnd).order("taken_at"),
+    supabase.from("medication_logs").select("id, taken_at, taken, note, log_date, created_at").eq("user_id", userId).eq("log_date", ds),
     supabase.from("sleep_log").select("id, created_at, quality, score, notes").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
   ]);
 
@@ -68,7 +68,10 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
   completedGoals.data?.forEach((g: any) => activities.push({ type: "goal", label: "Objetivo cumplido", detail: g.goal_text?.slice(0, 100) || "", time: format(new Date(g.created_at), "HH:mm") }));
   readings.data?.forEach((r: any) => activities.push({ type: "reading", label: r.psychoeducation_content?.title ? `Lectura: ${r.psychoeducation_content.title}` : "Lectura completada", detail: r.psychoeducation_content?.content_type === "video" ? "Video" : "Artículo", time: r.completed_at ? format(new Date(r.completed_at), "HH:mm") : "" }));
   dbt.data?.forEach((d: any) => activities.push({ type: "dbt", label: "Regulación emocional (DBT)", detail: d.emotion ? `Emoción: ${d.emotion}${d.path ? ` · ${d.path}` : ""}` : (d.path ?? "Sesión completada"), time: format(new Date(d.created_at), "HH:mm") }));
-  meds.data?.forEach((m: any) => activities.push({ type: "medication", label: m.taken ? "Medicación tomada" : "Toma saltada", detail: m.note?.slice(0, 80) || "", time: format(new Date(m.taken_at), "HH:mm") }));
+  meds.data?.forEach((m: any) => {
+    const ts = m.taken_at || m.created_at;
+    activities.push({ type: "medication", label: m.taken ? "Medicación tomada" : "Toma saltada", detail: m.note?.slice(0, 80) || "", time: ts ? format(new Date(ts), "HH:mm") : "" });
+  });
   sleep.data?.forEach((s: any) => activities.push({ type: "sleep", label: "Registro de sueño", detail: `${s.quality ?? ""}${s.score != null ? ` · ${s.score}/10` : ""}${s.notes ? ` · ${s.notes.slice(0, 60)}` : ""}`.replace(/^ · /, "") || "Registrado", time: format(new Date(s.created_at), "HH:mm") }));
 
   const bodyPartLabels: Record<string, string> = {

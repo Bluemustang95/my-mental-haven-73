@@ -208,22 +208,22 @@ export default function TherapyNotes() {
         )}
       </div>
 
-      {/* Sync floating bar */}
+      {/* Share emoji FAB */}
       {pending.length > 0 && (
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#f9f9fb] via-[#f9f9fb]/95 to-transparent pt-10 pb-6">
-          <div className="pointer-events-auto mx-auto max-w-md px-5">
-            <button
-              onClick={shareAll}
-              disabled={sending}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7cc2c8] py-4 font-semibold text-white shadow-lg shadow-[#7cc2c8]/30 disabled:opacity-70"
-            >
-              {sending ? "Enviando... ⏳" : `Compartir con terapeuta (${pending.length})`}
-            </button>
-            <p className="mt-2 flex items-center justify-center gap-1 text-[10px] text-slate-400">
-              <Lock size={10} /> Cifrado de extremo a extremo
-            </p>
-          </div>
-        </div>
+        <button
+          onClick={shareAll}
+          disabled={sending}
+          aria-label={`Compartir ${pending.length} nota${pending.length === 1 ? "" : "s"} con tu terapeuta (cifrado extremo a extremo)`}
+          title="Compartir con tu terapeuta · Cifrado extremo a extremo"
+          className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-white/90 backdrop-blur-md text-3xl shadow-lg shadow-black/20 ring-1 ring-slate-200 active:scale-95 transition-transform disabled:opacity-70"
+        >
+          <span aria-hidden>{sending ? "⏳" : "💌"}</span>
+          {!sending && (
+            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7cc2c8] px-1 text-[10px] font-bold text-white ring-2 ring-white">
+              {pending.length}
+            </span>
+          )}
+        </button>
       )}
     </div>
   );
