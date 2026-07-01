@@ -219,6 +219,16 @@ export function BigFiveProfileModal({ open, onClose }: { open: boolean; onClose:
               Cerrar Perfil
             </button>
           </div>
+
+          {running && (
+            <TestRunner
+              testCode="BIGFIVE"
+              onClose={() => {
+                setRunning(false);
+                loadLatest();
+              }}
+            />
+          )}
         </motion.div>
       )}
     </AnimatePresence>
