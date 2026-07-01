@@ -254,6 +254,7 @@ const App = () => (
               <Route path="/admin/progreso" element={<ProgresoAdmin />} />
               <Route path="/admin/notificaciones" element={<NotificacionesAdmin />} />
               <Route path="/admin/contenido" element={<ContentManager />} />
+              <Route path="/admin/contenido-diario" element={<ContenidoDiarioAdmin />} />
               <Route path="/admin/recursos" element={<ResourcesManager />} />
               <Route path="/admin/recursos/:slug" element={<ResourceDetail />} />
               <Route path="/admin/solicitudes" element={<TreatmentRequests />} />
