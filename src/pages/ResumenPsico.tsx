@@ -130,12 +130,12 @@ export default function ResumenPsico() {
 
         <AnimatePresence mode="wait">
           {screen === "select" && (
-            <motion.div
+          <motion.div
               key="select"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="flex-1 pb-24"
+              className="flex-1 pb-32"
             >
               <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-[#7cc2c8]/25 bg-[#7cc2c8]/10 p-3.5">
                 <Shield size={16} className="mt-0.5 shrink-0 text-[#0e7c8a]" />
@@ -185,7 +185,7 @@ export default function ResumenPsico() {
       </div>
 
       {screen === "select" && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/5 bg-white/95 px-5 pb-6 pt-3 backdrop-blur-xl">
+        <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-black/5 bg-white/95 px-5 pb-6 pt-3 backdrop-blur-xl">
           <div className="mx-auto max-w-md">
             <button
               onClick={generate}

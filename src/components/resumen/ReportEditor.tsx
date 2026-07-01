@@ -33,7 +33,7 @@ export function ReportEditor({
   };
 
   return (
-    <div className="space-y-4 pb-32">
+    <div className="space-y-4 pb-40">
       <div className="rounded-2xl bg-white shadow-[0_2px_12px_rgba(16,25,39,0.05)]">
         <textarea
           value={text}
@@ -57,7 +57,7 @@ export function ReportEditor({
         <Download size={15} /> Descargar copia
       </button>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/5 bg-white/95 px-5 pb-6 pt-3 backdrop-blur-xl">
+      <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-black/5 bg-white/95 px-5 pb-6 pt-3 backdrop-blur-xl">
         <div className="mx-auto max-w-md">
           <motion.button
             whileTap={{ scale: status === "idle" ? 0.98 : 1 }}
