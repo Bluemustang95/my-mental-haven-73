@@ -48,13 +48,13 @@ export function BigFiveHexagon({
           key={idx}
           points={pts}
           fill="none"
-          stroke="rgba(255,255,255,0.12)"
+          stroke="rgba(15,23,42,0.10)"
           strokeWidth={1}
         />
       ))}
       {dims.map((_, i) => {
         const p = axis(i, 1);
-        return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.08)" />;
+        return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(15,23,42,0.08)" />;
       })}
       {!preview && scores && (
         <motion.polygon
@@ -63,8 +63,8 @@ export function BigFiveHexagon({
           transition={{ duration: 0.8, type: "spring" }}
           style={{ transformOrigin: `${cx}px ${cy}px` }}
           points={valuePoly}
-          fill="rgba(167,139,250,0.35)"
-          stroke="#a78bfa"
+          fill="rgba(124,194,200,0.35)"
+          stroke="#7cc2c8"
           strokeWidth={2}
         />
       )}
@@ -77,7 +77,7 @@ export function BigFiveHexagon({
               y={p.y}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill="rgba(255,255,255,0.7)"
+              fill="#64748b"
               fontSize={11}
               fontWeight={600}
             >

@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 import { BigFiveHexagon } from "./BigFiveHexagon";
 import { useHideBottomNav } from "@/hooks/useUiChrome";
 
@@ -109,7 +108,6 @@ export function TestRunner({
   };
 
   const progress = items.length ? (idx + 1) / items.length : 0;
-
   const isBigFive = def?.code === "BIGFIVE";
 
   return (
@@ -117,34 +115,34 @@ export function TestRunner({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] overflow-y-auto bg-[#0F0F12] text-white"
+      className="fixed inset-0 z-[9999] overflow-y-auto bg-[#f9f9fb] text-[#0f172a]"
     >
-      <div className="pointer-events-none absolute -top-32 -right-24 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -left-20 h-72 w-72 rounded-full bg-[#7cc2c8]/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-24 h-72 w-72 rounded-full bg-[#facb60]/15 blur-3xl" />
 
       <div className="relative mx-auto min-h-screen max-w-md px-6 pt-12 pb-32">
         <div className="mb-6 flex items-center justify-between">
           <button
             onClick={stage === "items" && idx > 0 ? () => setIdx(idx - 1) : onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e2e8f0] bg-white shadow-sm"
           >
             <ArrowLeft size={16} />
           </button>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-white/45">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#94a3b8]">
             {def?.name ?? "Cargando..."}
           </p>
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e2e8f0] bg-white shadow-sm"
           >
             <X size={16} />
           </button>
         </div>
 
         {stage === "items" && items.length > 0 && (
-          <div className="mb-6 h-1 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="mb-6 h-1 w-full overflow-hidden rounded-full bg-[#e2e8f0]">
             <div
-              className="h-full bg-gradient-to-r from-indigo-400 to-violet-400 transition-all"
+              className="h-full bg-[#7cc2c8] transition-all"
               style={{ width: `${progress * 100}%` }}
             />
           </div>
@@ -158,27 +156,27 @@ export function TestRunner({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <h1 className="font-display text-2xl font-bold">{def.name}</h1>
-              <p className="mt-3 text-sm text-white/65">{def.instructions}</p>
+              <h1 className="font-serif text-2xl font-semibold text-[#0f172a]">{def.name}</h1>
+              <p className="mt-3 text-sm leading-relaxed text-[#64748b]">{def.instructions}</p>
 
               {isBigFive && (
-                <div className="my-8 rounded-3xl border border-white/10 bg-white/5 p-6">
-                  <p className="text-center text-[11px] font-semibold uppercase tracking-widest text-white/45">
+                <div className="my-8 rounded-3xl border border-[#e2e8f0] bg-white p-6 shadow-sm">
+                  <p className="text-center text-[11px] font-semibold uppercase tracking-widest text-[#94a3b8]">
                     Tu hexágono — vista previa
                   </p>
                   <BigFiveHexagon preview />
-                  <p className="mt-2 text-center text-xs text-white/55">
+                  <p className="mt-2 text-center text-xs text-[#64748b]">
                     Cuando termines, este hexágono se llenará con tu perfil OCEAN.
                   </p>
                 </div>
               )}
 
-              <p className="mt-6 text-xs text-white/45">
+              <p className="mt-6 text-xs text-[#94a3b8]">
                 {items.length} preguntas · ~{Math.max(2, Math.round(items.length / 6))} min
               </p>
               <button
                 onClick={() => setStage("items")}
-                className="mt-6 w-full rounded-2xl bg-indigo-500 py-4 font-semibold shadow-lg"
+                className="mt-6 w-full rounded-2xl bg-[#7cc2c8] py-4 font-semibold text-white shadow-[0_10px_30px_-10px_rgba(124,194,200,0.6)]"
               >
                 Comenzar
               </button>
@@ -193,10 +191,10 @@ export function TestRunner({
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.25 }}
             >
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-white/45">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-[#94a3b8]">
                 {idx + 1} de {items.length}
               </p>
-              <h2 className="mt-3 font-display text-xl font-bold leading-snug">
+              <h2 className="mt-3 font-serif text-xl font-semibold leading-snug text-[#0f172a]">
                 {current.prompt}
               </h2>
 
@@ -213,8 +211,8 @@ export function TestRunner({
                       onClick={() => answerAndNext(v)}
                       className={`w-full rounded-2xl border px-5 py-4 text-left text-sm font-medium transition active:scale-[0.99] ${
                         selected
-                          ? "border-indigo-400/60 bg-indigo-500/15"
-                          : "border-white/10 bg-white/5 hover:bg-white/10"
+                          ? "border-[#7cc2c8] bg-[#7cc2c8]/10 text-[#0f172a]"
+                          : "border-[#e2e8f0] bg-white text-[#0f172a] hover:bg-[#f1f5f9]"
                       }`}
                     >
                       {label}
@@ -232,38 +230,40 @@ export function TestRunner({
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="mb-8 text-center">
-                <Check size={48} className="mx-auto text-emerald-400" />
-                <h2 className="mt-4 font-display text-2xl font-bold">Test completado</h2>
-                <p className="mt-1 text-sm text-white/55">{def.name}</p>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#7cc2c8]/15">
+                  <Check size={28} className="text-[#7cc2c8]" />
+                </div>
+                <h2 className="mt-4 font-serif text-2xl font-semibold text-[#0f172a]">Test completado</h2>
+                <p className="mt-1 text-sm text-[#64748b]">{def.name}</p>
               </div>
 
               {isBigFive ? (
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <div className="rounded-3xl border border-[#e2e8f0] bg-white p-6 shadow-sm">
                   <BigFiveHexagon scores={result.subs} />
                   <div className="mt-4 grid grid-cols-5 gap-2 text-center text-[10px]">
                     {["O", "C", "E", "A", "N"].map((k) => (
                       <div key={k}>
-                        <p className="font-bold text-white">{Math.round((result.subs[k] ?? 0) * 100)}%</p>
-                        <p className="text-white/50">{k}</p>
+                        <p className="font-bold text-[#0f172a]">{Math.round((result.subs[k] ?? 0) * 100)}%</p>
+                        <p className="text-[#94a3b8]">{k}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-center">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-white/45">
+                <div className="rounded-3xl border border-[#e2e8f0] bg-white p-6 text-center shadow-sm">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-[#94a3b8]">
                     Puntaje total
                   </p>
-                  <p className="mt-2 font-display text-5xl font-bold text-amber-400">
+                  <p className="mt-2 font-serif text-5xl font-bold text-[#7cc2c8]">
                     {result.total}
                   </p>
-                  <p className="mt-3 text-sm text-white/75">{result.interpretation}</p>
+                  <p className="mt-3 text-sm text-[#475569]">{result.interpretation}</p>
                 </div>
               )}
 
               <button
                 onClick={onClose}
-                className="mt-8 w-full rounded-2xl bg-indigo-500 py-4 font-semibold shadow-lg"
+                className="mt-8 w-full rounded-2xl bg-[#0f172a] py-4 font-semibold text-white shadow-lg"
               >
                 Listo
               </button>

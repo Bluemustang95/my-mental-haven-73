@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Brain, Shield, Moon, Zap, Heart, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -13,14 +13,20 @@ const categories = [
 
 export default function MedLibrary() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const mode = (searchParams.get("mode") as "add" | "info") ?? "info";
 
   return (
     <div className="px-5 pt-14 pb-28 safe-area-top bg-[hsl(var(--background))]">
       <button onClick={() => navigate("/mi-proceso/medicacion")} className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
         <ArrowLeft size={16} /> Medicación
       </button>
-      <h1 className="mb-1 font-display text-xl font-semibold">Tipo de medicamentos</h1>
-      <p className="mb-6 text-sm text-muted-foreground">Información sobre psicofármacos comunes.</p>
+      <h1 className="mb-1 font-display text-xl font-semibold">
+        {mode === "add" ? "Agregar medicación" : "Tipo de medicamentos"}
+      </h1>
+      <p className="mb-6 text-sm text-muted-foreground">
+        {mode === "add" ? "Elegí la categoría de tu medicamento." : "Información sobre psicofármacos comunes."}
+      </p>
 
       <div className="space-y-3">
         {categories.map((cat, i) => {
@@ -31,7 +37,7 @@ export default function MedLibrary() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              onClick={() => navigate(`/mi-proceso/medicacion/biblioteca/${cat.id}`)}
+              onClick={() => navigate(`/mi-proceso/medicacion/biblioteca/${cat.id}?mode=${mode}`)}
               className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 text-left shadow-[0_2px_12px_hsl(var(--foreground)/0.04)] active:bg-muted transition-colors"
             >
               <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${cat.color}`}>

@@ -39,14 +39,16 @@ export function BottomNav() {
         aria-label={tab.label}
         className={cn(
           "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-          active ? "text-foreground" : "text-white/70"
+          active
+            ? "bg-white text-primary shadow-sm"
+            : "text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
         )}
       >
         <motion.div
           animate={active ? { scale: 1.1 } : { scale: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
         >
-          <Icon size={20} weight={active ? "fill" : "regular"} />
+          <Icon size={20} weight={active ? "fill" : "bold"} />
         </motion.div>
       </motion.button>
     );
