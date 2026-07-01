@@ -371,11 +371,15 @@ function WriteView({
                 <Plus size={15} />
               </button>
               <button
-                onClick={() => toast.info("Tus notas son privadas y solo vos las ves. El cifrado extremo llega en la próxima versión.")}
-                className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)}
-                aria-label="Privacidad"
+                onClick={() => setPrivacyOpen(true)}
+                className={cn("grid h-8 w-8 place-items-center rounded-full relative", iconBtnCls)}
+                aria-label="Privacidad y cifrado"
+                title="Privacidad y cifrado"
               >
                 <Lock size={15} />
+                {e2e.isE2EEnabled() && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+                )}
               </button>
               <button onClick={onOpenHistory} className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Historial">
                 <Clock size={15} />
