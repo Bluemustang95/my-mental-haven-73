@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { CrisisSheet } from "@/components/CrisisButton";
+import { useUiChrome } from "@/hooks/useUiChrome";
 
 const leftTabs = [
   { path: "/", label: "Inicio", icon: House },
@@ -19,6 +20,8 @@ export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const [crisisOpen, setCrisisOpen] = useState(false);
+  const { bottomNavHidden } = useUiChrome();
+  if (bottomNavHidden) return null;
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -65,7 +68,7 @@ export function BottomNav() {
       }}
     >
       <div
-        className="pointer-events-auto mx-4 flex items-center justify-center gap-0.5 rounded-[28px] border border-white/20 bg-primary/95 px-2 py-1.5 shadow-primary-glow backdrop-blur-3xl"
+        className="pointer-events-auto mx-4 flex items-center justify-center gap-0.5 rounded-[28px] border border-white/30 bg-primary/40 supports-[backdrop-filter]:bg-primary/30 px-2 py-1.5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.25)] backdrop-blur-2xl"
         style={{ maxWidth: "calc(100vw - 2rem)" }}
       >
         {leftTabs.map(renderTab)}
