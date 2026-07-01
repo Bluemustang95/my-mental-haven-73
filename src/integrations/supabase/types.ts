@@ -1105,6 +1105,7 @@ export type Database = {
           entry_date: string | null
           highlighted: boolean | null
           id: string
+          is_encrypted: boolean
           prompt: string | null
           updated_at: string | null
           user_id: string
@@ -1118,6 +1119,7 @@ export type Database = {
           entry_date?: string | null
           highlighted?: boolean | null
           id?: string
+          is_encrypted?: boolean
           prompt?: string | null
           updated_at?: string | null
           user_id: string
@@ -1131,6 +1133,7 @@ export type Database = {
           entry_date?: string | null
           highlighted?: boolean | null
           id?: string
+          is_encrypted?: boolean
           prompt?: string | null
           updated_at?: string | null
           user_id?: string
@@ -1456,6 +1459,7 @@ export type Database = {
           linked_phone: string | null
           linked_professional_code: string | null
           module_scores: Json | null
+          next_session_at: string | null
           notifications_on: boolean | null
           onboarding_completed: boolean | null
           plan: string
@@ -1466,6 +1470,7 @@ export type Database = {
           recent_feelings: string[] | null
           satisfaction_survey_completed_at: string | null
           satisfaction_survey_dismissed_at: string | null
+          session_reminder_dismissed_at: string | null
           sleep_quality: string | null
           therapist_email: string | null
           therapist_license: string | null
@@ -1491,6 +1496,7 @@ export type Database = {
           linked_phone?: string | null
           linked_professional_code?: string | null
           module_scores?: Json | null
+          next_session_at?: string | null
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
           plan?: string
@@ -1501,6 +1507,7 @@ export type Database = {
           recent_feelings?: string[] | null
           satisfaction_survey_completed_at?: string | null
           satisfaction_survey_dismissed_at?: string | null
+          session_reminder_dismissed_at?: string | null
           sleep_quality?: string | null
           therapist_email?: string | null
           therapist_license?: string | null
@@ -1526,6 +1533,7 @@ export type Database = {
           linked_phone?: string | null
           linked_professional_code?: string | null
           module_scores?: Json | null
+          next_session_at?: string | null
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
           plan?: string
@@ -1536,6 +1544,7 @@ export type Database = {
           recent_feelings?: string[] | null
           satisfaction_survey_completed_at?: string | null
           satisfaction_survey_dismissed_at?: string | null
+          session_reminder_dismissed_at?: string | null
           sleep_quality?: string | null
           therapist_email?: string | null
           therapist_license?: string | null
@@ -1783,6 +1792,30 @@ export type Database = {
           user_id?: string
           what_happened?: string | null
           what_i_wished?: string | null
+        }
+        Relationships: []
+      }
+      resmita_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2522,6 +2555,7 @@ export type Database = {
           linked_phone: string | null
           linked_professional_code: string | null
           module_scores: Json | null
+          next_session_at: string | null
           notifications_on: boolean | null
           onboarding_completed: boolean | null
           plan: string
@@ -2532,6 +2566,7 @@ export type Database = {
           recent_feelings: string[] | null
           satisfaction_survey_completed_at: string | null
           satisfaction_survey_dismissed_at: string | null
+          session_reminder_dismissed_at: string | null
           sleep_quality: string | null
           therapist_email: string | null
           therapist_license: string | null
