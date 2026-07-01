@@ -26,7 +26,7 @@ import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
-import { PeriodStats } from "@/components/proceso/PeriodStats";
+
 
 
 
