@@ -47,7 +47,7 @@ export default function MedicationTracker() {
     const effects = logSideEffects[medId] ?? [];
     const { data } = await supabase
       .from("medication_logs")
-      .insert({ user_id: user.id, medication_id: medId, taken: true, side_effects: effects, log_date: todayStr })
+      .insert({ user_id: user.id, medication_id: medId, taken: true, side_effects: effects, log_date: todayStr, taken_at: new Date().toISOString() })
       .select("*")
       .single();
     if (data) setLogs((l) => [...l, data as MedLog]);
