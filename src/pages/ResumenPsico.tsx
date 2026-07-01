@@ -135,7 +135,7 @@ export default function ResumenPsico() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="flex-1 pb-32"
+              className="flex-1 pb-[calc(12rem+env(safe-area-inset-bottom))]"
             >
               <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-[#7cc2c8]/25 bg-[#7cc2c8]/10 p-3.5">
                 <Shield size={16} className="mt-0.5 shrink-0 text-[#0e7c8a]" />
@@ -185,12 +185,12 @@ export default function ResumenPsico() {
       </div>
 
       {screen === "select" && (
-        <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-black/5 bg-white/95 px-5 pb-6 pt-3 backdrop-blur-xl">
-          <div className="mx-auto max-w-md">
+        <div className="fixed inset-x-0 z-40 px-5" style={{ bottom: "calc(6.15rem + env(safe-area-inset-bottom))" }}>
+          <div className="mx-auto max-w-md rounded-[2rem] border border-white/70 bg-white/90 p-2 shadow-[0_18px_45px_rgba(16,25,39,0.18)] backdrop-blur-xl">
             <button
               onClick={generate}
               disabled={total === 0}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7cc2c8] py-3.5 font-display text-[13.5px] font-semibold text-white shadow-[0_6px_20px_rgba(124,194,200,0.35)] transition-opacity disabled:opacity-40 disabled:shadow-none"
+              className="flex w-full items-center justify-center gap-2 rounded-[1.55rem] bg-[#7cc2c8] py-3.5 font-display text-[13.5px] font-semibold text-white shadow-[0_6px_20px_rgba(124,194,200,0.35)] transition-opacity disabled:opacity-40 disabled:shadow-none"
             >
               <Sparkles size={16} />
               {total === 0 ? "Seleccioná al menos un ítem" : `Generar resumen (${total})`}
