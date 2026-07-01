@@ -84,6 +84,7 @@ export default function HabitosHome() {
         onCreate={create}
         customCategories={categories}
         onAddCategory={addCategory}
+        existingHabits={habits}
       />
       <HabitDetailSheet
         habit={detail}
