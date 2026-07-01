@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MapPin, Video, X } from "lucide-react";
 import { toast } from "sonner";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 
 export type SessionModality = "presencial" | "virtual";
 
@@ -23,6 +24,7 @@ const empty: NextSessionData = { date: "", time: "", modality: "presencial", loc
 
 export function NextSessionSheet({ open, initial, onClose, onSave }: Props) {
   const [form, setForm] = useState<NextSessionData>(initial ?? empty);
+  useHideBottomNav(open);
 
   useEffect(() => {
     if (open) setForm(initial ?? empty);
