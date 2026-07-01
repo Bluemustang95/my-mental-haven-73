@@ -18,18 +18,30 @@ export default function MedicationTracker() {
   const { user } = useAuth();
   const [meds, setMeds] = useState<Med[]>([]);
   const [logs, setLogs] = useState<MedLog[]>([]);
+  const [monthAdherence, setMonthAdherence] = useState<number | null>(null);
   const [expandedMed, setExpandedMed] = useState<string | null>(null);
   const [logSideEffects, setLogSideEffects] = useState<Record<string, string[]>>({});
   const todayStr = localDateStr();
 
   useEffect(() => {
     if (!user) return;
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    const monthStartStr = localDateStr(monthStart);
     Promise.all([
       supabase.from("medications").select("*").eq("user_id", user.id).eq("active", true).order("created_at"),
       supabase.from("medication_logs").select("*").eq("user_id", user.id).eq("log_date", todayStr),
-    ]).then(([medsRes, logsRes]) => {
-      setMeds((medsRes.data as Med[]) ?? []);
+      supabase.from("medication_logs").select("id, taken, log_date").eq("user_id", user.id).gte("log_date", monthStartStr),
+    ]).then(([medsRes, logsRes, monthRes]) => {
+      const medsList = (medsRes.data as Med[]) ?? [];
+      setMeds(medsList);
       setLogs((logsRes.data as MedLog[]) ?? []);
+      // Adherencia = tomas registradas / (dosis diarias × días transcurridos)
+      const dailyDoses = medsList.length;
+      const daysElapsed = new Date().getDate();
+      const expected = dailyDoses * daysElapsed;
+      const taken = ((monthRes.data as { taken: boolean }[]) ?? []).filter((l) => l.taken).length;
+      setMonthAdherence(expected > 0 ? Math.round((taken / expected) * 100) : null);
     });
   }, [user, todayStr]);
 
