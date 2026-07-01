@@ -49,6 +49,8 @@ export function HabitCard({ habit, completions, view, onToggle, onOpenDetail }: 
   const today = localDateStr();
   const isTodayDone = doneSet.has(today);
   const categoryLabel = DBT_CATEGORIES.find(c => c.key === habit.category_key)?.label ?? habit.category_key;
+  // Habit stacking: si depende de otro hábito, avisamos.
+  const stackAfterId = (habit as { stack_after_habit_id?: string | null }).stack_after_habit_id;
 
   if (view === "cards") {
     return (
