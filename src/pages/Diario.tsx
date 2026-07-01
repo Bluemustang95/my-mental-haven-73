@@ -718,7 +718,7 @@ function PrivacyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
           {enabled ? (
             <>
               <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800">
-                <Check size={16} weight="bold" /> Cifrado extremo activado
+                <Check size={16} /> Cifrado extremo activado
               </div>
               <button
                 onClick={() => setShowKey((v) => !v)}
