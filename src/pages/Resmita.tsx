@@ -125,7 +125,7 @@ export default function Resmita() {
           </div>
         )}
         {messages.map((msg, i) => (
-          <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+          <div key={i} className={cn("flex flex-col", msg.role === "user" ? "items-end" : "items-start")}>
             <div
               className={cn(
                 "max-w-[80%] rounded-2xl px-4 py-3 text-sm",
@@ -142,6 +142,28 @@ export default function Resmita() {
                 msg.content
               )}
             </div>
+            {msg.role === "assistant" && msg.content.length > 40 && (
+              <button
+                onClick={async () => {
+                  if (!user || savedIdxs.has(i)) return;
+                  const { error } = await supabase
+                    .from("therapy_prep_notes")
+                    .insert({ user_id: user.id, note: `[Resmita] ${msg.content.slice(0, 1800)}` });
+                  if (error) { toast.error("No pude guardar."); return; }
+                  setSavedIdxs(new Set([...savedIdxs, i]));
+                  toast.success("Guardado en Notas para terapia");
+                }}
+                className={cn(
+                  "mt-1 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] transition",
+                  savedIdxs.has(i)
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-muted text-muted-foreground hover:bg-muted/70"
+                )}
+              >
+                {savedIdxs.has(i) ? <Check size={11} /> : <BookmarkPlus size={11} />}
+                {savedIdxs.has(i) ? "Guardado" : "Guardar para terapia"}
+              </button>
+            )}
           </div>
         ))}
         {isLoading && messages[messages.length - 1]?.role === "user" && (
