@@ -136,7 +136,7 @@ export default function SafetyPlan() {
     a.download = `plan-seguridad-resma-${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    saveLog("safety", { meta: { signs: checked.size, contacts: contacts.length } });
+    saveLog("safety", { meta: { signs: signs.length, coping: coping.length, contacts: contacts.length } });
     toast.success("Reporte descargado");
   };
 
