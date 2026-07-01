@@ -8,13 +8,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { loadHotlines, detectUserCountry, type Hotline } from "@/lib/crisisHotlines";
 import { toast } from "sonner";
 
-const warningSigns = [
+const suggestedSigns = [
   "Pensamientos intrusivos y persistentes",
   "Aislamiento de personas queridas",
   "Cambios bruscos de ánimo",
   "Dificultad para dormir o comer",
   "Sensación de desesperanza",
   "Aumento del consumo",
+];
+
+const suggestedCoping = [
+  "Salir a caminar 10 minutos",
+  "Escuchar una canción que me calma",
+  "Ejercicio de respiración 4-7-8",
+  "Llamar a alguien de confianza",
+  "Escribir en el diario",
 ];
 
 const ambiental = [
@@ -30,7 +38,10 @@ export default function SafetyPlan() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [checked, setChecked] = useState<Set<number>>(new Set());
+  const [signs, setSigns] = useState<string[]>([]);
+  const [coping, setCoping] = useState<string[]>([]);
+  const [signDraft, setSignDraft] = useState("");
+  const [copingDraft, setCopingDraft] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [draft, setDraft] = useState<Contact>({ name: "", phone: "" });
   const [hotlines, setHotlines] = useState<Hotline[]>([]);
@@ -45,8 +56,8 @@ export default function SafetyPlan() {
       if (user) {
         const { data } = await supabase.from("safety_plans").select("*").eq("user_id", user.id).maybeSingle();
         if (data) {
-          const signsArr = (data.warning_signs as unknown as string[]) ?? [];
-          setChecked(new Set(signsArr.map((s) => warningSigns.indexOf(s)).filter((i) => i >= 0)));
+          setSigns((data.warning_signs as unknown as string[]) ?? []);
+          setCoping((data.coping_strategies as unknown as string[]) ?? []);
           setContacts(((data.contacts as unknown as Contact[]) ?? []));
         }
       }
@@ -63,22 +74,30 @@ export default function SafetyPlan() {
       setSaving(true);
       await supabase.from("safety_plans").upsert({
         user_id: user.id,
-        warning_signs: [...checked].map((i) => warningSigns[i]),
+        warning_signs: signs as unknown as never,
+        coping_strategies: coping as unknown as never,
         contacts: contacts as unknown as never,
-        coping_strategies: [] as unknown as never,
       }, { onConflict: "user_id" });
       setSaving(false);
     }, 800);
     return () => clearTimeout(id);
-  }, [checked, contacts, loading]);
+  }, [signs, coping, contacts, loading]);
 
-  const toggle = (i: number) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
-      return next;
-    });
+  const addSign = (v: string) => {
+    const t = v.trim();
+    if (!t || signs.includes(t) || signs.length >= 8) return;
+    setSigns((s) => [...s, t]);
+    setSignDraft("");
   };
+  const removeSign = (i: number) => setSigns((s) => s.filter((_, idx) => idx !== i));
+
+  const addCoping = (v: string) => {
+    const t = v.trim();
+    if (!t || coping.includes(t) || coping.length >= 8) return;
+    setCoping((s) => [...s, t]);
+    setCopingDraft("");
+  };
+  const removeCoping = (i: number) => setCoping((s) => s.filter((_, idx) => idx !== i));
 
   const addContact = () => {
     if (!draft.name.trim() || !draft.phone.trim()) return;
