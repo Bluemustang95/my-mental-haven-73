@@ -59,9 +59,11 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
         frequency, frequency_count: frequencyCount,
         time_slot: timeSlot, cadence,
         reminders_enabled: reminders,
+        stack_after_habit_id: stackAfter || null,
       });
       toast.success("Hábito registrado ✓");
       setName(""); setDescription(""); setIcon(EMOJI_ICONS[0]); setColorIdx(0);
+      setStackAfter("");
       setExpanded(false);
       onClose();
     } catch {
