@@ -304,20 +304,47 @@ export default function Dashboard() {
   );
 }
 
-function BulletRow({ done, children }: { done: boolean; children: React.ReactNode }) {
+function BulletRow({
+  done,
+  children,
+  isFirst = true,
+  isLast = true,
+}: {
+  done: boolean;
+  children: React.ReactNode;
+  isFirst?: boolean;
+  isLast?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span
-        className={
-          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] transition " +
-          (done
-            ? "border-resma-teal bg-resma-teal text-white"
-            : "border-foreground/25 bg-white text-transparent")
-        }
-      >
-        {done && <Check size={9} strokeWidth={3} />}
-      </span>
-      <div className="min-w-0 flex-1">{children}</div>
+    <div className="relative flex items-stretch gap-2.5">
+      {/* Dashed connector rail behind the bullet column */}
+      <div className="relative flex w-4 shrink-0 flex-col items-center">
+        {/* segment above bullet */}
+        <div
+          className={
+            "w-px flex-1 " +
+            (!isFirst ? "border-l border-dashed border-foreground/25" : "")
+          }
+        />
+        <span
+          className={
+            "my-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] transition " +
+            (done
+              ? "border-resma-teal bg-resma-teal text-white"
+              : "border-foreground/25 bg-white text-transparent")
+          }
+        >
+          {done && <Check size={9} strokeWidth={3} />}
+        </span>
+        {/* segment below bullet */}
+        <div
+          className={
+            "w-px flex-1 " +
+            (!isLast ? "border-l border-dashed border-foreground/25" : "")
+          }
+        />
+      </div>
+      <div className="min-w-0 flex-1 py-1">{children}</div>
     </div>
   );
 }
