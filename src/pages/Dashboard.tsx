@@ -402,7 +402,7 @@ function SleepZoneCard({ onClick }: { onClick: () => void }) {
         </div>
         <div>
           <p className="text-[9.5px] font-semibold uppercase tracking-[0.18em] text-white/70">Zona de descanso</p>
-          <p className="font-serifElegant text-[14.5px] font-semibold">Santuario del sueño</p>
+          <p className="font-display text-[14px] font-semibold">Santuario del sueño</p>
           <p className="text-[10.5px] text-white/70">Ruidos blancos y protocolos nocturnos.</p>
         </div>
       </div>
