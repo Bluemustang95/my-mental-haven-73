@@ -172,9 +172,6 @@ export default function SafetyPlan() {
       </motion.div>
 
       <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
-        <p className="mb-3 font-mindful text-base font-semibold">Señales de alerta</p>
-        <div className="space-y-2">
-      <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
         <p className="mb-1 font-mindful text-base font-semibold">Señales de alerta</p>
         <p className="mb-3 text-[11px] leading-4 text-resource-safety-accent/60">
           Escribí las tuyas o tocá una sugerencia.
