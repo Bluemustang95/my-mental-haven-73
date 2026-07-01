@@ -38,7 +38,7 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     supabase.from("body_map_entries").select("id, created_at, body_part, note").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("content_progress").select("id, last_accessed, psychoeducation_content(title, content_type)").eq("user_id", userId).eq("completed", true).gte("last_accessed", dayStart).lt("last_accessed", dayEnd),
     supabase.from("dbt_emotion_sessions").select("id, created_at, emotion, path").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
-    supabase.from("medication_logs").select("id, taken_at, taken, note").eq("user_id", userId).gte("taken_at", dayStart).lt("taken_at", dayEnd).order("taken_at"),
+    supabase.from("medication_logs").select("id, taken_at, taken, note, log_date, created_at").eq("user_id", userId).eq("log_date", ds),
     supabase.from("sleep_log").select("id, created_at, quality, score, notes").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
   ]);
 
