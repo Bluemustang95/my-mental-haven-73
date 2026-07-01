@@ -1,18 +1,26 @@
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Book, ClipboardList, Moon, Smile, Target, X } from "lucide-react";
 import { Sparkline } from "./Sparkline";
+import { PeriodStats } from "./PeriodStats";
 import type { WellbeingSnapshot } from "@/lib/wellbeingScore";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 type Props = { open: boolean; onClose: () => void; snapshot?: WellbeingSnapshot | null };
 
 export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
+  const { user } = useAuth();
+  const [rangeMode, setRangeMode] = useState<"week" | "month">("week");
+  const [mindMinutes, setMindMinutes] = useState<number>(0);
   const trend = snapshot?.trend?.length ? snapshot.trend : [0,0,0,0,0,0,0];
   const score = snapshot?.score ?? 0;
   const delta = snapshot?.delta ?? 0;
   const prevScore = delta !== 0 && score > 0 ? Math.max(0, Math.round(score / (1 + delta / 100))) : score;
   const message = snapshot?.message ?? "Empezá registrando tu día.";
+
   const c = snapshot?.components ?? { sleep: null, mood: null, habits: null, tests: null, engagement: null };
   const pill = (v: number | null): "ok" | "warn" | "none" => v === null ? "none" : v >= 65 ? "ok" : "warn";
   const state = (v: number | null, okTxt: string, midTxt: string, noneTxt: string) =>
