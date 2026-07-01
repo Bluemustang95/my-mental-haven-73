@@ -116,6 +116,7 @@ import CrisisHotlinesManager from "@/pages/admin/CrisisHotlinesManager";
 import CountryViewSwitcher from "@/pages/admin/CountryViewSwitcher";
 import MenteEmocion from "@/pages/MenteEmocion";
 import { NotificationForegroundListener } from "@/components/system/NotificationForegroundListener";
+import { IosInstallHint } from "@/components/system/IosInstallHint";
 import { UiChromeProvider } from "@/hooks/useUiChrome";
 
 
@@ -142,6 +143,7 @@ const App = () => (
         <AuthProvider>
           <UiChromeProvider>
           <NotificationForegroundListener />
+          <IosInstallHint />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
