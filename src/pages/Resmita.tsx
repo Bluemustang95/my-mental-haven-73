@@ -17,11 +17,38 @@ export default function Resmita() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  // Load prior conversation memory (last 30 messages)
+  useEffect(() => {
+    if (!user) { setLoadingHistory(false); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("resmita_messages")
+        .select("role, content")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (data && data.length) {
+        setMessages(data.reverse().map((m) => ({ role: m.role as "user" | "assistant", content: m.content })));
+      }
+      setLoadingHistory(false);
+    })();
+  }, [user]);
+
+  const clearHistory = async () => {
+    if (!user) return;
+    if (!confirm("¿Borrar toda la conversación con Resmita?")) return;
+    await supabase.from("resmita_messages").delete().eq("user_id", user.id);
+    setMessages([]);
+    setSavedIdxs(new Set());
+    toast.success("Conversación borrada");
+  };
 
   const send = async () => {
     const text = input.trim();
@@ -31,6 +58,11 @@ export default function Resmita() {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+
+    // Persist user message
+    if (user) {
+      supabase.from("resmita_messages").insert({ user_id: user.id, role: "user", content: text });
+    }
 
     let assistantSoFar = "";
     const allMessages = [...messages, userMsg];
