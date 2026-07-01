@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Clock, Lock, Sparkles, X, Camera, Image as ImageIcon,
   Paperclip, Mic, Pause, Flower, Volume2, VolumeX, FileText,
-  Smile, Tag, Bold, Italic, Plus, Search, Pencil, Trash2,
+  Smile, Tag, Bold, Italic, Plus, Search, Pencil, Trash2, Check,
 } from "lucide-react";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
 import { uploadAttachment, deleteAttachment } from "@/lib/journalAttachments";
+import * as e2e from "@/lib/e2ecipher";
 
 /* ────────────── Sanitizer (whitelist b/strong/i/em/br) ────────────── */
 function sanitizeHtml(html: string): string {
@@ -139,6 +140,7 @@ function WriteView({
   const [entryId, setEntryId] = useState<string | null>(null);
   const [confirmNew, setConfirmNew] = useState(false);
   const [fmtBar, setFmtBar] = useState<{ top: number; left: number } | null>(null);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lastLen = useRef(0);
@@ -302,14 +304,18 @@ function WriteView({
         .filter((a) => !!a.path)
         .map((a) => ({ id: a.id, name: a.name, type: a.type, path: a.path, size: a.size }));
       const audioAtt = persistedAttachments.find((a) => a.type === "audio");
+      const encEnabled = e2e.isE2EEnabled();
+      const rawContent = sanitizeHtml(text);
+      const contentForDb = encEnabled ? await e2e.encryptText(rawContent) : rawContent;
       const payload = {
         user_id: user.id,
-        content: sanitizeHtml(text),
+        content: contentForDb,
         entry_date: localDateStr(),
         emotion_tags: tags,
         prompt: prompt?.text ?? null,
         attachments: persistedAttachments as unknown as never,
         voice_note_path: audioAtt?.path ?? null,
+        is_encrypted: encEnabled,
       };
       if (entryId) {
         const { error } = await supabase.from("journal_entries").update(payload).eq("id", entryId);
@@ -366,11 +372,15 @@ function WriteView({
                 <Plus size={15} />
               </button>
               <button
-                onClick={() => toast.info("Tus notas son privadas y solo vos las ves. El cifrado extremo llega en la próxima versión.")}
-                className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)}
-                aria-label="Privacidad"
+                onClick={() => setPrivacyOpen(true)}
+                className={cn("grid h-8 w-8 place-items-center rounded-full relative", iconBtnCls)}
+                aria-label="Privacidad y cifrado"
+                title="Privacidad y cifrado"
               >
                 <Lock size={15} />
+                {e2e.isE2EEnabled() && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
+                )}
               </button>
               <button onClick={onOpenHistory} className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Historial">
                 <Clock size={15} />
@@ -647,12 +657,132 @@ function WriteView({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
     </motion.div>
   );
 }
 
 
 /* ────────────── Subcomponents ────────────── */
+function PrivacyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const [enabled, setEnabled] = useState(e2e.isE2EEnabled());
+  const [showKey, setShowKey] = useState(false);
+  const [importVal, setImportVal] = useState("");
+
+  useEffect(() => { if (open) setEnabled(e2e.isE2EEnabled()); }, [open]);
+
+  const activate = async () => {
+    await e2e.enableE2E();
+    setEnabled(true);
+    toast.success("Cifrado extremo activado. Las nuevas entradas se cifran en tu dispositivo.");
+  };
+  const deactivate = () => {
+    e2e.disableE2E();
+    setEnabled(false);
+    toast.info("Cifrado desactivado. Las nuevas entradas se guardarán sin cifrar.");
+  };
+  const copyKey = async () => {
+    const k = e2e.exportKeyB64();
+    if (!k) { toast.error("No hay clave para copiar"); return; }
+    await navigator.clipboard.writeText(k);
+    toast.success("Clave copiada. Guardala en un lugar seguro.");
+  };
+  const doImport = async () => {
+    const ok = await e2e.importKeyB64(importVal);
+    if (ok) { toast.success("Clave importada. Recargá el historial."); setImportVal(""); }
+    else toast.error("Clave inválida.");
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="max-w-sm">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <Lock size={16} /> Privacidad y cifrado
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-left space-y-2">
+            <span className="block">
+              Tus notas viajan cifradas en tránsito y solo vos las ves. Podés además activar
+              <strong> cifrado extremo (E2E)</strong>: se genera una clave en este dispositivo
+              y cifra el contenido antes de subirlo. Ni RESMA ni nadie puede leerlo.
+            </span>
+            <span className="block text-xs text-amber-700 bg-amber-50 rounded-lg p-2 border border-amber-200">
+              ⚠️ Si perdés la clave, no se puede recuperar el contenido cifrado.
+              Copiala y guardala en un lugar seguro para usarla en otro dispositivo.
+            </span>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="space-y-3 pt-1">
+          {enabled ? (
+            <>
+              <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800">
+                <Check size={16} /> Cifrado extremo activado
+              </div>
+              <button
+                onClick={() => setShowKey((v) => !v)}
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-left"
+              >
+                {showKey ? "Ocultar clave" : "Ver / copiar mi clave"}
+              </button>
+              {showKey && (
+                <div className="space-y-2">
+                  <textarea
+                    readOnly
+                    value={e2e.exportKeyB64() ?? ""}
+                    className="w-full rounded-xl border border-border bg-muted p-2 text-[11px] font-mono break-all"
+                    rows={3}
+                  />
+                  <button onClick={copyKey} className="w-full rounded-xl bg-[#101927] py-2 text-xs font-medium text-white">
+                    Copiar clave
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={deactivate}
+                className="w-full rounded-xl border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+              >
+                Desactivar cifrado extremo
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={activate}
+                className="w-full rounded-xl bg-[#7cc2c8] py-3 text-sm font-semibold text-[#101927]"
+              >
+                Activar cifrado extremo
+              </button>
+              <details className="rounded-xl border border-border bg-card p-3 text-xs">
+                <summary className="cursor-pointer text-muted-foreground">Ya tengo una clave (importar)</summary>
+                <textarea
+                  value={importVal}
+                  onChange={(e) => setImportVal(e.target.value)}
+                  placeholder="Pegá tu clave base64"
+                  className="mt-2 w-full rounded-lg border border-border bg-background p-2 text-[11px] font-mono"
+                  rows={3}
+                />
+                <button
+                  onClick={doImport}
+                  disabled={!importVal.trim()}
+                  className="mt-2 w-full rounded-lg bg-[#101927] py-2 text-xs font-medium text-white disabled:opacity-40"
+                >
+                  Importar clave
+                </button>
+              </details>
+            </>
+          )}
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cerrar</AlertDialogCancel>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 function SaveIndicator({ state, zen }: { state: "idle" | "saving" | "saved"; zen: boolean }) {
   const base = cn("text-[10px] font-medium tracking-wide transition-opacity", zen ? "text-slate-400" : "text-[#101927]/45");
   if (state === "idle") return <span className={cn(base, "opacity-0")}>·</span>;
@@ -768,7 +898,7 @@ function SoundscapePopover() {
 
 
 /* ────────────── History View ────────────── */
-type Entry = { id: string; content: string; entry_date: string | null; emotion_tags: string[] | null; created_at: string | null };
+type Entry = { id: string; content: string; entry_date: string | null; emotion_tags: string[] | null; created_at: string | null; is_encrypted?: boolean; _locked?: boolean };
 
 function HistoryView({ onBack }: { onBack: () => void }) {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -786,9 +916,17 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
       const { data } = await supabase.from("journal_entries")
-        .select("id, content, entry_date, emotion_tags, created_at")
+        .select("id, content, entry_date, emotion_tags, created_at, is_encrypted")
         .eq("user_id", user.id).order("created_at", { ascending: false });
-      setEntries((data ?? []) as Entry[]);
+      const rows = (data ?? []) as Entry[];
+      const decoded: Entry[] = await Promise.all(rows.map(async (r) => {
+        const encrypted = r.is_encrypted || e2e.looksEncrypted(r.content);
+        if (!encrypted) return r;
+        const dec = await e2e.decryptText(r.content ?? "");
+        if (dec === null) return { ...r, content: "", _locked: true };
+        return { ...r, content: dec, is_encrypted: true };
+      }));
+      setEntries(decoded);
       setLoading(false);
     })();
   }, []);
@@ -826,8 +964,10 @@ function HistoryView({ onBack }: { onBack: () => void }) {
     if (!active) return;
     setSaving(true);
     const newHtml = sanitizeHtml(draft.replace(/\n/g, "<br>"));
+    const encrypted = active.is_encrypted && e2e.isE2EEnabled();
+    const contentForDb = encrypted ? await e2e.encryptText(newHtml) : newHtml;
     const { error } = await supabase.from("journal_entries")
-      .update({ content: newHtml }).eq("id", active.id);
+      .update({ content: contentForDb, is_encrypted: !!encrypted }).eq("id", active.id);
     setSaving(false);
     if (error) { toast.error("No se pudo guardar"); return; }
     setEntries((arr) => arr.map((x) => x.id === active.id ? { ...x, content: newHtml } : x));
@@ -941,7 +1081,11 @@ function HistoryView({ onBack }: { onBack: () => void }) {
                   className="mt-2 overflow-hidden text-[11.5px] leading-relaxed text-[#101927]/75 line-clamp-5"
                   style={{ fontFamily: "Lora, serif" }}
                 >
-                  {preview || "(sin texto)"}
+                  {e._locked ? (
+                    <span className="inline-flex items-center gap-1 text-[#101927]/50">
+                      <Lock size={11} /> Cifrada (clave no disponible en este dispositivo)
+                    </span>
+                  ) : (preview || "(sin texto)")}
                 </p>
               </div>
               <div className="relative z-10 mt-auto flex justify-end gap-1 pt-1">

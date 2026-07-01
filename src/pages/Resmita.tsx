@@ -17,11 +17,38 @@ export default function Resmita() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  // Load prior conversation memory (last 30 messages)
+  useEffect(() => {
+    if (!user) { setLoadingHistory(false); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("resmita_messages")
+        .select("role, content")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (data && data.length) {
+        setMessages(data.reverse().map((m) => ({ role: m.role as "user" | "assistant", content: m.content })));
+      }
+      setLoadingHistory(false);
+    })();
+  }, [user]);
+
+  const clearHistory = async () => {
+    if (!user) return;
+    if (!confirm("¿Borrar toda la conversación con Resmita?")) return;
+    await supabase.from("resmita_messages").delete().eq("user_id", user.id);
+    setMessages([]);
+    setSavedIdxs(new Set());
+    toast.success("Conversación borrada");
+  };
 
   const send = async () => {
     const text = input.trim();
@@ -31,6 +58,11 @@ export default function Resmita() {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+
+    // Persist user message
+    if (user) {
+      supabase.from("resmita_messages").insert({ user_id: user.id, role: "user", content: text });
+    }
 
     let assistantSoFar = "";
     const allMessages = [...messages, userMsg];
@@ -99,22 +131,36 @@ export default function Resmita() {
       setMessages((prev) => [...prev, { role: "assistant", content: "No pude conectar con el servidor. Revisá tu conexión." }]);
     } finally {
       setIsLoading(false);
+      // Persist assistant reply
+      if (user && assistantSoFar.trim()) {
+        supabase.from("resmita_messages").insert({ user_id: user.id, role: "assistant", content: assistantSoFar });
+      }
     }
   };
 
   return (
     <div className="flex h-screen flex-col safe-area-top">
       {/* Header */}
-      <div className="border-b border-border px-5 pb-3 pt-14">
-        <h1 className="font-display text-lg font-semibold">Resmita</h1>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          No reemplaza terapia profesional
-        </p>
+      <div className="flex items-start justify-between border-b border-border px-5 pb-3 pt-14">
+        <div>
+          <h1 className="font-display text-lg font-semibold">Resmita</h1>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Recuerda tus conversaciones · No reemplaza terapia
+          </p>
+        </div>
+        {messages.length > 0 && (
+          <button
+            onClick={clearHistory}
+            className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive"
+          >
+            Borrar historial
+          </button>
+        )}
       </div>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-        {messages.length === 0 && (
+        {messages.length === 0 && !loadingHistory && (
           <div className="flex h-full items-center justify-center text-center">
             <div>
               <p className="mb-2 font-display text-sm font-medium">Estoy acá para acompañarte</p>
