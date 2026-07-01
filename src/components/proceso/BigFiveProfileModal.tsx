@@ -1,6 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
+import { TestRunner } from "@/components/tests/TestRunner";
 
 type Trait = { key: string; label: string; short: string; color: string };
 
