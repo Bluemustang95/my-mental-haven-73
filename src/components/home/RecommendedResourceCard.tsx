@@ -69,20 +69,20 @@ export function RecommendedResourceCard() {
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={() => navigate(resource.route)}
-      className="glass-premium relative flex w-full items-center gap-2.5 rounded-[18px] p-2.5 text-left"
+      className="glass-premium relative flex w-full items-center gap-3 rounded-[20px] p-3 text-left"
     >
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${resource.iconBg}`}>
-        <Icon size={15} className={resource.iconColor} />
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${resource.iconBg}`}>
+        <Icon size={16} className={resource.iconColor} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-display text-[12px] font-semibold leading-tight text-resma-navy line-clamp-1">
+        <p className="font-display text-[14px] font-semibold leading-tight text-resma-navy line-clamp-1">
           {resource.title}
         </p>
-        <p className="mt-0.5 line-clamp-1 text-[10.5px] leading-snug text-muted-foreground">
+        <p className="mt-0.5 line-clamp-1 text-[11.5px] leading-snug text-muted-foreground">
           {resource.subtitle}
         </p>
       </div>
-      <ChevronRight size={13} className="text-muted-foreground/50" />
+      <ChevronRight size={14} className="text-muted-foreground/50" />
     </motion.button>
   );
 }
