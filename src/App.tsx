@@ -66,6 +66,7 @@ import MedLibrary from "@/pages/MedLibrary";
 import MedCategoryList from "@/pages/MedCategoryList";
 import MedDrugDetail from "@/pages/MedDrugDetail";
 import DoseSetup from "@/pages/DoseSetup";
+import AddMedication from "@/pages/AddMedication";
 import WeeklyReflection from "@/pages/WeeklyReflection";
 import WeeklyGoalsPage from "@/pages/WeeklyGoalsPage";
 import InternalDialogueHistory from "@/pages/InternalDialogueHistory";
