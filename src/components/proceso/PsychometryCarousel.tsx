@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type TestKey = "BDI" | "BAI" | "PSWQ";
 type Status = "ok" | "due" | "never";
@@ -24,34 +26,56 @@ type Card = {
   art: React.ReactNode;
 };
 
-const CARDS: Card[] = [
-  {
-    code: "BDI",
-    title: "Depresión de Beck",
-    gradient: "linear-gradient(135deg,#7cc2c8 0%,#5fa8af 100%)",
-    status: "due",
-    recency: "Hace 9 días",
-    art: <ArtResilientBars />,
-  },
-  {
-    code: "BAI",
-    title: "Ansiedad de Beck",
-    gradient: "linear-gradient(135deg,#4f46e5 0%,#3b32c0 100%)",
-    status: "ok",
-    recency: "Hace 2 días",
-    art: <ArtSineHarmony />,
-  },
-  {
-    code: "PSWQ",
-    title: "Preocupación (PSWQ)",
-    gradient: "linear-gradient(135deg,#f59e0b 0%,#d97706 100%)",
-    status: "never",
-    recency: "Nunca",
-    art: <ArtGoldenSpiral />,
-  },
+const BASE: Omit<Card, "status" | "recency">[] = [
+  { code: "BDI", title: "Depresión de Beck", gradient: "linear-gradient(135deg,#7cc2c8 0%,#5fa8af 100%)", art: <ArtResilientBars /> },
+  { code: "BAI", title: "Ansiedad de Beck", gradient: "linear-gradient(135deg,#4f46e5 0%,#3b32c0 100%)", art: <ArtSineHarmony /> },
+  { code: "PSWQ", title: "Preocupación (PSWQ)", gradient: "linear-gradient(135deg,#f59e0b 0%,#d97706 100%)", art: <ArtGoldenSpiral /> },
 ];
 
+// Códigos aceptados en test_results para cada card
+const CODE_MAP: Record<TestKey, string[]> = {
+  BDI: ["BDI", "BDI-II", "BDI_II"],
+  BAI: ["BAI"],
+  PSWQ: ["PSWQ"],
+};
+
+function statusFromDays(days: number | null): { status: Status; recency: string } {
+  if (days === null) return { status: "never", recency: "Nunca" };
+  if (days <= 7) return { status: "ok", recency: days === 0 ? "Hoy" : `Hace ${days} día${days > 1 ? "s" : ""}` };
+  return { status: "due", recency: `Hace ${days} días` };
+}
+
 export function PsychometryCarousel({ onSelect }: { onSelect: (code: TestKey) => void }) {
+  const [lastByCode, setLastByCode] = useState<Record<TestKey, number | null>>({ BDI: null, BAI: null, PSWQ: null });
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("test_results")
+        .select("test_type, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      const map: Record<TestKey, number | null> = { BDI: null, BAI: null, PSWQ: null };
+      const now = Date.now();
+      (data ?? []).forEach((r: any) => {
+        const upper = (r.test_type || "").toUpperCase();
+        (Object.keys(CODE_MAP) as TestKey[]).forEach((key) => {
+          if (map[key] !== null) return;
+          if (CODE_MAP[key].some((c) => upper === c || upper.startsWith(c))) {
+            const diff = Math.floor((now - new Date(r.created_at).getTime()) / 86400000);
+            map[key] = Math.max(0, diff);
+          }
+        });
+      });
+      setLastByCode(map);
+    })();
+  }, []);
+
+  const CARDS: Card[] = BASE.map((b) => ({ ...b, ...statusFromDays(lastByCode[b.code]) }));
+
   return (
     <div>
       <div className="mb-2.5 flex items-end justify-between">

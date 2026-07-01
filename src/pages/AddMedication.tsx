@@ -139,13 +139,16 @@ export default function AddMedication() {
   const save = async () => {
     if (!user || !drug || !canSave) return;
     setSaving(true);
+    // Escribimos también `schedule` (array de horas HH:MM) para que el cron
+    // dispatcher de push (que lee schedule[]) dispare el recordatorio.
     const { error } = await supabase.from("medications").insert({
       user_id: user.id,
       name: drug.name,
       dosage: finalDose,
       reminder_time: time,
       frequency: slot,
-    });
+      schedule: [time],
+    } as any);
     setSaving(false);
     if (error) {
       toast.error("No se pudo guardar");

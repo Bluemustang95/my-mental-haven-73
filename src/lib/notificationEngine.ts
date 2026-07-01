@@ -157,7 +157,14 @@ export async function evaluateNextNotification(): Promise<EvaluatedNotif | null>
     if (!c.rule || !c.ok) continue;
     const id = `${c.rule.category}.${c.rule.trigger_key}`;
     if (alreadyShownToday(id)) continue;
-    return { id, category: c.rule.category, title: c.title, body: c.rule.copy_text };
+    // Interpolate variables like {{dias}} in copy_text.
+    const body = (c.rule.copy_text ?? "").replace(/\{\{\s*dias\s*\}\}/gi, () => {
+      if (c.rule!.category === "psicometria") return String(daysSinceTest);
+      if (c.rule!.category === "hibernacion") return String(daysSinceCheckin);
+      if (c.rule!.category === "habitos") return String(daysSinceHabit);
+      return "algunos";
+    });
+    return { id, category: c.rule.category, title: c.title, body };
   }
 
   return null;

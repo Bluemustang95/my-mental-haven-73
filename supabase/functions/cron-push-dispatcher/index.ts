@@ -7,16 +7,17 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Resolve current local time in Argentina (UTC-3, no DST)
-function nowAR(): { hhmm: string; date: string } {
-  const ms = Date.now() - 3 * 60 * 60 * 1000;
-  const d = new Date(ms);
-  const hh = String(d.getUTCHours()).padStart(2, "0");
-  const mm = String(d.getUTCMinutes()).padStart(2, "0");
-  const yyyy = d.getUTCFullYear();
-  const mo = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  return { hhmm: `${hh}:${mm}`, date: `${yyyy}-${mo}-${dd}` };
+// Resolve current local time for an arbitrary IANA timezone using Intl.
+function nowInTz(tz: string): { hhmm: string; date: string } {
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(now).map((p) => [p.type, p.value]));
+  const hh = parts.hour === "24" ? "00" : parts.hour;
+  return { hhmm: `${hh}:${parts.minute}`, date: `${parts.year}-${parts.month}-${parts.day}` };
 }
 
 function isQuiet(hhmm: string, start: string, end: string): boolean {
@@ -32,13 +33,13 @@ async function dispatchOne(
   kind: string,
   title: string,
   body: string,
-  url: string
+  url: string,
+  today: string,
 ) {
   const { data: tokens } = await admin.from("device_tokens").select("token").eq("user_id", userId);
   if (!tokens?.length) return 0;
 
   // Dedupe: skip if already sent today for this kind
-  const today = nowAR().date;
   const { count } = await admin
     .from("notification_log")
     .select("id", { count: "exact", head: true })
@@ -70,16 +71,31 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { hhmm, date } = nowAR();
+
+    // Load admin-editable copy from notification_rules (keyed by category+trigger_key)
+    const { data: rules } = await admin
+      .from("notification_rules")
+      .select("category, trigger_key, enabled, copy_text");
+    const ruleMap = new Map<string, { enabled: boolean; body: string }>();
+    (rules ?? []).forEach((r: any) =>
+      ruleMap.set(`${r.category}.${r.trigger_key}`, { enabled: r.enabled !== false, body: r.copy_text })
+    );
+    const copyFor = (key: string, fallback: string) => {
+      const r = ruleMap.get(key);
+      if (r && !r.enabled) return null;
+      return r?.body || fallback;
+    };
 
     // Load all users with push enabled
     const { data: prefs } = await admin
       .from("notification_preferences")
-      .select("user_id, push_enabled, checkin_enabled, checkin_time, medication_enabled, habits_enabled, quiet_hours_start, quiet_hours_end");
+      .select("user_id, push_enabled, checkin_enabled, checkin_time, medication_enabled, habits_enabled, quiet_hours_start, quiet_hours_end, timezone");
 
     let sent = 0;
     for (const p of prefs ?? []) {
       if (p.push_enabled === false) continue;
+      const tz = (p as any).timezone || "America/Argentina/Buenos_Aires";
+      const { hhmm, date } = nowInTz(tz);
       const quietStart = (p.quiet_hours_start ?? "22:30").slice(0, 5);
       const quietEnd = (p.quiet_hours_end ?? "07:30").slice(0, 5);
       const inQuiet = isQuiet(hhmm, quietStart, quietEnd);
@@ -93,13 +109,10 @@ Deno.serve(async (req) => {
           .eq("user_id", p.user_id)
           .eq("checkin_date", date);
         if (!count) {
-          sent += await dispatchOne(
-            admin,
-            p.user_id,
-            "checkin",
-            "Tu check-in de hoy ☀️",
-            "Tomate 1 minuto para registrar cómo estás.",
-            "/dashboard"
+          const body = copyFor("checkin.daily", "Tomate 1 minuto para registrar cómo estás.");
+          if (body) sent += await dispatchOne(
+            admin, p.user_id, "checkin",
+            "Tu check-in de hoy ☀️", body, "/dashboard", date,
           );
         }
       }
@@ -119,43 +132,44 @@ Deno.serve(async (req) => {
             .eq("completed_date", date);
           if (!count) {
             sent += await dispatchOne(
-              admin,
-              p.user_id,
-              `habit:${h.id}`,
+              admin, p.user_id, `habit:${h.id}`,
               "Es hora de tu hábito 🌱",
               h.name || "Recordá tu hábito de hoy.",
-              "/habitos"
+              "/habitos", date,
             );
           }
         }
       }
 
-      // 3) Medication at scheduled time
+      // 3) Medication at scheduled time (supports schedule[] or reminder_time)
       if (p.medication_enabled !== false && !inQuiet) {
         const { data: meds } = await admin
           .from("medications")
-          .select("id, name, schedule")
+          .select("id, name, schedule, reminder_time")
           .eq("user_id", p.user_id);
         for (const m of meds ?? []) {
-          const times: string[] = Array.isArray(m.schedule)
-            ? m.schedule
+          const scheduleArr: string[] = Array.isArray(m.schedule)
+            ? (m.schedule as any[]).map(String)
             : Array.isArray((m.schedule as any)?.times)
-              ? (m.schedule as any).times
+              ? ((m.schedule as any).times as any[]).map(String)
               : [];
-          if (!times.map((t) => String(t).slice(0, 5)).includes(hhmm)) continue;
+          const times = scheduleArr.length
+            ? scheduleArr
+            : (m as any).reminder_time
+              ? [String((m as any).reminder_time)]
+              : [];
+          if (!times.map((t) => t.slice(0, 5)).includes(hhmm)) continue;
           sent += await dispatchOne(
-            admin,
-            p.user_id,
-            `med:${m.id}:${hhmm}`,
+            admin, p.user_id, `med:${m.id}:${hhmm}`,
             "Recordatorio de medicación 💊",
             m.name || "Es hora de tu medicación.",
-            "/mi-proceso"
+            "/mi-proceso", date,
           );
         }
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, hhmm, date, sent }), {
+    return new Response(JSON.stringify({ ok: true, sent }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

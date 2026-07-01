@@ -75,8 +75,11 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
   const habits = habitDays.size === 0 ? null : Math.round((last7Days.filter((d) => habitDays.has(d)).length / 7) * 100);
 
   // tests: tomamos el último de cada tipo, invertimos severidad
+  // BIGFIVE es un perfil de personalidad, no una escala clínica → se excluye
   const seenTypes = new Set<string>();
   const latestTests = (tr ?? []).filter((t) => {
+    const code = (t.test_type || "").toUpperCase();
+    if (code === "BIGFIVE" || code === "BIG-FIVE" || code === "BFI") return false;
     if (seenTypes.has(t.test_type)) return false;
     seenTypes.add(t.test_type);
     return true;

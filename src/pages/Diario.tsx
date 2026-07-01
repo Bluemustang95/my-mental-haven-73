@@ -365,7 +365,11 @@ function WriteView({
               >
                 <Plus size={15} />
               </button>
-              <button className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Privacidad">
+              <button
+                onClick={() => toast.info("Tus notas son privadas y solo vos las ves. El cifrado extremo llega en la próxima versión.")}
+                className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)}
+                aria-label="Privacidad"
+              >
                 <Lock size={15} />
               </button>
               <button onClick={onOpenHistory} className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Historial">
@@ -865,7 +869,11 @@ function HistoryView({ onBack }: { onBack: () => void }) {
           >
             <Search size={15} />
           </button>
-          <button className="grid h-9 w-9 place-items-center rounded-full border border-white/60 bg-white/70 text-[#101927] shadow-sm" aria-label="Privacidad">
+          <button
+            onClick={() => toast.info("Tus notas son privadas y solo vos las ves.")}
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/60 bg-white/70 text-[#101927] shadow-sm"
+            aria-label="Privacidad"
+          >
             <Lock size={14} />
           </button>
           <button onClick={onBack} className="grid h-9 w-9 place-items-center rounded-full bg-[#7cc2c8] text-[#101927] shadow-[0_8px_24px_-10px_rgba(124,194,200,0.7)]" aria-label="Cerrar historial">
