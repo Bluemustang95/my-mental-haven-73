@@ -18,18 +18,30 @@ export default function MedicationTracker() {
   const { user } = useAuth();
   const [meds, setMeds] = useState<Med[]>([]);
   const [logs, setLogs] = useState<MedLog[]>([]);
+  const [monthAdherence, setMonthAdherence] = useState<number | null>(null);
   const [expandedMed, setExpandedMed] = useState<string | null>(null);
   const [logSideEffects, setLogSideEffects] = useState<Record<string, string[]>>({});
   const todayStr = localDateStr();
 
   useEffect(() => {
     if (!user) return;
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    const monthStartStr = localDateStr(monthStart);
     Promise.all([
       supabase.from("medications").select("*").eq("user_id", user.id).eq("active", true).order("created_at"),
       supabase.from("medication_logs").select("*").eq("user_id", user.id).eq("log_date", todayStr),
-    ]).then(([medsRes, logsRes]) => {
-      setMeds((medsRes.data as Med[]) ?? []);
+      supabase.from("medication_logs").select("id, taken, log_date").eq("user_id", user.id).gte("log_date", monthStartStr),
+    ]).then(([medsRes, logsRes, monthRes]) => {
+      const medsList = (medsRes.data as Med[]) ?? [];
+      setMeds(medsList);
       setLogs((logsRes.data as MedLog[]) ?? []);
+      // Adherencia = tomas registradas / (dosis diarias × días transcurridos)
+      const dailyDoses = medsList.length;
+      const daysElapsed = new Date().getDate();
+      const expected = dailyDoses * daysElapsed;
+      const taken = ((monthRes.data as { taken: boolean }[]) ?? []).filter((l) => l.taken).length;
+      setMonthAdherence(expected > 0 ? Math.round((taken / expected) * 100) : null);
     });
   }, [user, todayStr]);
 
@@ -110,6 +122,31 @@ export default function MedicationTracker() {
         </div>
       )}
 
+
+      {/* Adherencia mensual */}
+      {monthAdherence !== null && meds.length > 0 && (
+        <div className="mb-5 rounded-2xl bg-card p-4 shadow-[0_2px_12px_hsl(var(--foreground)/0.04)]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground font-display">Adherencia este mes</span>
+            <span className={cn(
+              "text-xs font-semibold font-display",
+              monthAdherence >= 80 ? "text-[hsl(var(--mood-5))]" : monthAdherence >= 50 ? "text-[hsl(var(--mood-3))]" : "text-[hsl(var(--mood-1))]"
+            )}>{monthAdherence}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${Math.min(100, monthAdherence)}%`,
+                background: monthAdherence >= 80 ? "hsl(var(--mood-5))" : monthAdherence >= 50 ? "hsl(var(--mood-3))" : "hsl(var(--mood-1))",
+              }}
+            />
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            Sobre las tomas esperadas en los días transcurridos del mes.
+          </p>
+        </div>
+      )}
 
       {/* Medications by time slot */}
       {meds.length === 0 ? (

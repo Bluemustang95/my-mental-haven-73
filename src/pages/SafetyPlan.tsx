@@ -8,13 +8,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { loadHotlines, detectUserCountry, type Hotline } from "@/lib/crisisHotlines";
 import { toast } from "sonner";
 
-const warningSigns = [
+const suggestedSigns = [
   "Pensamientos intrusivos y persistentes",
   "Aislamiento de personas queridas",
   "Cambios bruscos de ánimo",
   "Dificultad para dormir o comer",
   "Sensación de desesperanza",
   "Aumento del consumo",
+];
+
+const suggestedCoping = [
+  "Salir a caminar 10 minutos",
+  "Escuchar una canción que me calma",
+  "Ejercicio de respiración 4-7-8",
+  "Llamar a alguien de confianza",
+  "Escribir en el diario",
 ];
 
 const ambiental = [
@@ -30,7 +38,10 @@ export default function SafetyPlan() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [checked, setChecked] = useState<Set<number>>(new Set());
+  const [signs, setSigns] = useState<string[]>([]);
+  const [coping, setCoping] = useState<string[]>([]);
+  const [signDraft, setSignDraft] = useState("");
+  const [copingDraft, setCopingDraft] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [draft, setDraft] = useState<Contact>({ name: "", phone: "" });
   const [hotlines, setHotlines] = useState<Hotline[]>([]);
@@ -45,8 +56,8 @@ export default function SafetyPlan() {
       if (user) {
         const { data } = await supabase.from("safety_plans").select("*").eq("user_id", user.id).maybeSingle();
         if (data) {
-          const signsArr = (data.warning_signs as unknown as string[]) ?? [];
-          setChecked(new Set(signsArr.map((s) => warningSigns.indexOf(s)).filter((i) => i >= 0)));
+          setSigns((data.warning_signs as unknown as string[]) ?? []);
+          setCoping((data.coping_strategies as unknown as string[]) ?? []);
           setContacts(((data.contacts as unknown as Contact[]) ?? []));
         }
       }
@@ -63,22 +74,30 @@ export default function SafetyPlan() {
       setSaving(true);
       await supabase.from("safety_plans").upsert({
         user_id: user.id,
-        warning_signs: [...checked].map((i) => warningSigns[i]),
+        warning_signs: signs as unknown as never,
+        coping_strategies: coping as unknown as never,
         contacts: contacts as unknown as never,
-        coping_strategies: [] as unknown as never,
       }, { onConflict: "user_id" });
       setSaving(false);
     }, 800);
     return () => clearTimeout(id);
-  }, [checked, contacts, loading]);
+  }, [signs, coping, contacts, loading]);
 
-  const toggle = (i: number) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
-      return next;
-    });
+  const addSign = (v: string) => {
+    const t = v.trim();
+    if (!t || signs.includes(t) || signs.length >= 8) return;
+    setSigns((s) => [...s, t]);
+    setSignDraft("");
   };
+  const removeSign = (i: number) => setSigns((s) => s.filter((_, idx) => idx !== i));
+
+  const addCoping = (v: string) => {
+    const t = v.trim();
+    if (!t || coping.includes(t) || coping.length >= 8) return;
+    setCoping((s) => [...s, t]);
+    setCopingDraft("");
+  };
+  const removeCoping = (i: number) => setCoping((s) => s.filter((_, idx) => idx !== i));
 
   const addContact = () => {
     if (!draft.name.trim() || !draft.phone.trim()) return;
@@ -95,7 +114,10 @@ export default function SafetyPlan() {
       `País: ${country}`,
       "",
       "Señales de alerta detectadas:",
-      ...[...checked].map((i) => `  - ${warningSigns[i]}`),
+      ...signs.map((s) => `  - ${s}`),
+      "",
+      "Estrategias para calmarme:",
+      ...coping.map((s) => `  - ${s}`),
       "",
       "Red de apoyo personal:",
       ...contacts.map((c) => `  - ${c.name}: ${c.phone}`),
@@ -114,7 +136,7 @@ export default function SafetyPlan() {
     a.download = `plan-seguridad-resma-${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    saveLog("safety", { meta: { signs: checked.size, contacts: contacts.length } });
+    saveLog("safety", { meta: { signs: signs.length, coping: coping.length, contacts: contacts.length } });
     toast.success("Reporte descargado");
   };
 
@@ -150,16 +172,84 @@ export default function SafetyPlan() {
       </motion.div>
 
       <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
-        <p className="mb-3 font-mindful text-base font-semibold">Señales de alerta</p>
+        <p className="mb-1 font-mindful text-base font-semibold">Señales de alerta</p>
+        <p className="mb-3 text-[11px] leading-4 text-resource-safety-accent/60">
+          Escribí las tuyas o tocá una sugerencia.
+        </p>
         <div className="space-y-2">
-          {warningSigns.map((sign, i) => (
-            <button key={sign} onClick={() => toggle(i)}
-              className={cn("flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition",
-                checked.has(i) ? "border-resource-safety-accent bg-resource-safety-accent/10" : "border-resource-safety-accent/15 bg-resource-safety-bg/60")}>
-              <span className={cn("h-4 w-4 shrink-0 rounded border-2", checked.has(i) ? "border-resource-safety-accent bg-resource-safety-accent" : "border-resource-safety-accent/40")} />
-              <span className="font-sans text-sm font-semibold leading-5">{sign}</span>
-            </button>
+          {signs.map((s, i) => (
+            <div key={`${s}-${i}`} className="flex items-center gap-2 rounded-2xl border border-resource-safety-accent bg-resource-safety-accent/10 px-3 py-2.5">
+              <span className="flex-1 font-sans text-sm font-semibold leading-5">{s}</span>
+              <button onClick={() => removeSign(i)} aria-label="Quitar" className="p-1 text-resource-safety-accent/60">
+                <Trash2 size={14} />
+              </button>
+            </div>
           ))}
+          {signs.length < 8 && (
+            <div className="flex gap-2">
+              <input
+                value={signDraft}
+                onChange={(e) => setSignDraft(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addSign(signDraft)}
+                placeholder="Escribí tu señal…"
+                className="flex-1 rounded-2xl border border-resource-safety-accent/15 bg-resource-safety-bg/60 px-3 py-2.5 text-sm outline-none"
+              />
+              <button onClick={() => addSign(signDraft)} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-resource-safety-accent text-primary-foreground active:scale-95">
+                <Plus size={18} />
+              </button>
+            </div>
+          )}
+          {suggestedSigns.filter((s) => !signs.includes(s)).length > 0 && signs.length < 8 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {suggestedSigns.filter((s) => !signs.includes(s)).map((s) => (
+                <button key={s} onClick={() => addSign(s)}
+                  className="rounded-full border border-resource-safety-accent/20 bg-resource-safety-bg/60 px-2.5 py-1 text-[11px] text-resource-safety-accent/70">
+                  + {s}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
+        <p className="mb-1 font-mindful text-base font-semibold">Estrategias para calmarme</p>
+        <p className="mb-3 text-[11px] leading-4 text-resource-safety-accent/60">
+          Cosas que puedo hacer solo/a antes de pedir ayuda.
+        </p>
+        <div className="space-y-2">
+          {coping.map((s, i) => (
+            <div key={`${s}-${i}`} className="flex items-center gap-2 rounded-2xl border border-resource-safety-accent bg-resource-safety-accent/10 px-3 py-2.5">
+              <span className="flex-1 font-sans text-sm font-semibold leading-5">{s}</span>
+              <button onClick={() => removeCoping(i)} aria-label="Quitar" className="p-1 text-resource-safety-accent/60">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          {coping.length < 8 && (
+            <div className="flex gap-2">
+              <input
+                value={copingDraft}
+                onChange={(e) => setCopingDraft(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addCoping(copingDraft)}
+                placeholder="Ej: Escuchar música…"
+                className="flex-1 rounded-2xl border border-resource-safety-accent/15 bg-resource-safety-bg/60 px-3 py-2.5 text-sm outline-none"
+              />
+              <button onClick={() => addCoping(copingDraft)} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-resource-safety-accent text-primary-foreground active:scale-95">
+                <Plus size={18} />
+              </button>
+            </div>
+          )}
+          {suggestedCoping.filter((s) => !coping.includes(s)).length > 0 && coping.length < 8 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {suggestedCoping.filter((s) => !coping.includes(s)).map((s) => (
+                <button key={s} onClick={() => addCoping(s)}
+                  className="rounded-full border border-resource-safety-accent/20 bg-resource-safety-bg/60 px-2.5 py-1 text-[11px] text-resource-safety-accent/70">
+                  + {s}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

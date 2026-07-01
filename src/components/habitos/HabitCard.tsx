@@ -49,6 +49,8 @@ export function HabitCard({ habit, completions, view, onToggle, onOpenDetail }: 
   const today = localDateStr();
   const isTodayDone = doneSet.has(today);
   const categoryLabel = DBT_CATEGORIES.find(c => c.key === habit.category_key)?.label ?? habit.category_key;
+  // Habit stacking: si depende de otro hábito, avisamos.
+  const stackAfterId = (habit as { stack_after_habit_id?: string | null }).stack_after_habit_id;
 
   if (view === "cards") {
     return (
@@ -75,6 +77,9 @@ export function HabitCard({ habit, completions, view, onToggle, onOpenDetail }: 
         </div>
         <h3 className="mt-6 font-serif text-[15px] font-bold leading-tight text-[#101927]">{habit.name}</h3>
         <p className="mt-1 font-[Montserrat] text-[9px] font-bold uppercase tracking-[0.16em] text-[#101927]/50">{categoryLabel}</p>
+        {stackAfterId && (
+          <p className="mt-1 text-[10px] text-[#7cc2c8]">🔗 Encadenado</p>
+        )}
         <p className="mt-2 text-[12px] font-bold" style={{ color: habit.text_color }}>{streak}d racha 🔥</p>
       </motion.div>
     );

@@ -36,6 +36,7 @@ export type Habit = {
   cadence: string;
   reminders_enabled: boolean;
   best_streak: number;
+  stack_after_habit_id?: string | null;
   created_at: string;
 };
 
@@ -66,6 +67,7 @@ export type HabitInput = {
   time_slot?: string;
   cadence?: string;
   reminders_enabled?: boolean;
+  stack_after_habit_id?: string | null;
 };
 
 export function useHabits() {
@@ -134,6 +136,7 @@ export function useHabits() {
       time_slot: input.time_slot ?? "all",
       cadence: input.cadence ?? "every_day",
       reminders_enabled: input.reminders_enabled ?? false,
+      stack_after_habit_id: input.stack_after_habit_id ?? null,
     }).select().single();
     if (data) setHabits(prev => [...prev, data as unknown as Habit]);
   }, [user]);

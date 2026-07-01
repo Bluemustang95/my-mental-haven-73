@@ -161,8 +161,11 @@ export default function Psicoeducacion() {
                         {cat.description && (
                           <p className="mt-0.5 text-xs leading-snug text-white/65 line-clamp-2">{cat.description}</p>
                         )}
-                        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-black/40">
-                          <div className="h-full rounded-full transition-all" style={{ width: `${prog}%`, background: accent }} />
+                        <div className="mt-3 flex items-center gap-2">
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/40">
+                            <div className="h-full rounded-full transition-all" style={{ width: `${prog}%`, background: accent }} />
+                          </div>
+                          <span className="text-[10px] font-bold tabular-nums text-white/70">{prog}%</span>
                         </div>
                       </div>
                       <div className="text-4xl">{cat.emoji ?? "📘"}</div>

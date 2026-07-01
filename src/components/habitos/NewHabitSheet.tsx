@@ -6,7 +6,7 @@ import {
   EMOJI_ICONS, LINE_ICONS, STREAK_COLORS, DBT_CATEGORIES,
   TIME_SLOTS, FREQUENCY_OPTIONS, CADENCE_OPTIONS,
 } from "@/lib/habitsIcons";
-import type { HabitInput, HabitCategory } from "@/hooks/useHabits";
+import type { HabitInput, HabitCategory, Habit } from "@/hooks/useHabits";
 
 interface Props {
   open: boolean;
@@ -14,9 +14,10 @@ interface Props {
   onCreate: (input: HabitInput) => Promise<void>;
   customCategories: HabitCategory[];
   onAddCategory: (label: string) => Promise<string | undefined>;
+  existingHabits?: Habit[];
 }
 
-export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAddCategory }: Props) {
+export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAddCategory, existingHabits = [] }: Props) {
   const [iconTab, setIconTab] = useState<"emoji" | "line">("emoji");
   const [icon, setIcon] = useState<string>(EMOJI_ICONS[0]);
   const [name, setName] = useState("");
@@ -30,6 +31,7 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
   const [categoryKey, setCategoryKey] = useState("salud");
   const [cadence, setCadence] = useState("every_day");
   const [reminders, setReminders] = useState(false);
+  const [stackAfter, setStackAfter] = useState<string>("");
   const [newCatInput, setNewCatInput] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -57,9 +59,11 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
         frequency, frequency_count: frequencyCount,
         time_slot: timeSlot, cadence,
         reminders_enabled: reminders,
+        stack_after_habit_id: stackAfter || null,
       });
       toast.success("Hábito registrado ✓");
       setName(""); setDescription(""); setIcon(EMOJI_ICONS[0]); setColorIdx(0);
+      setStackAfter("");
       setExpanded(false);
       onClose();
     } catch {
@@ -289,6 +293,28 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
                           ))}
                         </div>
                       </div>
+
+                      {/* Habit stacking */}
+                      {existingHabits.length > 0 && (
+                        <div>
+                          <p className="font-[Montserrat] text-[9px] font-bold uppercase tracking-[0.14em] text-[#101927]/55">
+                            Encadenar (opcional)
+                          </p>
+                          <p className="mt-1 text-[11px] text-[#101927]/50">
+                            "Después de X, hacer este hábito" — James Clear
+                          </p>
+                          <select
+                            value={stackAfter}
+                            onChange={(e) => setStackAfter(e.target.value)}
+                            className="mt-2 w-full appearance-none rounded-xl border border-[#101927]/10 bg-[#f7f8fa] px-3 py-2.5 text-sm font-semibold text-[#101927]"
+                          >
+                            <option value="">Sin encadenar</option>
+                            {existingHabits.map((h) => (
+                              <option key={h.id} value={h.id}>Después de: {h.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
 
                       {/* Reminders toggle */}
                       <div className="flex items-center justify-between rounded-xl bg-[#f7f8fa] p-3">
