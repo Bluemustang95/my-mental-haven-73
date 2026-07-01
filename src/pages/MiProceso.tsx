@@ -206,7 +206,7 @@ export default function MiProceso() {
       </div>
 
 
-      <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
+      <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} snapshot={snap} />
       <BigFiveProfileModal open={bigFiveOpen} onClose={() => setBigFiveOpen(false)} />
       <BeckTestRunner open={beckOpen} onClose={() => setBeckOpen(false)} />
       <SymptomsTestModal open={!!genericTest} kind={genericTest ?? "symptom"} onClose={() => setGenericTest(null)} />
