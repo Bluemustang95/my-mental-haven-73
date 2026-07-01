@@ -63,7 +63,10 @@ export function CrisisSheet({ open, onClose }: { open: boolean; onClose: () => v
               {hotlines.length === 0 && <p className="text-xs text-muted-foreground">Cargando líneas…</p>}
             </div>
             <button
-              onClick={() => { onClose(); navigate("/herramientas/plan-seguridad"); }}
+              onClick={() => {
+                navigate("/herramientas/plan-seguridad");
+                setTimeout(() => onClose(), 0);
+              }}
               className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40 py-3 text-sm font-medium"
             >
               <ShieldCheck size={16} /> Ver mi plan de seguridad

@@ -55,6 +55,7 @@ const SECTIONS: NavSection[] = [
     label: "Librería CMS",
     items: [
       { title: "Psicoeducación", url: "/admin/contenido", icon: BookOpen },
+      { title: "Frases y Noticias", url: "/admin/contenido-diario", icon: Sparkles },
       { title: "Pack de Actividades", url: "/admin/pack", icon: Zap },
     ],
   },

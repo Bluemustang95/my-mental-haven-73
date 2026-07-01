@@ -79,6 +79,7 @@ import { AdminRoute } from "@/components/admin/AdminRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import ContentManager from "@/pages/admin/ContentManager";
+import ContenidoDiarioAdmin from "@/pages/admin/ContenidoDiarioAdmin";
 import TreatmentRequests from "@/pages/admin/TreatmentRequests";
 import PatientList from "@/pages/admin/PatientList";
 import PatientDetail from "@/pages/admin/PatientDetail";
@@ -253,6 +254,7 @@ const App = () => (
               <Route path="/admin/progreso" element={<ProgresoAdmin />} />
               <Route path="/admin/notificaciones" element={<NotificacionesAdmin />} />
               <Route path="/admin/contenido" element={<ContentManager />} />
+              <Route path="/admin/contenido-diario" element={<ContenidoDiarioAdmin />} />
               <Route path="/admin/recursos" element={<ResourcesManager />} />
               <Route path="/admin/recursos/:slug" element={<ResourceDetail />} />
               <Route path="/admin/solicitudes" element={<TreatmentRequests />} />

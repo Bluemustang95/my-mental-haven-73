@@ -21,6 +21,8 @@ import {
   type GroupItem,
 } from "@/components/home/WidgetsBoard";
 import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
+import { DailyQuoteWidget } from "@/components/home/DailyQuoteWidget";
+import { PsyNewsWidget } from "@/components/home/PsyNewsWidget";
 import { PendingBento } from "@/components/home/PendingBento";
 import { PullToRefresh } from "@/components/home/PullToRefresh";
 import { HomeSkeleton } from "@/components/home/HomeSkeleton";
@@ -171,6 +173,10 @@ export default function Dashboard() {
         return <GratitudeWidget />;
       case "contention_notes":
         return <ContentionNotesWidget />;
+      case "daily_quote":
+        return <DailyQuoteWidget />;
+      case "psy_news":
+        return <PsyNewsWidget />;
       default:
         return null;
     }

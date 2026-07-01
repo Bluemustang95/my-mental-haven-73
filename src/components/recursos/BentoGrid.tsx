@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Wind, Sparkles, Lock, Brain, type LucideIcon } from "lucide-react";
+import { Zap, Wind, Sparkles, Lock, Brain, ShieldCheck, type LucideIcon } from "lucide-react";
 import { readLocalProfile } from "@/lib/clinicalAlgorithm";
 import { usePlan } from "@/hooks/usePlan";
 import { PaywallModal } from "@/components/modals/PaywallModal";
@@ -96,6 +96,22 @@ export function BentoGrid() {
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
           {isPremium ? <Zap size={20} fill="currentColor" /> : <Lock size={18} strokeWidth={2.6} />}
         </div>
+      </button>
+
+      <button
+        onClick={() => navigate("/herramientas/plan-seguridad")}
+        className="pressable relative flex w-full items-center justify-between overflow-hidden rounded-3xl border border-[#f5c8c1]/70 bg-[#fef2f0] p-4 text-left transition"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e24b4a]/15 text-[#c0392b]">
+            <ShieldCheck size={20} strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="font-display text-base font-bold leading-tight text-[#0f172a]">Plan de Seguridad</h3>
+            <p className="mt-0.5 text-xs text-[#64748b]">Tus señales, apoyos y contactos.</p>
+          </div>
+        </div>
+        <span className="text-[18px] text-[#c0392b]">→</span>
       </button>
 
       <PaywallModal

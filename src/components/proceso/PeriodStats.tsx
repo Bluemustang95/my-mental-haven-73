@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 
-type Range = "month" | "year";
+type Range = "week" | "month" | "year";
 type Totals = {
   checkins: number;
   mindfulnessMin: number;
@@ -12,20 +12,29 @@ type Totals = {
   habitsCompleted: number;
 };
 
+type Props = {
+  /** Controlled range. If omitted, an internal toggle is shown. */
+  range?: Range;
+  /** Hide the internal segmented toggle (usually true when parent controls range). */
+  hideToggle?: boolean;
+};
+
 /**
- * Compact stats module with a Month/Year segmented toggle.
- * Shows aggregated clinical activity so users can see progress at a glance
- * without leaving Mi Proceso.
+ * Aggregated activity totals for the selected range.
+ * Can be used standalone (with its own month/year toggle) or controlled
+ * from a parent (Wellbeing sheet passes range="week" | "month" | "year").
  */
-export function PeriodStats() {
+export function PeriodStats({ range: controlledRange, hideToggle }: Props = {}) {
   const { user } = useAuth();
-  const [range, setRange] = useState<Range>("month");
+  const [internal, setInternal] = useState<Range>("month");
+  const range = controlledRange ?? internal;
   const [totals, setTotals] = useState<Totals | null>(null);
   const [loading, setLoading] = useState(true);
 
   const since = useMemo(() => {
     const d = new Date();
-    if (range === "month") d.setDate(d.getDate() - 30);
+    if (range === "week") d.setDate(d.getDate() - 7);
+    else if (range === "month") d.setDate(d.getDate() - 30);
     else d.setDate(d.getDate() - 365);
     return d.toISOString();
   }, [range]);
@@ -60,25 +69,29 @@ export function PeriodStats() {
     { label: "Hábitos ✓", value: totals?.habitsCompleted ?? 0, tint: "bg-[#a8d8b9]/30 text-[#3b7a55]" },
   ];
 
+  const showToggle = !hideToggle && !controlledRange;
+
   return (
     <section className="rounded-[22px] border border-white/70 bg-white/80 p-4 backdrop-blur-xl">
       <div className="flex items-center justify-between">
         <p className="font-[Montserrat] text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#94a3b8]">
           Tu actividad
         </p>
-        <div className="flex rounded-full bg-[#f1f5f9] p-0.5">
-          {(["month", "year"] as Range[]).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRange(r)}
-              className={`rounded-full px-3 py-1 text-[10.5px] font-semibold transition ${
-                range === r ? "bg-white text-[#0f172a] shadow-sm" : "text-[#64748b]"
-              }`}
-            >
-              {r === "month" ? "30 días" : "12 meses"}
-            </button>
-          ))}
-        </div>
+        {showToggle && (
+          <div className="flex rounded-full bg-[#f1f5f9] p-0.5">
+            {(["month", "year"] as Range[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => setInternal(r)}
+                className={`rounded-full px-3 py-1 text-[10.5px] font-semibold transition ${
+                  range === r ? "bg-white text-[#0f172a] shadow-sm" : "text-[#64748b]"
+                }`}
+              >
+                {r === "month" ? "30 días" : "12 meses"}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">

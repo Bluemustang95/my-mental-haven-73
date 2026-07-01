@@ -711,6 +711,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_quotes: {
+        Row: {
+          active: boolean
+          author: string | null
+          created_at: string
+          id: string
+          sort_order: number
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          author?: string | null
+          created_at?: string
+          id?: string
+          sort_order?: number
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          author?: string | null
+          created_at?: string
+          id?: string
+          sort_order?: number
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       day_timeline_entries: {
         Row: {
           created_at: string | null
@@ -1765,6 +1795,42 @@ export type Database = {
           },
         ]
       }
+      psychology_news: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          image_url: string | null
+          published_at: string
+          summary: string | null
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          published_at?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       relationship_logs: {
         Row: {
           created_at: string | null
@@ -2620,6 +2686,14 @@ export type Database = {
             Returns: undefined
           }
       admin_stats_overview: { Args: never; Returns: Json }
+      get_daily_quote: {
+        Args: never
+        Returns: {
+          author: string
+          id: string
+          text: string
+        }[]
+      }
       get_daily_recommendations: {
         Args: { _limit?: number; _user_id: string }
         Returns: {
