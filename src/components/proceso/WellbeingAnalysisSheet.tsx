@@ -27,6 +27,24 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
     v === null ? noneTxt : v >= 65 ? okTxt : midTxt;
   const dotFor = (v: number | null) => v === null ? "#94a3b8" : v >= 65 ? "#7cc2c8" : "#facb60";
 
+  useEffect(() => {
+    if (!open || !user) return;
+    const days = rangeMode === "week" ? 7 : 30;
+    const since = new Date(Date.now() - days * 86400000).toISOString();
+    supabase
+      .from("exercise_sessions")
+      .select("duration_seconds")
+      .eq("user_id", user.id)
+      .eq("exercise_type", "mindfulness")
+      .gte("created_at", since)
+      .then(({ data }) => {
+        const total = (data ?? []).reduce((s: number, r: any) => s + (r.duration_seconds ?? 0), 0);
+        setMindMinutes(Math.round(total / 60));
+      });
+  }, [open, user, rangeMode]);
+
+
+
   return (
     <AnimatePresence>
       {open && (
