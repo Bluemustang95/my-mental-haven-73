@@ -72,6 +72,20 @@ Deno.serve(async (req) => {
   try {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // Load admin-editable copy from notification_rules (keyed by category+trigger_key)
+    const { data: rules } = await admin
+      .from("notification_rules")
+      .select("category, trigger_key, enabled, copy_text");
+    const ruleMap = new Map<string, { enabled: boolean; body: string }>();
+    (rules ?? []).forEach((r: any) =>
+      ruleMap.set(`${r.category}.${r.trigger_key}`, { enabled: r.enabled !== false, body: r.copy_text })
+    );
+    const copyFor = (key: string, fallback: string) => {
+      const r = ruleMap.get(key);
+      if (r && !r.enabled) return null;
+      return r?.body || fallback;
+    };
+
     // Load all users with push enabled
     const { data: prefs } = await admin
       .from("notification_preferences")
@@ -95,11 +109,10 @@ Deno.serve(async (req) => {
           .eq("user_id", p.user_id)
           .eq("checkin_date", date);
         if (!count) {
-          sent += await dispatchOne(
+          const body = copyFor("checkin.daily", "Tomate 1 minuto para registrar cómo estás.");
+          if (body) sent += await dispatchOne(
             admin, p.user_id, "checkin",
-            "Tu check-in de hoy ☀️",
-            "Tomate 1 minuto para registrar cómo estás.",
-            "/dashboard", date,
+            "Tu check-in de hoy ☀️", body, "/dashboard", date,
           );
         }
       }
