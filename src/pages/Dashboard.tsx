@@ -22,6 +22,8 @@ import {
 } from "@/components/home/WidgetsBoard";
 import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
 import { PendingBento } from "@/components/home/PendingBento";
+import { PullToRefresh } from "@/components/home/PullToRefresh";
+import { HomeSkeleton } from "@/components/home/HomeSkeleton";
 
 const GROUP_ORDER_KEY = "home_groups_order_v2";
 function loadGroupOrder(): string[] {
@@ -54,6 +56,8 @@ export default function Dashboard() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
   const [weekProgress, setWeekProgress] = useState<Record<string, number>>({});
+
+  const [loading, setLoading] = useState(true);
 
   const widgets = useHomeWidgets();
 
@@ -90,6 +94,7 @@ export default function Dashboard() {
       prog[c.checkin_date] = (prog[c.checkin_date] ?? 0) + 1;
     });
     setWeekProgress(prog);
+    setLoading(false);
   }, [user, todayStr]);
 
   useEffect(() => {
@@ -181,6 +186,10 @@ export default function Dashboard() {
 
       <EditTopBar visible={widgets.editMode} onDone={() => widgets.setEditMode(false)} onReset={widgets.reset} />
 
+      {loading ? (
+        <HomeSkeleton />
+      ) : (
+      <PullToRefresh onRefresh={loadToday}>
       <div className="relative mx-auto max-w-md px-5 pt-5">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -298,6 +307,8 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      </PullToRefresh>
+      )}
 
       <CheckinModal
         open={!!checkinOpen}

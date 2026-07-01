@@ -26,6 +26,7 @@ import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
+import { PeriodStats } from "@/components/proceso/PeriodStats";
 
 
 
@@ -177,6 +178,10 @@ export default function MiProceso() {
           )}
 
         </PremiumLock>
+
+        <div className="mt-5">
+          <PeriodStats />
+        </div>
 
         <div className="my-6 h-px bg-black/[0.06]" />
 
