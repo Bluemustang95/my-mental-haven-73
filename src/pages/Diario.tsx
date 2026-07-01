@@ -140,6 +140,7 @@ function WriteView({
   const [entryId, setEntryId] = useState<string | null>(null);
   const [confirmNew, setConfirmNew] = useState(false);
   const [fmtBar, setFmtBar] = useState<{ top: number; left: number } | null>(null);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lastLen = useRef(0);
