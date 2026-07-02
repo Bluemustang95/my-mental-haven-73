@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Eye, EyeOff, Sparkles, Check, Crown } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
 import { GoogleLogo } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/modals/PaywallModal";
+
 import {
   OnboardingShell,
   GlassInput,
@@ -97,10 +97,9 @@ async function persistProfile(userId: string, data: Pending) {
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  // -2: splash, -1: value slides, 0..5: wizard, 6: algorithm, 7: account, 8: plan picker
+  // -2: splash, -1: value slides, 0..5: wizard, 6: algorithm, 7: account
   const [step, setStep] = useState(-2);
-  const [paywallOpen, setPaywallOpen] = useState(false);
-  const [savingPlan, setSavingPlan] = useState(false);
+
 
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -230,21 +229,7 @@ export default function Onboarding() {
     }
   };
 
-  const selectFreePlan = async () => {
-    if (!user) {
-      navigate("/", { replace: true });
-      return;
-    }
-    setSavingPlan(true);
-    await supabase
-      .from("patient_app_profiles")
-      .upsert(
-        { user_id: user.id, plan: "free", plan_started_at: null } as any,
-        { onConflict: "user_id" }
-      );
-    setSavingPlan(false);
-    navigate("/mi-proceso#suscripcion", { replace: true });
-  };
+
 
   const totalSteps = 6;
   const canNext =
