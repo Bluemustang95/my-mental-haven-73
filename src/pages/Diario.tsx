@@ -251,6 +251,7 @@ function WriteView({
         const blob = new Blob(recordChunksRef.current, { type: mime });
         recordStreamRef.current?.getTracks().forEach((t) => t.stop());
         recordStreamRef.current = null;
+        setMicStream(null);
         if (blob.size < 800) {
           toast.error("Grabación muy corta");
           return;
