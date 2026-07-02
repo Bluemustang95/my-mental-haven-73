@@ -21,6 +21,8 @@ export default function Settings() {
   const [name, setName] = useState("");
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [notifications, setNotifications] = useState(true);
+  const [voiceGender, setVoiceGender] = useState<"female" | "male">("female");
+
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState<null | "manage" | "restore">(null);
   const [bioOn, setBioOn] = useState(false);
