@@ -91,8 +91,13 @@ function VoicesTab() {
 
   const save = async () => {
     setSaving(true);
-    const payload = rows.filter(r => r.voice_id).map(r => ({
-      country_code: mindfulnessCountry(r.country_code), gender: r.gender, voice_id: r.voice_id, label: r.label,
+    const deduped = new Map<string, VoiceRow>();
+    rows.filter(r => r.voice_id).forEach((r) => {
+      const normalized = { ...r, country_code: mindfulnessCountry(r.country_code) };
+      deduped.set(`${normalized.country_code}:${normalized.gender}`, normalized);
+    });
+    const payload = [...deduped.values()].map(r => ({
+      country_code: r.country_code, gender: r.gender, voice_id: r.voice_id, label: r.label,
     }));
     const { error } = await supabase.from("voice_settings").upsert(payload, { onConflict: "country_code,gender" });
     setSaving(false);
