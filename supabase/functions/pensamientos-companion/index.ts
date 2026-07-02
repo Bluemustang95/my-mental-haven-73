@@ -1,4 +1,5 @@
 import { streamLovableChat } from "../_shared/ai-gateway.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,29 +15,76 @@ type DraftCtx = {
   automaticThought?: string;
   emotion?: string;
   subEmotions?: string[];
+  intensityInitial?: number;
+  intensityFinal?: number;
   behavior?: string;
   bodySensations?: string[];
+  evidenceFor?: string[];
+  evidenceAgainst?: string[];
   distortions?: { label: string }[];
+  alternativeThought?: string;
+  resolutionPlan?: string;
 };
 
-function buildSystem(ctx: DraftCtx): string {
-  const parts: string[] = [
-    "Sos un acompañante cognitivo virtual de RESMA, una app argentina de bienestar mental.",
-    "Tu rol es guiar al usuario en un registro de pensamientos basado en Terapia Cognitivo-Conductual (TCC).",
-    "Hablás en español rioplatense con voseo argentino, tono empático, cálido y respetuoso.",
-    "Sos un guía cognitivo, NO sos terapeuta. Si detectás riesgo (autolesión, suicidio, abuso), sugerí contactar profesional o líneas de ayuda.",
-    "Respuestas breves (máx 4 oraciones), preguntas socráticas para ayudar a explorar, sin diagnosticar.",
-    "Aclaración obligatoria al inicio de la conversación: esto no reemplaza terapia profesional.",
-  ];
+const STEP_LABELS = [
+  "Situación",
+  "Pensamiento automático",
+  "Emociones",
+  "Conducta",
+  "Sensaciones corporales",
+  "Balanza de evidencias",
+  "Distorsiones cognitivas",
+  "Resolución",
+];
 
-  if (ctx.step) parts.push(`\nPaso actual del registro: ${ctx.step} de 8.`);
-  if (ctx.triggerEvent) parts.push(`Situación: "${ctx.triggerEvent}"`);
-  if (ctx.automaticThought) parts.push(`Pensamiento automático: "${ctx.automaticThought}"`);
-  if (ctx.emotion) parts.push(`Emoción: ${ctx.emotion}${ctx.subEmotions?.length ? ` (${ctx.subEmotions.join(", ")})` : ""}`);
-  if (ctx.behavior) parts.push(`Conducta: "${ctx.behavior}"`);
-  if (ctx.distortions?.length) parts.push(`Distorsiones detectadas: ${ctx.distortions.map((d) => d.label).join(", ")}`);
+const DEFAULT_PROMPT = `Sos "Reeni", acompañante cognitivo virtual de RESMA en TCC (Beck / Leahy).
+Hablás en español rioplatense con voseo, tono empático, breve y socrático. NO reemplazás terapia.
+Tenés acceso al REGISTRO en curso del usuario (lo verás abajo). Léelo antes de responder:
+- Si te pide "leé lo que escribí" o "resumime", devolvé un resumen empático de 3 líneas.
+- Si te pide "ayudame a completar" o "sugerí": generá 2–3 opciones breves para el paso actual, adaptadas al contenido ya escrito.
+- Si detectás distorsiones cognitivas, nombralas explicando por qué encajan.
+- Si detectás riesgo (autolesión, suicidio, abuso), sugerí líneas de ayuda.
+Máx 4 oraciones salvo que pidan sugerencias en lista.`;
 
-  return parts.join("\n");
+function describeDraft(ctx: DraftCtx): string {
+  const l: string[] = [];
+  const stepLabel = ctx.step ? `${ctx.step}/8 · ${STEP_LABELS[(ctx.step ?? 1) - 1]}` : "—";
+  l.push(`\n===== REGISTRO EN CURSO (paso ${stepLabel}) =====`);
+  l.push(`• Situación: ${ctx.triggerEvent || "(vacío)"}`);
+  l.push(`• Pensamiento automático: ${ctx.automaticThought || "(vacío)"}`);
+  l.push(
+    `• Emoción: ${ctx.emotion || "(vacío)"}${ctx.intensityInitial != null ? ` · SUDS inicial ${ctx.intensityInitial}` : ""}${ctx.subEmotions?.length ? ` · subemociones: ${ctx.subEmotions.join(", ")}` : ""}`
+  );
+  l.push(`• Conducta: ${ctx.behavior || "(vacío)"}`);
+  l.push(`• Sensaciones: ${ctx.bodySensations?.length ? ctx.bodySensations.join(", ") : "(vacío)"}`);
+  l.push(`• Evidencias a favor: ${ctx.evidenceFor?.length ? ctx.evidenceFor.join(" | ") : "(vacío)"}`);
+  l.push(`• Evidencias en contra: ${ctx.evidenceAgainst?.length ? ctx.evidenceAgainst.join(" | ") : "(vacío)"}`);
+  l.push(`• Distorsiones: ${ctx.distortions?.length ? ctx.distortions.map((d) => d.label).join(", ") : "(vacío)"}`);
+  l.push(`• Pensamiento alternativo: ${ctx.alternativeThought || "(vacío)"}`);
+  l.push(`• Plan de abordaje: ${ctx.resolutionPlan || "(vacío)"}`);
+  if (ctx.intensityFinal != null) l.push(`• SUDS final: ${ctx.intensityFinal}`);
+  return l.join("\n");
+}
+
+async function loadAiConfig(): Promise<{ prompt: string; model: string }> {
+  try {
+    const url = Deno.env.get("SUPABASE_URL");
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!url || !key) return { prompt: DEFAULT_PROMPT, model: "google/gemini-3-flash-preview" };
+    const sb = createClient(url, key);
+    const { data } = await sb
+      .from("admin_settings")
+      .select("value")
+      .eq("key", "pensamientos_ai")
+      .maybeSingle();
+    const v: any = data?.value ?? {};
+    return {
+      prompt: (v.prompt as string) || DEFAULT_PROMPT,
+      model: (v.model as string) || "google/gemini-3-flash-preview",
+    };
+  } catch {
+    return { prompt: DEFAULT_PROMPT, model: "google/gemini-3-flash-preview" };
+  }
 }
 
 Deno.serve(async (req) => {
@@ -55,8 +103,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    const cfg = await loadAiConfig();
+    const system = `${cfg.prompt}\n${describeDraft(draft ?? {})}`;
+
     const upstream = await streamLovableChat({
-      system: buildSystem(draft ?? {}),
+      model: cfg.model,
+      system,
       messages: messages.slice(-12),
     });
 
@@ -80,7 +132,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Stream SSE through to the client
     return new Response(upstream.body, {
       status: 200,
       headers: {
