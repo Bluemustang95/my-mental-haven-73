@@ -42,10 +42,10 @@ type Plan = {
 };
 
 const DEFAULT_PLAN: Plan = {
-  signs: ["Pensamientos intrusivos y persistentes", "Aislamiento de personas queridas"],
-  coping: ["Escuchar mi playlist de calma", "Respiración 4-7-8"],
-  network: [{ name: "Mamá", phone: "" }, { name: "Carlos (Amigo)", phone: "" }],
-  env: ["Guardar medicación extra bajo llave"],
+  signs: [],
+  coping: [],
+  network: [],
+  env: [],
   emergencies: [],
 };
 
@@ -57,6 +57,13 @@ const STEPS = [
   { key: "emergencies", title: "Líneas de emergencia",     icon: LifeBuoy,     sub: "Números profesionales disponibles 24/7." },
 ] as const;
 
+const isPlanEmpty = (p: Plan) =>
+  p.signs.length === 0 &&
+  p.coping.length === 0 &&
+  p.network.length === 0 &&
+  p.env.length === 0 &&
+  p.emergencies.length === 0;
+
 // ─── Component ─────────────────────────────────────────────────────────────
 export default function SafetyPlan() {
   const navigate = useNavigate();
@@ -67,6 +74,7 @@ export default function SafetyPlan() {
   const [plan, setPlan] = useState<Plan>(DEFAULT_PLAN);
   const [country, setCountry] = useState("AR");
   const [hotlines, setHotlines] = useState<Hotline[]>([]);
+  const [hasSavedPlan, setHasSavedPlan] = useState(false);
 
   // Load
   useEffect(() => {
@@ -86,17 +94,23 @@ export default function SafetyPlan() {
             env = Array.isArray(parsed.env) ? parsed.env : [];
             emergencies = Array.isArray(parsed.emergencies) ? parsed.emergencies : [];
           } catch { /* ignore */ }
-          setPlan({
-            signs: (data.warning_signs as unknown as string[]) ?? DEFAULT_PLAN.signs,
-            coping: (data.coping_strategies as unknown as string[]) ?? DEFAULT_PLAN.coping,
-            network: (data.contacts as unknown as Contact[]) ?? DEFAULT_PLAN.network,
-            env: env.length ? env : DEFAULT_PLAN.env,
+          const loaded: Plan = {
+            signs: (data.warning_signs as unknown as string[]) ?? [],
+            coping: (data.coping_strategies as unknown as string[]) ?? [],
+            network: (data.contacts as unknown as Contact[]) ?? [],
+            env,
             emergencies,
-          });
+          };
+          setPlan(loaded);
+          setHasSavedPlan(!isPlanEmpty(loaded));
+          if (isPlanEmpty(loaded) && params.get("mode") !== "view") setMode("edit");
+        } else if (params.get("mode") !== "view") {
+          setMode("edit");
         }
       }
       setLoading(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Autosave (debounced) whenever plan changes
@@ -112,12 +126,17 @@ export default function SafetyPlan() {
         contacts: plan.network as unknown as never,
         environment_notes: JSON.stringify({ env: plan.env, emergencies: plan.emergencies }),
       }, { onConflict: "user_id" });
+      if (!isPlanEmpty(plan)) setHasSavedPlan(true);
     }, 700);
     return () => clearTimeout(id);
   }, [plan, loading]);
 
   const enterEdit = () => { setWizardStep(0); setMode("edit"); };
   const exitEdit = () => { setMode("view"); setWizardStep(0); };
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/herramientas");
+  };
 
   // Merge hotlines (country) with user-added emergencies for the view
   const allEmergencies: Contact[] = useMemo(() => [
@@ -133,6 +152,8 @@ export default function SafetyPlan() {
     );
   }
 
+  const planEmpty = isPlanEmpty(plan);
+
   return (
     <div className="relative min-h-screen bg-[#f4f7f9]">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
@@ -141,10 +162,11 @@ export default function SafetyPlan() {
             <ViewMode
               key="view"
               plan={plan}
+              planEmpty={planEmpty}
               allEmergencies={allEmergencies}
               country={country}
               onEdit={enterEdit}
-              onBack={() => navigate(-1)}
+              onBack={goBack}
             />
           ) : (
             <EditWizard
@@ -153,7 +175,7 @@ export default function SafetyPlan() {
               setPlan={setPlan}
               step={wizardStep}
               setStep={setWizardStep}
-              onCancel={exitEdit}
+              onCancel={hasSavedPlan ? exitEdit : goBack}
               onFinish={() => { toast.success("Plan guardado"); exitEdit(); }}
             />
           )}
