@@ -146,6 +146,10 @@ function WriteView({
   const [prompt, setPrompt] = useState<InspirePrompt | null>(null);
   const [promptReuseDate, setPromptReuseDate] = useState<string | null>(null);
   const [prompts, setPrompts] = useState<InspirePrompt[]>(FALLBACK_PROMPTS);
+  const [emotionsPrimary, setEmotionsPrimary] = useState<Chip[]>(FALLBACK_EMOTIONS_PRIMARY);
+  const [emotionsExtra, setEmotionsExtra] = useState<Chip[]>(FALLBACK_EMOTIONS_EXTRA);
+  const [causesPrimary, setCausesPrimary] = useState<Chip[]>(FALLBACK_CAUSES_PRIMARY);
+  const [causesExtra, setCausesExtra] = useState<Chip[]>(FALLBACK_CAUSES_EXTRA);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [emos, setEmos] = useState<Set<string>>(new Set());
   const [causes, setCauses] = useState<Set<string>>(new Set());
