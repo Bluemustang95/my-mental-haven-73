@@ -319,9 +319,12 @@ export default function MindfulnessAdmin() {
                   <AdminButton variant="secondary" onClick={remove}>
                     <Trash2 size={14} /> Eliminar
                   </AdminButton>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap justify-end">
+                    <AdminButton variant="secondary" onClick={generateAllCountries} disabled={batching}>
+                      {batching ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />} Generar en todos los países
+                    </AdminButton>
                     <AdminButton variant="secondary" onClick={generateAudio}>
-                      {generating ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Generar audio
+                      {generating ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Generar audio ({country})
                     </AdminButton>
                     <AdminButton variant="purple" onClick={save}>
                       {saving ? <Loader2 size={14} className="animate-spin" /> : <PlayCircle size={14} />} Guardar guion
