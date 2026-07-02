@@ -754,25 +754,102 @@ function IconBtn({
 }
 
 
-function Waveform() {
-  const [bars, setBars] = useState<number[]>(() => Array.from({ length: 12 }, () => 0.3));
+function Waveform({ stream }: { stream: MediaStream | null }) {
+  const BAR_COUNT = 20;
+  const [bars, setBars] = useState<number[]>(() => Array.from({ length: BAR_COUNT }, () => 0.15));
+
   useEffect(() => {
-    const id = setInterval(() => {
-      setBars(Array.from({ length: 12 }, () => 0.25 + Math.random() * 0.75));
-    }, 140);
-    return () => clearInterval(id);
-  }, []);
+    if (!stream) return;
+    let raf = 0;
+    let ctx: AudioContext | null = null;
+    let analyser: AnalyserNode | null = null;
+    let data: Uint8Array | null = null;
+    try {
+      ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const src = ctx.createMediaStreamSource(stream);
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;
+      src.connect(analyser);
+      data = new Uint8Array(analyser.frequencyBinCount);
+    } catch (e) {
+      console.warn("[waveform] audio ctx failed", e);
+      return;
+    }
+    const tick = () => {
+      if (!analyser || !data) return;
+      analyser.getByteFrequencyData(data);
+      const step = Math.max(1, Math.floor(data.length / BAR_COUNT));
+      const next: number[] = [];
+      for (let i = 0; i < BAR_COUNT; i++) {
+        const v = data[i * step] ?? 0;
+        // amplify low signals so speech is visible
+        next.push(Math.min(1, 0.15 + (v / 255) * 1.6));
+      }
+      setBars(next);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      ctx?.close().catch(() => undefined);
+    };
+  }, [stream]);
+
   return (
-    <div className="flex flex-1 items-center gap-1">
+    <div className="flex flex-1 items-center justify-center gap-[3px]" style={{ height: 22 }}>
       {bars.map((b, i) => (
         <motion.span
           key={i}
-          animate={{ height: `${b * 100}%` }}
-          transition={{ duration: 0.14 }}
-          className="block w-1 rounded-full bg-[#7cc2c8]"
-          style={{ minHeight: 4 }}
+          animate={{ height: `${Math.max(10, b * 100)}%` }}
+          transition={{ duration: 0.08 }}
+          className="block w-[3px] rounded-full bg-[#7cc2c8]"
+          style={{ minHeight: 3 }}
         />
       ))}
+    </div>
+  );
+}
+
+function ChipCloud({
+  primary,
+  extra,
+  selected,
+  onToggle,
+}: {
+  primary: { k: string; e: string }[];
+  extra: { k: string; e: string }[];
+  selected: Set<string>;
+  onToggle: (k: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const items = open ? [...primary, ...extra] : primary;
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((it) => {
+          const on = selected.has(it.k);
+          return (
+            <button
+              key={it.k}
+              onClick={() => onToggle(it.k)}
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-[11px] transition",
+                on ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#7cc2c8]" : "border-[#101927]/10 bg-white/60 text-[#101927]",
+              )}
+            >
+              <span className="mr-0.5">{it.e}</span>{it.k}
+            </button>
+          );
+        })}
+      </div>
+      {extra.length > 0 && (
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="text-[11px] font-semibold text-[#7cc2c8] hover:underline"
+        >
+          {open ? "Ver menos" : `Ver más (${extra.length})`}
+        </button>
+      )}
     </div>
   );
 }
