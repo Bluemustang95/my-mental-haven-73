@@ -87,6 +87,12 @@ export default function MiProceso() {
     return subscribeCountryOverride(() => setOverrideCountry(getCountryOverride()));
   }, []);
 
+  useEffect(() => {
+    const h = () => setSheetOpen(true);
+    window.addEventListener("open-wellbeing-sheet", h);
+    return () => window.removeEventListener("open-wellbeing-sheet", h);
+  }, []);
+
   const updateTherapy = async (v: boolean) => {
     if (v) return setSyncOpen(true);
     setInTherapy(false);

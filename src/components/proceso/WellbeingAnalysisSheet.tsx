@@ -17,6 +17,7 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
   const [rangeMode, setRangeMode] = useState<"week" | "month">("week");
   const [mindMinutes, setMindMinutes] = useState<number>(0);
   const [medAdh, setMedAdh] = useState<{ taken: number; total: number } | null>(null);
+  const [testHistory, setTestHistory] = useState<{ test_type: string; score: number; severity: string | null; created_at: string }[]>([]);
   const trend = snapshot?.trend?.length ? snapshot.trend : [0,0,0,0,0,0,0];
   const score = snapshot?.score ?? 0;
   const delta = snapshot?.delta ?? 0;
@@ -53,6 +54,14 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
         const taken = rows.filter((r) => r.taken === true).length;
         setMedAdh({ taken, total: rows.length });
       });
+    supabase
+      .from("test_results")
+      .select("test_type, score, severity, created_at")
+      .eq("user_id", user.id)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => setTestHistory((data as any) ?? []));
   }, [open, user, rangeMode]);
 
 
@@ -172,6 +181,34 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
               </div>
 
 
+
+              {/* Historial de evaluaciones y personalidad */}
+              <div>
+                <p className="mb-2 font-[Montserrat] text-[11px] font-medium uppercase tracking-[0.12em] text-[#94a3b8]">
+                  Historial de evaluaciones
+                </p>
+                {testHistory.length === 0 ? (
+                  <div className="rounded-2xl bg-[#f8fafc] p-4 text-center text-[12px] text-[#94a3b8]">
+                    Sin evaluaciones en este período.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[#e2e8f0]/70 rounded-2xl bg-[#f8fafc]">
+                    {testHistory.map((t, i) => (
+                      <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+                        <ClipboardList size={16} className="shrink-0 text-[#94a3b8]" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-medium text-[#0f172a] truncate">
+                            {t.test_type} · <span className="font-bold text-[#3d8a90]">{t.score}</span> pts
+                          </p>
+                          <p className="text-[11px] text-[#64748b] truncate">
+                            {t.severity ?? "resultado registrado"} · {new Date(t.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Section C - 2x2 pillars */}
               <div>

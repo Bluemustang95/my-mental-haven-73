@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BigFiveHexagon } from "./BigFiveHexagon";
 import { useHideBottomNav } from "@/hooks/useUiChrome";
 
+type Baremo = { label: string; min: number; max: number; color: string; message: string };
 type Def = {
   id: string;
   code: string;
@@ -15,13 +16,17 @@ type Def = {
   scale_max: number;
   scale_labels: string[] | null;
   instructions: string | null;
+  baremos: Baremo[] | null;
+  result_message: string | null;
 };
+type ItemOption = { label: string; score: number };
 type Item = {
   id: string;
   sort: number;
   prompt: string;
   reverse: boolean;
   subscale: string | null;
+  options: ItemOption[] | null;
 };
 
 export function TestRunner({
@@ -70,19 +75,21 @@ export function TestRunner({
     const subs: Record<string, number[]> = {};
     items.forEach((it) => {
       const raw = answers[it.id] ?? min;
-      const v = it.reverse ? max + min - raw : raw;
+      // effective min/max for this item (item options override scale)
+      const localMin = it.options && it.options.length > 0 ? Math.min(...it.options.map((o) => o.score)) : min;
+      const localMax = it.options && it.options.length > 0 ? Math.max(...it.options.map((o) => o.score)) : max;
+      const v = it.reverse ? localMax + localMin - raw : raw;
       total += v;
       if (it.subscale) {
         subs[it.subscale] = subs[it.subscale] ?? [];
-        subs[it.subscale].push(v);
+        subs[it.subscale].push((v - localMin) / Math.max(1, localMax - localMin));
       }
     });
     const subMeans: Record<string, number> = {};
     Object.entries(subs).forEach(([k, arr]) => {
-      const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
-      subMeans[k] = (avg - min) / (max - min);
+      subMeans[k] = arr.reduce((a, b) => a + b, 0) / arr.length;
     });
-    const interpretation = interpret(def.code, total);
+    const interpretation = interpret(def, total);
     setResult({ total, subs: subMeans, interpretation });
     setStage("result");
 
@@ -199,23 +206,25 @@ export function TestRunner({
               </h2>
 
               <div className="mt-8 space-y-3">
-                {Array.from(
-                  { length: def.scale_max - def.scale_min + 1 },
-                  (_, i) => def.scale_min + i
-                ).map((v) => {
-                  const label = def.scale_labels?.[v - def.scale_min] ?? String(v);
-                  const selected = answers[current.id] === v;
+                {(current.options && current.options.length > 0
+                  ? current.options.map((o) => ({ label: o.label, score: o.score }))
+                  : Array.from({ length: def.scale_max - def.scale_min + 1 }, (_, i) => {
+                      const v = def.scale_min + i;
+                      return { label: def.scale_labels?.[i] ?? String(v), score: v };
+                    })
+                ).map((opt) => {
+                  const selected = answers[current.id] === opt.score;
                   return (
                     <button
-                      key={v}
-                      onClick={() => answerAndNext(v)}
+                      key={opt.score + opt.label}
+                      onClick={() => answerAndNext(opt.score)}
                       className={`w-full rounded-2xl border px-5 py-4 text-left text-sm font-medium transition active:scale-[0.99] ${
                         selected
                           ? "border-[#7cc2c8] bg-[#7cc2c8]/10 text-[#0f172a]"
                           : "border-[#e2e8f0] bg-white text-[#0f172a] hover:bg-[#f1f5f9]"
                       }`}
                     >
-                      {label}
+                      {opt.label}
                     </button>
                   );
                 })}
@@ -261,6 +270,12 @@ export function TestRunner({
                 </div>
               )}
 
+              {def.result_message && (
+                <p className="mt-4 rounded-2xl bg-[#f8fafc] p-4 text-center text-[13px] leading-relaxed text-[#475569]">
+                  {def.result_message}
+                </p>
+              )}
+
               <button
                 onClick={onClose}
                 className="mt-8 w-full rounded-2xl bg-[#0f172a] py-4 font-semibold text-white shadow-lg"
@@ -275,7 +290,13 @@ export function TestRunner({
   );
 }
 
-function interpret(code: string, total: number): string {
+function interpret(def: Def, total: number): string {
+  if (def.baremos && def.baremos.length > 0) {
+    const hit = def.baremos.find((b) => total >= b.min && total <= b.max);
+    if (hit) return hit.message || hit.label;
+  }
+  // Fallback legacy hardcoded
+  const code = def.code;
   if (code === "BDI") {
     if (total <= 13) return "Mínima depresión.";
     if (total <= 19) return "Depresión leve.";
