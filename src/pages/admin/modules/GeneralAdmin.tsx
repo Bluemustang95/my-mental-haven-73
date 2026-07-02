@@ -263,6 +263,9 @@ function AmbientOverridesSection() {
 
 // ---------- Voces de guiones (Mindfulness) ----------
 
+function AudiosTab() {
+
+
 
   const [rows, setRows] = useState<CachedAudio[]>([]);
   const [loading, setLoading] = useState(true);
