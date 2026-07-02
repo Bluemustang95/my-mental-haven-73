@@ -190,6 +190,7 @@
 /* Diario AMOLED Zen mode */
 body.zen-mode { background: #050508 !important; }
 body.zen-mode nav { opacity: 0 !important; pointer-events: none !important; transition: opacity .35s ease; }
+body.diary-entry-open nav { opacity: 0 !important; pointer-events: none !important; transition: opacity .25s ease; }
 
 /* Diary contentEditable placeholder */
 .diary-editor:empty::before {
