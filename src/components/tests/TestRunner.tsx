@@ -206,23 +206,25 @@ export function TestRunner({
               </h2>
 
               <div className="mt-8 space-y-3">
-                {Array.from(
-                  { length: def.scale_max - def.scale_min + 1 },
-                  (_, i) => def.scale_min + i
-                ).map((v) => {
-                  const label = def.scale_labels?.[v - def.scale_min] ?? String(v);
-                  const selected = answers[current.id] === v;
+                {(current.options && current.options.length > 0
+                  ? current.options.map((o) => ({ label: o.label, score: o.score }))
+                  : Array.from({ length: def.scale_max - def.scale_min + 1 }, (_, i) => {
+                      const v = def.scale_min + i;
+                      return { label: def.scale_labels?.[i] ?? String(v), score: v };
+                    })
+                ).map((opt) => {
+                  const selected = answers[current.id] === opt.score;
                   return (
                     <button
-                      key={v}
-                      onClick={() => answerAndNext(v)}
+                      key={opt.score + opt.label}
+                      onClick={() => answerAndNext(opt.score)}
                       className={`w-full rounded-2xl border px-5 py-4 text-left text-sm font-medium transition active:scale-[0.99] ${
                         selected
                           ? "border-[#7cc2c8] bg-[#7cc2c8]/10 text-[#0f172a]"
                           : "border-[#e2e8f0] bg-white text-[#0f172a] hover:bg-[#f1f5f9]"
                       }`}
                     >
-                      {label}
+                      {opt.label}
                     </button>
                   );
                 })}
