@@ -577,6 +577,7 @@ function AudiosTab() {
   };
 
   const uploadFile = async (file: File) => {
+    if (file.size > 50 * 1024 * 1024) { toast.error("Máximo 50 MB"); return; }
     setUploading(true);
     try {
       const safeName = file.name.replace(/[^\w.\-]+/g, "_");
