@@ -119,7 +119,8 @@ Deno.serve(async (req) => {
     }
 
     const cfg = await loadAiConfig();
-    const system = `${cfg.prompt}\n${describeDraft(draft ?? {})}`;
+    const dialect = dialectInstruction(draft?.userCountry);
+    const system = `${cfg.prompt}\n\n[REGLA REGIONAL OBLIGATORIA]\n${dialect}\n${describeDraft(draft ?? {})}`;
 
     const upstream = await streamLovableChat({
       model: cfg.model,
