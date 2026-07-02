@@ -1043,10 +1043,11 @@ function TimeEditSheet({
 }
 
 function SessionSettings({
-  voice, setVoice, voiceVolume, setVoiceVolume,
+  voice, setVoice, voiceGender, setVoiceGender, voiceVolume, setVoiceVolume,
   ambientId, setAmbientId, ambientVolume, setAmbientVolume, onClose,
 }: {
   voice: boolean; setVoice: (b: boolean) => void;
+  voiceGender: VoiceGender; setVoiceGender: (g: VoiceGender) => void;
   voiceVolume: number; setVoiceVolume: (v: number) => void;
   ambientId: string; setAmbientId: (id: string) => void;
   ambientVolume: number; setAmbientVolume: (v: number) => void;
@@ -1098,6 +1099,7 @@ function SessionSettings({
             />
             <span className="text-white/70 text-[11px] tabular-nums w-8 text-right">{Math.round(voiceVolume * 100)}</span>
           </div>
+          {voice && <VoiceGenderSelector value={voiceGender} onChange={setVoiceGender} variant="dark" />}
         </div>
 
         {/* Ambient dropdown + volume */}
