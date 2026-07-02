@@ -881,10 +881,25 @@ function SoundscapePopover() {
   const [, force] = useState(0);
   const [showMore, setShowMore] = useState(false);
   const refresh = () => force((n) => n + 1);
+  const { entries } = useAmbientCatalog();
+  const player = useAmbientPlayer();
+  const [customPlaying, setCustomPlaying] = useState<string>("off");
+
   const toggle = (t: audio.Track) => {
     if (audio.isPlaying(t)) audio.stop(t); else audio.play(t);
     refresh();
   };
+  const toggleCustom = (id: string) => {
+    player.prime();
+    if (customPlaying === id) {
+      player.stop();
+      setCustomPlaying("off");
+    } else {
+      player.setSound(id);
+      setCustomPlaying(id);
+    }
+  };
+
   type Item = { t: audio.Track; label: string; Icon: typeof CloudRain };
   const primary: Item[] = [
     { t: "solfeggio", label: "528Hz Solfeggio", Icon: MusicNote },
@@ -897,8 +912,10 @@ function SoundscapePopover() {
     { t: "white", label: "Ruido Blanco", Icon: SpeakerHigh },
     { t: "wind", label: "Viento", Icon: WindPh },
   ];
+  const customs = entries.filter((e) => e.custom);
   const all = showMore ? [...primary, ...extra] : primary;
-  const anyOn = [...primary, ...extra].some((it) => audio.isPlaying(it.t));
+  const anyOn = [...primary, ...extra].some((it) => audio.isPlaying(it.t)) || customPlaying !== "off";
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -913,7 +930,7 @@ function SoundscapePopover() {
           {anyOn ? <Volume2 size={17} /> : <VolumeX size={17} />}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl border-white/10 bg-[#0b0b10] p-3">
+      <PopoverContent align="center" sideOffset={8} className="w-72 max-h-[70vh] overflow-y-auto rounded-2xl border-white/10 bg-[#0b0b10] p-3">
         <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-[#7cc2c8]">
           Paisajes sonoros
         </p>
@@ -938,6 +955,36 @@ function SoundscapePopover() {
             );
           })}
         </div>
+
+        {customs.length > 0 && (
+          <>
+            <p className="mt-3 mb-2 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-[#7cc2c8]/70">
+              Personalizados
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {customs.map((c) => {
+                const on = customPlaying === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => toggleCustom(c.id)}
+                    className={cn(
+                      "flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[11.5px] transition",
+                      on
+                        ? "border-[#7cc2c8]/50 bg-[#7cc2c8]/10 text-[#7cc2c8]"
+                        : "border-white/10 bg-white/[0.03] text-slate-200"
+                    )}
+                  >
+                    <Music size={14} />
+                    <span className="truncate flex-1 text-left">{c.label}</span>
+                    {on && <span className="h-1.5 w-1.5 rounded-full bg-[#7cc2c8]" />}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
         <button
           onClick={() => setShowMore((v) => !v)}
           className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.03] py-1.5 text-[11px] text-slate-300 hover:text-white"
@@ -948,6 +995,7 @@ function SoundscapePopover() {
     </Popover>
   );
 }
+
 
 
 /* ────────────── History View ────────────── */
