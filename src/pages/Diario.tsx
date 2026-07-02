@@ -369,7 +369,7 @@ function WriteView({
   const mm = String(Math.floor(recSec / 60)).padStart(2, "0");
   const ss = String(recSec % 60).padStart(2, "0");
 
-  const selectedEmo = EMOTIONS.find((e) => e.k === emo);
+  const hasContent = !!text || emos.size > 0 || causes.size > 0;
 
   return (
     <motion.div
@@ -387,27 +387,13 @@ function WriteView({
           {!zen && (
             <>
               <button
-                onClick={() => {
-                  if (!text && !emo && causes.size === 0) return;
-                  setConfirmNew(true);
-                }}
-                disabled={!text && !emo && causes.size === 0}
+                onClick={() => { if (hasContent) setConfirmNew(true); }}
+                disabled={!hasContent}
                 className={cn("grid h-8 w-8 place-items-center rounded-full disabled:opacity-30", iconBtnCls)}
                 aria-label="Nueva entrada"
                 title="Nueva entrada"
               >
                 <Plus size={15} />
-              </button>
-              <button
-                onClick={() => setPrivacyOpen(true)}
-                className={cn("grid h-8 w-8 place-items-center rounded-full relative", iconBtnCls)}
-                aria-label="Privacidad y cifrado"
-                title="Privacidad y cifrado"
-              >
-                <Lock size={15} />
-                {e2e.isE2EEnabled() && (
-                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
-                )}
               </button>
               <button onClick={onOpenHistory} className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Historial">
                 <Clock size={15} />
@@ -434,11 +420,15 @@ function WriteView({
           >
             <div className={cn("relative mb-3 rounded-3xl p-4 pr-10", surfaceCls,
               !zen && "bg-[#7cc2c8]/10 border-[#7cc2c8]/30")}>
-              <p className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-[#7cc2c8]">
-                {prompt.tag}
-              </p>
-              <p className="mt-1.5 font-mindful text-base leading-snug">{prompt.text}</p>
-              <button onClick={() => setPrompt(null)} className="absolute right-3 top-3 opacity-60">
+              <p className="font-mindful text-base leading-snug">{prompt.text}</p>
+              {promptReuseDate && (
+                <p className="mt-2 rounded-xl bg-[#facb60]/15 border border-[#facb60]/40 px-3 py-2 text-[11.5px] text-[#101927]/80">
+                  ✨ Ya escribiste con este mismo Inspirame el{" "}
+                  <strong>{new Date(promptReuseDate).toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" })}</strong>.
+                  Escribí de nuevo y luego, en tu Historial, comparalo.
+                </p>
+              )}
+              <button onClick={() => { setPrompt(null); setPromptReuseDate(null); }} className="absolute right-3 top-3 opacity-60">
                 <X size={16} />
               </button>
             </div>
