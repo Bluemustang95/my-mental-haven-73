@@ -813,15 +813,14 @@ function ImmersivePlayer({
       if (voiceLoading) { setGuideStatus("loading"); return; }
 
       const resolvedCountry = country || "default";
-      const baseQuery = supabase
+      const { data: localized } = await supabase
         .from("mindfulness_scripts_v2")
         .select("id, title, version, country_code")
         .eq("exercise_id", pattern.id)
         .eq("minutes", minutes)
         .eq("active", true)
+        .eq("country_code", resolvedCountry)
         .order("version", { ascending: true });
-
-      const { data: localized } = await baseQuery.eq("country_code", resolvedCountry);
       let scripts = localized ?? [];
       if (!scripts.length && resolvedCountry !== "default") {
         const { data: defaults } = await supabase
@@ -877,7 +876,7 @@ function ImmersivePlayer({
 
   // Fallback: speak cue when phase changes only if there is no cached full guide.
   useEffect(() => {
-    if (!voice || cycle.paused || voiceLoading || guideStatus === "cached") return;
+    if (!voice || cycle.paused || voiceLoading || guideStatus === "loading" || guideStatus === "cached") return;
     primeAudio();
     setSpeechVolume(voiceVolume);
     speakTTS(phase.cue, voiceId).catch(() => {});
