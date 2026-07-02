@@ -26,7 +26,7 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
   const dayEnd = `${nextDayStr}T03:00:00Z`;
   const activities: CalendarActivity[] = [];
 
-  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap, readings, dbt, meds, sleep, habitDone] = await Promise.all([
+  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap, readings, dbt, meds, sleep, habitDone, tFollowups, tFollowupLogs] = await Promise.all([
     supabase.from("journal_entries").select("id, created_at, content").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("thought_records").select("id, created_at, situation, emotion").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
