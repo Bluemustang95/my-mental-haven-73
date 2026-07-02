@@ -559,24 +559,29 @@ function WriteView({
           <PopoverTrigger asChild>
             <button
               className={cn(
-                "flex items-center gap-1 rounded-full px-2 py-1.5 text-sm transition",
-                emo ? "text-[#7cc2c8]" : iconBtnCls,
+                "relative flex items-center gap-1 rounded-full px-2 py-1.5 text-sm transition",
+                emos.size > 0 ? "text-[#7cc2c8]" : iconBtnCls,
               )}
               aria-label="Siento"
               title="Siento…"
             >
-              {selectedEmo ? <span className="text-base leading-none">{selectedEmo.e}</span> : <Smile size={17} />}
+              <SmileyWink size={19} weight="duotone" />
+              {emos.size > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-[#7cc2c8] text-[8px] font-bold text-[#101927]">
+                  {emos.size}
+                </span>
+              )}
             </button>
           </PopoverTrigger>
           <PopoverContent align="center" sideOffset={8} className="w-64 rounded-2xl p-3">
-            <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Siento…</p>
+            <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Siento… (podés elegir varias)</p>
             <div className="flex flex-wrap gap-1.5">
               {EMOTIONS.map((it) => {
-                const on = emo === it.k;
+                const on = emos.has(it.k);
                 return (
                   <button
                     key={it.k}
-                    onClick={() => setEmo(on ? null : it.k)}
+                    onClick={() => setEmos((s) => { const n = new Set(s); n.has(it.k) ? n.delete(it.k) : n.add(it.k); return n; })}
                     className={cn(
                       "rounded-full border px-2.5 py-1 text-[11px] transition",
                       on ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#7cc2c8]" : "border-[#101927]/10 bg-white/60 text-[#101927]",
@@ -600,7 +605,7 @@ function WriteView({
               aria-label="Causas"
               title="Causas…"
             >
-              <Tag size={17} />
+              <TagPh size={19} weight="duotone" />
               {causes.size > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-[#7cc2c8] text-[8px] font-bold text-[#101927]">
                   {causes.size}
