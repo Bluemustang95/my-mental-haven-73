@@ -58,24 +58,21 @@ const FALLBACK_PROMPTS: InspirePrompt[] = [
 ];
 const INSPIRE_HISTORY_KEY = "diary:inspire:history";
 
-const EMOTIONS_PRIMARY = [
+type Chip = { k: string; e: string; img?: string | null };
+const FALLBACK_EMOTIONS_PRIMARY: Chip[] = [
   { k: "Calma", e: "🧘" }, { k: "Alegría", e: "☀️" }, { k: "Tristeza", e: "🌧️" },
   { k: "Ansiedad", e: "⚡" }, { k: "Enojo", e: "🔥" }, { k: "Agotamiento", e: "🛌" },
 ];
-const EMOTIONS_EXTRA = [
+const FALLBACK_EMOTIONS_EXTRA: Chip[] = [
   { k: "Amor", e: "💗" }, { k: "Gratitud", e: "🙏" }, { k: "Culpa", e: "😔" },
   { k: "Vergüenza", e: "🫣" }, { k: "Miedo", e: "😨" }, { k: "Frustración", e: "😤" },
-  { k: "Esperanza", e: "🌈" }, { k: "Orgullo", e: "🦁" }, { k: "Nostalgia", e: "🍂" },
-  { k: "Confusión", e: "🌀" }, { k: "Envidia", e: "🥴" }, { k: "Aburrimiento", e: "🥱" },
 ];
-const CAUSES_PRIMARY = [
+const FALLBACK_CAUSES_PRIMARY: Chip[] = [
   { k: "Trabajo", e: "🏢" }, { k: "Pareja", e: "❤️" }, { k: "Salud", e: "🍎" },
   { k: "Finanzas", e: "💵" }, { k: "Sueño", e: "💤" },
 ];
-const CAUSES_EXTRA = [
+const FALLBACK_CAUSES_EXTRA: Chip[] = [
   { k: "Familia", e: "🏡" }, { k: "Amistades", e: "🤝" }, { k: "Estudios", e: "📚" },
-  { k: "Hijes", e: "🧸" }, { k: "Cuerpo", e: "💪" }, { k: "Redes", e: "📱" },
-  { k: "Duelo", e: "🕊️" }, { k: "Mudanza", e: "📦" }, { k: "Rutina", e: "🔁" },
 ];
 
 type Attachment = {
@@ -149,6 +146,10 @@ function WriteView({
   const [prompt, setPrompt] = useState<InspirePrompt | null>(null);
   const [promptReuseDate, setPromptReuseDate] = useState<string | null>(null);
   const [prompts, setPrompts] = useState<InspirePrompt[]>(FALLBACK_PROMPTS);
+  const [emotionsPrimary, setEmotionsPrimary] = useState<Chip[]>(FALLBACK_EMOTIONS_PRIMARY);
+  const [emotionsExtra, setEmotionsExtra] = useState<Chip[]>(FALLBACK_EMOTIONS_EXTRA);
+  const [causesPrimary, setCausesPrimary] = useState<Chip[]>(FALLBACK_CAUSES_PRIMARY);
+  const [causesExtra, setCausesExtra] = useState<Chip[]>(FALLBACK_CAUSES_EXTRA);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [emos, setEmos] = useState<Set<string>>(new Set());
   const [causes, setCauses] = useState<Set<string>>(new Set());
@@ -168,14 +169,21 @@ function WriteView({
   const imgRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Load prompts from DB (admin-managed) with local fallback
+  // Load prompts + chips from DB (admin-managed) with local fallback
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("diary_inspire_prompts")
-        .select("id, text, tag")
-        .eq("active", true);
-      if (data && data.length > 0) setPrompts(data as InspirePrompt[]);
+      const [{ data: pData }, { data: cData }] = await Promise.all([
+        supabase.from("diary_inspire_prompts").select("id, text, tag").eq("active", true),
+        supabase.from("diary_chips").select("kind, name, icon, image_url, is_primary, sort_order").eq("active", true).order("sort_order"),
+      ]);
+      if (pData && pData.length > 0) setPrompts(pData as InspirePrompt[]);
+      if (cData && cData.length > 0) {
+        const map = (rows: any[]): Chip[] => rows.map((r) => ({ k: r.name, e: r.icon || "•", img: r.image_url }));
+        setEmotionsPrimary(map(cData.filter((r: any) => r.kind === "emotion" && r.is_primary)));
+        setEmotionsExtra(map(cData.filter((r: any) => r.kind === "emotion" && !r.is_primary)));
+        setCausesPrimary(map(cData.filter((r: any) => r.kind === "cause" && r.is_primary)));
+        setCausesExtra(map(cData.filter((r: any) => r.kind === "cause" && !r.is_primary)));
+      }
     })();
   }, []);
 
@@ -629,8 +637,8 @@ function WriteView({
           <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl p-3">
             <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Siento… (podés elegir varias)</p>
             <ChipCloud
-              primary={EMOTIONS_PRIMARY}
-              extra={EMOTIONS_EXTRA}
+              primary={emotionsPrimary}
+              extra={emotionsExtra}
               selected={emos}
               onToggle={(k) => setEmos((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; })}
             />
@@ -658,8 +666,8 @@ function WriteView({
           <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl p-3">
             <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Causas…</p>
             <ChipCloud
-              primary={CAUSES_PRIMARY}
-              extra={CAUSES_EXTRA}
+              primary={causesPrimary}
+              extra={causesExtra}
               selected={causes}
               onToggle={toggleCause}
             />
@@ -816,8 +824,8 @@ function ChipCloud({
   selected,
   onToggle,
 }: {
-  primary: { k: string; e: string }[];
-  extra: { k: string; e: string }[];
+  primary: Chip[];
+  extra: Chip[];
   selected: Set<string>;
   onToggle: (k: string) => void;
 }) {
@@ -833,11 +841,23 @@ function ChipCloud({
               key={it.k}
               onClick={() => onToggle(it.k)}
               className={cn(
-                "rounded-full border px-2.5 py-1 text-[11px] transition",
-                on ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#7cc2c8]" : "border-[#101927]/10 bg-white/60 text-[#101927]",
+                "group flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] transition",
+                on
+                  ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#3d8a90]"
+                  : "border-[#101927]/10 bg-white text-[#101927] shadow-[0_1px_2px_rgba(16,25,39,0.04)]",
               )}
             >
-              <span className="mr-0.5">{it.e}</span>{it.k}
+              <span
+                className={cn(
+                  "grid h-6 w-6 place-items-center rounded-full text-[13px] leading-none overflow-hidden",
+                  on ? "bg-[#7cc2c8]/25" : "bg-[#fdf6ec]",
+                )}
+              >
+                {it.img
+                  ? <img src={it.img} alt="" className="h-full w-full object-cover" />
+                  : <span>{it.e}</span>}
+              </span>
+              <span className="font-medium">{it.k}</span>
             </button>
           );
         })}
