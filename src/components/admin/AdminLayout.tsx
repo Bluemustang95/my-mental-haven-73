@@ -36,6 +36,7 @@ const SECTIONS: NavSection[] = [
     id: "recursos",
     label: "Recursos Clínicos",
     items: [
+      { title: "Diario", url: "/admin/diario", icon: NotebookPen },
       { title: "Pensamientos Auto.", url: "/admin/pensamientos", icon: Brain },
       { title: "Regulación DBT", url: "/admin/regulacion", icon: Sparkles },
       { title: "Mindfulness & Resp.", url: "/admin/mindfulness", icon: Wind },
