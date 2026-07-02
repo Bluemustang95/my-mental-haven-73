@@ -637,8 +637,8 @@ function WriteView({
           <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl p-3">
             <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Siento… (podés elegir varias)</p>
             <ChipCloud
-              primary={EMOTIONS_PRIMARY}
-              extra={EMOTIONS_EXTRA}
+              primary={emotionsPrimary}
+              extra={emotionsExtra}
               selected={emos}
               onToggle={(k) => setEmos((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; })}
             />
