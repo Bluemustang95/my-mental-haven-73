@@ -270,6 +270,12 @@ export function TestRunner({
                 </div>
               )}
 
+              {def.result_message && (
+                <p className="mt-4 rounded-2xl bg-[#f8fafc] p-4 text-center text-[13px] leading-relaxed text-[#475569]">
+                  {def.result_message}
+                </p>
+              )}
+
               <button
                 onClick={onClose}
                 className="mt-8 w-full rounded-2xl bg-[#0f172a] py-4 font-semibold text-white shadow-lg"
