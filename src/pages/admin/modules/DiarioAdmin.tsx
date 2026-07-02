@@ -76,6 +76,24 @@ function InspirePanel() {
     load();
   };
 
+  const [bulk, setBulk] = useState("");
+  const [bulkTag, setBulkTag] = useState("");
+
+  const addBulk = async () => {
+    const lines = bulk
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+    if (lines.length === 0) return;
+    const payload = lines.map((text) => ({ text, tag: bulkTag.trim() || null }));
+    const { error } = await supabase.from("diary_inspire_prompts").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success(`${lines.length} frases cargadas`);
+    setBulk("");
+    setBulkTag("");
+    load();
+  };
+
   return (
     <div className="space-y-4">
       <AdminCard className="p-4">
@@ -98,6 +116,31 @@ function InspirePanel() {
         <p className="mt-2 text-[11px] text-slate-500">
           El usuario ve solo el texto del prompt. La categoría es para tu organización interna.
         </p>
+      </AdminCard>
+
+      <AdminCard className="p-4">
+        <p className="text-sm font-semibold text-slate-700 mb-1">Cargado masivo</p>
+        <p className="text-[11px] text-slate-500 mb-3">
+          Pegá una frase por línea. Se crea un prompt activo por cada línea no vacía.
+        </p>
+        <textarea
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm min-h-[140px] font-mono"
+          placeholder={`¿Qué está bajo tu control hoy?\n¿Qué te hizo sonreír esta semana?\n…`}
+          value={bulk}
+          onChange={(e) => setBulk(e.target.value)}
+        />
+        <div className="mt-2 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-2">
+          <input
+            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            placeholder="Categoría común (opcional) — se asigna a todas las líneas"
+            value={bulkTag}
+            onChange={(e) => setBulkTag(e.target.value)}
+          />
+          <AdminButton onClick={addBulk}>
+            <Plus size={14} />
+            Cargar {bulk.split("\n").filter((l) => l.trim()).length || ""} frases
+          </AdminButton>
+        </div>
       </AdminCard>
 
       <AdminCard className="p-0 overflow-hidden">
