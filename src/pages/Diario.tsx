@@ -859,7 +859,8 @@ function SoundscapePopover() {
 
 
 /* ────────────── History View ────────────── */
-type Entry = { id: string; content: string; entry_date: string | null; emotion_tags: string[] | null; created_at: string | null; is_encrypted?: boolean; _locked?: boolean };
+type StoredAtt = { id: string; name: string; type: "image" | "file" | "audio"; path: string; size?: number };
+type Entry = { id: string; content: string; entry_date: string | null; emotion_tags: string[] | null; created_at: string | null; is_encrypted?: boolean; attachments?: StoredAtt[] | null; _locked?: boolean };
 
 function HistoryView({ onBack }: { onBack: () => void }) {
   const [entries, setEntries] = useState<Entry[]>([]);
