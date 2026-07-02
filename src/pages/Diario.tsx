@@ -666,8 +666,8 @@ function WriteView({
           <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl p-3">
             <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Causas…</p>
             <ChipCloud
-              primary={CAUSES_PRIMARY}
-              extra={CAUSES_EXTRA}
+              primary={causesPrimary}
+              extra={causesExtra}
               selected={causes}
               onToggle={toggleCause}
             />
