@@ -142,7 +142,7 @@ function AmbientOverridesSection() {
   };
 
   const uploadOverride = async (entry: CatalogEntry, file: File) => {
-    if (file.size > 12 * 1024 * 1024) { toast.error("Máximo 12 MB"); return; }
+    if (file.size > 50 * 1024 * 1024) { toast.error("Máximo 50 MB"); return; }
     setUploadingId(entry.id);
     try {
       const ext = file.name.split(".").pop()?.toLowerCase() || "mp3";
