@@ -976,9 +976,19 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       className="flex flex-1 flex-col"
     >
       <div className="mb-4 flex items-start justify-between px-1">
-        <div>
-          <h1 className="font-mindful text-3xl leading-none">Diario</h1>
-          <p className="mt-1 text-xs text-slate-500">Tu espacio seguro para escribir.</p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onBack}
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/60 bg-white/80 text-[#101927] shadow-sm"
+            aria-label="Volver al Diario"
+            title="Volver al Diario"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className="font-mindful text-3xl leading-none">Historial</h1>
+            <p className="mt-1 text-xs text-slate-500">Tus bitácoras anteriores.</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <button
@@ -990,16 +1000,6 @@ function HistoryView({ onBack }: { onBack: () => void }) {
             aria-label="Buscar"
           >
             <Search size={15} />
-          </button>
-          <button
-            onClick={() => toast.info("Tus notas son privadas y solo vos las ves.")}
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/60 bg-white/70 text-[#101927] shadow-sm"
-            aria-label="Privacidad"
-          >
-            <Lock size={14} />
-          </button>
-          <button onClick={onBack} className="grid h-9 w-9 place-items-center rounded-full bg-[#7cc2c8] text-[#101927] shadow-[0_8px_24px_-10px_rgba(124,194,200,0.7)]" aria-label="Cerrar historial">
-            <Clock size={14} />
           </button>
         </div>
       </div>
