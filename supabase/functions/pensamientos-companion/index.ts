@@ -24,7 +24,22 @@ type DraftCtx = {
   distortions?: { label: string }[];
   alternativeThought?: string;
   resolutionPlan?: string;
+  userCountry?: string;
 };
+
+function dialectInstruction(country?: string): string {
+  const c = (country ?? "").trim().toLowerCase();
+  if (["argentina", "uruguay", "ar", "uy"].includes(c)) {
+    return `El usuario es de ${country}. Hablá en español rioplatense con VOSEO ("vos tenés", "sentís", "podés", "dale"). Nunca uses "tú".`;
+  }
+  if (["españa", "espana", "spain", "es"].includes(c)) {
+    return `El usuario es de España. Usa tuteo peninsular ("tú tienes", "puedes", "vale"). No uses voseo ni modismos latinoamericanos.`;
+  }
+  if (c) {
+    return `El usuario es de ${country}. Usa español latinoamericano neutro con tuteo ("tú tienes", "puedes", "sientes"). NO uses voseo rioplatense ("vos", "tenés") ni modismos regionales.`;
+  }
+  return `No se conoce el país del usuario: usa español neutro con tuteo, sin voseo ni modismos regionales.`;
+}
 
 const STEP_LABELS = [
   "Situación",
