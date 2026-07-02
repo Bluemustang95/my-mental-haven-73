@@ -205,6 +205,31 @@ export default function ResumenPsico() {
                       emptyText={c.empty}
                     />
                   ))}
+
+                  {safety && (
+                    <button
+                      type="button"
+                      onClick={() => setIncludeSafety(v => !v)}
+                      className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition ${
+                        includeSafety
+                          ? "border-rose-200 bg-rose-50/70"
+                          : "border-slate-100 bg-white/85"
+                      }`}
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-500">
+                        <ShieldAlert size={17} />
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-[13px] font-semibold text-slate-800">Plan de Seguridad</p>
+                        <p className="text-[11px] text-slate-500">
+                          Adjuntar tu red de contención al resumen.
+                        </p>
+                      </div>
+                      <span className={`h-5 w-9 rounded-full transition ${includeSafety ? "bg-rose-400" : "bg-slate-200"} relative`}>
+                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition ${includeSafety ? "left-4" : "left-0.5"}`} />
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
             </motion.div>
