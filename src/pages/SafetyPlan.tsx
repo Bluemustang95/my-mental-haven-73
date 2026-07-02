@@ -42,10 +42,10 @@ type Plan = {
 };
 
 const DEFAULT_PLAN: Plan = {
-  signs: ["Pensamientos intrusivos y persistentes", "Aislamiento de personas queridas"],
-  coping: ["Escuchar mi playlist de calma", "Respiración 4-7-8"],
-  network: [{ name: "Mamá", phone: "" }, { name: "Carlos (Amigo)", phone: "" }],
-  env: ["Guardar medicación extra bajo llave"],
+  signs: [],
+  coping: [],
+  network: [],
+  env: [],
   emergencies: [],
 };
 
@@ -57,6 +57,13 @@ const STEPS = [
   { key: "emergencies", title: "Líneas de emergencia",     icon: LifeBuoy,     sub: "Números profesionales disponibles 24/7." },
 ] as const;
 
+const isPlanEmpty = (p: Plan) =>
+  p.signs.length === 0 &&
+  p.coping.length === 0 &&
+  p.network.length === 0 &&
+  p.env.length === 0 &&
+  p.emergencies.length === 0;
+
 // ─── Component ─────────────────────────────────────────────────────────────
 export default function SafetyPlan() {
   const navigate = useNavigate();
@@ -67,6 +74,7 @@ export default function SafetyPlan() {
   const [plan, setPlan] = useState<Plan>(DEFAULT_PLAN);
   const [country, setCountry] = useState("AR");
   const [hotlines, setHotlines] = useState<Hotline[]>([]);
+  const [hasSavedPlan, setHasSavedPlan] = useState(false);
 
   // Load
   useEffect(() => {
@@ -86,17 +94,23 @@ export default function SafetyPlan() {
             env = Array.isArray(parsed.env) ? parsed.env : [];
             emergencies = Array.isArray(parsed.emergencies) ? parsed.emergencies : [];
           } catch { /* ignore */ }
-          setPlan({
-            signs: (data.warning_signs as unknown as string[]) ?? DEFAULT_PLAN.signs,
-            coping: (data.coping_strategies as unknown as string[]) ?? DEFAULT_PLAN.coping,
-            network: (data.contacts as unknown as Contact[]) ?? DEFAULT_PLAN.network,
-            env: env.length ? env : DEFAULT_PLAN.env,
+          const loaded: Plan = {
+            signs: (data.warning_signs as unknown as string[]) ?? [],
+            coping: (data.coping_strategies as unknown as string[]) ?? [],
+            network: (data.contacts as unknown as Contact[]) ?? [],
+            env,
             emergencies,
-          });
+          };
+          setPlan(loaded);
+          setHasSavedPlan(!isPlanEmpty(loaded));
+          if (isPlanEmpty(loaded) && params.get("mode") !== "view") setMode("edit");
+        } else if (params.get("mode") !== "view") {
+          setMode("edit");
         }
       }
       setLoading(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Autosave (debounced) whenever plan changes
@@ -112,12 +126,17 @@ export default function SafetyPlan() {
         contacts: plan.network as unknown as never,
         environment_notes: JSON.stringify({ env: plan.env, emergencies: plan.emergencies }),
       }, { onConflict: "user_id" });
+      if (!isPlanEmpty(plan)) setHasSavedPlan(true);
     }, 700);
     return () => clearTimeout(id);
   }, [plan, loading]);
 
   const enterEdit = () => { setWizardStep(0); setMode("edit"); };
   const exitEdit = () => { setMode("view"); setWizardStep(0); };
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/herramientas");
+  };
 
   // Merge hotlines (country) with user-added emergencies for the view
   const allEmergencies: Contact[] = useMemo(() => [
@@ -133,6 +152,8 @@ export default function SafetyPlan() {
     );
   }
 
+  const planEmpty = isPlanEmpty(plan);
+
   return (
     <div className="relative min-h-screen bg-[#f4f7f9]">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
@@ -141,10 +162,11 @@ export default function SafetyPlan() {
             <ViewMode
               key="view"
               plan={plan}
+              planEmpty={planEmpty}
               allEmergencies={allEmergencies}
               country={country}
               onEdit={enterEdit}
-              onBack={() => navigate(-1)}
+              onBack={goBack}
             />
           ) : (
             <EditWizard
@@ -153,7 +175,7 @@ export default function SafetyPlan() {
               setPlan={setPlan}
               step={wizardStep}
               setStep={setWizardStep}
-              onCancel={exitEdit}
+              onCancel={hasSavedPlan ? exitEdit : goBack}
               onFinish={() => { toast.success("Plan guardado"); exitEdit(); }}
             />
           )}
@@ -165,9 +187,9 @@ export default function SafetyPlan() {
 
 // ─── VIEW MODE (SOS) ───────────────────────────────────────────────────────
 function ViewMode({
-  plan, allEmergencies, country, onEdit, onBack,
+  plan, planEmpty, allEmergencies, country, onEdit, onBack,
 }: {
-  plan: Plan; allEmergencies: Contact[]; country: string;
+  plan: Plan; planEmpty: boolean; allEmergencies: Contact[]; country: string;
   onEdit: () => void; onBack: () => void;
 }) {
   return (
@@ -179,12 +201,14 @@ function ViewMode({
         <button onClick={onBack} className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white/80 shadow-sm">
           <ArrowLeft size={18} className="text-slate-700" />
         </button>
-        <button
-          onClick={onEdit}
-          className="flex items-center gap-1.5 rounded-full border border-slate-100 bg-white/80 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm active:scale-95"
-        >
-          <Pencil size={13} /> Editar Plan
-        </button>
+        {!planEmpty && (
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-1.5 rounded-full border border-slate-100 bg-white/80 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm active:scale-95"
+          >
+            <Pencil size={13} /> Editar Plan
+          </button>
+        )}
       </header>
 
       {/* Hero */}
@@ -196,103 +220,129 @@ function ViewMode({
         <p className="mt-1 text-xs text-slate-500">Un plan pensado en calma para usar en momentos difíciles.</p>
       </div>
 
-      {/* Emergencias */}
-      <SectionTitle>Líneas de emergencia</SectionTitle>
-      <div className="space-y-2">
-        {allEmergencies.length === 0 && <EmptyHint text="Sin líneas configuradas todavía." />}
-        {allEmergencies.map((e, i) => (
-          <a
-            key={`${e.name}-${i}`}
-            href={e.phone ? `tel:${e.phone.replace(/\s+/g, "")}` : undefined}
-            className="group flex items-center gap-3 rounded-2xl border border-rose-200/60 bg-gradient-to-br from-rose-50/80 to-white/80 p-4 shadow-sm backdrop-blur-xl transition hover:bg-white active:scale-[0.99]"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/70 text-rose-500 group-hover:text-rose-600">
-              <Phone size={18} />
-            </span>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-rose-800">{e.name}</p>
-              {e.phone && <p className="font-mono text-[13px] text-rose-600">{e.phone}</p>}
-            </div>
-          </a>
-        ))}
-      </div>
-
-      {/* Estrategias */}
-      <SectionTitle>Estrategias de calma</SectionTitle>
-      <div className="space-y-2">
-        {plan.coping.length === 0 && <EmptyHint text="Editá tu plan para agregar estrategias." />}
-        {plan.coping.map((c, i) => (
-          <div key={`${c}-${i}`} className="flex items-center gap-3 rounded-2xl border border-teal-100/70 bg-white/80 p-3.5 shadow-sm backdrop-blur-md">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-50 text-[13px] font-bold text-[#2c6e73]">
-              {i + 1}
-            </span>
-            <p className="flex-1 text-[13.5px] leading-snug text-slate-700">{c}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Señales */}
-      <SectionTitle>Señales de alerta</SectionTitle>
-      <div className="rounded-2xl border border-amber-100/70 bg-white/80 p-4 shadow-sm backdrop-blur-md">
-        {plan.signs.length === 0 ? (
-          <EmptyHint text="Sin señales registradas." />
-        ) : (
-          <ul className="space-y-2">
-            {plan.signs.map((s, i) => (
-              <li key={`${s}-${i}`} className="flex items-start gap-2 text-[13.5px] text-slate-700">
-                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
-                <span>{s}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Red de apoyo */}
-      <SectionTitle>Red de apoyo</SectionTitle>
-      <div className="space-y-2">
-        {plan.network.length === 0 && <EmptyHint text="Agregá contactos personales de confianza." />}
-        {plan.network.map((c, i) => (
-          <div key={`${c.name}-${i}`} className="flex items-center gap-3 rounded-2xl border border-indigo-100/70 bg-white/80 p-3.5 shadow-sm backdrop-blur-md">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-500">
-              <Users size={17} />
-            </span>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-slate-800">{c.name}</p>
-              {c.phone && <p className="font-mono text-[12px] text-slate-500">{c.phone}</p>}
-            </div>
-            {c.phone && (
+      {/* Emergencias — always visible */}
+      {allEmergencies.length > 0 && (
+        <>
+          <SectionTitle>Líneas de emergencia</SectionTitle>
+          <div className="space-y-2">
+            {allEmergencies.map((e, i) => (
               <a
-                href={`tel:${c.phone.replace(/\s+/g, "")}`}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm active:scale-95"
+                key={`${e.name}-${i}`}
+                href={e.phone ? `tel:${e.phone.replace(/\s+/g, "")}` : undefined}
+                className="group flex items-center gap-3 rounded-2xl border border-rose-200/60 bg-gradient-to-br from-rose-50/80 to-white/80 p-4 shadow-sm backdrop-blur-xl transition hover:bg-white active:scale-[0.99]"
               >
-                <Phone size={14} />
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/70 text-rose-500 group-hover:text-rose-600">
+                  <Phone size={18} />
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-rose-800">{e.name}</p>
+                  {e.phone && <p className="font-mono text-[13px] text-rose-600">{e.phone}</p>}
+                </div>
               </a>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Entorno */}
-      <SectionTitle>Modificar el entorno</SectionTitle>
-      <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm backdrop-blur-md">
-        {plan.env.length === 0 ? (
-          <EmptyHint text="Sin acciones definidas para el entorno." />
-        ) : (
-          <ul className="space-y-2">
-            {plan.env.map((e, i) => (
-              <li key={`${e}-${i}`} className="flex items-start gap-2 text-[13.5px] text-slate-700">
-                <Check size={14} className="mt-0.5 shrink-0 text-emerald-500" />
-                <span>{e}</span>
-              </li>
             ))}
-          </ul>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
-      <p className="mt-6 text-center text-[10px] uppercase tracking-widest text-slate-400">
-        País: {country} · guardado automático
-      </p>
+      {/* CTA when plan is empty */}
+      {planEmpty ? (
+        <div className="mt-8 rounded-3xl border border-[#7cc2c8]/30 bg-white/85 p-6 text-center shadow-sm backdrop-blur-md">
+          <p className="font-serif text-[18px] leading-snug text-slate-900">
+            Todavía no armaste tu plan de seguridad
+          </p>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-slate-500">
+            Un plan pensado en calma te da herramientas concretas para los momentos difíciles.
+            Lleva 5 minutos y podés editarlo cuando quieras.
+          </p>
+          <button
+            onClick={onEdit}
+            className="mt-5 w-full rounded-2xl bg-[#7cc2c8] py-3.5 font-serif text-sm font-semibold text-[#101927] shadow-[0_10px_28px_-12px_rgba(124,194,200,0.6)] active:scale-[0.98]"
+          >
+            Armar mi plan
+          </button>
+        </div>
+      ) : (
+        <>
+          {plan.coping.length > 0 && (
+            <>
+              <SectionTitle>Estrategias de calma</SectionTitle>
+              <div className="space-y-2">
+                {plan.coping.map((c, i) => (
+                  <div key={`${c}-${i}`} className="flex items-center gap-3 rounded-2xl border border-teal-100/70 bg-white/80 p-3.5 shadow-sm backdrop-blur-md">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-50 text-[13px] font-bold text-[#2c6e73]">
+                      {i + 1}
+                    </span>
+                    <p className="flex-1 text-[13.5px] leading-snug text-slate-700">{c}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {plan.signs.length > 0 && (
+            <>
+              <SectionTitle>Señales de alerta</SectionTitle>
+              <div className="rounded-2xl border border-amber-100/70 bg-white/80 p-4 shadow-sm backdrop-blur-md">
+                <ul className="space-y-2">
+                  {plan.signs.map((s, i) => (
+                    <li key={`${s}-${i}`} className="flex items-start gap-2 text-[13.5px] text-slate-700">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+
+          {plan.network.length > 0 && (
+            <>
+              <SectionTitle>Red de apoyo</SectionTitle>
+              <div className="space-y-2">
+                {plan.network.map((c, i) => (
+                  <div key={`${c.name}-${i}`} className="flex items-center gap-3 rounded-2xl border border-indigo-100/70 bg-white/80 p-3.5 shadow-sm backdrop-blur-md">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-500">
+                      <Users size={17} />
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-slate-800">{c.name}</p>
+                      {c.phone && <p className="font-mono text-[12px] text-slate-500">{c.phone}</p>}
+                    </div>
+                    {c.phone && (
+                      <a
+                        href={`tel:${c.phone.replace(/\s+/g, "")}`}
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm active:scale-95"
+                      >
+                        <Phone size={14} />
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {plan.env.length > 0 && (
+            <>
+              <SectionTitle>Modificar el entorno</SectionTitle>
+              <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm backdrop-blur-md">
+                <ul className="space-y-2">
+                  {plan.env.map((e, i) => (
+                    <li key={`${e}-${i}`} className="flex items-start gap-2 text-[13.5px] text-slate-700">
+                      <Check size={14} className="mt-0.5 shrink-0 text-emerald-500" />
+                      <span>{e}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+
+          <p className="mt-6 text-center text-[10px] uppercase tracking-widest text-slate-400">
+            País: {country} · guardado automático
+          </p>
+        </>
+      )}
     </motion.div>
   );
 }
