@@ -62,6 +62,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_log: {
+        Row: {
+          chars: number | null
+          cost_usd: number | null
+          created_at: string
+          feature: string
+          id: string
+          meta: Json | null
+          model: string
+          provider: string
+          tokens_in: number | null
+          tokens_out: number | null
+          user_id: string | null
+        }
+        Insert: {
+          chars?: number | null
+          cost_usd?: number | null
+          created_at?: string
+          feature: string
+          id?: string
+          meta?: Json | null
+          model: string
+          provider: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          chars?: number | null
+          cost_usd?: number | null
+          created_at?: string
+          feature?: string
+          id?: string
+          meta?: Json | null
+          model?: string
+          provider?: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       algo_option_links: {
         Row: {
           created_at: string
@@ -1377,6 +1419,44 @@ export type Database = {
         }
         Relationships: []
       }
+      mindfulness_audio_cache: {
+        Row: {
+          chars_used: number | null
+          created_at: string
+          duration_sec: number | null
+          id: string
+          script_id: string
+          storage_path: string
+          voice_id: string
+        }
+        Insert: {
+          chars_used?: number | null
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          script_id: string
+          storage_path: string
+          voice_id: string
+        }
+        Update: {
+          chars_used?: number | null
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          script_id?: string
+          storage_path?: string
+          voice_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mindfulness_audio_cache_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "mindfulness_scripts_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mindfulness_scripts: {
         Row: {
           category: string
@@ -1407,6 +1487,42 @@ export type Database = {
           script?: string
           sub_key?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      mindfulness_scripts_v2: {
+        Row: {
+          active: boolean
+          created_at: string
+          exercise_id: string
+          id: string
+          minutes: number
+          script_text: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          exercise_id: string
+          id?: string
+          minutes: number
+          script_text?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          minutes?: number
+          script_text?: string
+          title?: string
+          updated_at?: string
+          version?: number
         }
         Relationships: []
       }
@@ -1578,6 +1694,7 @@ export type Database = {
           treatment_status: string | null
           updated_at: string | null
           user_id: string
+          voice_gender_preference: string | null
           voice_id: string | null
         }
         Insert: {
@@ -1615,6 +1732,7 @@ export type Database = {
           treatment_status?: string | null
           updated_at?: string | null
           user_id: string
+          voice_gender_preference?: string | null
           voice_id?: string | null
         }
         Update: {
@@ -1652,6 +1770,7 @@ export type Database = {
           treatment_status?: string | null
           updated_at?: string | null
           user_id?: string
+          voice_gender_preference?: string | null
           voice_id?: string | null
         }
         Relationships: []
@@ -2717,6 +2836,33 @@ export type Database = {
           },
         ]
       }
+      voice_settings: {
+        Row: {
+          country_code: string
+          gender: string
+          id: string
+          label: string | null
+          updated_at: string
+          voice_id: string
+        }
+        Insert: {
+          country_code: string
+          gender: string
+          id?: string
+          label?: string | null
+          updated_at?: string
+          voice_id: string
+        }
+        Update: {
+          country_code?: string
+          gender?: string
+          id?: string
+          label?: string | null
+          updated_at?: string
+          voice_id?: string
+        }
+        Relationships: []
+      }
       weekly_goals: {
         Row: {
           completed: boolean | null
@@ -2819,6 +2965,7 @@ export type Database = {
           treatment_status: string | null
           updated_at: string | null
           user_id: string
+          voice_gender_preference: string | null
           voice_id: string | null
         }[]
         SetofOptions: {
