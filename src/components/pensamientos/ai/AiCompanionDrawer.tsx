@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, X, Send, Loader2 } from "lucide-react";
+import { Bot, X, Send, Loader2, Sparkles, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import type { ThoughtDraft } from "@/lib/pensamientos/state";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
