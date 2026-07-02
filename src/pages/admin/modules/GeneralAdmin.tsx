@@ -179,6 +179,16 @@ function AmbientOverridesSection() {
     await load();
   };
 
+  const deleteCustom = async (row: OverrideRow) => {
+    if (!confirm(`¿Eliminar el ambiente personalizado "${row.label}"? Esta acción no se puede deshacer.`)) return;
+    await supabase.storage.from("ambient-audio").remove([row.storage_path]);
+    await supabase.from("ambient_audio_overrides").delete().eq("id", row.id);
+    invalidateAmbientOverrides();
+    invalidateAmbientCatalog();
+    toast.success("Ambiente eliminado");
+    await load();
+  };
+
   useEffect(() => () => stopPreview(), []);
 
   const grouped = useMemo(() => {
@@ -191,20 +201,68 @@ function AmbientOverridesSection() {
   }, []);
 
   return (
+    <>
     <AdminCard className="p-0 overflow-hidden">
       <div className="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-white flex items-center gap-2">
         <Wind size={16} className="text-resma-teal" />
         <div className="flex-1">
           <div className="text-sm font-semibold text-resma-navy">Sonidos ambientales</div>
           <div className="text-[11px] text-slate-500">
-            Por defecto generados en tiempo real (Web Audio). Subí un MP3 para reemplazar cualquiera con audio real.
+            Por defecto generados en tiempo real. Reemplazá con MP3 o agregá ambientes nuevos que aparecerán en Mindfulness y Diario.
           </div>
         </div>
-        <div className="text-[11px] text-slate-500">
-          {loading ? "Cargando…" : `${overrides.size}/${AMBIENT_CATALOG.length} personalizados`}
-        </div>
+        <button
+          onClick={() => setNewOpen(true)}
+          className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-resma-navy text-white text-[11px] font-semibold hover:opacity-90"
+        >
+          <Plus size={12} /> Nuevo ambiente
+        </button>
       </div>
 
+      {/* Custom ambientes */}
+      {customs.length > 0 && (
+        <div>
+          <div className="px-4 py-1.5 bg-resma-navy/5 text-[10px] font-admin-label text-resma-navy uppercase tracking-wider flex items-center gap-2">
+            <Music size={11} /> Personalizados ({customs.length})
+          </div>
+          {customs.map((row) => {
+            const isPlaying = playingId === row.sound_id;
+            const asEntry: CatalogEntry = { id: row.sound_id, label: row.label, category: row.category };
+            return (
+              <div key={row.id} className="grid grid-cols-[36px_1fr_auto_auto] gap-3 items-center px-4 py-2.5 border-b border-slate-50 last:border-0">
+                <button
+                  onClick={() => preview(asEntry)}
+                  className={`h-8 w-8 rounded-full flex items-center justify-center transition ${isPlaying ? "bg-resma-teal text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                >
+                  {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                </button>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-resma-navy truncate">{row.label}</div>
+                  <div className="text-[10px] text-slate-400 truncate">{CATALOG_CATEGORY_LABELS[row.category] ?? row.category}</div>
+                </div>
+                <label className="inline-flex items-center gap-1 h-7 px-2 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-semibold cursor-pointer hover:bg-slate-200">
+                  <Upload size={11} /> Reemplazar
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadOverride(asEntry, f); e.currentTarget.value = ""; }}
+                  />
+                </label>
+                <button
+                  onClick={() => deleteCustom(row)}
+                  title="Eliminar"
+                  className="h-7 w-7 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Built-in */}
       {grouped.map(([cat, items]) => (
         <div key={cat}>
           <div className="px-4 py-1.5 bg-slate-50 text-[10px] font-admin-label text-slate-500 uppercase tracking-wider">
@@ -269,6 +327,116 @@ function AmbientOverridesSection() {
         </div>
       ))}
     </AdminCard>
+
+    <NewAmbientDialog
+      open={newOpen}
+      onOpenChange={setNewOpen}
+      onCreated={async () => { await load(); invalidateAmbientOverrides(); invalidateAmbientCatalog(); }}
+    />
+    </>
+  );
+}
+
+// ---------- New Ambient Dialog ----------
+
+function NewAmbientDialog({ open, onOpenChange, onCreated }: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onCreated: () => void | Promise<void>;
+}) {
+  const [label, setLabel] = useState("");
+  const [category, setCategory] = useState<CatalogCategory>("naturaleza");
+  const [file, setFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const reset = () => { setLabel(""); setCategory("naturaleza"); setFile(null); setSaving(false); };
+
+  const submit = async () => {
+    if (!label.trim()) { toast.error("Ingresá un nombre"); return; }
+    if (!file) { toast.error("Subí un archivo MP3"); return; }
+    if (file.size > 12 * 1024 * 1024) { toast.error("Máximo 12 MB"); return; }
+    setSaving(true);
+    try {
+      const slug = label.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "ambiente";
+      const sound_id = `custom_${slug}_${Math.random().toString(36).slice(2, 8)}`;
+      const ext = file.name.split(".").pop()?.toLowerCase() || "mp3";
+      const path = `ambient/${sound_id}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("ambient-audio")
+        .upload(path, file, { cacheControl: "3600", contentType: file.type || "audio/mpeg", upsert: true });
+      if (upErr) throw upErr;
+      const { error: dbErr } = await supabase.from("ambient_audio_overrides").insert({
+        sound_id, label: label.trim(), category, storage_path: path, active: true,
+      });
+      if (dbErr) throw dbErr;
+      toast.success(`"${label.trim()}" agregado — ya aparece en Mindfulness y Diario`);
+      await onCreated();
+      reset();
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al crear");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const CATS: CatalogCategory[] = ["lluvia", "viento", "agua", "naturaleza", "abstractos", "zen", "sueño"];
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Plus size={16} /> Nuevo ambiente</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Nombre</label>
+            <input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="Ej: Lluvia sobre techo de chapa"
+              className="mt-1 w-full h-10 px-3 rounded-lg border border-slate-200 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Categoría</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as CatalogCategory)}
+              className="mt-1 w-full h-10 px-3 rounded-lg border border-slate-200 text-sm bg-white"
+            >
+              {CATS.map((c) => (
+                <option key={c} value={c}>{CATALOG_CATEGORY_LABELS[c]}</option>
+              ))}
+            </select>
+            <div className="text-[10px] text-slate-400 mt-1">Define en qué grupo aparece dentro del selector.</div>
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Archivo (MP3 · máx 12 MB)</label>
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="mt-1 w-full text-sm"
+            />
+            {file && <div className="text-[11px] text-slate-500 mt-1 truncate">{file.name} · {(file.size / 1024 / 1024).toFixed(2)} MB</div>}
+          </div>
+        </div>
+        <DialogFooter>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="h-9 px-3 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold"
+          >Cancelar</button>
+          <button
+            onClick={submit}
+            disabled={saving}
+            className="h-9 px-4 rounded-lg bg-resma-teal text-white text-sm font-semibold disabled:opacity-60 inline-flex items-center gap-2"
+          >
+            {saving && <Loader2 size={13} className="animate-spin" />}
+            Crear ambiente
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
