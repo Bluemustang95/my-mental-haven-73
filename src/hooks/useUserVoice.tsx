@@ -3,6 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { voiceForCountry, VOICE_DEFAULT, type VoiceProfile } from "@/lib/voiceByCountry";
 
+type VoiceGender = "female" | "male";
+type UseUserVoiceOptions = {
+  genderOverride?: VoiceGender;
+};
+
 /**
  * Returns the ElevenLabs voice the user should hear.
  * Priority:
@@ -11,9 +16,11 @@ import { voiceForCountry, VOICE_DEFAULT, type VoiceProfile } from "@/lib/voiceBy
  *   3. gender-agnostic voice mapped from country (legacy)
  *   4. default
  */
-export function useUserVoice() {
+export function useUserVoice(options: UseUserVoiceOptions = {}) {
   const { user } = useAuth();
   const [voice, setVoice] = useState<VoiceProfile>(VOICE_DEFAULT);
+  const [country, setCountry] = useState<string | null>(null);
+  const [gender, setGender] = useState<VoiceGender>(options.genderOverride ?? "female");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +42,9 @@ export function useUserVoice() {
       }
 
       const country = profile?.country ?? null;
-      const gender = (profile?.voice_gender_preference ?? "female") as "female" | "male";
+      const gender = (options.genderOverride ?? profile?.voice_gender_preference ?? "female") as VoiceGender;
+      setCountry(country);
+      setGender(gender);
 
       if (country) {
         const { data: vs } = await supabase
@@ -68,7 +77,7 @@ export function useUserVoice() {
     })();
 
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, options.genderOverride]);
 
-  return { voice, voiceId: voice.voiceId, loading };
+  return { voice, voiceId: voice.voiceId, country, gender, loading };
 }
