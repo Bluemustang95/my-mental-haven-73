@@ -26,6 +26,29 @@ export default function ResumenPsico() {
   const [screen, setScreen] = useState<"select" | "loading" | "editor">("select");
   const [selection, setSelection] = useState<Selection>({});
   const [reportText, setReportText] = useState("");
+  const [safety, setSafety] = useState<SafetyPlanRow | null>(null);
+  const [includeSafety, setIncludeSafety] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: sp } = await supabase.from("safety_plans").select("*").eq("user_id", user.id).maybeSingle();
+      if (!sp) return;
+      let env: string[] = []; let emergencies: SafetyPlanRow["emergencies"] = [];
+      try {
+        const parsed = sp.environment_notes ? JSON.parse(sp.environment_notes as string) : {};
+        env = Array.isArray(parsed.env) ? parsed.env : [];
+        emergencies = Array.isArray(parsed.emergencies) ? parsed.emergencies : [];
+      } catch { /* ignore */ }
+      setSafety({
+        signs: (sp.warning_signs as unknown as string[]) ?? [],
+        coping: (sp.coping_strategies as unknown as string[]) ?? [],
+        network: (sp.contacts as unknown as SafetyPlanRow["network"]) ?? [],
+        env, emergencies,
+      });
+    })();
+  }, []);
 
   const items = useMemo(() => {
     if (!data) return null;
