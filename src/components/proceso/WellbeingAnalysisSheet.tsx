@@ -54,6 +54,14 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
         const taken = rows.filter((r) => r.taken === true).length;
         setMedAdh({ taken, total: rows.length });
       });
+    supabase
+      .from("test_results")
+      .select("test_type, score, severity, created_at")
+      .eq("user_id", user.id)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => setTestHistory((data as any) ?? []));
   }, [open, user, rangeMode]);
 
 
