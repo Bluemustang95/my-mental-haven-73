@@ -21,6 +21,7 @@ const DUE_OPTS = [
 ];
 
 export default function FollowupPromptModal({ open, thoughtRecordId, userId, mode, defaultTitle, onClose }: Props) {
+  useHideBottomNav(open);
   const [title, setTitle] = useState(defaultTitle);
   const [due, setDue] = useState<"today" | "tomorrow" | "3d">("tomorrow");
   const [saving, setSaving] = useState(false);
