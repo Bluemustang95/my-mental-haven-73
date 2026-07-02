@@ -35,16 +35,19 @@ const COUNTRIES = [
 ];
 
 type AudioRow = { script_id: string; voice_id: string; storage_path: string };
+type VoiceRow = { country_code: string; gender: "female" | "male"; voice_id: string };
 
 export default function MindfulnessAdmin() {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [audio, setAudio] = useState<AudioRow[]>([]);
+  const [voiceRows, setVoiceRows] = useState<VoiceRow[]>([]);
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [minutes, setMinutes] = useState<number>(5);
+  const [country, setCountry] = useState<string>("default");
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const globalVoiceId = useMemo(() => getGlobalVoice().voiceId, []);
+  const [batching, setBatching] = useState(false);
 
   const reload = async () => {
     const { data } = await supabase
@@ -56,16 +59,25 @@ export default function MindfulnessAdmin() {
     setScripts((data as Script[]) ?? []);
     const { data: aud } = await supabase.from("mindfulness_audio_cache").select("script_id, voice_id, storage_path");
     setAudio((aud as AudioRow[]) ?? []);
+    const { data: vs } = await supabase.from("voice_settings").select("country_code, gender, voice_id");
+    setVoiceRows((vs as VoiceRow[]) ?? []);
   };
   useEffect(() => { reload(); }, []);
 
-  const versionsForBucket = scripts.filter(s => s.exercise_id === exerciseId && s.minutes === minutes);
+  const versionsForBucket = scripts.filter(
+    s => s.exercise_id === exerciseId && s.minutes === minutes && (s.country_code ?? "default") === country
+  );
   const current = versionsForBucket.find(s => s.id === activeVersionId) ?? versionsForBucket[0];
 
   useEffect(() => {
     setActiveVersionId(versionsForBucket[0]?.id ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exerciseId, minutes, scripts.length]);
+  }, [exerciseId, minutes, country, scripts.length]);
+
+  const voiceForCountry = (c: string, gender: "female" | "male" = "female") =>
+    voiceRows.find(v => v.country_code === c && v.gender === gender)?.voice_id
+    ?? voiceRows.find(v => v.country_code === "default" && v.gender === gender)?.voice_id
+    ?? "";
 
   const addVersion = async () => {
     const nextVersion = Math.max(0, ...versionsForBucket.map(v => v.version)) + 1;
@@ -75,6 +87,7 @@ export default function MindfulnessAdmin() {
         exercise_id: exerciseId,
         minutes,
         version: nextVersion,
+        country_code: country,
         title: `Versión ${nextVersion}`,
         script_text: "",
         active: true,
@@ -113,32 +126,58 @@ export default function MindfulnessAdmin() {
     setActiveVersionId(null);
   };
 
-  const generateAudio = async () => {
-    if (!current) return;
+  const persistCurrent = async () => {
+    if (!current) return null;
     const text = current.script_text.trim();
-    if (!text) { toast.error("Redactá el guion primero"); return; }
-    setGenerating(true);
-    // Persist any unsaved edits first so the edge function sees the latest text.
-    const { error: saveErr } = await supabase.from("mindfulness_scripts_v2").update({
-      title: current.title,
-      script_text: current.script_text,
-      active: current.active,
+    if (!text) { toast.error("Redactá el guion primero"); return null; }
+    const { error } = await supabase.from("mindfulness_scripts_v2").update({
+      title: current.title, script_text: current.script_text, active: current.active,
     }).eq("id", current.id);
-    if (saveErr) { setGenerating(false); toast.error(saveErr.message); return; }
+    if (error) { toast.error(error.message); return null; }
+    return current;
+  };
 
+  const generateAudio = async () => {
+    const s = await persistCurrent();
+    if (!s) return;
+    const voiceId = voiceForCountry(country, "female");
+    if (!voiceId) { toast.error(`Configurá primero la voz para "${country}" en General → Voces`); return; }
+    setGenerating(true);
     const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
-      body: { scriptId: current.id, voiceId: globalVoiceId, force: false },
+      body: { scriptId: s.id, voiceId, countryCode: country, force: false },
     });
     setGenerating(false);
     if (error) { toast.error(error.message); return; }
     if ((data as { error?: string })?.error) { toast.error(String((data as { error?: string }).error)); return; }
-    toast.success((data as { cached?: boolean })?.cached ? "Audio ya estaba en cache" : "Audio generado y cacheado");
+    toast.success((data as { cached?: boolean })?.cached ? "Audio ya estaba en cache" : "Audio generado");
     reload();
   };
 
+  const generateAllCountries = async () => {
+    const s = await persistCurrent();
+    if (!s) return;
+    setBatching(true);
+    let ok = 0, fail = 0;
+    for (const c of COUNTRIES) {
+      const voiceId = voiceForCountry(c.code, "female");
+      if (!voiceId) { fail++; continue; }
+      // eslint-disable-next-line no-await-in-loop
+      const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
+        body: { scriptId: s.id, voiceId, countryCode: c.code, force: false },
+      });
+      if (error || (data as { error?: string })?.error) fail++; else ok++;
+    }
+    setBatching(false);
+    toast.success(`Batch listo: ${ok} ok · ${fail} sin voz/error`);
+    reload();
+  };
 
-  const hasAudio = (scriptId: string) =>
-    audio.some(a => a.script_id === scriptId && a.voice_id === globalVoiceId);
+  const hasAudioForCountry = (scriptId: string, countryCode: string) => {
+    const vid = voiceForCountry(countryCode, "female");
+    if (!vid) return false;
+    return audio.some(a => a.script_id === scriptId && a.voice_id === vid);
+  };
+  const hasAudio = (scriptId: string) => hasAudioForCountry(scriptId, country);
 
   return (
     <>
