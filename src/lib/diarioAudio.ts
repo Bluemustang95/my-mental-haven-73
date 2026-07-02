@@ -1,5 +1,5 @@
 // Web Audio synthesizer for Diario Zen mode — no external assets.
-export type Track = "solfeggio" | "rain" | "brown" | "click";
+export type Track = "solfeggio" | "rain" | "brown" | "click" | "ocean" | "white" | "wind";
 
 let ctx: AudioContext | null = null;
 const nodes: Partial<Record<Track, { stop: () => void }>> = {};
