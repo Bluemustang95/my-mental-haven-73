@@ -169,14 +169,21 @@ function WriteView({
   const imgRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Load prompts from DB (admin-managed) with local fallback
+  // Load prompts + chips from DB (admin-managed) with local fallback
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("diary_inspire_prompts")
-        .select("id, text, tag")
-        .eq("active", true);
-      if (data && data.length > 0) setPrompts(data as InspirePrompt[]);
+      const [{ data: pData }, { data: cData }] = await Promise.all([
+        supabase.from("diary_inspire_prompts").select("id, text, tag").eq("active", true),
+        supabase.from("diary_chips").select("kind, name, icon, image_url, is_primary, sort_order").eq("active", true).order("sort_order"),
+      ]);
+      if (pData && pData.length > 0) setPrompts(pData as InspirePrompt[]);
+      if (cData && cData.length > 0) {
+        const map = (rows: any[]): Chip[] => rows.map((r) => ({ k: r.name, e: r.icon || "•", img: r.image_url }));
+        setEmotionsPrimary(map(cData.filter((r: any) => r.kind === "emotion" && r.is_primary)));
+        setEmotionsExtra(map(cData.filter((r: any) => r.kind === "emotion" && !r.is_primary)));
+        setCausesPrimary(map(cData.filter((r: any) => r.kind === "cause" && r.is_primary)));
+        setCausesExtra(map(cData.filter((r: any) => r.kind === "cause" && !r.is_primary)));
+      }
     })();
   }, []);
 
