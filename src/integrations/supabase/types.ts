@@ -2130,42 +2130,51 @@ export type Database = {
       test_definitions: {
         Row: {
           active: boolean
+          baremos: Json | null
           code: string
           created_at: string
           id: string
           instructions: string | null
           kind: string
           name: string
+          result_message: string | null
           scale_labels: Json | null
           scale_max: number
           scale_min: number
           sort: number
+          trait_descriptions: Json | null
         }
         Insert: {
           active?: boolean
+          baremos?: Json | null
           code: string
           created_at?: string
           id?: string
           instructions?: string | null
           kind: string
           name: string
+          result_message?: string | null
           scale_labels?: Json | null
           scale_max?: number
           scale_min?: number
           sort?: number
+          trait_descriptions?: Json | null
         }
         Update: {
           active?: boolean
+          baremos?: Json | null
           code?: string
           created_at?: string
           id?: string
           instructions?: string | null
           kind?: string
           name?: string
+          result_message?: string | null
           scale_labels?: Json | null
           scale_max?: number
           scale_min?: number
           sort?: number
+          trait_descriptions?: Json | null
         }
         Relationships: []
       }
