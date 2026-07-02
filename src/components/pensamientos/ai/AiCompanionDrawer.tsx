@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import type { ThoughtDraft } from "@/lib/pensamientos/state";
 import { useHideBottomNav } from "@/hooks/useUiChrome";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { getCountryOverride } from "@/lib/countryOverride";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -16,14 +19,29 @@ const INITIAL: Msg = {
 type Props = { draft: ThoughtDraft };
 
 export default function AiCompanionDrawer({ draft }: Props) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([INITIAL]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [country, setCountry] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useHideBottomNav(open);
+
+  useEffect(() => {
+    const override = getCountryOverride();
+    if (override) { setCountry(override); return; }
+    if (!user) return;
+    supabase
+      .from("patient_app_profiles")
+      .select("country")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setCountry(data?.country ?? null));
+  }, [user]);
+
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -51,6 +69,7 @@ export default function AiCompanionDrawer({ draft }: Props) {
       distortions: draft.distortions,
       alternativeThought: draft.alternativeThought,
       resolutionPlan: draft.resolutionPlan,
+      userCountry: country ?? undefined,
     };
 
     try {
