@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Phone, Plus, ShieldAlert, Trash2, Loader2, Pencil, X,
-  AlertTriangle, Sparkles, Users, Home as HomeIcon, LifeBuoy, Check,
+  AlertTriangle, Sparkles, Users, Home as HomeIcon, Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
