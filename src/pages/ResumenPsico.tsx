@@ -255,11 +255,11 @@ export default function ResumenPsico() {
           <div className="mx-auto max-w-md rounded-[2rem] border border-white/70 bg-white/90 p-2 shadow-[0_18px_45px_rgba(16,25,39,0.18)] backdrop-blur-xl">
             <button
               onClick={generate}
-              disabled={total === 0}
+              disabled={total === 0 && !includeSafety}
               className="flex w-full items-center justify-center gap-2 rounded-[1.55rem] bg-[#7cc2c8] py-3.5 font-display text-[13.5px] font-semibold text-white shadow-[0_6px_20px_rgba(124,194,200,0.35)] transition-opacity disabled:opacity-40 disabled:shadow-none"
             >
               <Sparkles size={16} />
-              {total === 0 ? "Seleccioná al menos un ítem" : `Generar resumen (${total})`}
+              {total === 0 && !includeSafety ? "Seleccioná al menos un ítem" : `Generar resumen (${total + (includeSafety ? 1 : 0)})`}
             </button>
           </div>
         </div>
