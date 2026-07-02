@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -28,6 +30,7 @@ Deno.serve(async (req) => {
     const similarity = typeof body?.similarity_boost === "number" ? body.similarity_boost : 0.8;
     const style = typeof body?.style === "number" ? body.style : 0.25;
     const speed = typeof body?.speed === "number" ? body.speed : 0.92;
+    const feature = String(body?.feature ?? "mindfulness_tts");
 
     if (!text) {
       return new Response(JSON.stringify({ error: "Missing text" }), {
@@ -74,6 +77,36 @@ Deno.serve(async (req) => {
     }
 
     const audio = await res.arrayBuffer();
+
+    // Fire-and-forget usage log
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (supabaseUrl && serviceKey) {
+        const authHeader = req.headers.get("Authorization") ?? "";
+        let userId: string | null = null;
+        try {
+          const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+          const client = createClient(supabaseUrl, anonKey, {
+            global: { headers: { Authorization: authHeader } },
+          });
+          const { data } = await client.auth.getUser();
+          userId = data?.user?.id ?? null;
+        } catch { /* noop */ }
+        const admin = createClient(supabaseUrl, serviceKey);
+        const cost = (text.length / 1000) * 0.30; // ~$0.30/1K chars ElevenLabs multilingual
+        void admin.from("ai_usage_log").insert({
+          provider: "elevenlabs",
+          model: "eleven_multilingual_v2",
+          feature,
+          user_id: userId,
+          chars: text.length,
+          cost_usd: cost,
+          meta: { voice_id: voiceId },
+        });
+      }
+    } catch (e) { console.warn("[mindfulness-tts] log failed", e); }
+
     return new Response(audio, {
       status: 200,
       headers: {
