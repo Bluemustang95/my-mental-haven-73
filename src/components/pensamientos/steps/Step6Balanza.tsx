@@ -1,10 +1,87 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import type { ThoughtDraft } from "@/lib/pensamientos/state";
 
 type Props = { draft: ThoughtDraft; patch: (p: Partial<ThoughtDraft>) => void };
 type Side = "for" | "against";
+
+type PanelProps = {
+  side: Side;
+  title: string;
+  count: number;
+  pct: number;
+  color: string;
+  items: string[];
+  open: boolean;
+  value: string;
+  setValue: (v: string) => void;
+  onToggle: () => void;
+  onAdd: () => void;
+  onRemove: (i: number) => void;
+};
+
+function Panel({ side, title, count, pct, color, items, open, value, setValue, onToggle, onAdd, onRemove }: PanelProps) {
+  return (
+    <div className="rounded-3xl border border-white/60 bg-white/85 p-4 shadow-glass backdrop-blur-xl">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="font-display text-[13.5px] font-bold text-[#101927]">{title}</p>
+          <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest" style={{ color }}>
+            {count} ítem{count !== 1 ? "s" : ""} · {pct}%
+          </p>
+        </div>
+        <button
+          onClick={onToggle}
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm active:scale-95"
+          style={{ color }}
+          aria-label="Agregar"
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-2.5 flex gap-1.5">
+          <input
+            autoFocus
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onAdd()}
+            placeholder={side === "for" ? "Hecho que lo sostiene…" : "Hecho que lo refuta…"}
+            className="flex-1 rounded-xl border border-white/80 bg-white px-3 py-2 text-[12.5px] text-[#101927] placeholder:text-[#101927]/40 focus:outline-none focus:ring-2 focus:ring-[#7cc2c8]/40"
+          />
+          <button
+            onClick={onAdd}
+            className="rounded-xl px-3 font-display text-[12px] font-semibold text-white"
+            style={{ background: color }}
+          >
+            Agregar
+          </button>
+        </div>
+      )}
+
+      {items.length === 0 ? (
+        <p className="mt-2.5 text-[11.5px] italic text-[#101927]/45">
+          {side === "for" ? "Sin evidencias a favor cargadas todavía." : "Sin evidencias en contra todavía."}
+        </p>
+      ) : (
+        <ul className="mt-2.5 space-y-1.5">
+          {items.map((it, i) => (
+            <li
+              key={i}
+              className="flex items-start justify-between gap-2 rounded-xl border border-white/80 bg-white/90 px-2.5 py-1.5"
+            >
+              <span className="text-[12px] leading-snug text-[#101927]">{it}</span>
+              <button onClick={() => onRemove(i)} className="shrink-0 opacity-50 hover:opacity-90">
+                <X size={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function Step6Balanza({ draft, patch }: Props) {
   const [open, setOpen] = useState<Side | null>(null);
@@ -46,75 +123,9 @@ export default function Step6Balanza({ draft, patch }: Props) {
     }
   };
 
-  const Panel = ({ side, title, count, pct, color }: { side: Side; title: string; count: number; pct: number; color: string }) => {
-    const items = side === "for" ? draft.evidenceFor : draft.evidenceAgainst;
-    return (
-      <div className="rounded-3xl border border-white/60 bg-white/85 p-4 shadow-glass backdrop-blur-xl">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="font-display text-[13.5px] font-bold text-[#101927]">{title}</p>
-            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest" style={{ color }}>
-              {count} ítem{count !== 1 ? "s" : ""} · {pct}%
-            </p>
-          </div>
-          <button
-            onClick={() => setOpen(open === side ? null : side)}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm active:scale-95"
-            style={{ color }}
-            aria-label="Agregar"
-          >
-            <Plus size={16} />
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {open === side && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2.5 flex gap-1.5"
-            >
-              <input
-                autoFocus
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && add(side)}
-                placeholder={side === "for" ? "Hecho que lo sostiene…" : "Hecho que lo refuta…"}
-                className="flex-1 rounded-xl border border-white/80 bg-white px-3 py-2 text-[12.5px] text-[#101927] placeholder:text-[#101927]/40 focus:outline-none focus:ring-2 focus:ring-[#7cc2c8]/40"
-              />
-              <button
-                onClick={() => add(side)}
-                className="rounded-xl px-3 font-display text-[12px] font-semibold text-white"
-                style={{ background: color }}
-              >
-                Agregar
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {items.length === 0 ? (
-          <p className="mt-2.5 text-[11.5px] italic text-[#101927]/45">
-            {side === "for" ? "Sin evidencias a favor cargadas todavía." : "Sin evidencias en contra todavía."}
-          </p>
-        ) : (
-          <ul className="mt-2.5 space-y-1.5">
-            {items.map((it, i) => (
-              <li
-                key={i}
-                className="flex items-start justify-between gap-2 rounded-xl border border-white/80 bg-white/90 px-2.5 py-1.5"
-              >
-                <span className="text-[12px] leading-snug text-[#101927]">{it}</span>
-                <button onClick={() => remove(side, i)} className="shrink-0 opacity-50 hover:opacity-90">
-                  <X size={12} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    );
+  const toggle = (side: Side) => {
+    setOpen(open === side ? null : side);
+    setValue("");
   };
 
   return (
@@ -144,8 +155,34 @@ export default function Step6Balanza({ draft, patch }: Props) {
         </div>
       </div>
 
-      <Panel side="for" title="Argumento a favor" count={draft.evidenceFor.length} pct={pctFor} color="#7cc2c8" />
-      <Panel side="against" title="Argumento en contra" count={draft.evidenceAgainst.length} pct={pctAgainst} color="#34D399" />
+      <Panel
+        side="for"
+        title="Argumento a favor"
+        count={draft.evidenceFor.length}
+        pct={pctFor}
+        color="#7cc2c8"
+        items={draft.evidenceFor}
+        open={open === "for"}
+        value={value}
+        setValue={setValue}
+        onToggle={() => toggle("for")}
+        onAdd={() => add("for")}
+        onRemove={(i) => remove("for", i)}
+      />
+      <Panel
+        side="against"
+        title="Argumento en contra"
+        count={draft.evidenceAgainst.length}
+        pct={pctAgainst}
+        color="#34D399"
+        items={draft.evidenceAgainst}
+        open={open === "against"}
+        value={value}
+        setValue={setValue}
+        onToggle={() => toggle("against")}
+        onAdd={() => add("against")}
+        onRemove={(i) => remove("against", i)}
+      />
     </div>
   );
 }
