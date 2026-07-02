@@ -1,27 +1,67 @@
-## Problema
+## Cambios en `/diario` y Admin
 
-1. **BDI no refleja los cambios del admin y no tiene intro.** En `MiProceso.tsx` (líneas 113–115) el tap sobre la card BDI abre `BeckTestRunner`, que es una demo hardcodeada de 4 preguntas ("Tristeza", "Pesimismo"…) con baremos fijos 13/19/28/63 y sin pantalla intro. Nunca lee `test_definitions` / `test_items`, por eso ignora ítems personalizados, `baremos`, mensaje final y opciones custom. BAI y PSWQ ya usan el runner correcto (`TestRunner`).
+### 1) Admin: nueva sección "Diario" en Recursos Clínicos
+- Nueva tabla `diary_inspire_prompts` (campos: `text`, `tag`, `active`, `sort_order`) + RLS: lectura pública autenticada, escritura solo admin.
+- Nueva página `src/pages/admin/modules/DiarioAdmin.tsx` con una pestaña "Inspirarme" que permite listar, agregar, editar, activar/pausar y eliminar prompts (misma estética que `ContenidoDiarioAdmin`).
+- Ruta `/admin/diario` en `App.tsx` + entrada "Diario" con icono `BookOpen` en el grupo "Recursos Clínicos" de `AdminLayout.tsx`.
 
-2. **Personalidad muestra texto aunque no se cargó nada.** `BigFiveProfileModal.tsx` (líneas 20–26) tiene un objeto `FALLBACK_DESC` con textos por defecto para O/C/E/A/N, y las tarjetas usan `custom.description || fb.description` (líneas 219–221). Cuando el admin no cargó descripciones, cae al fallback y aparece texto que el admin nunca escribió.
+### 2) Inspirarme (frontend `Diario.tsx`)
+- Cargar prompts desde `diary_inspire_prompts` (fallback al array local si no hay datos).
+- Elegir uno al azar; guardar en localStorage el historial `{prompt_id → última fecha usada}`.
+- Si el prompt ya fue usado antes: mostrar aviso "El {fecha} escribiste con este mismo Inspirame — releé y compará" con un botón "Ver aquella entrada" que abra el historial filtrando por ese prompt.
+- Sacar el `tag` (título en mayúsculas arriba de la frase) del banner del prompt: mostrar solo el texto.
 
-## Cambios
+### 3) Grabación de voz → texto
+- Reemplazar el flujo actual (que sube archivo `.webm`) por transcripción vía la Lovable AI Gateway (`openai/gpt-4o-mini-transcribe`).
+- Nueva edge function `transcribe-voice`: recibe audio multipart, llama al gateway, devuelve texto.
+- Al detener la grabación, insertar el texto transcripto al final del editor (sin adjuntar archivo, sin `voice_note_path`).
+- Mostrar estado "Transcribiendo…" en la barra de grabación.
 
-### 1. `src/pages/MiProceso.tsx`
-- Reemplazar `handleSelectTest` por: `setDirectTestCode(code)` para los tres códigos (BDI, BAI, PSWQ).
-- Eliminar `beckOpen` state, el `<BeckTestRunner .../>` y el import. Todo pasa por `TestRunner` que ya soporta intro + `baremos` + `result_message` + `options` custom + `reverse`.
+### 4) Iconos "Siento" y "Etiqueta" más aesthetic + multi-selección de emoción
+- Cambiar `Smile` y `Tag` por iconos Phosphor duotone (`SmileyWink`, `Tag` de `@phosphor-icons/react`, weight `duotone`) al estilo de `HabitCard`.
+- Convertir `emo: string | null` a `emos: Set<string>` (permitir múltiples emociones).
+- Guardar `emotion_tags` como concat de emociones + causas (formato ya usado).
+- Actualizar chips del popover al mismo estilo redondeado de Hábitos.
 
-### 2. `src/components/proceso/BigFiveProfileModal.tsx`
-- Eliminar `FALLBACK_DESC` completo.
-- En la sección "Qué significa cada rasgo":
-  - Si `traitDescriptions` está vacío (o ningún rasgo tiene datos), no renderizar el bloque de tarjetas ni el título — mostrar un aviso sutil: *"Las explicaciones de cada rasgo aún no fueron cargadas por el equipo."*.
-  - Para cada rasgo, usar sólo `custom.description`, `custom.low`, `custom.high`, `custom.label`, `custom.color`. Si el rasgo no tiene `description`, no dibujar su tarjeta.
-  - El bloque low/high solo aparece si el texto correspondiente existe.
-- El nombre visible del rasgo (`label`) sigue usando el default de `TRAITS` sólo como fallback del **nombre** (no del contenido explicativo), para que el hexágono y los chips no queden sin etiqueta.
+### 5) Historial: navegación, bottom nav y adjuntos
+- Ocultar `BottomNav` global cuando se abre el detalle de una entrada: agregar clase `body.entry-open` (mismo patrón que `zen-mode`) y regla CSS en `index.css` para esconder `nav`.
+- Agregar botón "← Volver a Diario" en el header del `HistoryView` (además del actual icono).
+- En el detalle: cargar y renderizar los `attachments` de la entrada (imágenes en grid + audios/archivos como chips), reutilizando el signed URL de Storage.
 
-### 3. Limpieza
-- `BeckTestRunner.tsx` queda sin usar. Se puede dejar en el repo o borrar; propongo **borrarlo** para evitar que vuelva a colarse en otra pantalla.
+### 6) Sacar Privacidad y cifrado
+- Eliminar botón candado del header y el `PrivacyDialog`.
+- Eliminar botón candado del `HistoryView`.
+- Quitar dependencias de `e2e.*` en `Diario.tsx` (mantener el módulo por si otras vistas lo usan; solo dejar de invocarlo aquí — nuevas entradas siempre se guardan sin cifrar `is_encrypted:false`).
 
-## Resultado
+### 7) Zen — sonidos con iconos + "Ver más"
+- Reemplazar emojis por iconos Phosphor duotone (`CloudRain`, `MusicNote`, `Waveform`, `Keyboard`, etc.) en `SoundscapePopover`.
+- Mostrar 4 principales y agregar botón "Ver más" que expanda una lista completa desde `src/lib/ambientLibrary.ts` (ya existe una biblioteca ampliada; mapear cada entrada a `audio.Track` y a un icono).
 
-- Al abrir BDI se muestra la intro, los ítems reales cargados desde admin (con opciones y puntajes custom), los baremos definidos y el mensaje final. Igual que BAI/PSWQ.
-- En Personalidad, si el admin no cargó descripciones, no aparece ningún texto explicativo (solo el hexágono y un aviso corto). Cuando el admin las carga, aparecen exactamente los textos que escribió.
+### Detalles técnicos
+
+**Migración SQL:**
+```sql
+CREATE TABLE public.diary_inspire_prompts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  text text NOT NULL,
+  tag text,
+  active boolean NOT NULL DEFAULT true,
+  sort_order int NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+GRANT SELECT ON public.diary_inspire_prompts TO authenticated;
+GRANT ALL ON public.diary_inspire_prompts TO service_role;
+ALTER TABLE public.diary_inspire_prompts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "read prompts" ON public.diary_inspire_prompts FOR SELECT TO authenticated USING (true);
+CREATE POLICY "admin manage" ON public.diary_inspire_prompts FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+```
+
+**Edge function `transcribe-voice`:** `POST` multipart `file` + `model=openai/gpt-4o-mini-transcribe` a `https://ai.gateway.lovable.dev/v1/audio/transcriptions` con `Authorization: Bearer ${LOVABLE_API_KEY}`. Devuelve `{ text }`.
+
+**Historial "usado antes":** `usedPrompts = JSON.parse(localStorage.getItem('diary:inspire:history')||'{}')`. Al elegir prompt, si existe → banner con fecha guardada; luego actualizar la fecha al guardar la entrada.
+
+**Archivos afectados:**
+- Nuevo: `supabase/migrations/*.sql`, `src/pages/admin/modules/DiarioAdmin.tsx`, `supabase/functions/transcribe-voice/index.ts`.
+- Editar: `src/App.tsx`, `src/components/admin/AdminLayout.tsx`, `src/pages/Diario.tsx`, `src/index.css`.
