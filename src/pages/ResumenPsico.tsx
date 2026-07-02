@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Shield, HeartPulse, NotebookPen, ClipboardList, Activity, Target, BookHeart, Sparkles } from "lucide-react";
+import { ArrowLeft, Shield, HeartPulse, NotebookPen, ClipboardList, Activity, Target, BookHeart, Sparkles, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useResumenData } from "@/hooks/useResumenData";
@@ -9,6 +9,12 @@ import { buildReport, countSelected, type Selection, type CategoryId } from "@/c
 import { CategoryAccordion, type Item } from "@/components/resumen/CategoryAccordion";
 import { LoadingScreen } from "@/components/resumen/LoadingScreen";
 import { ReportEditor } from "@/components/resumen/ReportEditor";
+import { supabase } from "@/integrations/supabase/client";
+
+type SafetyPlanRow = {
+  signs: string[]; coping: string[]; network: { name: string; phone: string }[];
+  env: string[]; emergencies: { name: string; phone: string }[];
+};
 
 const fmt = (d: string) => format(new Date(d), "d MMM", { locale: es });
 
