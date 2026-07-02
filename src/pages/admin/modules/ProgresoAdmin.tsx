@@ -9,11 +9,6 @@ type Weights = { checkin: number; tests: number; habits: number; resources: numb
 type Protocol = { id: string; name: string; description: string; enabled: boolean };
 
 const DEFAULT_WEIGHTS: Weights = { checkin: 40, tests: 25, habits: 20, resources: 15 };
-const DEFAULT_BAREMOS: Baremo[] = [
-  { test: "BDI-II", mild: 13, moderate: 19, severe: 28, max: 63 },
-  { test: "GAD-7", mild: 5, moderate: 10, severe: 15, max: 21 },
-  { test: "PHQ-9", mild: 5, moderate: 10, severe: 15, max: 27 },
-];
 const DEFAULT_PROTOCOLS: Protocol[] = [
   { id: "sos_call", name: "Llamada SOS automática", description: "Disparar contacto de emergencia al detectar ideación.", enabled: true },
   { id: "grounding", name: "Sesión de Grounding 5-4-3-2-1", description: "Forzar pantalla de grounding ante crisis.", enabled: true },
@@ -21,15 +16,15 @@ const DEFAULT_PROTOCOLS: Protocol[] = [
   { id: "therapist", name: "Aviso al terapeuta", description: "Enviar notificación al profesional vinculado.", enabled: true },
 ];
 
+type Tab = "index" | "evaluaciones" | "personalidad" | "risk";
+
 export default function ProgresoAdmin() {
-  const [tab, setTab] = useState<"index" | "bar" | "risk">("index");
+  const [tab, setTab] = useState<Tab>("index");
   const [w, setW] = useState<Weights>(DEFAULT_WEIGHTS);
-  const [bar, setBar] = useState<Baremo[]>(DEFAULT_BAREMOS);
   const [prot, setProt] = useState<Protocol[]>(DEFAULT_PROTOCOLS);
 
   useEffect(() => {
     loadSetting<Weights>("wellbeing_weights", DEFAULT_WEIGHTS).then(setW);
-    loadSetting<Baremo[]>("baremos", DEFAULT_BAREMOS).then(setBar);
     loadSetting<Protocol[]>("risk_protocols", DEFAULT_PROTOCOLS).then(setProt);
   }, []);
 
