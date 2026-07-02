@@ -12,6 +12,38 @@ const corsHeaders = {
 const BUCKET = "mindfulness-audio";
 const SIGNED_URL_TTL = 60 * 60 * 24 * 365; // 1 year
 
+const COUNTRY_ALIASES = new Map<string, string>([
+  ["default", "default"],
+  ["predeterminado", "default"],
+  ["ar", "Argentina"],
+  ["arg", "Argentina"],
+  ["argentina", "Argentina"],
+  ["uy", "Uruguay"],
+  ["uruguay", "Uruguay"],
+  ["cl", "Chile"],
+  ["chile", "Chile"],
+  ["mx", "México"],
+  ["mexico", "México"],
+  ["méxico", "México"],
+  ["co", "Colombia"],
+  ["colombia", "Colombia"],
+  ["pe", "Perú"],
+  ["peru", "Perú"],
+  ["perú", "Perú"],
+  ["es", "España"],
+  ["espana", "España"],
+  ["españa", "España"],
+  ["us", "Estados Unidos"],
+  ["usa", "Estados Unidos"],
+  ["estados unidos", "Estados Unidos"],
+]);
+
+function normalizeCountry(value?: string | null) {
+  if (!value?.trim()) return "default";
+  const key = value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
+  return COUNTRY_ALIASES.get(key) ?? value.trim();
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -38,7 +70,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const scriptId = String(body?.scriptId ?? "");
     let voiceId = String(body?.voiceId ?? "");
-    const countryCode = body?.countryCode ? String(body.countryCode) : null;
+    const countryCode = body?.countryCode ? normalizeCountry(String(body.countryCode)) : null;
     const gender = (body?.gender === "male" ? "male" : "female") as "female" | "male";
     const force = Boolean(body?.force);
     if (!scriptId) return json({ error: "scriptId required" }, 400);
@@ -55,7 +87,7 @@ Deno.serve(async (req) => {
 
     // Resolve voice from country if not provided
     if (!voiceId) {
-      const country = countryCode ?? script.country_code ?? "default";
+      const country = normalizeCountry(countryCode ?? script.country_code ?? "default");
       const { data: vs } = await supa
         .from("voice_settings")
         .select("voice_id")
@@ -109,7 +141,8 @@ Deno.serve(async (req) => {
     }
     const audio = new Uint8Array(await ttsRes.arrayBuffer());
 
-    const path = `${script.exercise_id}/${script.minutes}/${script.country_code}/${script.version}/${voiceId}.mp3`;
+    const storageCountry = normalizeCountry(script.country_code);
+    const path = `${script.exercise_id}/${script.minutes}/${storageCountry}/${script.version}/${voiceId}.mp3`;
     const { error: upErr } = await supa.storage.from(BUCKET).upload(path, audio, {
       contentType: "audio/mpeg",
       upsert: true,
@@ -133,7 +166,7 @@ Deno.serve(async (req) => {
       user_id: user.id,
       chars: text.length,
       cost_usd: cost,
-      meta: { script_id: scriptId, voice_id: voiceId, minutes: script.minutes, exercise_id: script.exercise_id, country_code: script.country_code },
+      meta: { script_id: scriptId, voice_id: voiceId, minutes: script.minutes, exercise_id: script.exercise_id, country_code: storageCountry },
     });
 
     const { data: signed } = await supa.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_TTL);

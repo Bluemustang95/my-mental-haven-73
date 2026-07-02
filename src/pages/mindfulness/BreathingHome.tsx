@@ -12,6 +12,7 @@ import { speak as speakTTS, stopSpeak, primeAudio, setSpeechVolume } from "@/lib
 import { useUserVoice } from "@/hooks/useUserVoice";
 import { AMBIENT_SOUNDS, getAmbientById } from "@/lib/ambientLibrary";
 import { getPreloadedScriptUrl, playUrl } from "@/lib/mindfulnessAudio";
+import { mindfulnessCountry } from "@/lib/countryCodes";
 
 
 /* ============================================================
@@ -812,7 +813,7 @@ function ImmersivePlayer({
       if (!voice) { setGuideStatus("off"); setGuideLabel(""); return; }
       if (voiceLoading) { setGuideStatus("loading"); return; }
 
-      const resolvedCountry = country || "default";
+      const resolvedCountry = mindfulnessCountry(country);
       const { data: localized } = await supabase
         .from("mindfulness_scripts_v2")
         .select("id, title, version, country_code")
@@ -843,12 +844,25 @@ function ImmersivePlayer({
         return;
       }
 
+      if (import.meta.env.DEV) {
+        console.info("[Mindfulness] resolved audio", {
+          countryRaw: country,
+          countryNormalized: resolvedCountry,
+          voiceId,
+          gender,
+          exercise: pattern.id,
+          minutes,
+          scriptCountry: script.country_code,
+          scriptVersion: script.version,
+        });
+      }
+
       const url = await getPreloadedScriptUrl(script.id, voiceId);
       if (cancelled) return;
       const label = `${script.country_code ?? resolvedCountry} · ${gender === "male" ? "masculina" : "femenina"} · v${script.version}`;
       if (!url) {
         setGuideStatus("fallback");
-        setGuideLabel(`Audio pendiente para ${label}`);
+        setGuideLabel(`Falta generar audio · ${label}`);
         return;
       }
 

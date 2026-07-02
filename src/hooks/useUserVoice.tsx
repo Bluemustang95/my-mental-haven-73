@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { voiceForCountry, VOICE_DEFAULT, type VoiceProfile } from "@/lib/voiceByCountry";
 import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
+import { canonicalCountry } from "@/lib/countryCodes";
 
 
 type VoiceGender = "female" | "male";
@@ -41,7 +42,8 @@ export function useUserVoice(options: UseUserVoiceOptions = {}) {
       if (cancelled) return;
 
       const override = getCountryOverride();
-      const effectiveCountry = override ?? profile?.country ?? null;
+      const rawCountry = override ?? profile?.country ?? null;
+      const effectiveCountry = canonicalCountry(rawCountry) ?? rawCountry;
 
       if (!override && profile?.voice_id) {
         setVoice({ voiceId: profile.voice_id, label: "Voz personalizada", region: "custom" });

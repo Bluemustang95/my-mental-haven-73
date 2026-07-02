@@ -4,17 +4,9 @@ import { getCountryOverride, setCountryOverride } from "@/lib/countryOverride";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { COUNTRY_OPTIONS, countryIso, mindfulnessCountry } from "@/lib/countryCodes";
 
-const COMMON_COUNTRIES: { code: string; label: string; ar: boolean }[] = [
-  { code: "AR", label: "Argentina", ar: true },
-  { code: "UY", label: "Uruguay", ar: false },
-  { code: "CL", label: "Chile", ar: false },
-  { code: "MX", label: "México", ar: false },
-  { code: "ES", label: "España", ar: false },
-  { code: "CO", label: "Colombia", ar: false },
-  { code: "PE", label: "Perú", ar: false },
-  { code: "US", label: "Estados Unidos", ar: false },
-];
+const COMMON_COUNTRIES = COUNTRY_OPTIONS.filter((country) => country.code !== "default");
 
 export default function CountryViewSwitcher() {
   const [current, setCurrent] = useState<string | null>(null);
@@ -25,9 +17,10 @@ export default function CountryViewSwitcher() {
   }, []);
 
   const apply = (code: string | null) => {
-    setCountryOverride(code);
-    setCurrent(code);
-    toast.success(code ? `Viendo la app como ${code}` : "Override eliminado — uso tu país real.");
+    const canonical = code ? mindfulnessCountry(code) : null;
+    setCountryOverride(canonical);
+    setCurrent(canonical);
+    toast.success(canonical ? `Viendo la app como ${canonical}` : "Override eliminado — uso tu país real.");
   };
 
   return (
@@ -49,6 +42,7 @@ export default function CountryViewSwitcher() {
           <p className="text-xs text-muted-foreground">País simulado actualmente</p>
           <p className="font-display text-xl font-bold mt-1">
             {current ?? "— (uso país real del perfil)"}
+            {current && <span className="ml-2 font-mono text-sm text-muted-foreground">{countryIso(current)}</span>}
           </p>
         </div>
         {current && (
@@ -70,9 +64,9 @@ export default function CountryViewSwitcher() {
                 active ? "border-resma-teal bg-resma-teal/10 text-resma-teal" : "border-border bg-card hover:bg-muted/40"
               }`}
             >
-              <p className="font-mono text-xs font-bold">{c.code}</p>
+              <p className="font-mono text-xs font-bold">{c.iso}</p>
               <p className="text-sm font-medium mt-0.5">{c.label}</p>
-              {c.ar && <p className="text-[10px] text-emerald-600 mt-0.5">✓ flujo terapia activo</p>}
+              {c.iso === "AR" && <p className="text-[10px] text-emerald-600 mt-0.5">✓ flujo terapia activo</p>}
               {active && <Check size={14} className="absolute top-2 right-2" />}
             </button>
           );

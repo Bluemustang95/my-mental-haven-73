@@ -3,6 +3,7 @@ import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui/A
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Folder, FileAudio, Volume2, Plus, Trash2, CheckCircle2, Loader2, PlayCircle, Globe } from "lucide-react";
+import { COUNTRY_OPTIONS, mindfulnessCountry, type CanonicalCountry } from "@/lib/countryCodes";
 
 type Script = {
   id: string;
@@ -22,17 +23,7 @@ const EXERCISES = [
   { id: "coh", name: "Coherencia cardíaca" },
 ];
 const MINUTES_OPTIONS = [5, 10, 15, 20] as const;
-const COUNTRIES = [
-  { code: "default", label: "Default" },
-  { code: "Argentina", label: "Argentina" },
-  { code: "Uruguay", label: "Uruguay" },
-  { code: "Chile", label: "Chile" },
-  { code: "México", label: "México" },
-  { code: "Colombia", label: "Colombia" },
-  { code: "Perú", label: "Perú" },
-  { code: "España", label: "España" },
-  { code: "Estados Unidos", label: "EE.UU." },
-];
+const COUNTRIES = COUNTRY_OPTIONS.map((country) => ({ code: country.code, label: country.code === "Estados Unidos" ? "EE.UU." : country.label, iso: country.iso }));
 
 type AudioRow = { script_id: string; voice_id: string; storage_path: string };
 type VoiceRow = { country_code: string; gender: "female" | "male"; voice_id: string };
@@ -43,7 +34,7 @@ export default function MindfulnessAdmin() {
   const [voiceRows, setVoiceRows] = useState<VoiceRow[]>([]);
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [minutes, setMinutes] = useState<number>(5);
-  const [country, setCountry] = useState<string>("default");
+  const [country, setCountry] = useState<CanonicalCountry>("default");
   const [voiceGender, setVoiceGender] = useState<"female" | "male">("female");
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -66,7 +57,7 @@ export default function MindfulnessAdmin() {
   useEffect(() => { reload(); }, []);
 
   const versionsForBucket = scripts.filter(
-    s => s.exercise_id === exerciseId && s.minutes === minutes && (s.country_code ?? "default") === country
+    s => s.exercise_id === exerciseId && s.minutes === minutes && mindfulnessCountry(s.country_code) === country
   );
   const current = versionsForBucket.find(s => s.id === activeVersionId) ?? versionsForBucket[0];
 
@@ -75,10 +66,12 @@ export default function MindfulnessAdmin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exerciseId, minutes, country, scripts.length]);
 
-  const voiceForCountry = (c: string, gender: "female" | "male" = "female") =>
-    voiceRows.find(v => v.country_code === c && v.gender === gender)?.voice_id
+  const voiceForCountry = (c: string, gender: "female" | "male" = "female") => {
+    const canonical = mindfulnessCountry(c);
+    return voiceRows.find(v => mindfulnessCountry(v.country_code) === canonical && v.gender === gender)?.voice_id
     ?? voiceRows.find(v => v.country_code === "default" && v.gender === gender)?.voice_id
     ?? "";
+  };
 
   const addVersion = async () => {
     const nextVersion = Math.max(0, ...versionsForBucket.map(v => v.version)) + 1;
@@ -88,7 +81,7 @@ export default function MindfulnessAdmin() {
         exercise_id: exerciseId,
         minutes,
         version: nextVersion,
-        country_code: country,
+        country_code: mindfulnessCountry(country),
         title: `Versión ${nextVersion}`,
         script_text: "",
         active: true,
@@ -141,11 +134,12 @@ export default function MindfulnessAdmin() {
   const generateAudio = async () => {
     const s = await persistCurrent();
     if (!s) return;
-    const voiceId = voiceForCountry(country, voiceGender);
+    const canonical = mindfulnessCountry(country);
+    const voiceId = voiceForCountry(canonical, voiceGender);
     if (!voiceId) { toast.error(`Configurá primero la voz para "${country}" en General → Voces`); return; }
     setGenerating(true);
     const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
-      body: { scriptId: s.id, voiceId, countryCode: country, gender: voiceGender, force: false },
+      body: { scriptId: s.id, voiceId, countryCode: canonical, gender: voiceGender, force: false },
     });
     setGenerating(false);
     if (error) { toast.error(error.message); return; }
@@ -160,11 +154,12 @@ export default function MindfulnessAdmin() {
     setBatching(true);
     let ok = 0, fail = 0;
     for (const c of COUNTRIES) {
-      const voiceId = voiceForCountry(c.code, voiceGender);
+      const canonical = mindfulnessCountry(c.code);
+      const voiceId = voiceForCountry(canonical, voiceGender);
       if (!voiceId) { fail++; continue; }
       // eslint-disable-next-line no-await-in-loop
       const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
-        body: { scriptId: s.id, voiceId, countryCode: c.code, gender: voiceGender, force: false },
+        body: { scriptId: s.id, voiceId, countryCode: canonical, gender: voiceGender, force: false },
       });
       if (error || (data as { error?: string })?.error) fail++; else ok++;
     }
@@ -229,13 +224,14 @@ export default function MindfulnessAdmin() {
               return (
                 <button
                   key={c.code}
-                  onClick={() => setCountry(c.code)}
+                  onClick={() => setCountry(mindfulnessCountry(c.code))}
                   className={`px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
                     country === c.code ? "bg-resma-navy text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                   title={hasVoice ? "Voz configurada" : "Configurá la voz en General → Voces"}
                 >
                   {c.label}
+                  {c.iso !== "DEFAULT" && <span className="font-mono text-[10px] opacity-60">{c.iso}</span>}
                   <span className={`h-1.5 w-1.5 rounded-full ${hasVoice ? "bg-emerald-400" : "bg-amber-400"}`} />
                 </button>
               );
