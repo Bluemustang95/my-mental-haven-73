@@ -234,12 +234,39 @@ function WriteView({
         : "audio/webm";
       const rec = new MediaRecorder(stream, { mimeType: mime });
       rec.ondataavailable = (e) => { if (e.data.size > 0) recordChunksRef.current.push(e.data); };
-      rec.onstop = () => {
+      rec.onstop = async () => {
         const blob = new Blob(recordChunksRef.current, { type: mime });
-        const file = new File([blob], `nota-${Date.now()}.webm`, { type: mime });
-        addFiles({ 0: file, length: 1, item: (i: number) => i === 0 ? file : null } as unknown as FileList, "audio");
         recordStreamRef.current?.getTracks().forEach((t) => t.stop());
         recordStreamRef.current = null;
+        if (blob.size < 800) {
+          toast.error("Grabación muy corta");
+          return;
+        }
+        setTranscribing(true);
+        try {
+          const fd = new FormData();
+          fd.append("file", new File([blob], `voice-${Date.now()}.webm`, { type: mime }));
+          fd.append("language", "es");
+          const { data, error } = await supabase.functions.invoke("transcribe-voice", { body: fd });
+          if (error) throw error;
+          const t = (data as { text?: string })?.text?.trim() ?? "";
+          if (!t) { toast.error("No se detectó voz"); return; }
+          // Append transcript to editor at cursor / end
+          const el = editorRef.current;
+          if (el) {
+            const paragraph = `${el.innerText && !el.innerText.endsWith("\n") ? " " : ""}${t}`;
+            el.innerHTML = sanitizeHtml((el.innerHTML || "") + paragraph.replace(/\n/g, "<br>"));
+            onEditorInput();
+          } else {
+            setText((prev) => `${prev} ${t}`.trim());
+          }
+          toast.success("Voz transcripta");
+        } catch (e) {
+          console.warn("[transcribe] error", e);
+          toast.error("No se pudo transcribir la voz");
+        } finally {
+          setTranscribing(false);
+        }
       };
       rec.start();
       mediaRecorderRef.current = rec;
