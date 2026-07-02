@@ -12,7 +12,7 @@ interface Props {
   accent: string;
 }
 
-const OPTIONS = [1, 3, 5, 10];
+const OPTIONS = [1, 5, 10, 15, 20];
 
 export function TimeSetupScreen({
   subtitle,
@@ -53,7 +53,7 @@ export function TimeSetupScreen({
           )}
         </div>
 
-        <div className="mt-12 grid grid-cols-2 gap-3">
+        <div className="mt-12 grid grid-cols-3 gap-3">
           {OPTIONS.map((m) => {
             const active = minutes === m;
             return (
