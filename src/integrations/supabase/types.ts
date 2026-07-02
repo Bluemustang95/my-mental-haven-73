@@ -855,6 +855,45 @@ export type Database = {
         }
         Relationships: []
       }
+      diary_chips: {
+        Row: {
+          active: boolean
+          created_at: string
+          icon: string | null
+          id: string
+          image_url: string | null
+          is_primary: boolean
+          kind: string
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_primary?: boolean
+          kind: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_primary?: boolean
+          kind?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       diary_inspire_prompts: {
         Row: {
           active: boolean
