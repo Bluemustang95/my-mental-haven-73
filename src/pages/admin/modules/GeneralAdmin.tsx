@@ -11,10 +11,10 @@ type VoiceRow = { id?: string; country_code: string; gender: "female" | "male"; 
 type ElevenVoice = { voice_id: string; name: string; labels?: Record<string, string> };
 
 export default function GeneralAdmin() {
-  const [tab, setTab] = useState<"voces" | "gasto">("voces");
+  const [tab, setTab] = useState<"voces" | "audios" | "gasto">("voces");
   return (
     <>
-      <AdminPageHeader title="General" subtitle="Configuración global de voces y gasto de IA" />
+      <AdminPageHeader title="General" subtitle="Configuración global de voces, audios y gasto de IA" />
       <div className="px-8 py-4">
         <div className="flex gap-2 mb-4">
           <button
@@ -24,6 +24,14 @@ export default function GeneralAdmin() {
             }`}
           >
             <Volume2 size={14} /> Voces
+          </button>
+          <button
+            onClick={() => setTab("audios")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              tab === "audios" ? "bg-resma-teal text-white" : "bg-white border border-slate-200 text-slate-600"
+            }`}
+          >
+            <Music size={14} /> Audios
           </button>
           <button
             onClick={() => setTab("gasto")}
@@ -36,9 +44,152 @@ export default function GeneralAdmin() {
         </div>
       </div>
       <div className="admin-scroll flex-1 overflow-y-auto px-8 pb-32">
-        {tab === "voces" ? <VoicesTab /> : <SpendTab />}
+        {tab === "voces" ? <VoicesTab /> : tab === "audios" ? <AudiosTab /> : <SpendTab />}
       </div>
     </>
+  );
+}
+
+type CachedAudio = {
+  id: string;
+  script_id: string;
+  voice_id: string;
+  storage_path: string;
+  created_at: string;
+  script_title: string | null;
+  duration_minutes: number | null;
+  exercise_key: string | null;
+  country_code: string | null;
+};
+
+function AudiosTab() {
+  const [rows, setRows] = useState<CachedAudio[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("");
+  const [playing, setPlaying] = useState<string | null>(null);
+  const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const { data: cache } = await supabase
+        .from("mindfulness_audio_cache")
+        .select("id, script_id, voice_id, storage_path, created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      const list = (cache as Array<Omit<CachedAudio, "script_title" | "duration_minutes" | "exercise_key" | "country_code">>) ?? [];
+      const scriptIds = [...new Set(list.map(r => r.script_id))];
+      let scriptMap = new Map<string, { title: string | null; duration_minutes: number | null; exercise_key: string | null; country_code: string | null }>();
+      if (scriptIds.length) {
+        const { data: scripts } = await supabase
+          .from("mindfulness_scripts_v2")
+          .select("id, title, duration_minutes, exercise_key, country_code")
+          .in("id", scriptIds);
+        scriptMap = new Map((scripts ?? []).map((s: { id: string; title: string | null; duration_minutes: number | null; exercise_key: string | null; country_code: string | null }) =>
+          [s.id, { title: s.title, duration_minutes: s.duration_minutes, exercise_key: s.exercise_key, country_code: s.country_code }]));
+      }
+      setRows(list.map(r => {
+        const meta = scriptMap.get(r.script_id);
+        return { ...r, script_title: meta?.title ?? null, duration_minutes: meta?.duration_minutes ?? null, exercise_key: meta?.exercise_key ?? null, country_code: meta?.country_code ?? null };
+      }));
+      setLoading(false);
+    })();
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(r =>
+      (r.script_title ?? "").toLowerCase().includes(q) ||
+      (r.exercise_key ?? "").toLowerCase().includes(q) ||
+      (r.country_code ?? "").toLowerCase().includes(q) ||
+      r.voice_id.toLowerCase().includes(q)
+    );
+  }, [rows, filter]);
+
+  const togglePlay = async (row: CachedAudio) => {
+    if (audioEl) { audioEl.pause(); setAudioEl(null); }
+    if (playing === row.id) { setPlaying(null); return; }
+    const { data: signed } = await supabase.storage.from("mindfulness-audio").createSignedUrl(row.storage_path, 3600);
+    if (!signed?.signedUrl) { toast.error("No se pudo generar URL"); return; }
+    const a = new Audio(signed.signedUrl);
+    a.play().catch(() => toast.error("No se pudo reproducir"));
+    a.onended = () => { setPlaying(null); setAudioEl(null); };
+    setAudioEl(a);
+    setPlaying(row.id);
+  };
+
+  const deleteAudio = async (row: CachedAudio) => {
+    if (!confirm("¿Eliminar este audio cacheado? Se regenerará la próxima vez.")) return;
+    await supabase.storage.from("mindfulness-audio").remove([row.storage_path]);
+    await supabase.from("mindfulness_audio_cache").delete().eq("id", row.id);
+    setRows(prev => prev.filter(r => r.id !== row.id));
+    toast.success("Audio eliminado");
+  };
+
+  if (loading) return <div className="text-slate-500 flex items-center gap-2"><Loader2 className="animate-spin" size={16} /> Cargando audios…</div>;
+
+  return (
+    <div className="space-y-4">
+      <AdminCard className="p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-resma-navy">Audios cacheados</div>
+            <div className="text-xs text-slate-500 mt-0.5">
+              Todos los MP3 pregenerados para Mindfulness (y sonidos de Diario) almacenados en Storage.
+            </div>
+          </div>
+          <input
+            placeholder="Buscar por título, país o voz…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="h-9 w-64 px-3 rounded-lg border border-slate-200 bg-white text-sm"
+          />
+        </div>
+        <div className="mt-2 text-[11px] text-slate-500">
+          Total: {rows.length} audios · Mostrando {filtered.length}
+        </div>
+      </AdminCard>
+
+      <AdminCard className="p-0 overflow-hidden">
+        <div className="grid grid-cols-[36px_1fr_100px_90px_110px_150px_60px] gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50 text-[10px] font-admin-label text-slate-500">
+          <div></div>
+          <div>Título / Ejercicio</div>
+          <div>Duración</div>
+          <div>País</div>
+          <div>Voz</div>
+          <div>Creado</div>
+          <div></div>
+        </div>
+        {filtered.length === 0 && (
+          <div className="text-center text-xs text-slate-400 py-8">Sin audios cacheados.</div>
+        )}
+        {filtered.map(row => {
+          const isPlaying = playing === row.id;
+          return (
+            <div key={row.id} className="grid grid-cols-[36px_1fr_100px_90px_110px_150px_60px] gap-2 px-4 py-2.5 border-b border-slate-50 last:border-0 items-center text-xs">
+              <button
+                onClick={() => togglePlay(row)}
+                className={`h-8 w-8 rounded-full flex items-center justify-center ${isPlaying ? "bg-resma-teal text-white" : "bg-slate-100 text-slate-600"}`}
+              >
+                {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+              </button>
+              <div className="min-w-0">
+                <div className="font-semibold text-resma-navy truncate">{row.script_title ?? "(sin título)"}</div>
+                <div className="text-[10px] text-slate-400 truncate">{row.exercise_key ?? "—"} · {row.storage_path}</div>
+              </div>
+              <div className="text-slate-600">{row.duration_minutes ? `${row.duration_minutes} min` : "—"}</div>
+              <div className="text-slate-600">{row.country_code ?? "default"}</div>
+              <div className="font-mono text-[10px] text-slate-500 truncate">{row.voice_id}</div>
+              <div className="text-slate-500">{new Date(row.created_at).toLocaleDateString("es-AR")}</div>
+              <button onClick={() => deleteAudio(row)} className="text-rose-500 hover:text-rose-700 justify-self-end">
+                <Trash2 size={13} />
+              </button>
+            </div>
+          );
+        })}
+      </AdminCard>
+    </div>
   );
 }
 
