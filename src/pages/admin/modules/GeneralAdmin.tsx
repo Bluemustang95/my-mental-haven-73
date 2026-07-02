@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui/AdminPrimitives";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Volume2, DollarSign, Plus, Trash2, Play } from "lucide-react";
+import { Loader2, Volume2, DollarSign, Plus, Trash2, Play, Music, Pause } from "lucide-react";
 import { COUNTRY_OPTIONS, mindfulnessCountry } from "@/lib/countryCodes";
 
 const COUNTRIES = COUNTRY_OPTIONS.map((country) => ({ ...country, label: country.code === "default" ? "Predeterminado" : country.label }));
