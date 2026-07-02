@@ -42,9 +42,15 @@ export default function AiCompanionDrawer({ draft }: Props) {
       automaticThought: draft.automaticThought,
       emotion: draft.emotion,
       subEmotions: draft.subEmotions,
+      intensityInitial: draft.intensityInitial,
+      intensityFinal: draft.intensityFinal,
       behavior: draft.behavior,
       bodySensations: draft.bodySensations,
+      evidenceFor: draft.evidenceFor,
+      evidenceAgainst: draft.evidenceAgainst,
       distortions: draft.distortions,
+      alternativeThought: draft.alternativeThought,
+      resolutionPlan: draft.resolutionPlan,
     };
 
     try {
