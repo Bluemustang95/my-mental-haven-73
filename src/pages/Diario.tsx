@@ -542,9 +542,9 @@ function WriteView({
         </div>
       )}
 
-      {/* Recording bar */}
+      {/* Recording / Transcribing bar */}
       <AnimatePresence>
-        {recording && (
+        {(recording || transcribing) && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -552,14 +552,26 @@ function WriteView({
             className="overflow-hidden"
           >
             <div className={cn("mt-2 flex items-center gap-3 rounded-full p-2 pl-3", surfaceCls)}>
-              <button
-                onClick={stopRecording}
-                className="grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white"
-              >
-                <Pause size={12} />
-              </button>
-              <Waveform />
-              <span className="pr-2 font-mono text-[11px] tabular-nums opacity-80">{mm}:{ss}</span>
+              {recording ? (
+                <>
+                  <button
+                    onClick={stopRecording}
+                    className="grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white"
+                    aria-label="Detener y transcribir"
+                  >
+                    <Pause size={12} />
+                  </button>
+                  <Waveform />
+                  <span className="pr-2 font-mono text-[11px] tabular-nums opacity-80">{mm}:{ss}</span>
+                </>
+              ) : (
+                <>
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-[#7cc2c8]/20 text-[#7cc2c8]">
+                    <Loader2 size={12} className="animate-spin" />
+                  </span>
+                  <span className="flex-1 text-[12px] opacity-80">Transcribiendo tu voz…</span>
+                </>
+              )}
             </div>
           </motion.div>
         )}
