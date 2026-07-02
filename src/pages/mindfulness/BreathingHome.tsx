@@ -677,7 +677,7 @@ function ImmersivePlayer({
   const secondsLeftInPhase = Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed));
   const [timeEditOpen, setTimeEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { voiceId } = useUserVoice();
+  const { voiceId, loading: voiceLoading } = useUserVoice();
 
   // Reflect voice volume to TTS player
   useEffect(() => { setSpeechVolume(voiceVolume); }, [voiceVolume]);
@@ -687,7 +687,6 @@ function ImmersivePlayer({
   const ambientStopRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    // teardown previous
     ambientStopRef.current?.();
     ambientStopRef.current = null;
     if (ambientId === "off") return;
@@ -717,14 +716,19 @@ function ImmersivePlayer({
     };
   }, []);
 
-  // Speak cue when phase changes (ElevenLabs via shared TTS helper)
+  // Stop playback when the resolved voice changes so the default voice
+  // does not keep playing over the country-specific one.
+  useEffect(() => { stopSpeak(); }, [voiceId]);
+
+  // Speak cue when phase changes. Wait for useUserVoice to resolve so
+  // we never speak the fallback default over the user's country voice.
   useEffect(() => {
-    if (!voice || cycle.paused) return;
+    if (!voice || cycle.paused || voiceLoading) return;
     primeAudio();
     setSpeechVolume(voiceVolume);
     speakTTS(phase.cue, voiceId).catch(() => {});
     return () => { stopSpeak(); };
-  }, [phase.cue, voice, cycle.paused, voiceId, voiceVolume]);
+  }, [phase.cue, voice, cycle.paused, voiceId, voiceVolume, voiceLoading]);
 
   return (
     <div
