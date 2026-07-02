@@ -25,6 +25,9 @@ export function useUserVoice(options: UseUserVoiceOptions = {}) {
   const [gender, setGender] = useState<VoiceGender>(options.genderOverride ?? "female");
   const [loading, setLoading] = useState(true);
 
+  const [overrideTick, setOverrideTick] = useState(0);
+  useEffect(() => subscribeCountryOverride(() => setOverrideTick((t) => t + 1)), []);
+
   useEffect(() => {
     let cancelled = false;
     if (!user) { setLoading(false); return; }
@@ -37,26 +40,29 @@ export function useUserVoice(options: UseUserVoiceOptions = {}) {
         .maybeSingle();
       if (cancelled) return;
 
-      if (profile?.voice_id) {
+      const override = getCountryOverride();
+      const effectiveCountry = override ?? profile?.country ?? null;
+
+      if (!override && profile?.voice_id) {
         setVoice({ voiceId: profile.voice_id, label: "Voz personalizada", region: "custom" });
+        setCountry(effectiveCountry);
         setLoading(false);
         return;
       }
 
-      const country = profile?.country ?? null;
       const gender = (options.genderOverride ?? profile?.voice_gender_preference ?? "female") as VoiceGender;
-      setCountry(country);
+      setCountry(effectiveCountry);
       setGender(gender);
 
-      if (country) {
+      if (effectiveCountry) {
         const { data: vs } = await supabase
           .from("voice_settings")
           .select("voice_id, label")
-          .eq("country_code", country)
+          .eq("country_code", effectiveCountry)
           .eq("gender", gender)
           .maybeSingle();
         if (!cancelled && vs?.voice_id) {
-          setVoice({ voiceId: vs.voice_id, label: vs.label ?? "Voz por país", region: country });
+          setVoice({ voiceId: vs.voice_id, label: vs.label ?? "Voz por país", region: effectiveCountry });
           setLoading(false);
           return;
         }
@@ -73,13 +79,14 @@ export function useUserVoice(options: UseUserVoiceOptions = {}) {
       if (def?.voice_id) {
         setVoice({ voiceId: def.voice_id, label: def.label ?? "Voz por defecto", region: "default" });
       } else {
-        setVoice(voiceForCountry(country));
+        setVoice(voiceForCountry(effectiveCountry));
       }
       setLoading(false);
     })();
 
     return () => { cancelled = true; };
-  }, [user, options.genderOverride]);
+  }, [user, options.genderOverride, overrideTick]);
+
 
   return { voice, voiceId: voice.voiceId, country, gender, loading };
 }
