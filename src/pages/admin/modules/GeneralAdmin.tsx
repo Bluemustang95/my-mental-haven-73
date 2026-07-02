@@ -70,13 +70,15 @@ type CachedAudio = {
 
 // ---------- Ambient overrides (rain, waves, wind, etc.) ----------
 
-type OverrideRow = { id: string; sound_id: string; storage_path: string; active: boolean; updated_at: string };
+type OverrideRow = { id: string; sound_id: string; label: string; category: CatalogCategory; storage_path: string; active: boolean; updated_at: string };
 
 function AmbientOverridesSection() {
   const [overrides, setOverrides] = useState<Map<string, OverrideRow>>(new Map());
+  const [customs, setCustoms] = useState<OverrideRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
   const stopRef = useRef<(() => void) | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
   const previewTimeout = useRef<number | null>(null);
@@ -85,10 +87,17 @@ function AmbientOverridesSection() {
     setLoading(true);
     const { data } = await supabase
       .from("ambient_audio_overrides")
-      .select("id, sound_id, storage_path, active, updated_at");
+      .select("id, sound_id, label, category, storage_path, active, updated_at");
+    const known = new Set(AMBIENT_CATALOG.map((e) => e.id));
+    const rows = (data as OverrideRow[] | null ?? []);
     const map = new Map<string, OverrideRow>();
-    (data as OverrideRow[] | null ?? []).forEach((r) => map.set(r.sound_id, r));
+    const custs: OverrideRow[] = [];
+    rows.forEach((r) => {
+      if (known.has(r.sound_id)) map.set(r.sound_id, r);
+      else custs.push(r);
+    });
     setOverrides(map);
+    setCustoms(custs);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
