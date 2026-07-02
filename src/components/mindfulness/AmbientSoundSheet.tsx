@@ -1,7 +1,8 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { AMBIENT_SOUNDS, CATEGORY_LABELS, type AmbientCategory } from "@/lib/ambientLibrary";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAmbientCatalog, CATALOG_CATEGORY_LABELS, type CatalogCategory } from "@/hooks/useAmbientCatalog";
+import { AMBIENT_SOUNDS } from "@/lib/ambientLibrary";
 
 interface Props {
   open: boolean;
@@ -10,14 +11,28 @@ interface Props {
   onPick: (id: string) => void;
 }
 
-const CATEGORIES: AmbientCategory[] = ["ninguno", "lluvia", "viento", "agua", "naturaleza", "abstractos"];
+// Order in which categories appear inside the sheet.
+const CATEGORY_ORDER: CatalogCategory[] = [
+  "ninguno", "lluvia", "viento", "agua", "naturaleza", "abstractos", "zen", "sueño",
+];
 
 export function AmbientSoundSheet({ open, onOpenChange, currentId, onPick }: Props) {
-  const grouped = CATEGORIES.map((cat) => ({
-    cat,
-    label: CATEGORY_LABELS[cat],
-    items: AMBIENT_SOUNDS.filter((s) => s.category === cat),
-  })).filter((g) => g.items.length > 0);
+  const { entries } = useAmbientCatalog();
+
+  // Always keep the "Silencio" option available (comes from static library)
+  const silencio = AMBIENT_SOUNDS.find((s) => s.id === "off");
+  const all = [
+    ...(silencio ? [{ id: "off", label: silencio.label, category: "ninguno" as CatalogCategory }] : []),
+    ...entries.filter((e) => e.category !== "ninguno"),
+  ];
+
+  const grouped = CATEGORY_ORDER
+    .map((cat) => ({
+      cat,
+      label: CATALOG_CATEGORY_LABELS[cat],
+      items: all.filter((s) => s.category === cat),
+    }))
+    .filter((g) => g.items.length > 0);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -50,8 +65,8 @@ export function AmbientSoundSheet({ open, onOpenChange, currentId, onPick }: Pro
                           : "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
                       )}
                     >
-                      <span className="font-medium">{s.label}</span>
-                      {active && <Check size={14} className="text-white/80" />}
+                      <span className="font-medium truncate">{s.label}</span>
+                      {active && <Check size={14} className="text-white/80 shrink-0" />}
                     </button>
                   );
                 })}
