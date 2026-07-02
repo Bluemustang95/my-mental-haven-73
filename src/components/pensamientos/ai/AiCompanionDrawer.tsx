@@ -69,6 +69,7 @@ export default function AiCompanionDrawer({ draft }: Props) {
       distortions: draft.distortions,
       alternativeThought: draft.alternativeThought,
       resolutionPlan: draft.resolutionPlan,
+      userCountry: country ?? undefined,
     };
 
     try {
