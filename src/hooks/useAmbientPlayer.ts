@@ -74,12 +74,15 @@ export function useAmbientPlayer() {
     const ctx = ensureCtx();
     currentIdRef.current = id;
     // Try MP3 override first; if none, fall back to synthesized builder.
+    // For custom entries (no static builder), MP3 is the only source.
     getOverrideUrl(id).then((url) => {
       if (currentIdRef.current !== id) return; // user switched already
       if (url) {
         handleRef.current = playOverride(ctx, url, volumeRef.current);
       } else if (def) {
         handleRef.current = def.build(ctx, volumeRef.current);
+      } else {
+        console.warn(`[ambient] no source for "${id}"`);
       }
     }).catch(() => {
       if (currentIdRef.current === id && def) {
