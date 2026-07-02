@@ -47,9 +47,9 @@ export function usePlan() {
     [user]
   );
 
-  // Admins effectively have premium access everywhere
-  const plan: Plan = isAdmin ? "premium" : realPlan;
-  const isPremium = plan === "premium";
+  // App is fully free — everyone has premium access.
+  const plan: Plan = "premium";
+  const isPremium = true;
 
   return { plan, realPlan, isAdmin, isPremium, planStartedAt, loading, setPlan: setUserPlan, refresh };
 }
