@@ -21,6 +21,7 @@ const activityConfig: Record<CalendarActivity["type"], { icon: typeof Brain; col
   medication: { icon: Pill, color: "text-[hsl(193_50%_45%)]" },
   sleep: { icon: Moon, color: "text-[hsl(220_60%_45%)]" },
   habit: { icon: Checks, color: "text-[hsl(155_45%_45%)]" },
+  thought_task: { icon: Target, color: "text-[hsl(193_50%_50%)]" },
 };
 
 function capitalizeFirst(text: string): string {
