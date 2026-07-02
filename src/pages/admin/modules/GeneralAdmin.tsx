@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui/AdminPrimitives";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Volume2, DollarSign, Plus, Trash2, Play, Music, Pause, Upload, Pencil, Check as CheckIcon, X as XIcon } from "lucide-react";
+import { Loader2, Volume2, DollarSign, Plus, Trash2, Play, Music, Pause, Upload, Pencil, Check as CheckIcon, X as XIcon, RotateCcw, Wind } from "lucide-react";
 import { COUNTRY_OPTIONS, mindfulnessCountry } from "@/lib/countryCodes";
+import { AMBIENT_CATALOG, CATALOG_CATEGORY_LABELS, type CatalogCategory, type CatalogEntry } from "@/lib/ambientCatalog";
+import { invalidateAmbientOverrides } from "@/lib/ambientResolver";
+import { getAmbientById } from "@/lib/ambientLibrary";
 
 const COUNTRIES = COUNTRY_OPTIONS.map((country) => ({ ...country, label: country.code === "default" ? "Predeterminado" : country.label }));
 
