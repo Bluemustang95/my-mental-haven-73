@@ -44,6 +44,7 @@ export default function MindfulnessAdmin() {
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [minutes, setMinutes] = useState<number>(5);
   const [country, setCountry] = useState<string>("default");
+  const [voiceGender, setVoiceGender] = useState<"female" | "male">("female");
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -140,11 +141,11 @@ export default function MindfulnessAdmin() {
   const generateAudio = async () => {
     const s = await persistCurrent();
     if (!s) return;
-    const voiceId = voiceForCountry(country, "female");
+    const voiceId = voiceForCountry(country, voiceGender);
     if (!voiceId) { toast.error(`Configurá primero la voz para "${country}" en General → Voces`); return; }
     setGenerating(true);
     const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
-      body: { scriptId: s.id, voiceId, countryCode: country, force: false },
+      body: { scriptId: s.id, voiceId, countryCode: country, gender: voiceGender, force: false },
     });
     setGenerating(false);
     if (error) { toast.error(error.message); return; }
@@ -159,11 +160,11 @@ export default function MindfulnessAdmin() {
     setBatching(true);
     let ok = 0, fail = 0;
     for (const c of COUNTRIES) {
-      const voiceId = voiceForCountry(c.code, "female");
+      const voiceId = voiceForCountry(c.code, voiceGender);
       if (!voiceId) { fail++; continue; }
       // eslint-disable-next-line no-await-in-loop
       const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
-        body: { scriptId: s.id, voiceId, countryCode: c.code, force: false },
+        body: { scriptId: s.id, voiceId, countryCode: c.code, gender: voiceGender, force: false },
       });
       if (error || (data as { error?: string })?.error) fail++; else ok++;
     }
@@ -173,7 +174,7 @@ export default function MindfulnessAdmin() {
   };
 
   const hasAudioForCountry = (scriptId: string, countryCode: string) => {
-    const vid = voiceForCountry(countryCode, "female");
+    const vid = voiceForCountry(countryCode, voiceGender);
     if (!vid) return false;
     return audio.some(a => a.script_id === scriptId && a.voice_id === vid);
   };
@@ -224,7 +225,7 @@ export default function MindfulnessAdmin() {
           <div className="font-admin-label text-[10px] text-slate-500 mb-2 flex items-center gap-1.5"><Globe size={11} /> País (localización del guion y voz)</div>
           <div className="flex flex-wrap gap-2">
             {COUNTRIES.map(c => {
-              const hasVoice = !!voiceForCountry(c.code, "female");
+              const hasVoice = !!voiceForCountry(c.code, voiceGender);
               return (
                 <button
                   key={c.code}
@@ -239,6 +240,23 @@ export default function MindfulnessAdmin() {
                 </button>
               );
             })}
+          </div>
+        </AdminCard>
+
+        <AdminCard className="p-4 mb-4">
+          <div className="font-admin-label text-[10px] text-slate-500 mb-2">Voz a generar</div>
+          <div className="inline-flex rounded-xl bg-slate-100 p-1">
+            {(["female", "male"] as const).map(g => (
+              <button
+                key={g}
+                onClick={() => setVoiceGender(g)}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition ${
+                  voiceGender === g ? "bg-white text-resma-navy shadow-sm" : "text-slate-500"
+                }`}
+              >
+                {g === "female" ? "Femenina" : "Masculina"}
+              </button>
+            ))}
           </div>
         </AdminCard>
 
@@ -311,8 +329,8 @@ export default function MindfulnessAdmin() {
                 <div className="mt-3 text-[11px] text-slate-500 flex items-center justify-between">
                   <span>{current.script_text.length} caracteres · costo estimado ${(current.script_text.length / 1000 * 0.30).toFixed(3)} USD</span>
                   {hasAudio(current.id)
-                    ? <span className="text-emerald-600 flex items-center gap-1"><CheckCircle2 size={12} /> audio cacheado</span>
-                    : <span className="text-amber-600">audio no generado</span>}
+                    ? <span className="text-emerald-600 flex items-center gap-1"><CheckCircle2 size={12} /> audio {voiceGender === "female" ? "femenino" : "masculino"} cacheado</span>
+                    : <span className="text-amber-600">audio {voiceGender === "female" ? "femenino" : "masculino"} no generado</span>}
                 </div>
 
                 <div className="flex justify-between gap-2 mt-4">
@@ -321,10 +339,10 @@ export default function MindfulnessAdmin() {
                   </AdminButton>
                   <div className="flex gap-2 flex-wrap justify-end">
                     <AdminButton variant="secondary" onClick={generateAllCountries} disabled={batching}>
-                      {batching ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />} Generar en todos los países
+                      {batching ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />} Generar {voiceGender === "female" ? "femenino" : "masculino"} en todos los países
                     </AdminButton>
                     <AdminButton variant="secondary" onClick={generateAudio}>
-                      {generating ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Generar audio ({country})
+                      {generating ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Generar audio {voiceGender === "female" ? "fem." : "masc."} ({country})
                     </AdminButton>
                     <AdminButton variant="purple" onClick={save}>
                       {saving ? <Loader2 size={14} className="animate-spin" /> : <PlayCircle size={14} />} Guardar guion
