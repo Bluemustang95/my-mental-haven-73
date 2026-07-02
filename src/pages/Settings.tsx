@@ -152,59 +152,7 @@ export default function Settings() {
           />
         </Group>
 
-        {/* Suscripción */}
-        <div className="mt-6 px-3">
-          <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Suscripción
-          </p>
-          <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_8px_24px_-14px_rgba(16,25,39,0.18)] backdrop-blur-2xl">
-            <div className="pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full bg-[#facb60]/25 blur-3xl" />
-            <div className="relative">
-              <div className="flex items-center gap-2">
-                <span className={`flex h-9 w-9 items-center justify-center rounded-2xl ${isPremium ? "bg-[#facb60]/30 text-[#101927]" : "bg-foreground/[0.06] text-foreground/70"}`}>
-                  <Crown size={18} />
-                </span>
-                <div className="flex-1">
-                  <p className="font-display text-[15px] font-bold text-foreground">{planLabel}</p>
-                  <p className="text-[11px] text-muted-foreground">{planSub}</p>
-                </div>
-              </div>
-
-              {!isPremium && (
-                <button
-                  onClick={() => setPaywallOpen(true)}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#101927] py-3.5 text-sm font-bold text-white transition active:scale-[0.98]"
-                >
-                  <Sparkles size={16} />
-                  Activar Premium — USD 0.99/sem
-                </button>
-              )}
-
-              <p className="mt-4 text-[11px] leading-relaxed text-foreground/55">
-                Tu facturación y suscripción a RESMA Premium están gestionadas de forma segura y
-                directa a través de tu cuenta de Apple App Store o Google Play Store.
-              </p>
-
-              <button
-                onClick={() => setManageOpen("manage")}
-                className="mt-3 flex w-full items-center justify-between rounded-2xl border border-white/80 bg-white/70 px-4 py-3 text-left shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] backdrop-blur transition active:scale-[0.99]"
-              >
-                <span className="text-[13px] font-semibold text-foreground">
-                  Gestionar Suscripción en el Sistema
-                </span>
-                <ChevronRight size={16} className="text-foreground/40" />
-              </button>
-
-              <button
-                onClick={() => setManageOpen("restore")}
-                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-2xl px-4 py-2.5 text-[12px] font-semibold text-foreground/65 transition active:bg-foreground/[0.04]"
-              >
-                <RefreshCw size={13} />
-                Restaurar Compras
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Suscripción removida — la app es gratuita. */}
 
 
         {/* Preferencias */}
