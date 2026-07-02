@@ -135,18 +135,19 @@ function WriteView({
   onExitZen: () => void;
 }) {
   const [text, setText] = useState("");
-  const [prompt, setPrompt] = useState<typeof PROMPTS[number] | null>(null);
+  const [prompt, setPrompt] = useState<InspirePrompt | null>(null);
+  const [promptReuseDate, setPromptReuseDate] = useState<string | null>(null);
+  const [prompts, setPrompts] = useState<InspirePrompt[]>(FALLBACK_PROMPTS);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [emo, setEmo] = useState<string | null>(null);
+  const [emos, setEmos] = useState<Set<string>>(new Set());
   const [causes, setCauses] = useState<Set<string>>(new Set());
-  const [openAcc, setOpenAcc] = useState<"emo" | "cause" | null>(null);
   const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [recSec, setRecSec] = useState(0);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [entryId, setEntryId] = useState<string | null>(null);
   const [confirmNew, setConfirmNew] = useState(false);
   const [fmtBar, setFmtBar] = useState<{ top: number; left: number } | null>(null);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lastLen = useRef(0);
@@ -155,8 +156,29 @@ function WriteView({
   const imgRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Load prompts from DB (admin-managed) with local fallback
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("diary_inspire_prompts")
+        .select("id, text, tag")
+        .eq("active", true);
+      if (data && data.length > 0) setPrompts(data as InspirePrompt[]);
+    })();
+  }, []);
+
   // Inspirame
-  const inspire = () => setPrompt(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
+  const inspire = () => {
+    if (prompts.length === 0) return;
+    const pick = prompts[Math.floor(Math.random() * prompts.length)];
+    setPrompt(pick);
+    try {
+      const hist = JSON.parse(localStorage.getItem(INSPIRE_HISTORY_KEY) || "{}") as Record<string, string>;
+      setPromptReuseDate(hist[pick.id] ?? null);
+      hist[pick.id] = new Date().toISOString();
+      localStorage.setItem(INSPIRE_HISTORY_KEY, JSON.stringify(hist));
+    } catch { setPromptReuseDate(null); }
+  };
 
   // Attachments — preview inmediato + upload en background a Storage.
   const addFiles = (files: FileList | null, type: "image" | "file" | "audio") => {
