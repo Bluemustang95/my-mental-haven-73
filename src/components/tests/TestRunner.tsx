@@ -290,7 +290,13 @@ export function TestRunner({
   );
 }
 
-function interpret(code: string, total: number): string {
+function interpret(def: Def, total: number): string {
+  if (def.baremos && def.baremos.length > 0) {
+    const hit = def.baremos.find((b) => total >= b.min && total <= b.max);
+    if (hit) return hit.message || hit.label;
+  }
+  // Fallback legacy hardcoded
+  const code = def.code;
   if (code === "BDI") {
     if (total <= 13) return "Mínima depresión.";
     if (total <= 19) return "Depresión leve.";
