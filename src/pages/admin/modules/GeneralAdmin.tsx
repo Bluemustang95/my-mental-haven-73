@@ -3,18 +3,9 @@ import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui/A
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Volume2, DollarSign, Plus, Trash2, Play } from "lucide-react";
+import { COUNTRY_OPTIONS, mindfulnessCountry } from "@/lib/countryCodes";
 
-const COUNTRIES = [
-  { code: "default", label: "Predeterminado" },
-  { code: "Argentina", label: "Argentina" },
-  { code: "Uruguay", label: "Uruguay" },
-  { code: "Chile", label: "Chile" },
-  { code: "México", label: "México" },
-  { code: "Colombia", label: "Colombia" },
-  { code: "Perú", label: "Perú" },
-  { code: "España", label: "España" },
-  { code: "Estados Unidos", label: "Estados Unidos" },
-];
+const COUNTRIES = COUNTRY_OPTIONS.map((country) => ({ ...country, label: country.code === "default" ? "Predeterminado" : country.label }));
 
 type VoiceRow = { id?: string; country_code: string; gender: "female" | "male"; voice_id: string; label: string | null };
 type ElevenVoice = { voice_id: string; name: string; labels?: Record<string, string> };
@@ -84,21 +75,28 @@ function VoicesTab() {
   }, [voices, customVoices]);
 
   const getRow = (country: string, gender: "female" | "male"): VoiceRow => {
-    return rows.find(r => r.country_code === country && r.gender === gender)
-      ?? { country_code: country, gender, voice_id: "", label: null };
+    const canonical = mindfulnessCountry(country);
+    return rows.find(r => mindfulnessCountry(r.country_code) === canonical && r.gender === gender)
+      ?? { country_code: canonical, gender, voice_id: "", label: null };
   };
 
   const setRow = (row: VoiceRow) => {
     setRows(prev => {
-      const idx = prev.findIndex(r => r.country_code === row.country_code && r.gender === row.gender);
-      if (idx >= 0) { const next = [...prev]; next[idx] = row; return next; }
-      return [...prev, row];
+      const normalized = { ...row, country_code: mindfulnessCountry(row.country_code) };
+      const idx = prev.findIndex(r => mindfulnessCountry(r.country_code) === normalized.country_code && r.gender === normalized.gender);
+      if (idx >= 0) { const next = [...prev]; next[idx] = normalized; return next; }
+      return [...prev, normalized];
     });
   };
 
   const save = async () => {
     setSaving(true);
-    const payload = rows.filter(r => r.voice_id).map(r => ({
+    const deduped = new Map<string, VoiceRow>();
+    rows.filter(r => r.voice_id).forEach((r) => {
+      const normalized = { ...r, country_code: mindfulnessCountry(r.country_code) };
+      deduped.set(`${normalized.country_code}:${normalized.gender}`, normalized);
+    });
+    const payload = [...deduped.values()].map(r => ({
       country_code: r.country_code, gender: r.gender, voice_id: r.voice_id, label: r.label,
     }));
     const { error } = await supabase.from("voice_settings").upsert(payload, { onConflict: "country_code,gender" });
@@ -245,7 +243,10 @@ function VoicesTab() {
           const m = getRow(c.code, "male");
           return (
             <div key={c.code} className="grid grid-cols-[180px_1fr_1fr] gap-3 py-2.5 border-b border-slate-50 items-center">
-              <div className="text-sm font-semibold text-resma-navy">{c.label}</div>
+              <div>
+                <div className="text-sm font-semibold text-resma-navy">{c.label}</div>
+                {c.iso !== "DEFAULT" && <div className="text-[10px] text-slate-400 font-mono">Usuarios {c.iso} usan esta voz</div>}
+              </div>
               <VoiceSelect voices={allVoices} row={f} onChange={setRow} />
               <VoiceSelect voices={allVoices} row={m} onChange={setRow} />
             </div>
