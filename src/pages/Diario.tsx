@@ -3,8 +3,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Clock, Lock, Sparkles, X, Camera, Image as ImageIcon,
   Paperclip, Mic, Pause, Flower, Volume2, VolumeX, FileText,
-  Smile, Tag, Bold, Italic, Plus, Search, Pencil, Trash2, Check,
+  Bold, Italic, Plus, Search, Pencil, Trash2, ArrowLeft, Loader2,
 } from "lucide-react";
+import {
+  SmileyWink, Tag as TagPh, CloudRain, MusicNote, Waveform as WaveformIcon,
+  Keyboard, Waves, Wind as WindPh, SpeakerHigh,
+} from "@phosphor-icons/react";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,7 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
-import { uploadAttachment, deleteAttachment } from "@/lib/journalAttachments";
+import { uploadAttachment, deleteAttachment, refreshSignedUrl } from "@/lib/journalAttachments";
 import * as e2e from "@/lib/e2ecipher";
 
 /* ────────────── Sanitizer (whitelist b/strong/i/em/br) ────────────── */
