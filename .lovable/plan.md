@@ -1,37 +1,54 @@
-# Ajustes en "Modificá tus pensamientos"
+## 1. Temporizador y layout del ejercicio
 
-## 1. Fix del "salto" al escribir en Pros y contras (Paso 6)
+**`TimeSetupScreen.tsx`**: reemplazar `OPTIONS = [1, 3, 5, 10]` por `[1, 5, 10, 15, 20]` (grid 3 columnas para que entren las 5 opciones sin permitir valores intermedios).
 
-**Causa**: en `src/components/pensamientos/steps/Step6Balanza.tsx` el subcomponente `Panel` está declarado **dentro** del componente padre. Cada tecla que se tipea recrea `Panel` como nuevo tipo → React desmonta y remonta el `<input>` y el bloque animado con `AnimatePresence` + `height: auto`, provocando pérdida de foco y una animación de expansión/colapso visible como "movimiento".
+**Reproductor inmersivo (`BreathingHome.tsx` → pantalla de sesión)**:
+- Centrar verticalmente el contador de tiempo (mm:ss) — hoy queda desplazado por el header/píldora.
+- Mover el botón "Ajustes" a la fila inferior, al lado de "Pausar" (mismo tamaño y estilo glass). Quitarlo del header.
+- Precargar el guion completo en ElevenLabs **antes** de iniciar (spinner "Preparando tu sesión…" en la transición TimeSetup → Player, para que la voz arranque en cuanto la persona toca Comenzar).
 
-**Fix**: extraer `Panel` fuera del componente (o inlinear el JSX) y evitar animar `height: auto` en el editor abierto para que la tarjeta no oscile. El input mantiene foco y la tarjeta queda fija mientras se escribe.
+## 2. Guiones precargados vía ElevenLabs (cero espera para el usuario final)
 
-## 2. Ocultar el downbar cuando aparece el prompt de seguimiento
+Estrategia: **pre-síntesis server-side + cache compartido en Supabase Storage**, en vez de sintetizar por-usuario en el cliente (que es lo que hoy hace `elevenLabsTTS.ts` con IndexedDB).
 
-**Causa**: `FollowupPromptModal.tsx` no llama a `useHideBottomNav`, por eso la BottomNav queda encima del modal (visible en la captura 2).
+- Nuevo bucket público `mindfulness-audio/` con estructura `{voice_id}/{exercise_id}/{minutes}/{version}.mp3`.
+- Nueva edge function `mindfulness-precache`: recibe `{ scriptId, minutes, version, voiceId }`, sintetiza vía ElevenLabs y sube el MP3 al bucket. La usa el admin al guardar un guion (botón "Generar audio"). Idempotente.
+- Nueva tabla `mindfulness_audio_cache` (script_id, minutes, version, voice_id, storage_path, duration_sec, generated_at).
+- En el cliente, `synthesize()` primero consulta la tabla; si existe, reproduce el MP3 público directo (0 latencia, sin costo de IA por reproducción). Solo cae al flujo actual como fallback.
 
-**Fix**: importar `useHideBottomNav` desde `@/hooks/useUiChrome` y activarlo con `open` — mismo patrón ya usado en `FollowupCompleteSheet.tsx`.
+## 3. Admin — Guiones por minuto y múltiples versiones
 
-## 3. Historial reciente ampliado + integración con Calendario
+Refactor de `MindfulnessAdmin.tsx`:
+- Modelo nuevo: cada ejercicio (478, sigh, box, coh, etc.) tiene guiones agrupados por **duración** (5, 10, 15, 20 min) y, dentro de cada duración, **N versiones** (mínimo 5, ideal 10).
+- Navegación en 3 niveles: Ejercicio → Duración (tabs 5/10/15/20) → Versión (lista + "Nueva versión").
+- Cada versión: título corto, texto del guion, autor, `audio_status` (sin generar / generado / desactualizado), botón "Generar audio" (llama `mindfulness-precache`).
+- Selección en runtime: cuando el usuario elige minutos, el player toma una versión al azar (o rotativa) de esa duración para variar la experiencia.
+- Persistencia: migrar de `admin_settings` (JSON monolítico) a tabla `mindfulness_scripts_v2` (id, exercise_id, minutes, version, title, script_text, active, created_at). GRANTs + RLS admin-only escritura, lectura autenticada.
 
-### 3a. Ver todo el historial en Mente & Emoción
-- `RecentHistory.tsx` hoy trae solo 5 registros y muestra situación + emoción muy cortas.
-- Cambios:
-  - Subir a los últimos 20 y agregar botón "Ver todos" que despliega la lista completa (paginado local desde `thought_records`).
-  - Al tocar un ítem, abrir un **sheet de detalle** (nuevo `ThoughtRecordDetailSheet.tsx`) que muestre: fecha, situación, emociones + intensidad, pensamiento automático, distorsiones, evidencias a favor/en contra, pensamiento alternativo, plan/resolución y estado del follow-up (pendiente/completado con SUDS antes-después y logro).
-  - Filtro simple por tipo (Reestructuración / Abordaje) y por estado de tarea.
+## 4. Admin — Nueva sección "General" en Principal
 
-### 3b. Tareas de seguimiento en el Calendario
-- `src/lib/calendarActivity.ts` ya trae `thought_records` como tipo `"thought"`. Ampliar la función para incluir además:
-  - `thought_followups` creados ese día (label: "Tarea de seguimiento pendiente") — usando `due_date`.
-  - `thought_followup_logs` (o el campo `completed_at` en `thought_followups`) para marcar la tarea como **completada** o **incompleta** en el día correspondiente. Detail: SUDS antes→después y "Logrado / No logrado".
-- Nuevo `type: "thought_task"` con label e icono propio para diferenciarlo del registro de pensamiento.
+Bajo "Dashboard principal" agregar item de menú **"General"** con dos subpestañas:
 
-## Archivos afectados
-- `src/components/pensamientos/steps/Step6Balanza.tsx` — extraer `Panel`, quitar animación de altura.
-- `src/components/pensamientos/FollowupPromptModal.tsx` — `useHideBottomNav(open)`.
-- `src/components/pensamientos/RecentHistory.tsx` — 20 items + "Ver todos" + apertura de detalle.
-- `src/components/pensamientos/ThoughtRecordDetailSheet.tsx` — **nuevo**, muestra el registro completo y el estado de la tarea.
-- `src/lib/calendarActivity.ts` — agrega `thought_followups` (pendientes y completadas) al día correspondiente.
+### 4.1 Voces (por país, masculino + femenino)
+- Tabla `voice_settings` con `country_code`, `gender` ('male'|'female'), `voice_id`, `label`.
+- UI: lista de países (AR, UY, ES, MX, CO, CL, PE, US, "default"), cada uno con dos selects (M / F) que traen las voces de ElevenLabs (endpoint `/v1/voices` vía nueva edge function `list-elevenlabs-voices`).
+- Perfil del usuario: nuevo campo `voice_gender_preference` en `patient_app_profiles` + control en `Ajustes` ("Preferencia de voz: Femenina / Masculina").
+- `useUserVoice.tsx` resuelve: `profile.voice_id` (override) → `voice_settings[country][gender]` → default. Se aplica en todos los módulos de voz (mindfulness, respiración, sueño).
 
-Sin cambios de esquema en base de datos: se usa lo ya existente (`thought_records`, `thought_followups`, `thought_followup_logs`).
+### 4.2 Gasto de IA
+- Tabla `ai_usage_log` (provider, model, feature, tokens_in, tokens_out, chars, cost_usd, user_id, created_at).
+- Instrumentar edge functions existentes (`mindfulness-tts`, `pensamientos-companion`, `resmita-chat`, `transcribe-voice`, `mindfulness-precache`) para escribir un log por llamada con costo estimado (según tarifas de cada modelo).
+- Dashboard: total mes actual, breakdown por feature (Mindfulness TTS, Pensamientos IA, Resmita, Transcripción), gráfico línea últimos 30 días, top 10 usuarios por consumo. Filtro de rango de fechas.
+
+## Detalles técnicos
+
+- Migraciones nuevas: `mindfulness_scripts_v2`, `mindfulness_audio_cache`, `voice_settings`, `ai_usage_log` (todas con GRANTs a `authenticated`/`service_role` + RLS: lectura autenticada donde aplica, escritura admin-only vía `has_role`).
+- Bucket público `mindfulness-audio` (audio pregenerado, sin datos personales).
+- Nuevas edge functions: `mindfulness-precache`, `list-elevenlabs-voices`.
+- Config: costos por modelo en `admin_settings.ai_pricing` (editable) para calcular `cost_usd` sin hardcodear tarifas.
+- `patient_app_profiles.voice_gender_preference` + UI en `Ajustes`.
+
+## Fuera de alcance
+
+- No se generan aún las 5-10 versiones de guion (queda como tarea de contenido en admin, con la UI lista para cargarlas).
+- No se rehace el motor visual de los ejercicios (Lottie/SVG existentes se mantienen).
