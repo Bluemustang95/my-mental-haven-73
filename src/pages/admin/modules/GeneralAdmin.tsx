@@ -411,7 +411,7 @@ function NewAmbientDialog({ open, onOpenChange, onCreated }: {
             <div className="text-[10px] text-slate-400 mt-1">Define en qué grupo aparece dentro del selector.</div>
           </div>
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Archivo (MP3 · máx 12 MB)</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Archivo (MP3 · máx 50 MB · se repite en loop si el ejercicio es más largo)</label>
             <input
               type="file"
               accept="audio/*"
