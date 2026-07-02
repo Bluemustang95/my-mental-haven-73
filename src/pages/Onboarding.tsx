@@ -245,8 +245,9 @@ export default function Onboarding() {
   return (
     <OnboardingShell
       step={wizardStep}
-      totalSteps={step < 0 || step === 6 || step === 8 ? 0 : totalSteps}
-      onBack={step > -2 && step !== 6 && step !== 8 ? () => setStep((s) => s - 1) : undefined}
+      totalSteps={step < 0 || step === 6 ? 0 : totalSteps}
+      onBack={step > -2 && step !== 6 ? () => setStep((s) => s - 1) : undefined}
+
     >
       {step === -2 && <SplashIntro onContinue={() => setStep(-1)} />}
       {step === -1 && <ValueSlides onContinue={() => setStep(0)} />}
