@@ -675,6 +675,43 @@ function ToggleRow({ title, sub, value, onChange }: { title: string; sub: string
   );
 }
 
+function VoiceGenderSelector({
+  value,
+  onChange,
+  variant,
+}: {
+  value: VoiceGender;
+  onChange: (g: VoiceGender) => void;
+  variant: "light" | "dark";
+}) {
+  const dark = variant === "dark";
+  return (
+    <div className="mt-3">
+      <div className={`mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-white/55" : "text-[#101927]/50"}`}>
+        Tipo de voz
+      </div>
+      <div className={`grid grid-cols-2 gap-1 rounded-2xl p-1 ${dark ? "bg-white/8 border border-white/10" : "bg-[#101927]/5"}`}>
+        {(["female", "male"] as const).map((g) => {
+          const active = value === g;
+          return (
+            <button
+              key={g}
+              onClick={() => onChange(g)}
+              className={`h-9 rounded-xl text-[12px] font-bold transition ${
+                active
+                  ? dark ? "bg-white text-[#101927] shadow" : "bg-white text-[#101927] shadow-sm"
+                  : dark ? "text-white/60" : "text-[#101927]/55"
+              }`}
+            >
+              {g === "female" ? "Femenina" : "Masculina"}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ============================================================
    Pantalla 3 · Reproductor Inmersivo (full-screen)
    ============================================================ */
