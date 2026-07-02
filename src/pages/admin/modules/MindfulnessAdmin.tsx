@@ -104,8 +104,17 @@ export default function MindfulnessAdmin() {
 
   const generateAudio = async () => {
     if (!current) return;
-    if (!current.script_text.trim()) { toast.error("Redactá el guion primero"); return; }
+    const text = current.script_text.trim();
+    if (!text) { toast.error("Redactá el guion primero"); return; }
     setGenerating(true);
+    // Persist any unsaved edits first so the edge function sees the latest text.
+    const { error: saveErr } = await supabase.from("mindfulness_scripts_v2").update({
+      title: current.title,
+      script_text: current.script_text,
+      active: current.active,
+    }).eq("id", current.id);
+    if (saveErr) { setGenerating(false); toast.error(saveErr.message); return; }
+
     const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
       body: { scriptId: current.id, voiceId: globalVoiceId, force: false },
     });
@@ -115,6 +124,7 @@ export default function MindfulnessAdmin() {
     toast.success((data as { cached?: boolean })?.cached ? "Audio ya estaba en cache" : "Audio generado y cacheado");
     reload();
   };
+
 
   const hasAudio = (scriptId: string) =>
     audio.some(a => a.script_id === scriptId && a.voice_id === globalVoiceId);
