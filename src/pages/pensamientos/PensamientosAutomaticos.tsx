@@ -15,11 +15,12 @@ import Step8Resolucion from "@/components/pensamientos/steps/Step8Resolucion";
 import PsicoeducacionModal from "@/components/pensamientos/shell/PsicoeducacionModal";
 import PasosDrawer from "@/components/pensamientos/shell/PasosDrawer";
 import AiCompanionDrawer from "@/components/pensamientos/ai/AiCompanionDrawer";
+import FollowupPromptModal from "@/components/pensamientos/FollowupPromptModal";
 import { STEP_TITLES } from "@/lib/pensamientos/stepHelp";
 import { getResolutionMode, useThoughtDraft, type ThoughtDraft } from "@/lib/pensamientos/state";
 
 const TOTAL = 8;
-const HUB = "/herramientas/pensamientos";
+const HUB = "/herramientas/mente-emocion";
 
 function isStepDone(d: ThoughtDraft, step: number): boolean {
   switch (step) {
