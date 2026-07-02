@@ -3,8 +3,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Clock, Lock, Sparkles, X, Camera, Image as ImageIcon,
   Paperclip, Mic, Pause, Flower, Volume2, VolumeX, FileText,
-  Smile, Tag, Bold, Italic, Plus, Search, Pencil, Trash2, Check,
+  Bold, Italic, Plus, Search, Pencil, Trash2, ArrowLeft, Loader2,
 } from "lucide-react";
+import {
+  SmileyWink, Tag as TagPh, CloudRain, MusicNote, Waveform as WaveformIcon,
+  Keyboard, Waves, Wind as WindPh, SpeakerHigh,
+} from "@phosphor-icons/react";
 import { cn, localDateStr } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,7 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
-import { uploadAttachment, deleteAttachment } from "@/lib/journalAttachments";
+import { uploadAttachment, deleteAttachment, refreshSignedUrl } from "@/lib/journalAttachments";
 import * as e2e from "@/lib/e2ecipher";
 
 /* ────────────── Sanitizer (whitelist b/strong/i/em/br) ────────────── */
@@ -46,11 +50,13 @@ function sanitizeHtml(html: string): string {
 
 
 /* ────────────── Data ────────────── */
-const PROMPTS = [
-  { tag: "DICOTOMÍA DE CONTROL", text: "¿Qué parte de lo que te preocupa hoy está 100% bajo tu control y qué parte no?" },
-  { tag: "VISUALIZACIÓN STOIC", text: "Si eso que tanto temés ocurriera, ¿con qué herramientas internas contás para afrontarlo?" },
-  { tag: "GRATITUD SOMÁTICA", text: "Describí con detalle físico o sensorial algo de hoy que te haya hecho sentir a salvo." },
+type InspirePrompt = { id: string; text: string; tag: string | null };
+const FALLBACK_PROMPTS: InspirePrompt[] = [
+  { id: "fb-1", text: "¿Qué parte de lo que te preocupa hoy está 100% bajo tu control y qué parte no?", tag: null },
+  { id: "fb-2", text: "Si eso que tanto temés ocurriera, ¿con qué herramientas internas contás para afrontarlo?", tag: null },
+  { id: "fb-3", text: "Describí con detalle físico o sensorial algo de hoy que te haya hecho sentir a salvo.", tag: null },
 ];
+const INSPIRE_HISTORY_KEY = "diary:inspire:history";
 
 const EMOTIONS = [
   { k: "Calma", e: "🧘" }, { k: "Alegría", e: "☀️" }, { k: "Tristeza", e: "🌧️" },
@@ -129,18 +135,19 @@ function WriteView({
   onExitZen: () => void;
 }) {
   const [text, setText] = useState("");
-  const [prompt, setPrompt] = useState<typeof PROMPTS[number] | null>(null);
+  const [prompt, setPrompt] = useState<InspirePrompt | null>(null);
+  const [promptReuseDate, setPromptReuseDate] = useState<string | null>(null);
+  const [prompts, setPrompts] = useState<InspirePrompt[]>(FALLBACK_PROMPTS);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [emo, setEmo] = useState<string | null>(null);
+  const [emos, setEmos] = useState<Set<string>>(new Set());
   const [causes, setCauses] = useState<Set<string>>(new Set());
-  const [openAcc, setOpenAcc] = useState<"emo" | "cause" | null>(null);
   const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [recSec, setRecSec] = useState(0);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [entryId, setEntryId] = useState<string | null>(null);
   const [confirmNew, setConfirmNew] = useState(false);
   const [fmtBar, setFmtBar] = useState<{ top: number; left: number } | null>(null);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lastLen = useRef(0);
@@ -149,8 +156,29 @@ function WriteView({
   const imgRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Load prompts from DB (admin-managed) with local fallback
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("diary_inspire_prompts")
+        .select("id, text, tag")
+        .eq("active", true);
+      if (data && data.length > 0) setPrompts(data as InspirePrompt[]);
+    })();
+  }, []);
+
   // Inspirame
-  const inspire = () => setPrompt(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
+  const inspire = () => {
+    if (prompts.length === 0) return;
+    const pick = prompts[Math.floor(Math.random() * prompts.length)];
+    setPrompt(pick);
+    try {
+      const hist = JSON.parse(localStorage.getItem(INSPIRE_HISTORY_KEY) || "{}") as Record<string, string>;
+      setPromptReuseDate(hist[pick.id] ?? null);
+      hist[pick.id] = new Date().toISOString();
+      localStorage.setItem(INSPIRE_HISTORY_KEY, JSON.stringify(hist));
+    } catch { setPromptReuseDate(null); }
+  };
 
   // Attachments — preview inmediato + upload en background a Storage.
   const addFiles = (files: FileList | null, type: "image" | "file" | "audio") => {
@@ -206,12 +234,39 @@ function WriteView({
         : "audio/webm";
       const rec = new MediaRecorder(stream, { mimeType: mime });
       rec.ondataavailable = (e) => { if (e.data.size > 0) recordChunksRef.current.push(e.data); };
-      rec.onstop = () => {
+      rec.onstop = async () => {
         const blob = new Blob(recordChunksRef.current, { type: mime });
-        const file = new File([blob], `nota-${Date.now()}.webm`, { type: mime });
-        addFiles({ 0: file, length: 1, item: (i: number) => i === 0 ? file : null } as unknown as FileList, "audio");
         recordStreamRef.current?.getTracks().forEach((t) => t.stop());
         recordStreamRef.current = null;
+        if (blob.size < 800) {
+          toast.error("Grabación muy corta");
+          return;
+        }
+        setTranscribing(true);
+        try {
+          const fd = new FormData();
+          fd.append("file", new File([blob], `voice-${Date.now()}.webm`, { type: mime }));
+          fd.append("language", "es");
+          const { data, error } = await supabase.functions.invoke("transcribe-voice", { body: fd });
+          if (error) throw error;
+          const t = (data as { text?: string })?.text?.trim() ?? "";
+          if (!t) { toast.error("No se detectó voz"); return; }
+          // Append transcript to editor at cursor / end
+          const el = editorRef.current;
+          if (el) {
+            const paragraph = `${el.innerText && !el.innerText.endsWith("\n") ? " " : ""}${t}`;
+            el.innerHTML = sanitizeHtml((el.innerHTML || "") + paragraph.replace(/\n/g, "<br>"));
+            onEditorInput();
+          } else {
+            setText((prev) => `${prev} ${t}`.trim());
+          }
+          toast.success("Voz transcripta");
+        } catch (e) {
+          console.warn("[transcribe] error", e);
+          toast.error("No se pudo transcribir la voz");
+        } finally {
+          setTranscribing(false);
+        }
       };
       rec.start();
       mediaRecorderRef.current = rec;
@@ -282,8 +337,9 @@ function WriteView({
   };
 
   const reset = () => {
-    setText(""); setPrompt(null); attachments.forEach((a) => URL.revokeObjectURL(a.url));
-    setAttachments([]); setEmo(null); setCauses(new Set()); setOpenAcc(null);
+    setText(""); setPrompt(null); setPromptReuseDate(null);
+    attachments.forEach((a) => URL.revokeObjectURL(a.url));
+    setAttachments([]); setEmos(new Set()); setCauses(new Set());
     setRecording(false); setEntryId(null); setSaveState("idle");
     if (editorRef.current) editorRef.current.innerHTML = "";
     lastLen.current = 0;
@@ -292,30 +348,28 @@ function WriteView({
 
   // Autosave: debounced upsert whenever meaningful content changes
   useEffect(() => {
-    if (!text.trim() && !emo && causes.size === 0 && attachments.length === 0) return;
+    if (!text.trim() && emos.size === 0 && causes.size === 0 && attachments.length === 0) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaveState("saving");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setSaveState("idle"); return; }
-      const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
+      const tags = [...Array.from(emos), ...Array.from(causes)];
       // Save only stable (uploaded) attachment metadata, NOT blob URLs.
       const persistedAttachments = attachments
         .filter((a) => !!a.path)
         .map((a) => ({ id: a.id, name: a.name, type: a.type, path: a.path, size: a.size }));
       const audioAtt = persistedAttachments.find((a) => a.type === "audio");
-      const encEnabled = e2e.isE2EEnabled();
       const rawContent = sanitizeHtml(text);
-      const contentForDb = encEnabled ? await e2e.encryptText(rawContent) : rawContent;
       const payload = {
         user_id: user.id,
-        content: contentForDb,
+        content: rawContent,
         entry_date: localDateStr(),
         emotion_tags: tags,
         prompt: prompt?.text ?? null,
         attachments: persistedAttachments as unknown as never,
         voice_note_path: audioAtt?.path ?? null,
-        is_encrypted: encEnabled,
+        is_encrypted: false,
       };
       if (entryId) {
         const { error } = await supabase.from("journal_entries").update(payload).eq("id", entryId);
@@ -329,7 +383,7 @@ function WriteView({
     }, 1200);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, emo, causes, prompt, attachments]);
+  }, [text, emos, causes, prompt, attachments]);
 
 
   /* tone classes */
@@ -342,7 +396,7 @@ function WriteView({
   const mm = String(Math.floor(recSec / 60)).padStart(2, "0");
   const ss = String(recSec % 60).padStart(2, "0");
 
-  const selectedEmo = EMOTIONS.find((e) => e.k === emo);
+  const hasContent = !!text || emos.size > 0 || causes.size > 0;
 
   return (
     <motion.div
@@ -360,27 +414,13 @@ function WriteView({
           {!zen && (
             <>
               <button
-                onClick={() => {
-                  if (!text && !emo && causes.size === 0) return;
-                  setConfirmNew(true);
-                }}
-                disabled={!text && !emo && causes.size === 0}
+                onClick={() => { if (hasContent) setConfirmNew(true); }}
+                disabled={!hasContent}
                 className={cn("grid h-8 w-8 place-items-center rounded-full disabled:opacity-30", iconBtnCls)}
                 aria-label="Nueva entrada"
                 title="Nueva entrada"
               >
                 <Plus size={15} />
-              </button>
-              <button
-                onClick={() => setPrivacyOpen(true)}
-                className={cn("grid h-8 w-8 place-items-center rounded-full relative", iconBtnCls)}
-                aria-label="Privacidad y cifrado"
-                title="Privacidad y cifrado"
-              >
-                <Lock size={15} />
-                {e2e.isE2EEnabled() && (
-                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
-                )}
               </button>
               <button onClick={onOpenHistory} className={cn("grid h-8 w-8 place-items-center rounded-full", iconBtnCls)} aria-label="Historial">
                 <Clock size={15} />
@@ -407,11 +447,15 @@ function WriteView({
           >
             <div className={cn("relative mb-3 rounded-3xl p-4 pr-10", surfaceCls,
               !zen && "bg-[#7cc2c8]/10 border-[#7cc2c8]/30")}>
-              <p className="font-display text-[10px] font-bold uppercase tracking-[0.2em] text-[#7cc2c8]">
-                {prompt.tag}
-              </p>
-              <p className="mt-1.5 font-mindful text-base leading-snug">{prompt.text}</p>
-              <button onClick={() => setPrompt(null)} className="absolute right-3 top-3 opacity-60">
+              <p className="font-mindful text-base leading-snug">{prompt.text}</p>
+              {promptReuseDate && (
+                <p className="mt-2 rounded-xl bg-[#facb60]/15 border border-[#facb60]/40 px-3 py-2 text-[11.5px] text-[#101927]/80">
+                  ✨ Ya escribiste con este mismo Inspirame el{" "}
+                  <strong>{new Date(promptReuseDate).toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" })}</strong>.
+                  Escribí de nuevo y luego, en tu Historial, comparalo.
+                </p>
+              )}
+              <button onClick={() => { setPrompt(null); setPromptReuseDate(null); }} className="absolute right-3 top-3 opacity-60">
                 <X size={16} />
               </button>
             </div>
@@ -498,9 +542,9 @@ function WriteView({
         </div>
       )}
 
-      {/* Recording bar */}
+      {/* Recording / Transcribing bar */}
       <AnimatePresence>
-        {recording && (
+        {(recording || transcribing) && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -508,14 +552,26 @@ function WriteView({
             className="overflow-hidden"
           >
             <div className={cn("mt-2 flex items-center gap-3 rounded-full p-2 pl-3", surfaceCls)}>
-              <button
-                onClick={stopRecording}
-                className="grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white"
-              >
-                <Pause size={12} />
-              </button>
-              <Waveform />
-              <span className="pr-2 font-mono text-[11px] tabular-nums opacity-80">{mm}:{ss}</span>
+              {recording ? (
+                <>
+                  <button
+                    onClick={stopRecording}
+                    className="grid h-7 w-7 place-items-center rounded-full bg-red-500 text-white"
+                    aria-label="Detener y transcribir"
+                  >
+                    <Pause size={12} />
+                  </button>
+                  <Waveform />
+                  <span className="pr-2 font-mono text-[11px] tabular-nums opacity-80">{mm}:{ss}</span>
+                </>
+              ) : (
+                <>
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-[#7cc2c8]/20 text-[#7cc2c8]">
+                    <Loader2 size={12} className="animate-spin" />
+                  </span>
+                  <span className="flex-1 text-[12px] opacity-80">Transcribiendo tu voz…</span>
+                </>
+              )}
             </div>
           </motion.div>
         )}
@@ -542,24 +598,29 @@ function WriteView({
           <PopoverTrigger asChild>
             <button
               className={cn(
-                "flex items-center gap-1 rounded-full px-2 py-1.5 text-sm transition",
-                emo ? "text-[#7cc2c8]" : iconBtnCls,
+                "relative flex items-center gap-1 rounded-full px-2 py-1.5 text-sm transition",
+                emos.size > 0 ? "text-[#7cc2c8]" : iconBtnCls,
               )}
               aria-label="Siento"
               title="Siento…"
             >
-              {selectedEmo ? <span className="text-base leading-none">{selectedEmo.e}</span> : <Smile size={17} />}
+              <SmileyWink size={19} weight="duotone" />
+              {emos.size > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-[#7cc2c8] text-[8px] font-bold text-[#101927]">
+                  {emos.size}
+                </span>
+              )}
             </button>
           </PopoverTrigger>
           <PopoverContent align="center" sideOffset={8} className="w-64 rounded-2xl p-3">
-            <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Siento…</p>
+            <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Siento… (podés elegir varias)</p>
             <div className="flex flex-wrap gap-1.5">
               {EMOTIONS.map((it) => {
-                const on = emo === it.k;
+                const on = emos.has(it.k);
                 return (
                   <button
                     key={it.k}
-                    onClick={() => setEmo(on ? null : it.k)}
+                    onClick={() => setEmos((s) => { const n = new Set(s); n.has(it.k) ? n.delete(it.k) : n.add(it.k); return n; })}
                     className={cn(
                       "rounded-full border px-2.5 py-1 text-[11px] transition",
                       on ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#7cc2c8]" : "border-[#101927]/10 bg-white/60 text-[#101927]",
@@ -583,7 +644,7 @@ function WriteView({
               aria-label="Causas"
               title="Causas…"
             >
-              <Tag size={17} />
+              <TagPh size={19} weight="duotone" />
               {causes.size > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-[#7cc2c8] text-[8px] font-bold text-[#101927]">
                   {causes.size}
@@ -658,130 +719,15 @@ function WriteView({
         </AlertDialogContent>
       </AlertDialog>
 
-      <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
     </motion.div>
   );
 }
 
 
+
+
 /* ────────────── Subcomponents ────────────── */
-function PrivacyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const [enabled, setEnabled] = useState(e2e.isE2EEnabled());
-  const [showKey, setShowKey] = useState(false);
-  const [importVal, setImportVal] = useState("");
 
-  useEffect(() => { if (open) setEnabled(e2e.isE2EEnabled()); }, [open]);
-
-  const activate = async () => {
-    await e2e.enableE2E();
-    setEnabled(true);
-    toast.success("Cifrado extremo activado. Las nuevas entradas se cifran en tu dispositivo.");
-  };
-  const deactivate = () => {
-    e2e.disableE2E();
-    setEnabled(false);
-    toast.info("Cifrado desactivado. Las nuevas entradas se guardarán sin cifrar.");
-  };
-  const copyKey = async () => {
-    const k = e2e.exportKeyB64();
-    if (!k) { toast.error("No hay clave para copiar"); return; }
-    await navigator.clipboard.writeText(k);
-    toast.success("Clave copiada. Guardala en un lugar seguro.");
-  };
-  const doImport = async () => {
-    const ok = await e2e.importKeyB64(importVal);
-    if (ok) { toast.success("Clave importada. Recargá el historial."); setImportVal(""); }
-    else toast.error("Clave inválida.");
-  };
-
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-sm">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <Lock size={16} /> Privacidad y cifrado
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-left space-y-2">
-            <span className="block">
-              Tus notas viajan cifradas en tránsito y solo vos las ves. Podés además activar
-              <strong> cifrado extremo (E2E)</strong>: se genera una clave en este dispositivo
-              y cifra el contenido antes de subirlo. Ni RESMA ni nadie puede leerlo.
-            </span>
-            <span className="block text-xs text-amber-700 bg-amber-50 rounded-lg p-2 border border-amber-200">
-              ⚠️ Si perdés la clave, no se puede recuperar el contenido cifrado.
-              Copiala y guardala en un lugar seguro para usarla en otro dispositivo.
-            </span>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <div className="space-y-3 pt-1">
-          {enabled ? (
-            <>
-              <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800">
-                <Check size={16} /> Cifrado extremo activado
-              </div>
-              <button
-                onClick={() => setShowKey((v) => !v)}
-                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-left"
-              >
-                {showKey ? "Ocultar clave" : "Ver / copiar mi clave"}
-              </button>
-              {showKey && (
-                <div className="space-y-2">
-                  <textarea
-                    readOnly
-                    value={e2e.exportKeyB64() ?? ""}
-                    className="w-full rounded-xl border border-border bg-muted p-2 text-[11px] font-mono break-all"
-                    rows={3}
-                  />
-                  <button onClick={copyKey} className="w-full rounded-xl bg-[#101927] py-2 text-xs font-medium text-white">
-                    Copiar clave
-                  </button>
-                </div>
-              )}
-              <button
-                onClick={deactivate}
-                className="w-full rounded-xl border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-              >
-                Desactivar cifrado extremo
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={activate}
-                className="w-full rounded-xl bg-[#7cc2c8] py-3 text-sm font-semibold text-[#101927]"
-              >
-                Activar cifrado extremo
-              </button>
-              <details className="rounded-xl border border-border bg-card p-3 text-xs">
-                <summary className="cursor-pointer text-muted-foreground">Ya tengo una clave (importar)</summary>
-                <textarea
-                  value={importVal}
-                  onChange={(e) => setImportVal(e.target.value)}
-                  placeholder="Pegá tu clave base64"
-                  className="mt-2 w-full rounded-lg border border-border bg-background p-2 text-[11px] font-mono"
-                  rows={3}
-                />
-                <button
-                  onClick={doImport}
-                  disabled={!importVal.trim()}
-                  className="mt-2 w-full rounded-lg bg-[#101927] py-2 text-xs font-medium text-white disabled:opacity-40"
-                >
-                  Importar clave
-                </button>
-              </details>
-            </>
-          )}
-        </div>
-
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cerrar</AlertDialogCancel>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
 
 function SaveIndicator({ state, zen }: { state: "idle" | "saving" | "saved"; zen: boolean }) {
   const base = cn("text-[10px] font-medium tracking-wide transition-opacity", zen ? "text-slate-400" : "text-[#101927]/45");
@@ -841,18 +787,26 @@ function Waveform() {
 
 function SoundscapePopover() {
   const [, force] = useState(0);
+  const [showMore, setShowMore] = useState(false);
   const refresh = () => force((n) => n + 1);
   const toggle = (t: audio.Track) => {
     if (audio.isPlaying(t)) audio.stop(t); else audio.play(t);
     refresh();
   };
-  const items: { t: audio.Track; label: string; emoji: string }[] = [
-    { t: "solfeggio", label: "528Hz Solfeggio", emoji: "🧬" },
-    { t: "rain", label: "Lluvia suave", emoji: "🌧️" },
-    { t: "brown", label: "Ruido Marrón", emoji: "🪵" },
-    { t: "click", label: "Click Mecánico", emoji: "⌨️" },
+  type Item = { t: audio.Track; label: string; Icon: typeof CloudRain };
+  const primary: Item[] = [
+    { t: "solfeggio", label: "528Hz Solfeggio", Icon: MusicNote },
+    { t: "rain", label: "Lluvia suave", Icon: CloudRain },
+    { t: "brown", label: "Ruido Marrón", Icon: WaveformIcon },
+    { t: "click", label: "Click Mecánico", Icon: Keyboard },
   ];
-  const anyOn = items.some((it) => audio.isPlaying(it.t));
+  const extra: Item[] = [
+    { t: "ocean", label: "Olas del mar", Icon: Waves },
+    { t: "white", label: "Ruido Blanco", Icon: SpeakerHigh },
+    { t: "wind", label: "Viento", Icon: WindPh },
+  ];
+  const all = showMore ? [...primary, ...extra] : primary;
+  const anyOn = [...primary, ...extra].some((it) => audio.isPlaying(it.t));
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -867,30 +821,37 @@ function SoundscapePopover() {
           {anyOn ? <Volume2 size={17} /> : <VolumeX size={17} />}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="center" sideOffset={8} className="w-64 rounded-2xl border-white/10 bg-[#0b0b10] p-3">
+      <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl border-white/10 bg-[#0b0b10] p-3">
         <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-[#7cc2c8]">
           Paisajes sonoros
         </p>
         <div className="grid grid-cols-2 gap-1.5">
-          {items.map((it) => {
+          {all.map((it) => {
             const on = audio.isPlaying(it.t);
             return (
               <button
                 key={it.t}
                 onClick={() => toggle(it.t)}
                 className={cn(
-                  "flex items-center justify-between gap-1 rounded-xl border px-2 py-2 text-[11px] transition",
+                  "flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[11.5px] transition",
                   on
                     ? "border-[#7cc2c8]/50 bg-[#7cc2c8]/10 text-[#7cc2c8]"
                     : "border-white/10 bg-white/[0.03] text-slate-200"
                 )}
               >
-                <span className="truncate"><span className="mr-1">{it.emoji}</span>{it.label}</span>
-                {on ? <Volume2 size={12} /> : <VolumeX size={12} className="opacity-60" />}
+                <it.Icon size={16} weight="duotone" />
+                <span className="truncate flex-1 text-left">{it.label}</span>
+                {on && <span className="h-1.5 w-1.5 rounded-full bg-[#7cc2c8]" />}
               </button>
             );
           })}
         </div>
+        <button
+          onClick={() => setShowMore((v) => !v)}
+          className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.03] py-1.5 text-[11px] text-slate-300 hover:text-white"
+        >
+          {showMore ? "Ver menos" : "Ver más"}
+        </button>
       </PopoverContent>
     </Popover>
   );
@@ -898,7 +859,8 @@ function SoundscapePopover() {
 
 
 /* ────────────── History View ────────────── */
-type Entry = { id: string; content: string; entry_date: string | null; emotion_tags: string[] | null; created_at: string | null; is_encrypted?: boolean; _locked?: boolean };
+type StoredAtt = { id: string; name: string; type: "image" | "file" | "audio"; path: string; size?: number };
+type Entry = { id: string; content: string; entry_date: string | null; emotion_tags: string[] | null; created_at: string | null; is_encrypted?: boolean; attachments?: StoredAtt[] | null; _locked?: boolean };
 
 function HistoryView({ onBack }: { onBack: () => void }) {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -916,7 +878,7 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
       const { data } = await supabase.from("journal_entries")
-        .select("id, content, entry_date, emotion_tags, created_at, is_encrypted")
+        .select("id, content, entry_date, emotion_tags, created_at, is_encrypted, attachments")
         .eq("user_id", user.id).order("created_at", { ascending: false });
       const rows = (data ?? []) as Entry[];
       const decoded: Entry[] = await Promise.all(rows.map(async (r) => {
@@ -930,6 +892,26 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       setLoading(false);
     })();
   }, []);
+
+  // Hide bottom nav while detail sheet is open
+  useEffect(() => {
+    if (active) document.body.classList.add("diary-entry-open");
+    else document.body.classList.remove("diary-entry-open");
+    return () => document.body.classList.remove("diary-entry-open");
+  }, [active]);
+
+  // Resolve signed URLs for the active entry's attachments
+  const [attUrls, setAttUrls] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!active?.attachments || active.attachments.length === 0) { setAttUrls({}); return; }
+    (async () => {
+      const entries = await Promise.all(active.attachments!.map(async (a) => {
+        const url = await refreshSignedUrl(a.path);
+        return [a.id, url ?? ""] as const;
+      }));
+      setAttUrls(Object.fromEntries(entries));
+    })();
+  }, [active]);
 
   const fmt = (s: string | null) => {
     if (!s) return "";
@@ -994,9 +976,19 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       className="flex flex-1 flex-col"
     >
       <div className="mb-4 flex items-start justify-between px-1">
-        <div>
-          <h1 className="font-mindful text-3xl leading-none">Diario</h1>
-          <p className="mt-1 text-xs text-slate-500">Tu espacio seguro para escribir.</p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onBack}
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/60 bg-white/80 text-[#101927] shadow-sm"
+            aria-label="Volver al Diario"
+            title="Volver al Diario"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className="font-mindful text-3xl leading-none">Historial</h1>
+            <p className="mt-1 text-xs text-slate-500">Tus bitácoras anteriores.</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <button
@@ -1008,16 +1000,6 @@ function HistoryView({ onBack }: { onBack: () => void }) {
             aria-label="Buscar"
           >
             <Search size={15} />
-          </button>
-          <button
-            onClick={() => toast.info("Tus notas son privadas y solo vos las ves.")}
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/60 bg-white/70 text-[#101927] shadow-sm"
-            aria-label="Privacidad"
-          >
-            <Lock size={14} />
-          </button>
-          <button onClick={onBack} className="grid h-9 w-9 place-items-center rounded-full bg-[#7cc2c8] text-[#101927] shadow-[0_8px_24px_-10px_rgba(124,194,200,0.7)]" aria-label="Cerrar historial">
-            <Clock size={14} />
           </button>
         </div>
       </div>
@@ -1157,11 +1139,48 @@ function HistoryView({ onBack }: { onBack: () => void }) {
                     style={{ fontFamily: "Lora, serif" }}
                   />
                 ) : (
-                  <div
-                    className="text-[14px] leading-relaxed text-[#101927] whitespace-pre-wrap"
-                    style={{ fontFamily: "Lora, serif" }}
-                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(active.content ?? "") || "<em class='opacity-60'>(sin texto)</em>" }}
-                  />
+                  <>
+                    <div
+                      className="text-[14px] leading-relaxed text-[#101927] whitespace-pre-wrap"
+                      style={{ fontFamily: "Lora, serif" }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(active.content ?? "") || "<em class='opacity-60'>(sin texto)</em>" }}
+                    />
+                    {active.attachments && active.attachments.length > 0 && (
+                      <div className="mt-4">
+                        <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">
+                          Adjuntos
+                        </p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {active.attachments.map((a) => {
+                            const url = attUrls[a.id];
+                            if (a.type === "image") {
+                              return (
+                                <a key={a.id} href={url || "#"} target="_blank" rel="noreferrer"
+                                  className="relative block aspect-square overflow-hidden rounded-2xl border border-[#101927]/10 bg-[#101927]/5">
+                                  {url ? <img src={url} alt={a.name} className="h-full w-full object-cover" /> :
+                                    <div className="grid h-full w-full place-items-center text-[10px] text-slate-400">…</div>}
+                                </a>
+                              );
+                            }
+                            if (a.type === "audio") {
+                              return (
+                                <div key={a.id} className="col-span-3 rounded-2xl border border-[#101927]/10 bg-[#101927]/5 p-2">
+                                  {url ? <audio controls src={url} className="w-full" /> : <p className="text-[11px] text-slate-500">Cargando audio…</p>}
+                                </div>
+                              );
+                            }
+                            return (
+                              <a key={a.id} href={url || "#"} target="_blank" rel="noreferrer"
+                                className="flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border border-[#101927]/10 bg-white p-2 text-center">
+                                <FileText size={18} className="opacity-70" />
+                                <span className="line-clamp-2 text-[9.5px] text-[#101927]/70">{a.name}</span>
+                              </a>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 

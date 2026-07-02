@@ -1,5 +1,5 @@
 // Web Audio synthesizer for Diario Zen mode — no external assets.
-export type Track = "solfeggio" | "rain" | "brown" | "click";
+export type Track = "solfeggio" | "rain" | "brown" | "click" | "ocean" | "white" | "wind";
 
 let ctx: AudioContext | null = null;
 const nodes: Partial<Record<Track, { stop: () => void }>> = {};
@@ -100,6 +100,59 @@ export function play(t: Track) {
   } else if (t === "click") {
     // Click is an "armed" mode: no continuous sound, just enables triggerClick.
     nodes[t] = { stop: () => { master.disconnect(); } };
+  } else if (t === "ocean") {
+    const src = c.createBufferSource();
+    src.buffer = noiseBuffer(c);
+    src.loop = true;
+    const filter = c.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 900;
+    const lfo = c.createOscillator();
+    lfo.frequency.value = 0.08;
+    const lfoG = c.createGain();
+    lfoG.gain.value = 600;
+    lfo.connect(lfoG).connect(filter.frequency);
+    src.connect(filter).connect(master);
+    src.start(); lfo.start();
+    nodes[t] = {
+      stop: () => {
+        master.gain.linearRampToValueAtTime(0, c.currentTime + 0.4);
+        setTimeout(() => { src.stop(); lfo.stop(); master.disconnect(); }, 500);
+      },
+    };
+  } else if (t === "white") {
+    const src = c.createBufferSource();
+    src.buffer = noiseBuffer(c);
+    src.loop = true;
+    src.connect(master);
+    src.start();
+    nodes[t] = {
+      stop: () => {
+        master.gain.linearRampToValueAtTime(0, c.currentTime + 0.4);
+        setTimeout(() => { src.stop(); master.disconnect(); }, 500);
+      },
+    };
+  } else if (t === "wind") {
+    const src = c.createBufferSource();
+    src.buffer = noiseBuffer(c);
+    src.loop = true;
+    const filter = c.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 500;
+    filter.Q.value = 0.7;
+    const lfo = c.createOscillator();
+    lfo.frequency.value = 0.2;
+    const lfoG = c.createGain();
+    lfoG.gain.value = 300;
+    lfo.connect(lfoG).connect(filter.frequency);
+    src.connect(filter).connect(master);
+    src.start(); lfo.start();
+    nodes[t] = {
+      stop: () => {
+        master.gain.linearRampToValueAtTime(0, c.currentTime + 0.4);
+        setTimeout(() => { src.stop(); lfo.stop(); master.disconnect(); }, 500);
+      },
+    };
   }
 }
 

@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, Brain, Sparkles, Wind, Palette, Activity,
   TrendingUp, BookOpen, Zap, Bell, ChevronDown, LogOut, ShieldCheck, Plus,
-  ClipboardList, Star, LifeBuoy, Globe2,
+  ClipboardList, Star, LifeBuoy, Globe2, NotebookPen,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -36,6 +36,7 @@ const SECTIONS: NavSection[] = [
     id: "recursos",
     label: "Recursos Clínicos",
     items: [
+      { title: "Diario", url: "/admin/diario", icon: NotebookPen },
       { title: "Pensamientos Auto.", url: "/admin/pensamientos", icon: Brain },
       { title: "Regulación DBT", url: "/admin/regulacion", icon: Sparkles },
       { title: "Mindfulness & Resp.", url: "/admin/mindfulness", icon: Wind },

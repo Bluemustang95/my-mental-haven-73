@@ -855,6 +855,36 @@ export type Database = {
         }
         Relationships: []
       }
+      diary_inspire_prompts: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          sort_order: number
+          tag: string | null
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          sort_order?: number
+          tag?: string | null
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          sort_order?: number
+          tag?: string | null
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dream_log: {
         Row: {
           created_at: string | null
