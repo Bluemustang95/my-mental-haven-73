@@ -50,11 +50,13 @@ function sanitizeHtml(html: string): string {
 
 
 /* ────────────── Data ────────────── */
-const PROMPTS = [
-  { tag: "DICOTOMÍA DE CONTROL", text: "¿Qué parte de lo que te preocupa hoy está 100% bajo tu control y qué parte no?" },
-  { tag: "VISUALIZACIÓN STOIC", text: "Si eso que tanto temés ocurriera, ¿con qué herramientas internas contás para afrontarlo?" },
-  { tag: "GRATITUD SOMÁTICA", text: "Describí con detalle físico o sensorial algo de hoy que te haya hecho sentir a salvo." },
+type InspirePrompt = { id: string; text: string; tag: string | null };
+const FALLBACK_PROMPTS: InspirePrompt[] = [
+  { id: "fb-1", text: "¿Qué parte de lo que te preocupa hoy está 100% bajo tu control y qué parte no?", tag: null },
+  { id: "fb-2", text: "Si eso que tanto temés ocurriera, ¿con qué herramientas internas contás para afrontarlo?", tag: null },
+  { id: "fb-3", text: "Describí con detalle físico o sensorial algo de hoy que te haya hecho sentir a salvo.", tag: null },
 ];
+const INSPIRE_HISTORY_KEY = "diary:inspire:history";
 
 const EMOTIONS = [
   { k: "Calma", e: "🧘" }, { k: "Alegría", e: "☀️" }, { k: "Tristeza", e: "🌧️" },
