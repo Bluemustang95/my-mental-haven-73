@@ -875,15 +875,23 @@ function TimeEditSheet({
           <span className="text-white/55 text-[10px] uppercase tracking-[0.18em] font-semibold">Duración</span>
           <div className="text-white text-[26px] font-bold tabular-nums">{m} <span className="text-[13px] font-medium text-white/55">min</span></div>
         </div>
-        <input
-          type="range" min={1} max={30} value={m}
-          onChange={(e) => setM(parseInt(e.target.value, 10))}
-          className="resma-slider mt-3 w-full"
-          style={{ accentColor: "#7cc2c8" }}
-        />
-        <div className="mt-1 flex justify-between text-[10px] font-semibold text-white/40">
-          {[1, 5, 10, 15, 20, 30].map((v) => <span key={v}>{v}m</span>)}
+        <div className="mt-3 grid grid-cols-5 gap-2">
+          {[1, 5, 10, 15, 20].map((v) => {
+            const active = m === v;
+            return (
+              <button
+                key={v}
+                onClick={() => setM(v)}
+                className={`h-11 rounded-2xl text-[13px] font-bold tabular-nums transition ${
+                  active ? "bg-[#7cc2c8] text-[#101927]" : "bg-white/10 text-white border border-white/15"
+                }`}
+              >
+                {v}
+              </button>
+            );
+          })}
         </div>
+
 
         <div className="mt-5 flex gap-2">
           <button
