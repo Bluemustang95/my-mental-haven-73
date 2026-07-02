@@ -1,35 +1,37 @@
-## Cambios a realizar
+## Diagnóstico
 
-### 1) Admin → General → Voces: agregar voces personalizadas
-- El selector actual solo muestra las voces que ElevenLabs devuelve del catálogo de tu cuenta. Para traer nuevas voces reales hay que agregarlas en la biblioteca de ElevenLabs (Voice Library o clonar); una vez agregadas aparecen automáticamente.
-- Además, para casos en que ya se tiene un `voice_id` a mano (voz compartida, voz pública, voz privada aún no sincronizada), agregar en la UI un botón **"+ Agregar voz manual"** que abre un mini formulario con `voice_id`, `label` y `género`. Esa entrada se guarda en una nueva tabla `voice_library_custom` (o se inserta ad-hoc en `voice_settings`) y se fusiona con el listado de ElevenLabs en el `<select>`.
-- Mostrar además un botón "Recargar catálogo" y un enlace/tooltip explicando "Para sumar más voces, agregalas primero a tu cuenta de ElevenLabs (Voice Library)".
+Sí, puede ser: en la base ya existe un guion de **Argentina / Dormir mejor / 5 min / Versión 1** y tiene audio cacheado. El problema es que el reproductor actual no está leyendo ese guion completo; sigue reproduciendo frases cortas internas del patrón (`Inhalá...`, `Sostené...`, `Exhalá...`) vía TTS en vivo. Por eso escuchás algo que no escribiste y puede sonar robótico/fallback.
 
-### 2) Admin → Mindfulness: guiones por país + estado por nacionalidad
-- Agregar columna `country_code TEXT NOT NULL DEFAULT 'default'` a `mindfulness_scripts_v2` y a la unique key (`exercise_id, minutes, version, country_code`).
-- En `MindfulnessAdmin.tsx` agregar un cuarto filtro **"País"** (Default / Argentina / Uruguay / Chile / México / Colombia / Perú / España / EEUU). La lista de versiones y el editor pasan a filtrar también por país.
-- Junto a cada versión mostrar chips con estado del audio por país (✓ verde si `mindfulness_audio_cache` tiene fila para esa `(script_id, voice_id_del_país)`).
-- Botón **"Generar audio para todos los países"**: itera países configurados en `voice_settings` (femenino/masculino) e invoca `mindfulness-precache` por cada uno. Alternativamente, el botón "Generar audio" actual queda país-por-país usando la voz configurada del país activo.
-- Respuesta a "¿se hace de una?": **no**, ElevenLabs cobra por síntesis y cada país usa distinta voz/acento, así que hay que generar por país. La UI lo hace en batch para no tener que hacer clic uno por uno.
+## Plan de implementación
 
-### 3) Reproductor de Mindfulness: honrar voz + ambiente elegidos
-- Bug: `useUserVoice` cae al fallback legacy cuando `voice_settings` no tiene fila para Argentina/género. Además, el reproductor no consulta el guion pre-cacheado por país, solo sintetiza cues (`Inhalá`/`Exhalá`) con la voz global.
-- Cambios:
-  - Al entrar al ejercicio, hacer lookup del guion pre-cacheado por `(exercise_id, minutes, country_code)` + voz del usuario en `mindfulness_audio_cache`; si existe, reproducirlo como pista guía en vez de sintetizar por cue.
-  - Si no hay precache, seguir con cues sintetizados **pero** usando el `voiceId` de `useUserVoice` de forma consistente (hoy hay un `getGlobalVoice()` fallback dentro de `elevenLabsTTS` que puede pisarlo).
-  - Ambiente: leer de localStorage la última selección global al montar el reproductor (hoy usa el estado inicial del padre, que puede quedar desincronizado tras cambiar en Ajustes globales).
+1. **Usar guion admin real en el player**
+   - Al iniciar una práctica, buscar el guion activo por:
+     - ejercicio: `478` para “Dormir mejor”
+     - duración: 5/10/15/20
+     - país del usuario/admin: Argentina si el perfil lo indica
+   - Prioridad: país del usuario → `default` como fallback.
+   - Si hay varias versiones activas, elegir una aleatoria para variedad.
 
-### 4) UI del reproductor: timer arriba, chico
-- Mover el chip del timer de `flex-1 justify-center` a un pequeño pill centrado justo **debajo del título** ("DORMIR MEJOR"), tipografía chica (`text-[15px]` tabular), como estaba antes.
-- El centro de la pantalla queda libre para el visualizador (esfera). La fase (`INHALÁ`) y los tres botones (Reanudar / Ajustes / Detener) quedan igual, abajo.
+2. **Reproducir audio pregenerado antes que TTS en vivo**
+   - Si existe audio cacheado para ese guion + voz argentina elegida, reproducir ese MP3.
+   - Si no existe, mostrar aviso claro: “Audio pendiente de generar para Argentina”, y recién ahí usar guía por fases como fallback opcional.
+   - Evitar que el navegador use `speechSynthesis`, que es lo que suele sonar robótico.
 
-### Archivos afectados
-- `supabase/migrations/*` → nueva migración: `country_code` en `mindfulness_scripts_v2` + unique, tabla `voice_library_custom` (id, voice_id, label, gender, created_at) con RLS admin-only.
-- `src/pages/admin/modules/GeneralAdmin.tsx` → botón "+ Agregar voz manual" + merge del catálogo.
-- `src/pages/admin/modules/MindfulnessAdmin.tsx` → filtro país + botón batch multi-país + estado audio por país.
-- `supabase/functions/mindfulness-precache/index.ts` → aceptar `country_code` en la ruta de storage y resolver voz automáticamente si se pasa `country_code` sin `voiceId`.
-- `src/pages/mindfulness/BreathingHome.tsx` → mover timer al header, cargar audio precacheado por país, re-hidratar ambiente desde localStorage al entrar.
-- `src/hooks/useUserVoice.tsx` → asegurar que nunca cae al `getGlobalVoice` cuando hay perfil + voz por país configurada.
+3. **Corregir selección de voz por país y género**
+   - Respetar `patient_app_profiles.country = Argentina` y `voice_gender_preference`.
+   - Si el usuario está como admin en Argentina, debe resolver voz de `voice_settings` para Argentina.
+   - En admin, permitir generar audio por país y por género, no solo femenino.
 
-### Nota técnica sobre el costo/tiempo
-Generar 4 ejercicios × 4 duraciones × ~5 versiones × 8 países × 2 géneros = **~1.280 audios**. Cada guion ronda 500-1500 caracteres → costo ElevenLabs multilingüe ~$0.15-0.45 por audio. Se recomienda generar solo la voz por defecto (femenina) para cada país al principio, y masculinas on-demand. La UI del batch va a mostrar un progreso claro.
+4. **Agregar selector Femenino / Masculino en Mindfulness**
+   - En la pantalla de ajustes antes de iniciar: selector “Voz femenina / Voz masculina”.
+   - En los ajustes dentro de la práctica: mismo selector junto a volumen y sonido ambiente.
+   - Guardar preferencia para próximas prácticas y sincronizarla con el perfil del usuario.
+
+5. **Ajustar estado visual y mensajes**
+   - Mostrar qué voz se está usando: “Argentina · femenina/masculina”.
+   - Mostrar si el audio está “pregenerado” o si falta generarlo.
+   - Mantener el timer chico arriba como pediste antes.
+
+## Resultado esperado
+
+Cuando entres a **Dormir mejor → 5 minutos** con perfil/admin Argentina, debe sonar exactamente el guion cargado en Admin para Argentina, con la voz argentina configurada, y el usuario podrá elegir voz femenina o masculina desde ajustes.
