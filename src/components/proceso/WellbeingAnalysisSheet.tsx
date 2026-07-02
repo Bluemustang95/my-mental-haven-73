@@ -17,6 +17,7 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
   const [rangeMode, setRangeMode] = useState<"week" | "month">("week");
   const [mindMinutes, setMindMinutes] = useState<number>(0);
   const [medAdh, setMedAdh] = useState<{ taken: number; total: number } | null>(null);
+  const [testHistory, setTestHistory] = useState<{ test_type: string; score: number; severity: string | null; created_at: string }[]>([]);
   const trend = snapshot?.trend?.length ? snapshot.trend : [0,0,0,0,0,0,0];
   const score = snapshot?.score ?? 0;
   const delta = snapshot?.delta ?? 0;
