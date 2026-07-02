@@ -111,6 +111,7 @@ import MindfulnessAdmin from "@/pages/admin/modules/MindfulnessAdmin";
 import EscanerAdmin from "@/pages/admin/modules/EscanerAdmin";
 import HabitosAdmin from "@/pages/admin/modules/HabitosAdmin";
 import ProgresoAdmin from "@/pages/admin/modules/ProgresoAdmin";
+import DiarioAdmin from "@/pages/admin/modules/DiarioAdmin";
 import NotificacionesAdmin from "@/pages/admin/modules/NotificacionesAdmin";
 import PatientReviews from "@/pages/admin/PatientReviews";
 import CrisisHotlinesManager from "@/pages/admin/CrisisHotlinesManager";
