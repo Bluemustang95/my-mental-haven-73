@@ -2,8 +2,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { House, Notebook, Toolbox, ChartLineUp, BookOpen, Lifebuoy } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { CrisisSheet } from "@/components/CrisisButton";
 import { useUiChrome } from "@/hooks/useUiChrome";
 
 const leftTabs = [
