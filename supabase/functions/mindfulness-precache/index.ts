@@ -133,11 +133,11 @@ Deno.serve(async (req) => {
       user_id: user.id,
       chars: text.length,
       cost_usd: cost,
-      meta: { script_id: scriptId, voice_id: voiceId, minutes: script.minutes, exercise_id: script.exercise_id },
+      meta: { script_id: scriptId, voice_id: voiceId, minutes: script.minutes, exercise_id: script.exercise_id, country_code: script.country_code },
     });
 
     const { data: signed } = await supa.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_TTL);
-    return json({ ok: true, cached: false, url: signed?.signedUrl ?? null, path, chars: text.length, cost });
+    return json({ ok: true, cached: false, url: signed?.signedUrl ?? null, path, chars: text.length, cost, voice_id: voiceId });
   } catch (e) {
     console.error("[mindfulness-precache]", e);
     return json({ error: String((e as Error)?.message ?? e) }, 500);
