@@ -117,11 +117,23 @@ export default function ResumenPsico() {
     }));
   };
 
+  const buildSafetyBlock = () => {
+    if (!includeSafety || !safety) return "";
+    const lines: string[] = ["", "── PLAN DE SEGURIDAD ──"];
+    if (safety.signs.length) { lines.push("Señales de alerta:"); safety.signs.forEach(s => lines.push(`  • ${s}`)); }
+    if (safety.coping.length) { lines.push("Estrategias de calma:"); safety.coping.forEach(s => lines.push(`  • ${s}`)); }
+    if (safety.network.length) { lines.push("Red de apoyo:"); safety.network.forEach(c => lines.push(`  • ${c.name}${c.phone ? ` — ${c.phone}` : ""}`)); }
+    if (safety.env.length) { lines.push("Entorno:"); safety.env.forEach(s => lines.push(`  • ${s}`)); }
+    if (safety.emergencies.length) { lines.push("Emergencias:"); safety.emergencies.forEach(c => lines.push(`  • ${c.name}${c.phone ? ` — ${c.phone}` : ""}`)); }
+    lines.push("");
+    return lines.join("\n");
+  };
+
   const generate = () => {
     if (!data) return;
     setScreen("loading");
     setTimeout(() => {
-      setReportText(buildReport(selection, data));
+      setReportText(buildReport(selection, data) + buildSafetyBlock());
       setScreen("editor");
     }, 1700);
   };
