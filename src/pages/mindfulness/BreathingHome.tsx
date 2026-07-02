@@ -756,9 +756,18 @@ function ImmersivePlayer({
             <ChevronLeft size={20} />
           </button>
 
-          <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold pt-3">
-            {pattern.title}
-          </span>
+          <div className="flex flex-col items-center pt-2 gap-1.5">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold">
+              {pattern.title}
+            </span>
+            <button
+              onClick={() => setTimeEditOpen(true)}
+              aria-label="Ajustar tiempo de esta sesión"
+              className="px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-semibold text-[13px] tabular-nums active:scale-95 transition"
+            >
+              {formatTime(cycle.remaining)}
+            </button>
+          </div>
 
           <button
             onClick={onHelp}
@@ -769,16 +778,9 @@ function ImmersivePlayer({
           </button>
         </div>
 
-        {/* Centro: contador grande y centrado */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <button
-            onClick={() => setTimeEditOpen(true)}
-            aria-label="Ajustar tiempo de esta sesión"
-            className="px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-bold text-[26px] tabular-nums active:scale-95 transition"
-          >
-            {formatTime(cycle.remaining)}
-          </button>
-        </div>
+        {/* Centro: solo visualizador — timer arriba */}
+        <div className="flex-1" />
+
 
         {/* Bloque inferior: fase + controles (Ajustes al lado de Pausar) */}
         <div className="flex flex-col items-center text-center gap-3">
