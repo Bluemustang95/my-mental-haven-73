@@ -58,13 +58,24 @@ const FALLBACK_PROMPTS: InspirePrompt[] = [
 ];
 const INSPIRE_HISTORY_KEY = "diary:inspire:history";
 
-const EMOTIONS = [
+const EMOTIONS_PRIMARY = [
   { k: "Calma", e: "🧘" }, { k: "Alegría", e: "☀️" }, { k: "Tristeza", e: "🌧️" },
   { k: "Ansiedad", e: "⚡" }, { k: "Enojo", e: "🔥" }, { k: "Agotamiento", e: "🛌" },
 ];
-const CAUSES = [
+const EMOTIONS_EXTRA = [
+  { k: "Amor", e: "💗" }, { k: "Gratitud", e: "🙏" }, { k: "Culpa", e: "😔" },
+  { k: "Vergüenza", e: "🫣" }, { k: "Miedo", e: "😨" }, { k: "Frustración", e: "😤" },
+  { k: "Esperanza", e: "🌈" }, { k: "Orgullo", e: "🦁" }, { k: "Nostalgia", e: "🍂" },
+  { k: "Confusión", e: "🌀" }, { k: "Envidia", e: "🥴" }, { k: "Aburrimiento", e: "🥱" },
+];
+const CAUSES_PRIMARY = [
   { k: "Trabajo", e: "🏢" }, { k: "Pareja", e: "❤️" }, { k: "Salud", e: "🍎" },
   { k: "Finanzas", e: "💵" }, { k: "Sueño", e: "💤" },
+];
+const CAUSES_EXTRA = [
+  { k: "Familia", e: "🏡" }, { k: "Amistades", e: "🤝" }, { k: "Estudios", e: "📚" },
+  { k: "Hijes", e: "🧸" }, { k: "Cuerpo", e: "💪" }, { k: "Redes", e: "📱" },
+  { k: "Duelo", e: "🕊️" }, { k: "Mudanza", e: "📦" }, { k: "Rutina", e: "🔁" },
 ];
 
 type Attachment = {
@@ -148,6 +159,7 @@ function WriteView({
   const [entryId, setEntryId] = useState<string | null>(null);
   const [confirmNew, setConfirmNew] = useState(false);
   const [fmtBar, setFmtBar] = useState<{ top: number; left: number } | null>(null);
+  const [micStream, setMicStream] = useState<MediaStream | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lastLen = useRef(0);
@@ -228,6 +240,7 @@ function WriteView({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       recordStreamRef.current = stream;
+      setMicStream(stream);
       recordChunksRef.current = [];
       const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
@@ -238,6 +251,7 @@ function WriteView({
         const blob = new Blob(recordChunksRef.current, { type: mime });
         recordStreamRef.current?.getTracks().forEach((t) => t.stop());
         recordStreamRef.current = null;
+        setMicStream(null);
         if (blob.size < 800) {
           toast.error("Grabación muy corta");
           return;
@@ -561,7 +575,7 @@ function WriteView({
                   >
                     <Pause size={12} />
                   </button>
-                  <Waveform />
+                  <Waveform stream={micStream} />
                   <span className="pr-2 font-mono text-[11px] tabular-nums opacity-80">{mm}:{ss}</span>
                 </>
               ) : (
@@ -612,25 +626,14 @@ function WriteView({
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent align="center" sideOffset={8} className="w-64 rounded-2xl p-3">
+          <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl p-3">
             <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Siento… (podés elegir varias)</p>
-            <div className="flex flex-wrap gap-1.5">
-              {EMOTIONS.map((it) => {
-                const on = emos.has(it.k);
-                return (
-                  <button
-                    key={it.k}
-                    onClick={() => setEmos((s) => { const n = new Set(s); n.has(it.k) ? n.delete(it.k) : n.add(it.k); return n; })}
-                    className={cn(
-                      "rounded-full border px-2.5 py-1 text-[11px] transition",
-                      on ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#7cc2c8]" : "border-[#101927]/10 bg-white/60 text-[#101927]",
-                    )}
-                  >
-                    <span className="mr-0.5">{it.e}</span>{it.k}
-                  </button>
-                );
-              })}
-            </div>
+            <ChipCloud
+              primary={EMOTIONS_PRIMARY}
+              extra={EMOTIONS_EXTRA}
+              selected={emos}
+              onToggle={(k) => setEmos((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; })}
+            />
           </PopoverContent>
         </Popover>
 
@@ -652,25 +655,14 @@ function WriteView({
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent align="center" sideOffset={8} className="w-64 rounded-2xl p-3">
+          <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl p-3">
             <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Causas…</p>
-            <div className="flex flex-wrap gap-1.5">
-              {CAUSES.map((it) => {
-                const on = causes.has(it.k);
-                return (
-                  <button
-                    key={it.k}
-                    onClick={() => toggleCause(it.k)}
-                    className={cn(
-                      "rounded-full border px-2.5 py-1 text-[11px] transition",
-                      on ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#7cc2c8]" : "border-[#101927]/10 bg-white/60 text-[#101927]",
-                    )}
-                  >
-                    <span className="mr-0.5">{it.e}</span>{it.k}
-                  </button>
-                );
-              })}
-            </div>
+            <ChipCloud
+              primary={CAUSES_PRIMARY}
+              extra={CAUSES_EXTRA}
+              selected={causes}
+              onToggle={toggleCause}
+            />
           </PopoverContent>
         </Popover>
 
@@ -762,25 +754,102 @@ function IconBtn({
 }
 
 
-function Waveform() {
-  const [bars, setBars] = useState<number[]>(() => Array.from({ length: 12 }, () => 0.3));
+function Waveform({ stream }: { stream: MediaStream | null }) {
+  const BAR_COUNT = 20;
+  const [bars, setBars] = useState<number[]>(() => Array.from({ length: BAR_COUNT }, () => 0.15));
+
   useEffect(() => {
-    const id = setInterval(() => {
-      setBars(Array.from({ length: 12 }, () => 0.25 + Math.random() * 0.75));
-    }, 140);
-    return () => clearInterval(id);
-  }, []);
+    if (!stream) return;
+    let raf = 0;
+    let ctx: AudioContext | null = null;
+    let analyser: AnalyserNode | null = null;
+    let data: Uint8Array | null = null;
+    try {
+      ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const src = ctx.createMediaStreamSource(stream);
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;
+      src.connect(analyser);
+      data = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
+    } catch (e) {
+      console.warn("[waveform] audio ctx failed", e);
+      return;
+    }
+    const tick = () => {
+      if (!analyser || !data) return;
+      analyser.getByteFrequencyData(data as Uint8Array<ArrayBuffer>);
+      const step = Math.max(1, Math.floor(data.length / BAR_COUNT));
+      const next: number[] = [];
+      for (let i = 0; i < BAR_COUNT; i++) {
+        const v = data[i * step] ?? 0;
+        // amplify low signals so speech is visible
+        next.push(Math.min(1, 0.15 + (v / 255) * 1.6));
+      }
+      setBars(next);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      ctx?.close().catch(() => undefined);
+    };
+  }, [stream]);
+
   return (
-    <div className="flex flex-1 items-center gap-1">
+    <div className="flex flex-1 items-center justify-center gap-[3px]" style={{ height: 22 }}>
       {bars.map((b, i) => (
         <motion.span
           key={i}
-          animate={{ height: `${b * 100}%` }}
-          transition={{ duration: 0.14 }}
-          className="block w-1 rounded-full bg-[#7cc2c8]"
-          style={{ minHeight: 4 }}
+          animate={{ height: `${Math.max(10, b * 100)}%` }}
+          transition={{ duration: 0.08 }}
+          className="block w-[3px] rounded-full bg-[#7cc2c8]"
+          style={{ minHeight: 3 }}
         />
       ))}
+    </div>
+  );
+}
+
+function ChipCloud({
+  primary,
+  extra,
+  selected,
+  onToggle,
+}: {
+  primary: { k: string; e: string }[];
+  extra: { k: string; e: string }[];
+  selected: Set<string>;
+  onToggle: (k: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const items = open ? [...primary, ...extra] : primary;
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((it) => {
+          const on = selected.has(it.k);
+          return (
+            <button
+              key={it.k}
+              onClick={() => onToggle(it.k)}
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-[11px] transition",
+                on ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#7cc2c8]" : "border-[#101927]/10 bg-white/60 text-[#101927]",
+              )}
+            >
+              <span className="mr-0.5">{it.e}</span>{it.k}
+            </button>
+          );
+        })}
+      </div>
+      {extra.length > 0 && (
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="text-[11px] font-semibold text-[#7cc2c8] hover:underline"
+        >
+          {open ? "Ver menos" : `Ver más (${extra.length})`}
+        </button>
+      )}
     </div>
   );
 }
