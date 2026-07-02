@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Shield, HeartPulse, NotebookPen, ClipboardList, Activity, Target, BookHeart, Sparkles } from "lucide-react";
+import { ArrowLeft, Shield, HeartPulse, NotebookPen, ClipboardList, Activity, Target, BookHeart, Sparkles, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useResumenData } from "@/hooks/useResumenData";
@@ -9,6 +9,12 @@ import { buildReport, countSelected, type Selection, type CategoryId } from "@/c
 import { CategoryAccordion, type Item } from "@/components/resumen/CategoryAccordion";
 import { LoadingScreen } from "@/components/resumen/LoadingScreen";
 import { ReportEditor } from "@/components/resumen/ReportEditor";
+import { supabase } from "@/integrations/supabase/client";
+
+type SafetyPlanRow = {
+  signs: string[]; coping: string[]; network: { name: string; phone: string }[];
+  env: string[]; emergencies: { name: string; phone: string }[];
+};
 
 const fmt = (d: string) => format(new Date(d), "d MMM", { locale: es });
 
@@ -20,6 +26,29 @@ export default function ResumenPsico() {
   const [screen, setScreen] = useState<"select" | "loading" | "editor">("select");
   const [selection, setSelection] = useState<Selection>({});
   const [reportText, setReportText] = useState("");
+  const [safety, setSafety] = useState<SafetyPlanRow | null>(null);
+  const [includeSafety, setIncludeSafety] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: sp } = await supabase.from("safety_plans").select("*").eq("user_id", user.id).maybeSingle();
+      if (!sp) return;
+      let env: string[] = []; let emergencies: SafetyPlanRow["emergencies"] = [];
+      try {
+        const parsed = sp.environment_notes ? JSON.parse(sp.environment_notes as string) : {};
+        env = Array.isArray(parsed.env) ? parsed.env : [];
+        emergencies = Array.isArray(parsed.emergencies) ? parsed.emergencies : [];
+      } catch { /* ignore */ }
+      setSafety({
+        signs: (sp.warning_signs as unknown as string[]) ?? [],
+        coping: (sp.coping_strategies as unknown as string[]) ?? [],
+        network: (sp.contacts as unknown as SafetyPlanRow["network"]) ?? [],
+        env, emergencies,
+      });
+    })();
+  }, []);
 
   const items = useMemo(() => {
     if (!data) return null;
@@ -88,11 +117,23 @@ export default function ResumenPsico() {
     }));
   };
 
+  const buildSafetyBlock = () => {
+    if (!includeSafety || !safety) return "";
+    const lines: string[] = ["", "── PLAN DE SEGURIDAD ──"];
+    if (safety.signs.length) { lines.push("Señales de alerta:"); safety.signs.forEach(s => lines.push(`  • ${s}`)); }
+    if (safety.coping.length) { lines.push("Estrategias de calma:"); safety.coping.forEach(s => lines.push(`  • ${s}`)); }
+    if (safety.network.length) { lines.push("Red de apoyo:"); safety.network.forEach(c => lines.push(`  • ${c.name}${c.phone ? ` — ${c.phone}` : ""}`)); }
+    if (safety.env.length) { lines.push("Entorno:"); safety.env.forEach(s => lines.push(`  • ${s}`)); }
+    if (safety.emergencies.length) { lines.push("Emergencias:"); safety.emergencies.forEach(c => lines.push(`  • ${c.name}${c.phone ? ` — ${c.phone}` : ""}`)); }
+    lines.push("");
+    return lines.join("\n");
+  };
+
   const generate = () => {
     if (!data) return;
     setScreen("loading");
     setTimeout(() => {
-      setReportText(buildReport(selection, data));
+      setReportText(buildReport(selection, data) + buildSafetyBlock());
       setScreen("editor");
     }, 1700);
   };
@@ -164,6 +205,31 @@ export default function ResumenPsico() {
                       emptyText={c.empty}
                     />
                   ))}
+
+                  {safety && (
+                    <button
+                      type="button"
+                      onClick={() => setIncludeSafety(v => !v)}
+                      className={`flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition ${
+                        includeSafety
+                          ? "border-rose-200 bg-rose-50/70"
+                          : "border-slate-100 bg-white/85"
+                      }`}
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-500">
+                        <ShieldAlert size={17} />
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-[13px] font-semibold text-slate-800">Plan de Seguridad</p>
+                        <p className="text-[11px] text-slate-500">
+                          Adjuntar tu red de contención al resumen.
+                        </p>
+                      </div>
+                      <span className={`h-5 w-9 rounded-full transition ${includeSafety ? "bg-rose-400" : "bg-slate-200"} relative`}>
+                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition ${includeSafety ? "left-4" : "left-0.5"}`} />
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -189,11 +255,11 @@ export default function ResumenPsico() {
           <div className="mx-auto max-w-md rounded-[2rem] border border-white/70 bg-white/90 p-2 shadow-[0_18px_45px_rgba(16,25,39,0.18)] backdrop-blur-xl">
             <button
               onClick={generate}
-              disabled={total === 0}
+              disabled={total === 0 && !includeSafety}
               className="flex w-full items-center justify-center gap-2 rounded-[1.55rem] bg-[#7cc2c8] py-3.5 font-display text-[13.5px] font-semibold text-white shadow-[0_6px_20px_rgba(124,194,200,0.35)] transition-opacity disabled:opacity-40 disabled:shadow-none"
             >
               <Sparkles size={16} />
-              {total === 0 ? "Seleccioná al menos un ítem" : `Generar resumen (${total})`}
+              {total === 0 && !includeSafety ? "Seleccioná al menos un ítem" : `Generar resumen (${total + (includeSafety ? 1 : 0)})`}
             </button>
           </div>
         </div>

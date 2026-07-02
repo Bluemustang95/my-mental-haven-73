@@ -142,18 +142,23 @@ export function HabitCard({ habit, completions, view, onToggle, onOpenDetail }: 
             <div className="grid grid-cols-7 gap-1.5">
               {monthCells().map(({ date }) => {
                 const isDone = doneSet.has(date);
+                const dayNum = Number(date.slice(-2));
                 return (
                   <motion.button
                     key={date}
                     onClick={() => onToggle(date)}
                     whileTap={{ scale: 0.8 }}
-                    className="aspect-square rounded-full"
+                    className="aspect-square rounded-full flex items-center justify-center text-[9px] font-bold"
                     style={{
                       backgroundColor: isDone ? habit.color : "#eef1f5",
+                      color: isDone ? "#101927" : "#101927",
+                      opacity: isDone ? 1 : 0.55,
                       boxShadow: isDone ? `0 2px 6px -2px ${habit.color}80` : undefined,
                     }}
                     aria-label={date}
-                  />
+                  >
+                    {dayNum}
+                  </motion.button>
                 );
               })}
             </div>

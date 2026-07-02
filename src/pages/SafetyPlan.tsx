@@ -1,309 +1,544 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Phone, Plus, Shield, Trash2, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { saveLog } from "@/lib/resourceLogs";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  ArrowLeft, Phone, Plus, ShieldAlert, Trash2, Loader2, Pencil, X,
+  AlertTriangle, Sparkles, Users, Home as HomeIcon, LifeBuoy, Check,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { loadHotlines, detectUserCountry, type Hotline } from "@/lib/crisisHotlines";
 import { toast } from "sonner";
 
-const suggestedSigns = [
+// ─── Mock / suggestion data ────────────────────────────────────────────────
+const SUGGESTED_SIGNS = [
   "Pensamientos intrusivos y persistentes",
   "Aislamiento de personas queridas",
   "Cambios bruscos de ánimo",
   "Dificultad para dormir o comer",
   "Sensación de desesperanza",
-  "Aumento del consumo",
 ];
-
-const suggestedCoping = [
+const SUGGESTED_COPING = [
+  "Escuchar mi playlist de calma",
+  "Respiración 4-7-8",
   "Salir a caminar 10 minutos",
-  "Escuchar una canción que me calma",
-  "Ejercicio de respiración 4-7-8",
-  "Llamar a alguien de confianza",
   "Escribir en el diario",
+  "Ducha con agua fría/caliente",
 ];
-
-const ambiental = [
-  "Guardá objetos peligrosos fuera de tu alcance.",
-  "Pedile a alguien de confianza que te acompañe.",
-  "Encendé luces, abrí ventanas y bajá la música fuerte.",
-  "Salí del lugar donde te sentís peor: caminá una cuadra.",
+const SUGGESTED_ENV = [
+  "Guardar medicación extra bajo llave",
+  "Pedirle a alguien de confianza que me acompañe",
+  "Retirar objetos peligrosos de mi habitación",
+  "Encender luces y abrir ventanas",
 ];
 
 type Contact = { name: string; phone: string };
 
+type Plan = {
+  signs: string[];
+  coping: string[];
+  network: Contact[];
+  env: string[];
+  emergencies: Contact[];
+};
+
+const DEFAULT_PLAN: Plan = {
+  signs: ["Pensamientos intrusivos y persistentes", "Aislamiento de personas queridas"],
+  coping: ["Escuchar mi playlist de calma", "Respiración 4-7-8"],
+  network: [{ name: "Mamá", phone: "" }, { name: "Carlos (Amigo)", phone: "" }],
+  env: ["Guardar medicación extra bajo llave"],
+  emergencies: [],
+};
+
+const STEPS = [
+  { key: "signs",       title: "Señales de alerta",       icon: AlertTriangle, sub: "Reconocer cuándo empieza la crisis ayuda a frenarla a tiempo." },
+  { key: "coping",      title: "Estrategias para calmarme", icon: Sparkles,   sub: "Recursos personales que puedo activar antes de pedir ayuda." },
+  { key: "network",     title: "Red de apoyo",             icon: Users,        sub: "Personas de confianza a las que puedo llamar." },
+  { key: "env",         title: "Modificar el entorno",     icon: HomeIcon,     sub: "Reducir el acceso a medios que pueden hacerme daño." },
+  { key: "emergencies", title: "Líneas de emergencia",     icon: LifeBuoy,     sub: "Números profesionales disponibles 24/7." },
+] as const;
+
+// ─── Component ─────────────────────────────────────────────────────────────
 export default function SafetyPlan() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const [mode, setMode] = useState<"view" | "edit">(params.get("mode") === "edit" ? "edit" : "view");
+  const [wizardStep, setWizardStep] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [signs, setSigns] = useState<string[]>([]);
-  const [coping, setCoping] = useState<string[]>([]);
-  const [signDraft, setSignDraft] = useState("");
-  const [copingDraft, setCopingDraft] = useState("");
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [draft, setDraft] = useState<Contact>({ name: "", phone: "" });
+  const [plan, setPlan] = useState<Plan>(DEFAULT_PLAN);
+  const [country, setCountry] = useState("AR");
   const [hotlines, setHotlines] = useState<Hotline[]>([]);
-  const [country, setCountry] = useState<string>("AR");
 
+  // Load
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       const c = (await detectUserCountry()) ?? "AR";
       setCountry(c);
       setHotlines(await loadHotlines(c));
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data } = await supabase.from("safety_plans").select("*").eq("user_id", user.id).maybeSingle();
         if (data) {
-          setSigns((data.warning_signs as unknown as string[]) ?? []);
-          setCoping((data.coping_strategies as unknown as string[]) ?? []);
-          setContacts(((data.contacts as unknown as Contact[]) ?? []));
+          let env: string[] = [];
+          let emergencies: Contact[] = [];
+          try {
+            const raw = (data.environment_notes ?? "") as string;
+            const parsed = raw ? JSON.parse(raw) : {};
+            env = Array.isArray(parsed.env) ? parsed.env : [];
+            emergencies = Array.isArray(parsed.emergencies) ? parsed.emergencies : [];
+          } catch { /* ignore */ }
+          setPlan({
+            signs: (data.warning_signs as unknown as string[]) ?? DEFAULT_PLAN.signs,
+            coping: (data.coping_strategies as unknown as string[]) ?? DEFAULT_PLAN.coping,
+            network: (data.contacts as unknown as Contact[]) ?? DEFAULT_PLAN.network,
+            env: env.length ? env : DEFAULT_PLAN.env,
+            emergencies,
+          });
         }
       }
       setLoading(false);
     })();
   }, []);
 
-  // Cloud autosave (debounced)
+  // Autosave (debounced) whenever plan changes
   useEffect(() => {
     if (loading) return;
     const id = setTimeout(async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      setSaving(true);
       await supabase.from("safety_plans").upsert({
         user_id: user.id,
-        warning_signs: signs as unknown as never,
-        coping_strategies: coping as unknown as never,
-        contacts: contacts as unknown as never,
+        warning_signs: plan.signs as unknown as never,
+        coping_strategies: plan.coping as unknown as never,
+        contacts: plan.network as unknown as never,
+        environment_notes: JSON.stringify({ env: plan.env, emergencies: plan.emergencies }),
       }, { onConflict: "user_id" });
-      setSaving(false);
-    }, 800);
+    }, 700);
     return () => clearTimeout(id);
-  }, [signs, coping, contacts, loading]);
+  }, [plan, loading]);
 
-  const addSign = (v: string) => {
-    const t = v.trim();
-    if (!t || signs.includes(t) || signs.length >= 8) return;
-    setSigns((s) => [...s, t]);
-    setSignDraft("");
-  };
-  const removeSign = (i: number) => setSigns((s) => s.filter((_, idx) => idx !== i));
+  const enterEdit = () => { setWizardStep(0); setMode("edit"); };
+  const exitEdit = () => { setMode("view"); setWizardStep(0); };
 
-  const addCoping = (v: string) => {
-    const t = v.trim();
-    if (!t || coping.includes(t) || coping.length >= 8) return;
-    setCoping((s) => [...s, t]);
-    setCopingDraft("");
-  };
-  const removeCoping = (i: number) => setCoping((s) => s.filter((_, idx) => idx !== i));
-
-  const addContact = () => {
-    if (!draft.name.trim() || !draft.phone.trim()) return;
-    setContacts((c) => [...c, draft]);
-    setDraft({ name: "", phone: "" });
-  };
-
-  const removeContact = (i: number) => setContacts((c) => c.filter((_, idx) => idx !== i));
-
-  const downloadReport = () => {
-    const lines = [
-      "PLAN DE SEGURIDAD — RESMA",
-      `Fecha: ${new Date().toLocaleDateString("es-AR")}`,
-      `País: ${country}`,
-      "",
-      "Señales de alerta detectadas:",
-      ...signs.map((s) => `  - ${s}`),
-      "",
-      "Estrategias para calmarme:",
-      ...coping.map((s) => `  - ${s}`),
-      "",
-      "Red de apoyo personal:",
-      ...contacts.map((c) => `  - ${c.name}: ${c.phone}`),
-      "",
-      "Líneas de emergencia:",
-      ...hotlines.map((e) => `  - ${e.label}: ${e.phone}`),
-      "",
-      "Modificación del entorno:",
-      ...ambiental.map((tip) => `  - ${tip}`),
-    ].join("\n");
-
-    const blob = new Blob([lines], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `plan-seguridad-resma-${new Date().toISOString().slice(0, 10)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    saveLog("safety", { meta: { signs: signs.length, coping: coping.length, contacts: contacts.length } });
-    toast.success("Reporte descargado");
-  };
+  // Merge hotlines (country) with user-added emergencies for the view
+  const allEmergencies: Contact[] = useMemo(() => [
+    ...hotlines.map(h => ({ name: h.label, phone: h.phone })),
+    ...plan.emergencies,
+  ], [hotlines, plan.emergencies]);
 
   if (loading) {
     return (
-      <div className="grid min-h-screen place-items-center text-resource-safety-accent">
+      <div className="grid min-h-screen place-items-center bg-[#f4f7f9] text-slate-500">
         <Loader2 className="animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-resource-safety-bg px-5 pb-28 pt-12 text-resource-safety-accent safe-area-top">
-      <header className="mb-6 flex items-center justify-between">
-        <button onClick={() => navigate("/herramientas")} aria-label="Volver"
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-resource-safety-accent/15 bg-card/80 shadow-sm">
-          <ArrowLeft size={20} />
+    <div className="relative min-h-screen bg-[#f4f7f9]">
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
+        <AnimatePresence mode="wait">
+          {mode === "view" ? (
+            <ViewMode
+              key="view"
+              plan={plan}
+              allEmergencies={allEmergencies}
+              country={country}
+              onEdit={enterEdit}
+              onBack={() => navigate(-1)}
+            />
+          ) : (
+            <EditWizard
+              key="edit"
+              plan={plan}
+              setPlan={setPlan}
+              step={wizardStep}
+              setStep={setWizardStep}
+              onCancel={exitEdit}
+              onFinish={() => { toast.success("Plan guardado"); exitEdit(); }}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+// ─── VIEW MODE (SOS) ───────────────────────────────────────────────────────
+function ViewMode({
+  plan, allEmergencies, country, onEdit, onBack,
+}: {
+  plan: Plan; allEmergencies: Contact[]; country: string;
+  onEdit: () => void; onBack: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="flex flex-1 flex-col px-5 pb-32 pt-4"
+    >
+      <header className="flex items-center justify-between pt-2">
+        <button onClick={onBack} className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white/80 shadow-sm">
+          <ArrowLeft size={18} className="text-slate-700" />
         </button>
-        <div className="flex items-center gap-2">
-          {saving && <span className="text-[10px] text-resource-safety-accent/60">Guardando…</span>}
-          <span className="rounded-full bg-card/80 px-4 py-2 font-mindful text-xs font-semibold shadow-sm">Plan de Seguridad</span>
-        </div>
+        <button
+          onClick={onEdit}
+          className="flex items-center gap-1.5 rounded-full border border-slate-100 bg-white/80 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm active:scale-95"
+        >
+          <Pencil size={13} /> Editar Plan
+        </button>
       </header>
 
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-7 flex items-center gap-3">
-        <div className="flex h-16 w-16 items-center justify-center rounded-[1.6rem] bg-card/85 shadow-sm shadow-resource-safety-accent/20">
-          <Shield size={32} strokeWidth={2.1} />
+      {/* Hero */}
+      <div className="mt-6 flex flex-col items-center text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-rose-50 shadow-inner shadow-rose-100">
+          <ShieldAlert size={34} className="text-rose-500" strokeWidth={1.8} />
         </div>
-        <div>
-          <h1 className="font-mindful text-3xl leading-tight">Tu red de contención</h1>
-          <p className="font-sans text-xs leading-5 text-resource-safety-accent/70">Se guarda en la nube · líneas para {country}.</p>
-        </div>
-      </motion.div>
+        <h1 className="mt-4 font-serif text-[26px] leading-tight text-slate-900">Tu red de contención</h1>
+        <p className="mt-1 text-xs text-slate-500">Un plan pensado en calma para usar en momentos difíciles.</p>
+      </div>
 
-      <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
-        <p className="mb-1 font-mindful text-base font-semibold">Señales de alerta</p>
-        <p className="mb-3 text-[11px] leading-4 text-resource-safety-accent/60">
-          Escribí las tuyas o tocá una sugerencia.
-        </p>
-        <div className="space-y-2">
-          {signs.map((s, i) => (
-            <div key={`${s}-${i}`} className="flex items-center gap-2 rounded-2xl border border-resource-safety-accent bg-resource-safety-accent/10 px-3 py-2.5">
-              <span className="flex-1 font-sans text-sm font-semibold leading-5">{s}</span>
-              <button onClick={() => removeSign(i)} aria-label="Quitar" className="p-1 text-resource-safety-accent/60">
-                <Trash2 size={14} />
-              </button>
+      {/* Emergencias */}
+      <SectionTitle>Líneas de emergencia</SectionTitle>
+      <div className="space-y-2">
+        {allEmergencies.length === 0 && <EmptyHint text="Sin líneas configuradas todavía." />}
+        {allEmergencies.map((e, i) => (
+          <a
+            key={`${e.name}-${i}`}
+            href={e.phone ? `tel:${e.phone.replace(/\s+/g, "")}` : undefined}
+            className="group flex items-center gap-3 rounded-2xl border border-rose-200/60 bg-gradient-to-br from-rose-50/80 to-white/80 p-4 shadow-sm backdrop-blur-xl transition hover:bg-white active:scale-[0.99]"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/70 text-rose-500 group-hover:text-rose-600">
+              <Phone size={18} />
+            </span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-rose-800">{e.name}</p>
+              {e.phone && <p className="font-mono text-[13px] text-rose-600">{e.phone}</p>}
             </div>
-          ))}
-          {signs.length < 8 && (
-            <div className="flex gap-2">
-              <input
-                value={signDraft}
-                onChange={(e) => setSignDraft(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addSign(signDraft)}
-                placeholder="Escribí tu señal…"
-                className="flex-1 rounded-2xl border border-resource-safety-accent/15 bg-resource-safety-bg/60 px-3 py-2.5 text-sm outline-none"
-              />
-              <button onClick={() => addSign(signDraft)} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-resource-safety-accent text-primary-foreground active:scale-95">
-                <Plus size={18} />
-              </button>
-            </div>
-          )}
-          {suggestedSigns.filter((s) => !signs.includes(s)).length > 0 && signs.length < 8 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {suggestedSigns.filter((s) => !signs.includes(s)).map((s) => (
-                <button key={s} onClick={() => addSign(s)}
-                  className="rounded-full border border-resource-safety-accent/20 bg-resource-safety-bg/60 px-2.5 py-1 text-[11px] text-resource-safety-accent/70">
-                  + {s}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+          </a>
+        ))}
+      </div>
 
-      <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
-        <p className="mb-1 font-mindful text-base font-semibold">Estrategias para calmarme</p>
-        <p className="mb-3 text-[11px] leading-4 text-resource-safety-accent/60">
-          Cosas que puedo hacer solo/a antes de pedir ayuda.
-        </p>
-        <div className="space-y-2">
-          {coping.map((s, i) => (
-            <div key={`${s}-${i}`} className="flex items-center gap-2 rounded-2xl border border-resource-safety-accent bg-resource-safety-accent/10 px-3 py-2.5">
-              <span className="flex-1 font-sans text-sm font-semibold leading-5">{s}</span>
-              <button onClick={() => removeCoping(i)} aria-label="Quitar" className="p-1 text-resource-safety-accent/60">
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
-          {coping.length < 8 && (
-            <div className="flex gap-2">
-              <input
-                value={copingDraft}
-                onChange={(e) => setCopingDraft(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addCoping(copingDraft)}
-                placeholder="Ej: Escuchar música…"
-                className="flex-1 rounded-2xl border border-resource-safety-accent/15 bg-resource-safety-bg/60 px-3 py-2.5 text-sm outline-none"
-              />
-              <button onClick={() => addCoping(copingDraft)} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-resource-safety-accent text-primary-foreground active:scale-95">
-                <Plus size={18} />
-              </button>
-            </div>
-          )}
-          {suggestedCoping.filter((s) => !coping.includes(s)).length > 0 && coping.length < 8 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {suggestedCoping.filter((s) => !coping.includes(s)).map((s) => (
-                <button key={s} onClick={() => addCoping(s)}
-                  className="rounded-full border border-resource-safety-accent/20 bg-resource-safety-bg/60 px-2.5 py-1 text-[11px] text-resource-safety-accent/70">
-                  + {s}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Estrategias */}
+      <SectionTitle>Estrategias de calma</SectionTitle>
+      <div className="space-y-2">
+        {plan.coping.length === 0 && <EmptyHint text="Editá tu plan para agregar estrategias." />}
+        {plan.coping.map((c, i) => (
+          <div key={`${c}-${i}`} className="flex items-center gap-3 rounded-2xl border border-teal-100/70 bg-white/80 p-3.5 shadow-sm backdrop-blur-md">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-50 text-[13px] font-bold text-[#2c6e73]">
+              {i + 1}
+            </span>
+            <p className="flex-1 text-[13.5px] leading-snug text-slate-700">{c}</p>
+          </div>
+        ))}
+      </div>
 
-      <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
-        <p className="mb-3 font-mindful text-base font-semibold">Líneas de emergencia ({country})</p>
-        <div className="space-y-2">
-          {hotlines.map((e) => (
-            <a key={e.id} href={`tel:${e.phone.replace(/\s+/g, "")}`}
-              className="flex items-center gap-3 rounded-2xl bg-resource-safety-accent px-4 py-4 font-mindful text-base font-bold text-primary-foreground shadow-lg shadow-resource-safety-accent/25 active:scale-[0.98]">
-              <Phone size={20} /> <span className="flex-1">{e.label}</span><span className="font-sans text-sm opacity-85">{e.phone}</span>
-            </a>
-          ))}
-        </div>
-      </section>
+      {/* Señales */}
+      <SectionTitle>Señales de alerta</SectionTitle>
+      <div className="rounded-2xl border border-amber-100/70 bg-white/80 p-4 shadow-sm backdrop-blur-md">
+        {plan.signs.length === 0 ? (
+          <EmptyHint text="Sin señales registradas." />
+        ) : (
+          <ul className="space-y-2">
+            {plan.signs.map((s, i) => (
+              <li key={`${s}-${i}`} className="flex items-start gap-2 text-[13.5px] text-slate-700">
+                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                <span>{s}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
-        <p className="mb-3 font-mindful text-base font-semibold">Red de apoyo personal</p>
-        <div className="space-y-2">
-          {contacts.map((c, i) => (
-            <div key={`${c.name}-${i}`} className="flex items-center gap-3 rounded-2xl border border-resource-safety-accent/15 bg-resource-safety-bg/60 px-4 py-3">
-              <a href={`tel:${c.phone}`} className="flex flex-1 items-center gap-3">
-                <Phone size={18} />
-                <div><p className="font-mindful text-sm font-semibold">{c.name}</p><p className="text-xs opacity-65">{c.phone}</p></div>
+      {/* Red de apoyo */}
+      <SectionTitle>Red de apoyo</SectionTitle>
+      <div className="space-y-2">
+        {plan.network.length === 0 && <EmptyHint text="Agregá contactos personales de confianza." />}
+        {plan.network.map((c, i) => (
+          <div key={`${c.name}-${i}`} className="flex items-center gap-3 rounded-2xl border border-indigo-100/70 bg-white/80 p-3.5 shadow-sm backdrop-blur-md">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-500">
+              <Users size={17} />
+            </span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-800">{c.name}</p>
+              {c.phone && <p className="font-mono text-[12px] text-slate-500">{c.phone}</p>}
+            </div>
+            {c.phone && (
+              <a
+                href={`tel:${c.phone.replace(/\s+/g, "")}`}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm active:scale-95"
+              >
+                <Phone size={14} />
               </a>
-              <button onClick={() => removeContact(i)} aria-label="Eliminar" className="p-2 text-resource-safety-accent/55">
-                <Trash2 size={16} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Entorno */}
+      <SectionTitle>Modificar el entorno</SectionTitle>
+      <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm backdrop-blur-md">
+        {plan.env.length === 0 ? (
+          <EmptyHint text="Sin acciones definidas para el entorno." />
+        ) : (
+          <ul className="space-y-2">
+            {plan.env.map((e, i) => (
+              <li key={`${e}-${i}`} className="flex items-start gap-2 text-[13.5px] text-slate-700">
+                <Check size={14} className="mt-0.5 shrink-0 text-emerald-500" />
+                <span>{e}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <p className="mt-6 text-center text-[10px] uppercase tracking-widest text-slate-400">
+        País: {country} · guardado automático
+      </p>
+    </motion.div>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h2 className="mt-6 mb-2 px-1 text-[11px] font-bold uppercase tracking-widest text-slate-400">{children}</h2>;
+}
+function EmptyHint({ text }: { text: string }) {
+  return <p className="rounded-xl bg-white/60 p-3 text-center text-[12px] text-slate-400">{text}</p>;
+}
+
+// ─── EDIT WIZARD ───────────────────────────────────────────────────────────
+function EditWizard({
+  plan, setPlan, step, setStep, onCancel, onFinish,
+}: {
+  plan: Plan; setPlan: React.Dispatch<React.SetStateAction<Plan>>;
+  step: number; setStep: (n: number) => void;
+  onCancel: () => void; onFinish: () => void;
+}) {
+  const current = STEPS[step];
+  const Icon = current.icon;
+
+  const next = () => {
+    if (step >= STEPS.length - 1) onFinish();
+    else setStep(step + 1);
+  };
+  const back = () => { if (step > 0) setStep(step - 1); else onCancel(); };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+      className="flex flex-1 flex-col px-5 pt-4"
+    >
+      {/* Header */}
+      <header className="flex items-center justify-between pt-2">
+        <button onClick={back} className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-100 bg-white/80 shadow-sm">
+          <ArrowLeft size={18} className="text-slate-700" />
+        </button>
+        <button
+          onClick={onCancel}
+          className="flex items-center gap-1.5 rounded-full border border-slate-100 bg-white/80 px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm active:scale-95"
+        >
+          <X size={13} /> Cancelar
+        </button>
+      </header>
+
+      {/* Step header */}
+      <div className="mt-5 flex items-center gap-3">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7cc2c8]/15 text-[#2c6e73]">
+          <Icon size={22} strokeWidth={2} />
+        </div>
+        <div className="flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Paso {step + 1} de {STEPS.length}</p>
+          <h1 className="font-serif text-[22px] leading-tight text-slate-900">{current.title}</h1>
+        </div>
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-slate-500">{current.sub}</p>
+
+      {/* Progress bar */}
+      <div className="mt-4 flex gap-1">
+        {STEPS.map((_, i) => (
+          <div
+            key={i}
+            className={`h-1 flex-1 rounded-full transition ${i <= step ? "bg-[#7cc2c8]" : "bg-slate-200"}`}
+          />
+        ))}
+      </div>
+
+      {/* Body */}
+      <div className="mt-5 flex-1 overflow-y-auto pb-40 no-scrollbar">
+        <div className="rounded-3xl border border-slate-100 bg-white/85 p-4 shadow-sm backdrop-blur-md animate-[fadeIn_0.3s_ease-out]">
+          {current.key === "signs" && (
+            <ListEditor
+              placeholder="Escribí una señal…"
+              items={plan.signs}
+              suggestions={SUGGESTED_SIGNS}
+              onAdd={(v) => setPlan(p => ({ ...p, signs: [...p.signs, v] }))}
+              onRemove={(i) => setPlan(p => ({ ...p, signs: p.signs.filter((_, idx) => idx !== i) }))}
+            />
+          )}
+          {current.key === "coping" && (
+            <ListEditor
+              placeholder="Escribí una estrategia…"
+              items={plan.coping}
+              suggestions={SUGGESTED_COPING}
+              onAdd={(v) => setPlan(p => ({ ...p, coping: [...p.coping, v] }))}
+              onRemove={(i) => setPlan(p => ({ ...p, coping: p.coping.filter((_, idx) => idx !== i) }))}
+            />
+          )}
+          {current.key === "env" && (
+            <ListEditor
+              placeholder="Ej: guardar medicación bajo llave…"
+              items={plan.env}
+              suggestions={SUGGESTED_ENV}
+              onAdd={(v) => setPlan(p => ({ ...p, env: [...p.env, v] }))}
+              onRemove={(i) => setPlan(p => ({ ...p, env: p.env.filter((_, idx) => idx !== i) }))}
+            />
+          )}
+          {current.key === "network" && (
+            <ContactEditor
+              items={plan.network}
+              onAdd={(c) => setPlan(p => ({ ...p, network: [...p.network, c] }))}
+              onRemove={(i) => setPlan(p => ({ ...p, network: p.network.filter((_, idx) => idx !== i) }))}
+            />
+          )}
+          {current.key === "emergencies" && (
+            <ContactEditor
+              items={plan.emergencies}
+              placeholderName="Ej: Línea de crisis local"
+              onAdd={(c) => setPlan(p => ({ ...p, emergencies: [...p.emergencies, c] }))}
+              onRemove={(i) => setPlan(p => ({ ...p, emergencies: p.emergencies.filter((_, idx) => idx !== i) }))}
+              hint="Las líneas de tu país ya están cargadas. Agregá otras si querés."
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Footer CTA */}
+      <div className="fixed inset-x-0 bottom-0 px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 bg-gradient-to-t from-[#f4f7f9] via-[#f4f7f9]/95 to-transparent">
+        <div className="mx-auto max-w-md">
+          <button
+            onClick={next}
+            className="w-full rounded-[20px] bg-[#7cc2c8] py-4 font-serif text-[15px] font-semibold text-[#101927] shadow-[0_10px_28px_-12px_rgba(124,194,200,0.6)] active:scale-[0.98]"
+          >
+            {step === STEPS.length - 1 ? "Finalizar Plan de Seguridad" : "Siguiente Paso"}
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function ListEditor({
+  items, suggestions, placeholder, onAdd, onRemove,
+}: {
+  items: string[]; suggestions?: string[]; placeholder: string;
+  onAdd: (v: string) => void; onRemove: (i: number) => void;
+}) {
+  const [draft, setDraft] = useState("");
+  const commit = () => {
+    const v = draft.trim();
+    if (!v || items.includes(v)) return;
+    onAdd(v); setDraft("");
+  };
+  const remaining = (suggestions ?? []).filter(s => !items.includes(s));
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && commit()}
+          placeholder={placeholder}
+          className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7cc2c8]"
+        />
+        <button
+          onClick={commit}
+          className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#101927] text-white active:scale-95"
+        >
+          <Plus size={18} />
+        </button>
+      </div>
+      {remaining.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">Sugerencias</p>
+          <div className="flex flex-wrap gap-1.5">
+            {remaining.map(s => (
+              <button
+                key={s}
+                onClick={() => onAdd(s)}
+                className="rounded-full border border-[#7cc2c8]/40 bg-white px-3 py-1 text-[11.5px] font-medium text-[#2c6e73] active:scale-95"
+              >
+                + {s}
               </button>
-            </div>
-          ))}
-          <div className="flex gap-2">
-            <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Nombre"
-              className="flex-1 rounded-2xl border border-resource-safety-accent/15 bg-resource-safety-bg/60 px-3 py-2.5 text-sm outline-none" />
-            <input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} placeholder="Teléfono" inputMode="tel"
-              className="w-32 rounded-2xl border border-resource-safety-accent/15 bg-resource-safety-bg/60 px-3 py-2.5 text-sm outline-none" />
-            <button onClick={addContact} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-resource-safety-accent text-primary-foreground active:scale-95">
-              <Plus size={18} />
-            </button>
+            ))}
           </div>
         </div>
-      </section>
-
-      <section className="mb-5 rounded-[2.5rem] border border-resource-safety-accent/15 bg-card/85 p-5 shadow-sm">
-        <p className="mb-3 font-mindful text-base font-semibold">Modificá el entorno</p>
-        <ul className="space-y-2 font-sans text-sm leading-6 text-resource-safety-accent/85">
-          {ambiental.map((tip) => (
-            <li key={tip} className="rounded-2xl bg-resource-safety-bg/60 px-4 py-3">{tip}</li>
+      )}
+      {items.length > 0 && (
+        <ul className="space-y-1.5 pt-1">
+          {items.map((it, i) => (
+            <li key={`${it}-${i}`} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5 animate-[slideIn_0.3s_ease-out]">
+              <span className="flex-1 text-[13px] text-slate-700">{it}</span>
+              <button onClick={() => onRemove(i)} className="p-1 text-slate-400 hover:text-rose-500">
+                <X size={14} />
+              </button>
+            </li>
           ))}
         </ul>
-      </section>
+      )}
+    </div>
+  );
+}
 
-      <button onClick={downloadReport}
-        className="flex w-full items-center justify-center gap-2 rounded-[3rem] border border-resource-safety-accent/20 bg-card/85 py-4 font-mindful text-base font-semibold shadow-sm active:scale-[0.98]">
-        <Download size={20} /> Descargar reporte para mi psicólogo
-      </button>
+function ContactEditor({
+  items, onAdd, onRemove, placeholderName = "Nombre", hint,
+}: {
+  items: Contact[]; onAdd: (c: Contact) => void; onRemove: (i: number) => void;
+  placeholderName?: string; hint?: string;
+}) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const commit = () => {
+    if (!name.trim()) return;
+    onAdd({ name: name.trim(), phone: phone.trim() });
+    setName(""); setPhone("");
+  };
+  return (
+    <div className="space-y-3">
+      {hint && <p className="rounded-xl bg-[#7cc2c8]/10 px-3 py-2 text-[11.5px] text-[#2c6e73]">{hint}</p>}
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={placeholderName}
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7cc2c8]"
+        />
+        <input
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Teléfono"
+          inputMode="tel"
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7cc2c8]"
+        />
+        <button
+          onClick={commit}
+          className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#101927] text-white active:scale-95"
+        >
+          <Plus size={18} />
+        </button>
+      </div>
+      {items.length > 0 && (
+        <ul className="space-y-1.5 pt-1">
+          {items.map((c, i) => (
+            <li key={`${c.name}-${i}`} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5 animate-[slideIn_0.3s_ease-out]">
+              <div className="flex-1">
+                <p className="text-[13px] font-semibold text-slate-800">{c.name}</p>
+                {c.phone && <p className="font-mono text-[11.5px] text-slate-500">{c.phone}</p>}
+              </div>
+              <button onClick={() => onRemove(i)} className="p-1 text-slate-400 hover:text-rose-500">
+                <X size={14} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -1,166 +1,62 @@
-## Diagnóstico confirmado
+# Plan de cambios
 
-El problema no está en que falte el audio argentino. Está cargado correctamente, pero la app busca con otro formato de país.
+## 1. Admin › General › nueva subpestaña "Audios"
+- Nueva tab en `src/pages/admin/modules/GeneralAdmin.tsx` llamada **Audios**.
+- Lista unificada de todos los audios usados por la app:
+  - **Mindfulness**: filas desde `mindfulness_scripts_v2` + su MP3 cacheado en Storage (ejercicio · minutos · país · versión · género · voz · estado).
+  - **Diario / Zen**: soundscapes registrados (Lluvia, 528Hz, etc. desde `src/lib/diarioAudio.ts` y bucket correspondiente).
+- Por fila: play inline, tamaño, fecha, botón "Regenerar" (mindfulness) o "Reemplazar" (diario) y "Copiar URL".
+- Filtros por módulo, país y estado (activo / pendiente / huérfano).
 
-Evidencia encontrada:
+## 2. Hábitos
+- **FAB tapado por bottom nav** en `src/pages/pensamientos/HabitosHome.tsx` / `NewHabitSheet.tsx`: subir el FAB a `bottom-24` y añadir `pb-32` al scroll para que el sheet "Nuevo hábito" no quede bajo la navbar.
+- **Grid tipo GitHub con día del mes**: en `HabitCard.tsx` / grid heat-map, renderizar el número de día (1–31) dentro de cada celda con tipografía tabular pequeña, manteniendo el color de intensidad.
 
-- El reproductor pidió:
-  - `country_code = AR`
-  - respuesta: vacío
-- Luego cayó a:
-  - `country_code = default`
-  - respuesta: guion default
-- En la base existen:
-  - Guion argentino: `exercise_id=478`, `minutes=5`, `country_code=Argentina`
-  - Audio argentino: `478/5/Argentina/1/arMlPrYpUo1XH5F2zM6R.mp3`
-  - Voz argentina femenina: `country_code=Argentina`, `voice_id=arMlPrYpUo1XH5F2zM6R`
-- Pero los perfiles y la “Vista por país” usan código ISO:
-  - `AR`
+## 3. Pack de Actividades junto a Hábitos (Bento 2x2)
+- En la home de Hábitos, reorganizar el header para exponer un bento 2x2:
+  - `[ Hábitos ]  [ Pack de Actividades ]`
+  - `[ Stats ]   [ Logros / Racha ]`
+- La card de Pack navega a `/pack` (ya existe `src/pages/pack/PackHome.tsx`). Mismo estilo glass que las cards vecinas.
 
-Mapa del fallo:
+## 4. Plan de Seguridad — rediseño "Dos Tiempos"
+Reescribir `src/pages/SafetyPlan.tsx` con arquitectura `mode: 'view' | 'edit'`.
 
-```text
-Vista por país / Perfil
-        ↓
-      AR
-        ↓
-useUserVoice busca voice_settings.country_code = AR
-        ↓
-No encuentra voz argentina porque está como Argentina
-        ↓
-Fallback a voz default / voz interna
-        ↓
-BreathingHome busca mindfulness_scripts_v2.country_code = AR
-        ↓
-No encuentra guion argentino porque está como Argentina
-        ↓
-Carga guion default
-        ↓
-Muestra “Audio pendiente para default...”
-```
+### Modo Lectura (SOS, default)
+- Header: escudo grande centrado, título serif "Tu red de contención", botón flotante "Editar Plan" (lápiz) arriba-derecha.
+- Cards glass:
+  - **Líneas de emergencia** con gradiente cuarzo rosa (`from-rose-50/80 to-white/80 backdrop-blur-xl border-rose-200/60`), números `font-mono text-rose-600`, `<a href="tel:">`.
+  - **Estrategias de calma** (acento teal) con viñetas numeradas.
+  - **Red de apoyo** (acento índigo) con botón de llamada rápida.
+- Bottom nav visible.
 
-## Plan de corrección exhaustiva
+### Modo Edición (Wizard 5 pasos)
+Pasos: (1) Señales, (2) Estrategias, (3) Red de apoyo (nombre + tel), (4) Entorno, (5) Emergencias (nombre + tel).
+- Header: "Atrás" a la izquierda, "Cancelar" a la derecha, "Paso X de 5".
+- Card blanca central: input + botón oscuro `bg-[#101927]` con `+`, chips de sugerencias turquesa (pasos 1/2/4), lista con ✕.
+- Botón inferior ancho turquesa `bg-[#7cc2c8] text-[#101927]`: "Siguiente paso" / en paso 5 "Finalizar Plan de Seguridad" → vuelve a `view`.
+- Autosave a `safety_plans` como hoy.
 
-### 1. Unificar países en toda la app
-Crear una utilidad central para normalizar países, por ejemplo:
+### Integración en Resumen Psico
+- En `src/pages/ResumenPsico.tsx` agregar sección/acción "Plan de Seguridad" que abre el mismo wizard (modo edit) para completar/actualizar desde ahí.
 
-```text
-AR → Argentina
-Argentina → Argentina
-UY → Uruguay
-MX → México
-ES → España
-CL → Chile
-CO → Colombia
-PE → Perú
-US → Estados Unidos
-```
+### Bugs de Crisis Button
+- Al abrir el modal, "Plan de seguridad" no navega y la `X` no cierra: revisar `src/components/CrisisButton.tsx` / `CrisisModal.tsx`, arreglar handler de navegación a `/plan-seguridad` y `onOpenChange(false)` en el botón de cierre; también corregir posición para que no quede desplazado hacia abajo.
 
-Se usará en:
+## 5. App 100% gratis (remover paywalls)
+- En `src/hooks/usePlan.tsx`: forzar `isPremium = true` y `plan = "premium"` para todos (dejando el hook por compatibilidad, sin llamadas de cambio de plan).
+- Ocultar UI de suscripción/paywall:
+  - Quitar `PremiumLock`, `PaywallModal`, `ManageSubscriptionModal` de los flows visibles.
+  - En `Settings.tsx` remover sección "Plan / Suscripción / Gestionar suscripción".
+  - Quitar badges "Premium" y CTAs "Hazte premium" de cards.
+- Eliminar gating en rutas que hoy chequean `isPremium` (Hábitos, Sueño, Diario, etc.) — todos accesibles.
+- No se borran tablas ni edge functions de billing; solo se desconecta la UI para poder reactivar en el futuro.
 
-- Perfil del usuario
-- Vista por país admin
-- Selección de voces
-- Guiones de mindfulness
-- Audio cacheado
-- Función de pregeneración de audio
-
-### 2. Corregir `useUserVoice`
-Actualizar el hook para que:
-
-- Si recibe `AR`, busque primero `Argentina`
-- Si recibe `Argentina`, lo respete
-- Devuelva un `country` ya normalizado para que el player no vuelva a consultar `AR`
-- Evite caer a default mientras exista una voz del país
-
-Resultado esperado:
-
-```text
-Vista país: AR
-useUserVoice country efectivo: Argentina
-voice_id: arMlPrYpUo1XH5F2zM6R
-```
-
-### 3. Corregir `BreathingHome`
-Actualizar la carga de guiones/audio para que:
-
-- Busque por país normalizado
-- No caiga a default si existe guion argentino
-- Use la voz argentina configurada
-- Muestre un estado más explícito, por ejemplo:
-  - `Audio pregenerado · Argentina · femenina · v1`
-  - `Falta generar audio · Argentina · femenina · v1`
-  - nunca `default` si el país activo es Argentina
-
-### 4. Corregir Admin > Mindfulness
-Actualizar la pestaña de guiones para que internamente use el mismo país normalizado.
-
-Además, hacer visible el estado por país:
-
-```text
-Dormir mejor · 5 min · Argentina · v1
-Guion: activo
-Voz femenina: configurada
-Audio femenino: generado
-Archivo: 478/5/Argentina/1/arMlPrYpUo1XH5F2zM6R.mp3
-```
-
-### 5. Corregir Admin > General > Voces
-Actualizar las voces por país para que no haya doble formato (`AR` vs `Argentina`).
-
-Debe quedar claro que:
-
-- Argentina es la voz usada para usuarios con país `AR`
-- Uruguay idem con `UY`
-- etc.
-
-### 6. Blindar la función `mindfulness-precache`
-Actualizar la función de pregeneración para que:
-
-- Reciba `AR` o `Argentina` indistintamente
-- Resuelva siempre el país canónico
-- Genere el storage path con el país correcto
-- Busque la voz correcta por país y género antes de caer a default
-
-### 7. Migración/limpieza de datos existentes
-Hacer una migración segura o una normalización compatible para los datos ya existentes.
-
-Opción recomendada:
-
-- Mantener los registros actuales como `Argentina` porque ya están así
-- Hacer que todo el código traduzca `AR → Argentina`
-- No romper audios ya cacheados
-
-Opcionalmente, más adelante se puede migrar todo a ISO (`AR`) si preferís, pero no lo haría ahora porque ya tenés audios generados con paths `Argentina`.
-
-### 8. Verificación completa
-Validar con tres niveles:
-
-```text
-Base de datos:
-- Existe voz Argentina/female
-- Existe guion 478/5/Argentina
-- Existe audio cacheado para ese script + voice_id
-
-Frontend:
-- Vista por país Argentina activa
-- Player consulta Argentina, no AR
-- Badge muestra Argentina, no default
-
-Audio:
-- Se reproduce audio pregenerado
-- No usa cues internos “Inhalá/Sostené/Exhalá” salvo que realmente falte audio
-```
-
-### 9. Mejora de prevención
-Agregar logs controlados solo en desarrollo para diagnosticar rápido:
-
-```text
-[Mindfulness] country raw: AR
-[Mindfulness] country normalized: Argentina
-[Mindfulness] voiceId: arMlPrYpUo1XH5F2zM6R
-[Mindfulness] script country: Argentina
-[Mindfulness] audio: cached
-```
-
-Esto permite detectar inmediatamente si vuelve a caer a default.
+## Detalles técnicos
+- Archivos principales a tocar:
+  - `src/pages/admin/modules/GeneralAdmin.tsx` (+ nuevo componente `AudiosPanel.tsx`)
+  - `src/pages/pensamientos/HabitosHome.tsx`, `src/components/habitos/NewHabitSheet.tsx`, `src/components/habitos/HabitCard.tsx`
+  - `src/pages/SafetyPlan.tsx` (reescritura), `src/components/CrisisButton.tsx`, `src/components/CrisisModal.tsx`
+  - `src/pages/ResumenPsico.tsx` (entrada al wizard)
+  - `src/hooks/usePlan.tsx`, `src/pages/Settings.tsx`, componentes con `PremiumLock`
+- Sin migraciones nuevas. Se reutiliza `safety_plans`, `mindfulness_scripts_v2`, bucket de audios y `voice_settings`.
+- Se preservan tokens del design system (glass, teal `#7cc2c8`, dark `#101927`, cream `#FDFCFB`).

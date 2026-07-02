@@ -111,7 +111,7 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pt-4 pb-6">
+            <div className="flex-1 overflow-y-auto px-6 pt-4 pb-[calc(env(safe-area-inset-bottom)+7rem)]">
               {/* Icon tabs */}
               <p className="font-[Montserrat] text-[10px] font-bold uppercase tracking-[0.18em] text-[#101927]/50">Iconografía del hábito</p>
               <div className="mt-2 grid grid-cols-2 rounded-full bg-[#101927]/5 p-1">

@@ -19,6 +19,7 @@ const tiles: TileWithTarget[] = [
   { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary", target: "/herramientas/mindfulness" },
   { slug: "mente-emocion", name: "Mente & Emoción", desc: "CBT + Regulación DBT.", Icon: Brain, tint: "accent", target: "/herramientas/mente-emocion" },
   { slug: "habitos", name: "Hábitos", desc: "Habit Tracker.", Icon: Zap, tint: "primary", target: "/diario-inteligente/gestion-pensamientos/habitos" },
+  { slug: "pack", name: "Pack Actividades", desc: "Programas guiados.", Icon: Sparkles, tint: "accent", target: "/herramientas/pack" },
 ];
 
 const tintBg: Record<Tile["tint"], string> = {
@@ -85,18 +86,6 @@ export function BentoGrid() {
         })}
       </div>
 
-      <button
-        onClick={() => open("pack", "Pack de Actividades", "/herramientas/pack")}
-        className="relative flex w-full items-center justify-between overflow-hidden rounded-3xl bg-primary p-5 text-left text-primary-foreground shadow-primary-glow"
-      >
-        <div>
-          <h3 className="font-display text-base font-bold">Pack de Actividades</h3>
-          <p className="mt-1 text-xs font-medium opacity-80">Abrí el kit con ejercicios de la app.</p>
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-          {isPremium ? <Zap size={20} fill="currentColor" /> : <Lock size={18} strokeWidth={2.6} />}
-        </div>
-      </button>
 
       <button
         onClick={() => navigate("/herramientas/plan-seguridad")}
