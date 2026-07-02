@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader, AdminTabs, AdminToggle } from "@/components/admin/ui/AdminPrimitives";
 import { loadSetting, saveSetting } from "@/lib/admin/settings";
 import { toast } from "sonner";
-import { AlertTriangle, Sliders, Layers, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Sliders, ClipboardList, User, ShieldAlert } from "lucide-react";
+import { TestsCrudPanel } from "@/components/admin/tests/TestsCrudPanel";
 
 type Weights = { checkin: number; tests: number; habits: number; resources: number };
-type Baremo = { test: string; mild: number; moderate: number; severe: number; max: number };
 type Protocol = { id: string; name: string; description: string; enabled: boolean };
 
 const DEFAULT_WEIGHTS: Weights = { checkin: 40, tests: 25, habits: 20, resources: 15 };
