@@ -346,6 +346,42 @@ export type Database = {
           },
         ]
       }
+      ambient_audio_overrides: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          label: string
+          sound_id: string
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          label: string
+          sound_id: string
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          label?: string
+          sound_id?: string
+          storage_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ba_baseline_entries: {
         Row: {
           activity: string

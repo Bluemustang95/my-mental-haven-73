@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { AMBIENT_SOUNDS, getAmbientById } from "@/lib/ambientLibrary";
+import { getOverrideUrl, playOverride } from "@/lib/ambientResolver";
 
 const STORAGE_KEY = "resma:mindful:ambient_volume";
 
@@ -70,11 +71,23 @@ export function useAmbientPlayer() {
     stop();
     if (id === "off") return;
     const def = getAmbientById(id);
-    if (!def) return;
     const ctx = ensureCtx();
-    handleRef.current = def.build(ctx, volumeRef.current);
     currentIdRef.current = id;
+    // Try MP3 override first; if none, fall back to synthesized builder.
+    getOverrideUrl(id).then((url) => {
+      if (currentIdRef.current !== id) return; // user switched already
+      if (url) {
+        handleRef.current = playOverride(ctx, url, volumeRef.current);
+      } else if (def) {
+        handleRef.current = def.build(ctx, volumeRef.current);
+      }
+    }).catch(() => {
+      if (currentIdRef.current === id && def) {
+        handleRef.current = def.build(ctx, volumeRef.current);
+      }
+    });
   }, [ensureCtx, stop]);
+
 
   const setVolume = useCallback((v: number) => {
     volumeRef.current = Math.min(1, Math.max(0, v));
@@ -82,11 +95,11 @@ export function useAmbientPlayer() {
     if (currentIdRef.current !== "off") {
       const id = currentIdRef.current;
       stop();
-      const ctx = ensureCtx();
-      handleRef.current = getAmbientById(id).build(ctx, volumeRef.current);
-      currentIdRef.current = id;
+      // Reuse setSound to re-resolve (override may have changed too).
+      setTimeout(() => setSound(id), 0);
     }
-  }, [ensureCtx, stop]);
+  }, [stop, setSound]);
+
 
   const pause = useCallback(() => {
     try { ctxRef.current?.suspend(); } catch { /* noop */ }

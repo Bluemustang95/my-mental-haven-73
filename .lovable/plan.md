@@ -1,30 +1,82 @@
-# Ajustes solicitados
 
-## 1. Onboarding — quitar selección de membresía
-- Localizar el paso "Elegí tu membresía" (probablemente en `src/components/onboarding/` o `src/pages/Onboarding.tsx`) y **eliminarlo** del flujo.
-- Ajustar el conteo de pasos y la navegación (siguiente/anterior) para saltar directo al paso posterior.
-- Asegurar que `usePlan` siga devolviendo premium por defecto (ya está hardcoded).
-- Remover cualquier import/asset del PaywallStep que quede huérfano.
+## Contexto
 
-## 2. Plan de Seguridad (`src/pages/SafetyPlan.tsx`)
-- **Padding inferior**: agregar `pb-32` (o safe-area) al contenedor scroll del wizard y del ViewMode para que el bottom nav no tape el botón "Siguiente/Finalizar".
-- **Reducir a 4 pasos** (quitar el paso 5 "Líneas de emergencia" — las líneas ya se muestran arriba en ViewMode). Actualizar barra de progreso y textos "Paso X de 4".
-- **Paso 3 "Red de apoyo"**:
-  - Layout vertical: `Nombre` arriba, `Teléfono` abajo (no en fila que se corta).
-  - Etiquetar cada bloque como "Contacto 1", "Contacto 2", etc.
-  - Botón "+ Agregar contacto" visible debajo.
-- **Post-completado**: 
-  - Detectar plan completo (al menos una señal + estrategia + 1 contacto).
-  - En `/herramientas` (o donde esté la card), mostrar botón **"Ver plan de seguridad"** que abre el ViewMode como modal/sheet.
-  - Si el plan está vacío/incompleto, el botón dice **"Armar mi plan"** y abre el wizard de edición (comportamiento actual).
+Hoy los sonidos ambientales (lluvia, olas, viento, grillos, fogata, ruidos, 528Hz, etc.) **no son archivos**: se generan en tiempo real con Web Audio API en el navegador (`ambientLibrary.ts`, `diarioAudio.ts`, `sleepAudio.ts`). Por eso la pestaña Audios del admin aparece vacía de ambientes — sólo lista lo que existe en el bucket `mindfulness-audio` (voces de guiones).
 
-## 3. Admin General — Audios (`src/pages/admin/modules/GeneralAdmin.tsx`)
-- **Listado completo**: hoy solo lista `mindfulness_audio_cache`. Ampliar para incluir también audios del Diario (Modo Zen) y cualquier otro bucket/tabla de audio del sistema. Unificar en una sola vista con filtro por origen.
-- **Upload**: agregar botón "Subir audio" que sube archivos MP3/WAV al bucket de Supabase Storage correspondiente y crea el registro en la tabla.
-- **Editar**: permitir renombrar el archivo, cambiar metadata (título, categoría, país/voz) y reemplazar el archivo. Botón eliminar ya debería existir; verificar.
+## Objetivo
 
-## Detalles técnicos
-- Onboarding: revisar `IntroScreens.tsx` y `OnboardingShell.tsx` para eliminar el step de paywall del array de pasos.
-- SafetyPlan: usar `env-safe` class con `pb-[calc(env(safe-area-inset-bottom)+96px)]`.
-- Persistencia del plan: ya usa tabla `safety_plans`; agregar campo derivado `is_complete` en cliente.
-- Audios: crear (si no existe) bucket público `audios-diario`; extender query a `diary_audios` u origen equivalente y agregar componente `<AudioUploadDialog>` con `<input type="file" accept="audio/*">`.
+Unificar todos los audios del sistema en un único panel donde el admin vea:
+- **Todos los ambientes sintetizados** (los 18 preexistentes + los del Diario Zen y Sueño).
+- **Todos los audios de voz** (guiones Mindfulness cacheados).
+- **Botón "Subir MP3"** por cada ambiente para reemplazarlo con un archivo real. Si existe MP3, el player lo usa; si no, cae al sintetizado.
+
+## Cambios
+
+### 1. Backend
+
+**Nueva tabla `ambient_audio_overrides`** (schema-level, vía migration):
+- `id uuid pk`
+- `sound_id text unique` (ej. `rain_soft`, `waves_strong`, `campfire`)
+- `label text` (nombre visible, ej. "Lluvia suave")
+- `category text` (lluvia/viento/agua/naturaleza/abstractos/zen/sueño)
+- `storage_path text` (ruta dentro del bucket)
+- `duration_seconds int null`
+- `active bool default true`
+- `updated_at timestamptz`
+- GRANTs a `authenticated` (SELECT) y `service_role` (ALL); RLS: lectura pública para users autenticados, escritura sólo admin (vía `has_role`).
+
+**Nuevo bucket `ambient-audio`** (privado; se sirven URLs firmadas o públicas según necesidad — arrancamos privado y usamos `createSignedUrl`).
+
+### 2. Catálogo unificado (frontend)
+
+**Nuevo archivo `src/lib/ambientCatalog.ts`**: exporta un array único con los 18 ambientes de `ambientLibrary.ts` + los 4 extra del Diario Zen (solfeggio 528Hz, click, ocean, wind únicos) + los de sueño (waves, rain de sleep). Cada entry:
+```ts
+{ id, label, category, source: "synth", builder }  // sintético
+```
+Este catálogo es la **fuente de verdad** para el admin (para renderizar la lista) y para los players.
+
+### 3. Player con fallback
+
+Nuevo helper `resolveAmbientAudio(id)`:
+1. Busca en `ambient_audio_overrides` (con cache de 5 min en memoria).
+2. Si hay override activo → devuelve URL firmada del MP3 → el player usa `<audio loop>` con esa URL.
+3. Si no → devuelve el `builder` sintetizado original.
+
+Se integra en `useAmbientPlayer.ts`, `diarioAudio.ts` (Diario Zen) y `sleepAudio.ts` (Santuario del Sueño) — todos comparten el mismo resolver.
+
+### 4. Admin — pestaña Audios rediseñada
+
+En `src/pages/admin/modules/GeneralAdmin.tsx` reemplazo el `AudiosTab` actual por dos sub-secciones:
+
+**A. "Ambientes"** (nueva, arriba)
+- Lista los 22 ambientes del catálogo agrupados por categoría (Lluvia, Viento, Agua, Naturaleza, Abstractos, Zen, Sueño).
+- Cada fila:
+  - Nombre + badge de categoría.
+  - Badge de origen: `Sintetizado` (gris) o `MP3 personalizado` (teal) si hay override.
+  - Botón ▶️ que reproduce en preview (10s).
+  - Botón **"Subir MP3"** → input file (mp3/ogg/wav, máx 10 MB) → sube al bucket como `ambient/{sound_id}.mp3` → upsert en `ambient_audio_overrides`.
+  - Botón "Restaurar sintetizado" si hay override (soft delete: `active=false`).
+
+**B. "Voces de guiones"** (la lista actual)
+- Sigue tal cual: archivos de `mindfulness-audio` + huérfanos + subida a `custom/`.
+
+### 5. Refresh de player
+
+Cuando el admin sube/restaura un override, invalida la cache local (via evento `window.dispatchEvent('ambient-overrides-changed')`) para que la próxima reproducción refetche.
+
+## Notas técnicas
+
+- No borro `ambientLibrary.ts` ni sus sintetizadores — quedan como fallback siempre disponible offline.
+- El bucket `ambient-audio` queda **privado** con URLs firmadas de larga duración (1h) cacheadas en memoria — evita fugas y CORS público.
+- El player HTML `<audio>` usa `loop=true` + `crossfade` corto al iniciar/detener para igualar la transición suave de los sintetizados.
+- Sin cambios en la UI del usuario final — sólo mejora la calidad del sonido si el admin sube MP3.
+
+## Archivos afectados
+
+- `supabase/migrations/*_ambient_audio_overrides.sql` (nuevo)
+- Bucket `ambient-audio` (nuevo)
+- `src/lib/ambientCatalog.ts` (nuevo)
+- `src/lib/ambientResolver.ts` (nuevo)
+- `src/hooks/useAmbientPlayer.ts` (integrar resolver)
+- `src/lib/diarioAudio.ts`, `src/lib/sleepAudio.ts` (usar resolver)
+- `src/pages/admin/modules/GeneralAdmin.tsx` (nueva sub-pestaña "Ambientes")
