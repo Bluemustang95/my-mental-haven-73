@@ -54,21 +54,34 @@ export default function GeneralAdmin() {
 function VoicesTab() {
   const [rows, setRows] = useState<VoiceRow[]>([]);
   const [voices, setVoices] = useState<ElevenVoice[]>([]);
+  const [customVoices, setCustomVoices] = useState<ElevenVoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [reloading, setReloading] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newVoice, setNewVoice] = useState({ voice_id: "", label: "", gender: "female" as "female" | "male", accent: "" });
 
-  useEffect(() => {
-    (async () => {
-      const [{ data }, { data: v }] = await Promise.all([
-        supabase.from("voice_settings").select("*"),
-        supabase.functions.invoke("list-elevenlabs-voices"),
-      ]);
-      setRows((data as VoiceRow[]) ?? []);
-      const voicesData = (v as { voices?: ElevenVoice[] } | null)?.voices ?? [];
-      setVoices(voicesData);
-      setLoading(false);
-    })();
-  }, []);
+  const loadAll = async () => {
+    const [{ data }, { data: v }, { data: custom }] = await Promise.all([
+      supabase.from("voice_settings").select("*"),
+      supabase.functions.invoke("list-elevenlabs-voices"),
+      supabase.from("voice_library_custom").select("*").order("created_at", { ascending: false }),
+    ]);
+    setRows((data as VoiceRow[]) ?? []);
+    const voicesData = (v as { voices?: ElevenVoice[] } | null)?.voices ?? [];
+    setVoices(voicesData);
+    const custRows = (custom as Array<{ voice_id: string; label: string; accent: string | null }>) ?? [];
+    setCustomVoices(custRows.map(c => ({ voice_id: c.voice_id, name: c.label, labels: c.accent ? { accent: c.accent } : {} })));
+    setLoading(false);
+  };
+  useEffect(() => { loadAll(); }, []);
+
+  const allVoices = useMemo(() => {
+    const map = new Map<string, ElevenVoice>();
+    for (const v of voices) map.set(v.voice_id, v);
+    for (const v of customVoices) if (!map.has(v.voice_id)) map.set(v.voice_id, v);
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [voices, customVoices]);
 
   const getRow = (country: string, gender: "female" | "male"): VoiceRow => {
     return rows.find(r => r.country_code === country && r.gender === gender)
@@ -94,38 +107,152 @@ function VoicesTab() {
     else toast.success("Voces guardadas");
   };
 
+  const refreshCatalog = async () => {
+    setReloading(true);
+    const { data: v } = await supabase.functions.invoke("list-elevenlabs-voices");
+    const voicesData = (v as { voices?: ElevenVoice[] } | null)?.voices ?? [];
+    setVoices(voicesData);
+    setReloading(false);
+    toast.success(`${voicesData.length} voces cargadas desde ElevenLabs`);
+  };
+
+  const addCustomVoice = async () => {
+    const vid = newVoice.voice_id.trim();
+    const label = newVoice.label.trim();
+    if (!vid || !label) { toast.error("Voice ID y nombre son obligatorios"); return; }
+    const { error } = await supabase.from("voice_library_custom").insert({
+      voice_id: vid, label, gender: newVoice.gender, accent: newVoice.accent.trim() || null,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Voz agregada");
+    setNewVoice({ voice_id: "", label: "", gender: "female", accent: "" });
+    setAddOpen(false);
+    loadAll();
+  };
+
+  const removeCustomVoice = async (vid: string) => {
+    if (!confirm("¿Eliminar esta voz custom?")) return;
+    const { error } = await supabase.from("voice_library_custom").delete().eq("voice_id", vid);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Voz eliminada");
+    loadAll();
+  };
+
   if (loading) return <div className="text-slate-500 flex items-center gap-2"><Loader2 className="animate-spin" size={16} /> Cargando…</div>;
 
   return (
-    <AdminCard className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-base font-semibold text-resma-navy">Voces por país</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Elegí la voz femenina y masculina que se usará según el país del usuario. La persona podrá elegir en Ajustes cuál prefiere.</p>
-        </div>
-        <AdminButton variant="purple" onClick={save}>
-          {saving ? <Loader2 className="animate-spin" size={14} /> : null} Guardar cambios
-        </AdminButton>
-      </div>
-
-      <div className="grid grid-cols-[180px_1fr_1fr] gap-3 pb-2 border-b border-slate-100 mb-2">
-        <div className="text-[10px] font-admin-label text-slate-500">País</div>
-        <div className="text-[10px] font-admin-label text-slate-500">Voz femenina</div>
-        <div className="text-[10px] font-admin-label text-slate-500">Voz masculina</div>
-      </div>
-
-      {COUNTRIES.map(c => {
-        const f = getRow(c.code, "female");
-        const m = getRow(c.code, "male");
-        return (
-          <div key={c.code} className="grid grid-cols-[180px_1fr_1fr] gap-3 py-2.5 border-b border-slate-50 items-center">
-            <div className="text-sm font-semibold text-resma-navy">{c.label}</div>
-            <VoiceSelect voices={voices} row={f} onChange={setRow} />
-            <VoiceSelect voices={voices} row={m} onChange={setRow} />
+    <div className="space-y-4">
+      <AdminCard className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="text-xs text-slate-600 leading-relaxed">
+            Las voces provienen de tu cuenta de ElevenLabs. Para <b>agregar más voces</b>, entrá a{" "}
+            <a href="https://elevenlabs.io/app/voice-library" target="_blank" rel="noreferrer" className="text-resma-teal underline">
+              ElevenLabs Voice Library
+            </a>{" "}
+            y guardalas en tu cuenta — después tocá "Recargar catálogo". También podés agregar una voz manual pegando su <code className="text-[10px] bg-slate-100 px-1 rounded">voice_id</code>.
           </div>
-        );
-      })}
-    </AdminCard>
+          <div className="flex gap-2 shrink-0">
+            <AdminButton variant="secondary" onClick={refreshCatalog}>
+              {reloading ? <Loader2 className="animate-spin" size={14} /> : null} Recargar catálogo
+            </AdminButton>
+            <AdminButton variant="purple" onClick={() => setAddOpen(true)}>
+              <Plus size={14} /> Agregar voz manual
+            </AdminButton>
+          </div>
+        </div>
+        <div className="mt-3 text-[11px] text-slate-500">
+          Catálogo actual: {voices.length} voces de ElevenLabs · {customVoices.length} voces manuales
+        </div>
+      </AdminCard>
+
+      {addOpen && (
+        <AdminCard className="p-4 border-2 border-resma-purple/40">
+          <div className="font-semibold text-sm text-resma-navy mb-3">Nueva voz manual</div>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              placeholder="voice_id (ej: EXAVITQu4vr4xnSDxMaL)"
+              value={newVoice.voice_id}
+              onChange={(e) => setNewVoice({ ...newVoice, voice_id: e.target.value })}
+              className="h-9 px-2 rounded-lg border border-slate-200 bg-white text-sm"
+            />
+            <input
+              placeholder="Nombre visible (ej: Nadia AR)"
+              value={newVoice.label}
+              onChange={(e) => setNewVoice({ ...newVoice, label: e.target.value })}
+              className="h-9 px-2 rounded-lg border border-slate-200 bg-white text-sm"
+            />
+            <select
+              value={newVoice.gender}
+              onChange={(e) => setNewVoice({ ...newVoice, gender: e.target.value as "female" | "male" })}
+              className="h-9 px-2 rounded-lg border border-slate-200 bg-white text-sm"
+            >
+              <option value="female">Femenina</option>
+              <option value="male">Masculina</option>
+            </select>
+            <input
+              placeholder="Acento / región (opcional)"
+              value={newVoice.accent}
+              onChange={(e) => setNewVoice({ ...newVoice, accent: e.target.value })}
+              className="h-9 px-2 rounded-lg border border-slate-200 bg-white text-sm"
+            />
+          </div>
+          <div className="flex gap-2 justify-end mt-3">
+            <AdminButton variant="secondary" onClick={() => setAddOpen(false)}>Cancelar</AdminButton>
+            <AdminButton variant="purple" onClick={addCustomVoice}>Guardar voz</AdminButton>
+          </div>
+        </AdminCard>
+      )}
+
+      {customVoices.length > 0 && (
+        <AdminCard className="p-4">
+          <div className="font-semibold text-sm text-resma-navy mb-2">Voces manuales</div>
+          <div className="space-y-1">
+            {customVoices.map(v => (
+              <div key={v.voice_id} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-50 last:border-0">
+                <div className="flex-1 min-w-0">
+                  <span className="font-semibold text-resma-navy">{v.name}</span>
+                  <span className="text-slate-400 font-mono ml-2 text-[10px]">{v.voice_id}</span>
+                  {v.labels?.accent && <span className="ml-2 text-slate-500">· {v.labels.accent}</span>}
+                </div>
+                <button onClick={() => removeCustomVoice(v.voice_id)} className="text-rose-500 hover:text-rose-700">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </AdminCard>
+      )}
+
+      <AdminCard className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-semibold text-resma-navy">Voces por país</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Elegí la voz femenina y masculina que se usará según el país del usuario. La persona podrá elegir en Ajustes cuál prefiere.</p>
+          </div>
+          <AdminButton variant="purple" onClick={save}>
+            {saving ? <Loader2 className="animate-spin" size={14} /> : null} Guardar cambios
+          </AdminButton>
+        </div>
+
+        <div className="grid grid-cols-[180px_1fr_1fr] gap-3 pb-2 border-b border-slate-100 mb-2">
+          <div className="text-[10px] font-admin-label text-slate-500">País</div>
+          <div className="text-[10px] font-admin-label text-slate-500">Voz femenina</div>
+          <div className="text-[10px] font-admin-label text-slate-500">Voz masculina</div>
+        </div>
+
+        {COUNTRIES.map(c => {
+          const f = getRow(c.code, "female");
+          const m = getRow(c.code, "male");
+          return (
+            <div key={c.code} className="grid grid-cols-[180px_1fr_1fr] gap-3 py-2.5 border-b border-slate-50 items-center">
+              <div className="text-sm font-semibold text-resma-navy">{c.label}</div>
+              <VoiceSelect voices={allVoices} row={f} onChange={setRow} />
+              <VoiceSelect voices={allVoices} row={m} onChange={setRow} />
+            </div>
+          );
+        })}
+      </AdminCard>
+    </div>
   );
 }
 
