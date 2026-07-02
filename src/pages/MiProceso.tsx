@@ -19,7 +19,7 @@ import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSh
 import { PsychometryCarousel } from "@/components/proceso/PsychometryCarousel";
 import { BigFiveCard } from "@/components/proceso/BigFiveCard";
 import { BigFiveProfileModal } from "@/components/proceso/BigFiveProfileModal";
-import { BeckTestRunner } from "@/components/proceso/BeckTestRunner";
+
 import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
 import { TestRunner } from "@/components/tests/TestRunner";
 import { useLocation } from "react-router-dom";
@@ -53,7 +53,7 @@ export default function MiProceso() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bigFiveOpen, setBigFiveOpen] = useState(false);
-  const [beckOpen, setBeckOpen] = useState(false);
+  
   const [genericTest, setGenericTest] = useState<null | "symptom">(null);
   const [directTestCode, setDirectTestCode] = useState<string | null>(null);
 
@@ -111,8 +111,7 @@ export default function MiProceso() {
   };
 
   const handleSelectTest = (code: "BDI" | "BAI" | "PSWQ") => {
-    if (code === "BDI") setBeckOpen(true);
-    else setDirectTestCode(code);
+    setDirectTestCode(code);
   };
 
 
@@ -216,7 +215,7 @@ export default function MiProceso() {
 
       <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} snapshot={snap} />
       <BigFiveProfileModal open={bigFiveOpen} onClose={() => setBigFiveOpen(false)} />
-      <BeckTestRunner open={beckOpen} onClose={() => setBeckOpen(false)} />
+      
       <SymptomsTestModal open={!!genericTest} kind={genericTest ?? "symptom"} onClose={() => setGenericTest(null)} />
       {directTestCode && <TestRunner testCode={directTestCode} onClose={() => setDirectTestCode(null)} />}
       <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} featureName="Premium" />
