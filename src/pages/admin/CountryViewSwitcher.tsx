@@ -13,7 +13,8 @@ export default function CountryViewSwitcher() {
   const [custom, setCustom] = useState("");
 
   useEffect(() => {
-    setCurrent(getCountryOverride());
+    const stored = getCountryOverride();
+    setCurrent(stored ? (canonicalCountry(stored) ?? stored) : null);
   }, []);
 
   const apply = (code: string | null) => {
