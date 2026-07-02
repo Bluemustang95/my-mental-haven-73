@@ -142,7 +142,7 @@ function AmbientOverridesSection() {
   };
 
   const uploadOverride = async (entry: CatalogEntry, file: File) => {
-    if (file.size > 12 * 1024 * 1024) { toast.error("Máximo 12 MB"); return; }
+    if (file.size > 50 * 1024 * 1024) { toast.error("Máximo 50 MB"); return; }
     setUploadingId(entry.id);
     try {
       const ext = file.name.split(".").pop()?.toLowerCase() || "mp3";
@@ -354,7 +354,7 @@ function NewAmbientDialog({ open, onOpenChange, onCreated }: {
   const submit = async () => {
     if (!label.trim()) { toast.error("Ingresá un nombre"); return; }
     if (!file) { toast.error("Subí un archivo MP3"); return; }
-    if (file.size > 12 * 1024 * 1024) { toast.error("Máximo 12 MB"); return; }
+    if (file.size > 50 * 1024 * 1024) { toast.error("Máximo 50 MB"); return; }
     setSaving(true);
     try {
       const slug = label.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "ambiente";
@@ -411,7 +411,7 @@ function NewAmbientDialog({ open, onOpenChange, onCreated }: {
             <div className="text-[10px] text-slate-400 mt-1">Define en qué grupo aparece dentro del selector.</div>
           </div>
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Archivo (MP3 · máx 12 MB)</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Archivo (MP3 · máx 50 MB · se repite en loop si el ejercicio es más largo)</label>
             <input
               type="file"
               accept="audio/*"
@@ -577,6 +577,7 @@ function AudiosTab() {
   };
 
   const uploadFile = async (file: File) => {
+    if (file.size > 50 * 1024 * 1024) { toast.error("Máximo 50 MB"); return; }
     setUploading(true);
     try {
       const safeName = file.name.replace(/[^\w.\-]+/g, "_");

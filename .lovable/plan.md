@@ -1,82 +1,43 @@
-
-## Contexto
-
-Hoy los sonidos ambientales (lluvia, olas, viento, grillos, fogata, ruidos, 528Hz, etc.) **no son archivos**: se generan en tiempo real con Web Audio API en el navegador (`ambientLibrary.ts`, `diarioAudio.ts`, `sleepAudio.ts`). Por eso la pestaña Audios del admin aparece vacía de ambientes — sólo lista lo que existe en el bucket `mindfulness-audio` (voces de guiones).
-
 ## Objetivo
+1. Permitir subir MP3 de ambientes de **hasta 50 MB** (hoy hay un límite implícito ~12 MB).
+2. Confirmar/garantizar que un audio más corto que el ejercicio (ej. 9 min en una práctica de 20 min) **se repita en loop automáticamente** sin cortes.
 
-Unificar todos los audios del sistema en un único panel donde el admin vea:
-- **Todos los ambientes sintetizados** (los 18 preexistentes + los del Diario Zen y Sueño).
-- **Todos los audios de voz** (guiones Mindfulness cacheados).
-- **Botón "Subir MP3"** por cada ambiente para reemplazarlo con un archivo real. Si existe MP3, el player lo usa; si no, cae al sintetizado.
+## 1. Ampliar límite de subida a 50 MB
 
-## Cambios
+**Dónde vive el límite hoy:**
+- Bucket `ambient-audio` en Storage: cada bucket tiene un `file_size_limit`. El default suele ser ~10-12 MB, por eso te rechaza archivos más grandes.
+- Además, el input de admin (`GeneralAdmin.tsx`, pestaña Audios → "Nuevo ambiente" y overrides) no valida ni informa el máximo.
 
-### 1. Backend
+**Cambios:**
+- **Migration**: actualizar el bucket `ambient-audio` para `file_size_limit = 52428800` (50 MB) y `allowed_mime_types = ['audio/mpeg','audio/mp4','audio/wav','audio/ogg']`. Hacer lo mismo con `mindfulness-audio` por consistencia.
+- **`src/pages/admin/modules/GeneralAdmin.tsx`**:
+  - Validación client-side: si `file.size > 50 MB`, toast con mensaje claro ("Máximo 50 MB").
+  - Mostrar el peso del archivo elegido y el máximo en el diálogo de "Nuevo ambiente" y en el override de sonidos built-in.
+  - Manejar el error del bucket (`Payload too large`) con un toast entendible en lugar del error crudo.
 
-**Nueva tabla `ambient_audio_overrides`** (schema-level, vía migration):
-- `id uuid pk`
-- `sound_id text unique` (ej. `rain_soft`, `waves_strong`, `campfire`)
-- `label text` (nombre visible, ej. "Lluvia suave")
-- `category text` (lluvia/viento/agua/naturaleza/abstractos/zen/sueño)
-- `storage_path text` (ruta dentro del bucket)
-- `duration_seconds int null`
-- `active bool default true`
-- `updated_at timestamptz`
-- GRANTs a `authenticated` (SELECT) y `service_role` (ALL); RLS: lectura pública para users autenticados, escritura sólo admin (vía `has_role`).
+Nota: 50 MB alcanza para ~50 min en MP3 128 kbps o ~35 min en 192 kbps. Si más adelante necesitás archivos más largos, conviene bajar el bitrate del MP3 antes de subir (a 96–128 kbps la calidad de un ambiente es indistinguible).
 
-**Nuevo bucket `ambient-audio`** (privado; se sirven URLs firmadas o públicas según necesidad — arrancamos privado y usamos `createSignedUrl`).
+## 2. Loop automático cuando el audio dura menos que el ejercicio
 
-### 2. Catálogo unificado (frontend)
+**Estado actual (`src/lib/ambientResolver.ts` → `playOverride`):**
+- Los MP3 override se reproducen con un `AudioBufferSourceNode` (o `<audio>`) y **ya deberían** setear `loop = true`. Hay que verificar los 2 caminos:
+  - `playOverride(ctx, url, volume)` para overrides de built-in.
+  - El nuevo camino para "custom" agregado recientemente en `useAmbientPlayer.setSound` (usa la misma función `playOverride`).
 
-**Nuevo archivo `src/lib/ambientCatalog.ts`**: exporta un array único con los 18 ambientes de `ambientLibrary.ts` + los 4 extra del Diario Zen (solfeggio 528Hz, click, ocean, wind únicos) + los de sueño (waves, rain de sleep). Cada entry:
-```ts
-{ id, label, category, source: "synth", builder }  // sintético
-```
-Este catálogo es la **fuente de verdad** para el admin (para renderizar la lista) y para los players.
+**Cambios (solo si falta alguno):**
+- Asegurar `source.loop = true` en el `AudioBufferSourceNode`, o `audio.loop = true` si usa `<audio>`.
+- Fade-in muy corto (~150 ms) al arrancar y crossfade suave en el punto de loop si el archivo no está preparado para loopear sin "click". Implementación mínima: al detectar `ended` (no debería dispararse con loop=true, pero como safety) rearrancar.
+- Un `console.log` de diagnóstico en dev cuando se carga el buffer, indicando duración + `loop=true`, para poder verificar.
 
-### 3. Player con fallback
+**Comportamiento resultante:**
+- MP3 de 9 min en ejercicio de 20 min → se reproduce continuo, reiniciando internamente cada 9 min.
+- El usuario no percibe corte siempre que el archivo termine con silencio o fade-out (recomendación en el tooltip de "Nuevo ambiente": "para loop perfecto, subí audios con fade-in/out o extremos silenciosos").
 
-Nuevo helper `resolveAmbientAudio(id)`:
-1. Busca en `ambient_audio_overrides` (con cache de 5 min en memoria).
-2. Si hay override activo → devuelve URL firmada del MP3 → el player usa `<audio loop>` con esa URL.
-3. Si no → devuelve el `builder` sintetizado original.
+## Archivos a tocar
+- Migration (schema del bucket).
+- `src/pages/admin/modules/GeneralAdmin.tsx` — validación y UX del uploader.
+- `src/lib/ambientResolver.ts` — confirmar/garantizar loop.
 
-Se integra en `useAmbientPlayer.ts`, `diarioAudio.ts` (Diario Zen) y `sleepAudio.ts` (Santuario del Sueño) — todos comparten el mismo resolver.
-
-### 4. Admin — pestaña Audios rediseñada
-
-En `src/pages/admin/modules/GeneralAdmin.tsx` reemplazo el `AudiosTab` actual por dos sub-secciones:
-
-**A. "Ambientes"** (nueva, arriba)
-- Lista los 22 ambientes del catálogo agrupados por categoría (Lluvia, Viento, Agua, Naturaleza, Abstractos, Zen, Sueño).
-- Cada fila:
-  - Nombre + badge de categoría.
-  - Badge de origen: `Sintetizado` (gris) o `MP3 personalizado` (teal) si hay override.
-  - Botón ▶️ que reproduce en preview (10s).
-  - Botón **"Subir MP3"** → input file (mp3/ogg/wav, máx 10 MB) → sube al bucket como `ambient/{sound_id}.mp3` → upsert en `ambient_audio_overrides`.
-  - Botón "Restaurar sintetizado" si hay override (soft delete: `active=false`).
-
-**B. "Voces de guiones"** (la lista actual)
-- Sigue tal cual: archivos de `mindfulness-audio` + huérfanos + subida a `custom/`.
-
-### 5. Refresh de player
-
-Cuando el admin sube/restaura un override, invalida la cache local (via evento `window.dispatchEvent('ambient-overrides-changed')`) para que la próxima reproducción refetche.
-
-## Notas técnicas
-
-- No borro `ambientLibrary.ts` ni sus sintetizadores — quedan como fallback siempre disponible offline.
-- El bucket `ambient-audio` queda **privado** con URLs firmadas de larga duración (1h) cacheadas en memoria — evita fugas y CORS público.
-- El player HTML `<audio>` usa `loop=true` + `crossfade` corto al iniciar/detener para igualar la transición suave de los sintetizados.
-- Sin cambios en la UI del usuario final — sólo mejora la calidad del sonido si el admin sube MP3.
-
-## Archivos afectados
-
-- `supabase/migrations/*_ambient_audio_overrides.sql` (nuevo)
-- Bucket `ambient-audio` (nuevo)
-- `src/lib/ambientCatalog.ts` (nuevo)
-- `src/lib/ambientResolver.ts` (nuevo)
-- `src/hooks/useAmbientPlayer.ts` (integrar resolver)
-- `src/lib/diarioAudio.ts`, `src/lib/sleepAudio.ts` (usar resolver)
-- `src/pages/admin/modules/GeneralAdmin.tsx` (nueva sub-pestaña "Ambientes")
+## Fuera de alcance
+- No cambia el catálogo dinámico ni el resolver de overrides ya construidos.
+- No se tocan Mindfulness ni Diario: el loop es transparente para ambos consumidores.
