@@ -15,11 +15,12 @@ import Step8Resolucion from "@/components/pensamientos/steps/Step8Resolucion";
 import PsicoeducacionModal from "@/components/pensamientos/shell/PsicoeducacionModal";
 import PasosDrawer from "@/components/pensamientos/shell/PasosDrawer";
 import AiCompanionDrawer from "@/components/pensamientos/ai/AiCompanionDrawer";
+import FollowupPromptModal from "@/components/pensamientos/FollowupPromptModal";
 import { STEP_TITLES } from "@/lib/pensamientos/stepHelp";
 import { getResolutionMode, useThoughtDraft, type ThoughtDraft } from "@/lib/pensamientos/state";
 
 const TOTAL = 8;
-const HUB = "/herramientas/pensamientos";
+const HUB = "/herramientas/mente-emocion";
 
 function isStepDone(d: ThoughtDraft, step: number): boolean {
   switch (step) {
@@ -44,6 +45,9 @@ export default function PensamientosAutomaticos() {
   const { draft, patch, reset } = useThoughtDraft();
   const [helpOpen, setHelpOpen] = useState(false);
   const [pasosOpen, setPasosOpen] = useState(false);
+  const [followupOpen, setFollowupOpen] = useState(false);
+  const [savedRecordId, setSavedRecordId] = useState<string | null>(null);
+  const [finishedMode, setFinishedMode] = useState<"reestructuracion" | "abordaje">("reestructuracion");
 
   const step = Math.min(Math.max(draft.step, 1), TOTAL);
   const canContinue = isStepDone(draft, step);
@@ -69,7 +73,7 @@ export default function PensamientosAutomaticos() {
       return;
     }
     const mode = getResolutionMode(draft);
-    const { error } = await supabase.from("thought_records").insert({
+    const { data, error } = await supabase.from("thought_records").insert({
       user_id: user.id,
       situation: draft.triggerEvent || "(sin descripción)",
       automatic_thought: draft.automaticThought || null,
@@ -93,13 +97,20 @@ export default function PensamientosAutomaticos() {
       new_emotion: draft.emotion === "otro" ? draft.emotionOther : draft.emotion,
       new_emotion_intensity: draft.intensityFinal,
       completed_at: new Date().toISOString(),
-    } as any);
+    } as any).select("id").maybeSingle();
     if (error) {
       console.error(error);
       toast.error("No pudimos guardar tu sesión. Probá de nuevo.");
       return;
     }
     toast.success("Sesión guardada. Gran trabajo.");
+    setSavedRecordId((data as any)?.id ?? null);
+    setFinishedMode(mode);
+    setFollowupOpen(true);
+  };
+
+  const closeFollowup = () => {
+    setFollowupOpen(false);
     reset();
     navigate(HUB);
   };
@@ -138,6 +149,15 @@ export default function PensamientosAutomaticos() {
         isStepComplete={(s) => isStepDone(draft, s)}
         onJump={(s) => patch({ step: s })}
         onClose={() => setPasosOpen(false)}
+      />
+
+      <FollowupPromptModal
+        open={followupOpen}
+        thoughtRecordId={savedRecordId}
+        userId={user?.id ?? null}
+        mode={finishedMode}
+        defaultTitle={finishedMode === "abordaje" ? "Ejecutá tu plan de acción" : "Practicá tu pensamiento alternativo"}
+        onClose={closeFollowup}
       />
     </>
   );

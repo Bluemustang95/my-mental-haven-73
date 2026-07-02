@@ -2402,6 +2402,106 @@ export type Database = {
         }
         Relationships: []
       }
+      thought_followup_logs: {
+        Row: {
+          achieved: string | null
+          created_at: string
+          did_it: boolean
+          followup_id: string
+          id: string
+          next_step: string | null
+          note: string | null
+          suds_after: number | null
+          suds_before: number | null
+          user_id: string
+        }
+        Insert: {
+          achieved?: string | null
+          created_at?: string
+          did_it: boolean
+          followup_id: string
+          id?: string
+          next_step?: string | null
+          note?: string | null
+          suds_after?: number | null
+          suds_before?: number | null
+          user_id: string
+        }
+        Update: {
+          achieved?: string | null
+          created_at?: string
+          did_it?: boolean
+          followup_id?: string
+          id?: string
+          next_step?: string | null
+          note?: string | null
+          suds_after?: number | null
+          suds_before?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_followup_logs_followup_id_fkey"
+            columns: ["followup_id"]
+            isOneToOne: false
+            referencedRelation: "thought_followups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thought_followups: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          pinned_home: boolean
+          status: string
+          thought_record_id: string | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          pinned_home?: boolean
+          status?: string
+          thought_record_id?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          pinned_home?: boolean
+          status?: string
+          thought_record_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_followups_thought_record_id_fkey"
+            columns: ["thought_record_id"]
+            isOneToOne: false
+            referencedRelation: "thought_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       thought_records: {
         Row: {
           action_plan: Json | null

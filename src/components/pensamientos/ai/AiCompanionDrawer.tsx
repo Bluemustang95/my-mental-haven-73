@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, X, Send, Loader2 } from "lucide-react";
+import { Bot, X, Send, Loader2, Sparkles, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import type { ThoughtDraft } from "@/lib/pensamientos/state";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -22,14 +23,15 @@ export default function AiCompanionDrawer({ draft }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  useHideBottomNav(open);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, streaming]);
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || streaming) return;
-    const next: Msg[] = [...messages, { role: "user", content: text }];
+  const sendText = async (text: string) => {
+    if (!text.trim() || streaming) return;
+    const next: Msg[] = [...messages, { role: "user", content: text.trim() }];
     setMessages([...next, { role: "assistant", content: "" }]);
     setInput("");
     setStreaming(true);
@@ -40,9 +42,15 @@ export default function AiCompanionDrawer({ draft }: Props) {
       automaticThought: draft.automaticThought,
       emotion: draft.emotion,
       subEmotions: draft.subEmotions,
+      intensityInitial: draft.intensityInitial,
+      intensityFinal: draft.intensityFinal,
       behavior: draft.behavior,
       bodySensations: draft.bodySensations,
+      evidenceFor: draft.evidenceFor,
+      evidenceAgainst: draft.evidenceAgainst,
       distortions: draft.distortions,
+      alternativeThought: draft.alternativeThought,
+      resolutionPlan: draft.resolutionPlan,
     };
 
     try {
@@ -169,7 +177,24 @@ export default function AiCompanionDrawer({ draft }: Props) {
                 ))}
               </div>
 
-              <div className="border-t border-[#101927]/5 bg-white px-4 py-3" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}>
+              <div className="border-t border-[#101927]/5 bg-white px-4 pt-2.5 pb-3" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}>
+                {/* Quick chips */}
+                <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  <button
+                    onClick={() => sendText("Leé lo que escribí en el registro y devolveme un resumen empático en 3 líneas.")}
+                    disabled={streaming}
+                    className="flex shrink-0 items-center gap-1 rounded-full bg-[#7cc2c8]/15 px-3 py-1.5 text-[11px] font-semibold text-[#101927] disabled:opacity-40"
+                  >
+                    <BookOpen size={12} /> Leé lo que escribí
+                  </button>
+                  <button
+                    onClick={() => sendText("Ayudame a completar este paso con 2 o 3 sugerencias breves basadas en lo que ya escribí.")}
+                    disabled={streaming}
+                    className="flex shrink-0 items-center gap-1 rounded-full bg-[#facb60]/25 px-3 py-1.5 text-[11px] font-semibold text-[#101927] disabled:opacity-40"
+                  >
+                    <Sparkles size={12} /> Ayudame a completar
+                  </button>
+                </div>
                 <div className="flex items-end gap-2">
                   <textarea
                     value={input}
@@ -177,7 +202,7 @@ export default function AiCompanionDrawer({ draft }: Props) {
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
-                        send();
+                        sendText(input);
                       }
                     }}
                     placeholder="Escribí lo que sentís…"
@@ -185,7 +210,7 @@ export default function AiCompanionDrawer({ draft }: Props) {
                     className="flex-1 max-h-28 resize-none rounded-2xl border border-[#101927]/10 bg-[#f9f9fb] px-3.5 py-2.5 text-[13px] text-[#101927] placeholder:text-[#101927]/40 focus:outline-none focus:ring-2 focus:ring-[#7cc2c8]/40"
                   />
                   <button
-                    onClick={send}
+                    onClick={() => sendText(input)}
                     disabled={streaming || !input.trim()}
                     className="flex h-10 w-10 items-center justify-center rounded-full bg-[#101927] text-white disabled:opacity-40 active:scale-95"
                   >

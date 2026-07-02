@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Brain, HeartPulse } from "lucide-react";
 import { motion } from "framer-motion";
+import PensamientosRecentHistory from "@/components/pensamientos/RecentHistory";
 
 /**
  * Hub "Mente & Emoción" — agrupa Pensamientos (CBT) y Regulación Emocional (DBT)
@@ -80,6 +81,7 @@ export default function MenteEmocion() {
             </div>
           </motion.button>
         ))}
+        <PensamientosRecentHistory />
       </div>
     </div>
   );

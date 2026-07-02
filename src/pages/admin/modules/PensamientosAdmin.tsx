@@ -1,13 +1,35 @@
 import { useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader, AdminTabs, AdminToggle } from "@/components/admin/ui/AdminPrimitives";
-import { Bot, Database, Type } from "lucide-react";
+import { Bot, Database, Type, Plus, Trash2 } from "lucide-react";
 import { loadSetting, saveSetting } from "@/lib/admin/settings";
 import { toast } from "sonner";
 
 type Distortion = { id: string; emoji: string; name: string; description: string; active: boolean };
 type EmoRow = { emotion: string; somatic: string };
+type AiCfg = { prompt: string; model: string; costs: Record<string, string> };
 
-const DEFAULT_PROMPT = "Eres RESMITA, asistente en TCC. Ayuda al paciente a identificar sus pensamientos automáticos sin juzgar.";
+const DEFAULT_PROMPT = `Sos "Reeni", acompañante cognitivo virtual de RESMA en TCC (Beck / Leahy).
+Hablás en español rioplatense con voseo, tono empático, breve y socrático. NO reemplazás terapia.
+Tenés acceso al REGISTRO del usuario. Léelo antes de responder.
+- Si te pide "leé lo que escribí": devolvé un resumen empático de 3 líneas.
+- Si te pide "ayudame a completar": generá 2–3 sugerencias adaptadas al paso actual.
+- Nombrá distorsiones cuando aparezcan.
+- Ante riesgo, sugerí líneas de ayuda.`;
+
+const MODEL_OPTIONS: { id: string; label: string; cost: string }[] = [
+  { id: "google/gemini-3-flash-preview", label: "Gemini 3 Flash (default)", cost: "Bajo" },
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", cost: "Bajo" },
+  { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", cost: "Alto" },
+  { id: "openai/gpt-5-mini", label: "GPT-5 Mini", cost: "Medio" },
+  { id: "openai/gpt-5", label: "GPT-5", cost: "Alto" },
+];
+
+const DEFAULT_AI: AiCfg = {
+  prompt: DEFAULT_PROMPT,
+  model: "google/gemini-3-flash-preview",
+  costs: Object.fromEntries(MODEL_OPTIONS.map((m) => [m.id, m.cost])),
+};
+
 const DEFAULT_DISTORTIONS: Distortion[] = [
   { id: "tn", emoji: "⚫", name: "Todo o nada", description: "Pensamiento dicotómico, sin matices.", active: true },
   { id: "cat", emoji: "🌪", name: "Catastrofismo", description: "Anticipar el peor escenario posible.", active: true },
@@ -24,15 +46,18 @@ const DEFAULT_EMOS: EmoRow[] = [
 
 export default function PensamientosAdmin() {
   const [tab, setTab] = useState<"prompt" | "dist" | "emo">("prompt");
-  const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
+  const [ai, setAi] = useState<AiCfg>(DEFAULT_AI);
   const [distortions, setDistortions] = useState<Distortion[]>(DEFAULT_DISTORTIONS);
   const [emos, setEmos] = useState<EmoRow[]>(DEFAULT_EMOS);
 
   useEffect(() => {
-    loadSetting("pensamientos_prompt", { text: DEFAULT_PROMPT }).then((v: any) => setPrompt(v.text || DEFAULT_PROMPT));
+    loadSetting<AiCfg>("pensamientos_ai", DEFAULT_AI).then((v) => setAi({ ...DEFAULT_AI, ...v, costs: { ...DEFAULT_AI.costs, ...(v?.costs ?? {}) } }));
     loadSetting<Distortion[]>("pensamientos_distortions", DEFAULT_DISTORTIONS).then(setDistortions);
     loadSetting<EmoRow[]>("pensamientos_emotions", DEFAULT_EMOS).then(setEmos);
   }, []);
+
+  const addDistortion = () => setDistortions([...distortions, { id: `d${Date.now()}`, emoji: "✨", name: "Nueva distorsión", description: "", active: true }]);
+  const removeDistortion = (i: number) => setDistortions(distortions.filter((_, j) => j !== i));
 
   return (
     <>
@@ -49,19 +74,38 @@ export default function PensamientosAdmin() {
       </div>
       <div className="admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32">
         {tab === "prompt" && (
-          <AdminCard className="p-6">
-            <div className="flex items-center gap-2 mb-4">
+          <AdminCard className="p-6 space-y-4">
+            <div className="flex items-center gap-2">
               <Bot size={18} className="text-resma-purple" />
-              <h2 className="text-base font-semibold text-resma-navy">Prompt del Sistema (RESMITA)</h2>
+              <h2 className="text-base font-semibold text-resma-navy">Prompt del Sistema (Reeni)</h2>
             </div>
             <textarea
-              value={prompt} onChange={(e) => setPrompt(e.target.value)}
+              value={ai.prompt} onChange={(e) => setAi({ ...ai, prompt: e.target.value })}
               rows={10}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed text-resma-navy focus:outline-none focus:border-resma-teal focus:bg-white admin-scroll resize-none"
             />
-            <div className="flex justify-end mt-4">
-              <AdminButton onClick={async () => { await saveSetting("pensamientos_prompt", { text: prompt }); toast.success("Instrucciones guardadas"); }}>
-                Guardar Instrucciones
+            <div>
+              <label className="text-xs font-semibold text-slate-600">Modelo IA</label>
+              <div className="mt-2 grid gap-2">
+                {MODEL_OPTIONS.map((m) => (
+                  <label key={m.id} className={`flex items-center justify-between rounded-lg border p-3 text-sm cursor-pointer ${ai.model === m.id ? "border-resma-teal bg-resma-teal/5" : "border-slate-200"}`}>
+                    <div className="flex items-center gap-2">
+                      <input type="radio" checked={ai.model === m.id} onChange={() => setAi({ ...ai, model: m.id })} />
+                      <span className="font-medium text-resma-navy">{m.label}</span>
+                    </div>
+                    <input
+                      value={ai.costs[m.id] ?? ""}
+                      onChange={(e) => setAi({ ...ai, costs: { ...ai.costs, [m.id]: e.target.value } })}
+                      className="w-24 rounded-md border border-slate-200 px-2 py-1 text-xs text-right"
+                      placeholder="Costo"
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <AdminButton onClick={async () => { await saveSetting("pensamientos_ai", ai); toast.success("Configuración IA guardada"); }}>
+                Guardar
               </AdminButton>
             </div>
           </AdminCard>
