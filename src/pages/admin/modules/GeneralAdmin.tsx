@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui/AdminPrimitives";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Volume2, DollarSign, Plus, Trash2, Play, Music, Pause } from "lucide-react";
+import { Loader2, Volume2, DollarSign, Plus, Trash2, Play, Music, Pause, Upload, Pencil, Check as CheckIcon, X as XIcon } from "lucide-react";
 import { COUNTRY_OPTIONS, mindfulnessCountry } from "@/lib/countryCodes";
 
 const COUNTRIES = COUNTRY_OPTIONS.map((country) => ({ ...country, label: country.code === "default" ? "Predeterminado" : country.label }));
@@ -52,7 +52,7 @@ export default function GeneralAdmin() {
 
 type CachedAudio = {
   id: string;
-  script_id: string;
+  script_id: string | null;
   voice_id: string;
   storage_path: string;
   created_at: string;
@@ -60,6 +60,7 @@ type CachedAudio = {
   minutes: number | null;
   exercise_id: string | null;
   country_code: string | null;
+  orphan?: boolean;
 };
 
 function AudiosTab() {
@@ -68,33 +69,80 @@ function AudiosTab() {
   const [filter, setFilter] = useState("");
   const [playing, setPlaying] = useState<string | null>(null);
   const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const { data: cache } = await supabase
+  const load = async () => {
+    setLoading(true);
+    const [{ data: cache }, { data: files }] = await Promise.all([
+      supabase
         .from("mindfulness_audio_cache")
         .select("id, script_id, voice_id, storage_path, created_at")
         .order("created_at", { ascending: false })
-        .limit(500);
-      const list = (cache as Array<Omit<CachedAudio, "script_title" | "minutes" | "exercise_id" | "country_code">>) ?? [];
-      const scriptIds = [...new Set(list.map(r => r.script_id))];
-      let scriptMap = new Map<string, { title: string | null; minutes: number | null; exercise_id: string | null; country_code: string | null }>();
-      if (scriptIds.length) {
-        const { data: scripts } = await supabase
-          .from("mindfulness_scripts_v2")
-          .select("id, title, minutes, exercise_id, country_code")
-          .in("id", scriptIds);
-        scriptMap = new Map((scripts ?? []).map((s: { id: string; title: string | null; minutes: number | null; exercise_id: string | null; country_code: string | null }) =>
-          [s.id, { title: s.title, minutes: s.minutes, exercise_id: s.exercise_id, country_code: s.country_code }]));
-      }
-      setRows(list.map(r => {
-        const meta = scriptMap.get(r.script_id);
-        return { ...r, script_title: meta?.title ?? null, minutes: meta?.minutes ?? null, exercise_id: meta?.exercise_id ?? null, country_code: meta?.country_code ?? null };
-      }));
-      setLoading(false);
-    })();
-  }, []);
+        .limit(500),
+      supabase.storage.from("mindfulness-audio").list("", { limit: 1000, sortBy: { column: "created_at", order: "desc" } }),
+    ]);
+    const list = (cache as Array<Omit<CachedAudio, "script_title" | "minutes" | "exercise_id" | "country_code">>) ?? [];
+    const scriptIds = [...new Set(list.map(r => r.script_id).filter(Boolean) as string[])];
+    let scriptMap = new Map<string, { title: string | null; minutes: number | null; exercise_id: string | null; country_code: string | null }>();
+    if (scriptIds.length) {
+      const { data: scripts } = await supabase
+        .from("mindfulness_scripts_v2")
+        .select("id, title, minutes, exercise_id, country_code")
+        .in("id", scriptIds);
+      scriptMap = new Map((scripts ?? []).map((s: { id: string; title: string | null; minutes: number | null; exercise_id: string | null; country_code: string | null }) =>
+        [s.id, { title: s.title, minutes: s.minutes, exercise_id: s.exercise_id, country_code: s.country_code }]));
+    }
+    const cached: CachedAudio[] = list.map(r => {
+      const meta = r.script_id ? scriptMap.get(r.script_id) : undefined;
+      return { ...r, script_title: meta?.title ?? null, minutes: meta?.minutes ?? null, exercise_id: meta?.exercise_id ?? null, country_code: meta?.country_code ?? null };
+    });
+    // Add orphan files (in storage but not in cache) so admin sees them all
+    const cachedPaths = new Set(cached.map(r => r.storage_path));
+    const orphanFolders = (files ?? []).filter(f => f.id === null); // folders
+    const orphanFiles: CachedAudio[] = [];
+    for (const folder of orphanFolders) {
+      const { data: sub } = await supabase.storage.from("mindfulness-audio").list(folder.name, { limit: 500 });
+      (sub ?? []).forEach(f => {
+        if (f.id === null) return;
+        const path = `${folder.name}/${f.name}`;
+        if (cachedPaths.has(path)) return;
+        orphanFiles.push({
+          id: `orphan:${path}`,
+          script_id: null,
+          voice_id: "—",
+          storage_path: path,
+          created_at: f.created_at ?? new Date().toISOString(),
+          script_title: f.name.replace(/\.[^.]+$/, ""),
+          minutes: null,
+          exercise_id: null,
+          country_code: null,
+          orphan: true,
+        });
+      });
+    }
+    (files ?? []).forEach(f => {
+      if (f.id === null) return;
+      if (cachedPaths.has(f.name)) return;
+      orphanFiles.push({
+        id: `orphan:${f.name}`,
+        script_id: null,
+        voice_id: "—",
+        storage_path: f.name,
+        created_at: f.created_at ?? new Date().toISOString(),
+        script_title: f.name.replace(/\.[^.]+$/, ""),
+        minutes: null,
+        exercise_id: null,
+        country_code: null,
+        orphan: true,
+      });
+    });
+    setRows([...cached, ...orphanFiles]);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -103,7 +151,8 @@ function AudiosTab() {
       (r.script_title ?? "").toLowerCase().includes(q) ||
       (r.exercise_id ?? "").toLowerCase().includes(q) ||
       (r.country_code ?? "").toLowerCase().includes(q) ||
-      r.voice_id.toLowerCase().includes(q)
+      r.voice_id.toLowerCase().includes(q) ||
+      r.storage_path.toLowerCase().includes(q)
     );
   }, [rows, filter]);
 
@@ -120,11 +169,47 @@ function AudiosTab() {
   };
 
   const deleteAudio = async (row: CachedAudio) => {
-    if (!confirm("¿Eliminar este audio cacheado? Se regenerará la próxima vez.")) return;
+    if (!confirm("¿Eliminar este audio? Se regenerará la próxima vez si tiene guion asociado.")) return;
     await supabase.storage.from("mindfulness-audio").remove([row.storage_path]);
-    await supabase.from("mindfulness_audio_cache").delete().eq("id", row.id);
+    if (!row.orphan) {
+      await supabase.from("mindfulness_audio_cache").delete().eq("id", row.id);
+    }
     setRows(prev => prev.filter(r => r.id !== row.id));
     toast.success("Audio eliminado");
+  };
+
+  const startEdit = (row: CachedAudio) => {
+    setEditingId(row.id);
+    setEditTitle(row.script_title ?? "");
+  };
+  const saveEdit = async (row: CachedAudio) => {
+    const title = editTitle.trim();
+    if (!title) { toast.error("Título vacío"); return; }
+    if (row.script_id) {
+      const { error } = await supabase.from("mindfulness_scripts_v2").update({ title }).eq("id", row.script_id);
+      if (error) { toast.error(error.message); return; }
+    }
+    setRows(prev => prev.map(r => r.id === row.id ? { ...r, script_title: title } : r));
+    setEditingId(null);
+    toast.success("Título actualizado");
+  };
+
+  const uploadFile = async (file: File) => {
+    setUploading(true);
+    try {
+      const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+      const path = `custom/${Date.now()}-${safeName}`;
+      const { error: upErr } = await supabase.storage.from("mindfulness-audio").upload(path, file, {
+        cacheControl: "3600", contentType: file.type || "audio/mpeg", upsert: false,
+      });
+      if (upErr) throw upErr;
+      toast.success("Audio subido");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al subir");
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) return <div className="text-slate-500 flex items-center gap-2"><Loader2 className="animate-spin" size={16} /> Cargando audios…</div>;
@@ -132,19 +217,32 @@ function AudiosTab() {
   return (
     <div className="space-y-4">
       <AdminCard className="p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="text-sm font-semibold text-resma-navy">Audios cacheados</div>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-resma-navy">Todos los audios del sistema</div>
             <div className="text-xs text-slate-500 mt-0.5">
-              Todos los MP3 pregenerados para Mindfulness (y sonidos de Diario) almacenados en Storage.
+              MP3 pregenerados para Mindfulness + archivos personalizados en el bucket <code className="text-[10px] bg-slate-100 px-1 rounded">mindfulness-audio</code>.
             </div>
           </div>
-          <input
-            placeholder="Buscar por título, país o voz…"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="h-9 w-64 px-3 rounded-lg border border-slate-200 bg-white text-sm"
-          />
+          <div className="flex items-center gap-2">
+            <label className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-resma-teal text-white text-xs font-semibold cursor-pointer hover:opacity-90">
+              {uploading ? <Loader2 className="animate-spin" size={13} /> : <Upload size={13} />}
+              Subir audio
+              <input
+                type="file"
+                accept="audio/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.currentTarget.value = ""; }}
+                disabled={uploading}
+              />
+            </label>
+            <input
+              placeholder="Buscar…"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="h-9 w-52 px-3 rounded-lg border border-slate-200 bg-white text-sm"
+            />
+          </div>
         </div>
         <div className="mt-2 text-[11px] text-slate-500">
           Total: {rows.length} audios · Mostrando {filtered.length}
@@ -152,9 +250,9 @@ function AudiosTab() {
       </AdminCard>
 
       <AdminCard className="p-0 overflow-hidden">
-        <div className="grid grid-cols-[36px_1fr_100px_90px_110px_150px_60px] gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50 text-[10px] font-admin-label text-slate-500">
+        <div className="grid grid-cols-[36px_1fr_100px_90px_110px_130px_90px] gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50 text-[10px] font-admin-label text-slate-500">
           <div></div>
-          <div>Título / Ejercicio</div>
+          <div>Título / Archivo</div>
           <div>Duración</div>
           <div>País</div>
           <div>Voz</div>
@@ -162,12 +260,13 @@ function AudiosTab() {
           <div></div>
         </div>
         {filtered.length === 0 && (
-          <div className="text-center text-xs text-slate-400 py-8">Sin audios cacheados.</div>
+          <div className="text-center text-xs text-slate-400 py-8">Sin audios.</div>
         )}
         {filtered.map(row => {
           const isPlaying = playing === row.id;
+          const isEditing = editingId === row.id;
           return (
-            <div key={row.id} className="grid grid-cols-[36px_1fr_100px_90px_110px_150px_60px] gap-2 px-4 py-2.5 border-b border-slate-50 last:border-0 items-center text-xs">
+            <div key={row.id} className="grid grid-cols-[36px_1fr_100px_90px_110px_130px_90px] gap-2 px-4 py-2.5 border-b border-slate-50 last:border-0 items-center text-xs">
               <button
                 onClick={() => togglePlay(row)}
                 className={`h-8 w-8 rounded-full flex items-center justify-center ${isPlaying ? "bg-resma-teal text-white" : "bg-slate-100 text-slate-600"}`}
@@ -175,16 +274,45 @@ function AudiosTab() {
                 {isPlaying ? <Pause size={12} /> : <Play size={12} />}
               </button>
               <div className="min-w-0">
-                <div className="font-semibold text-resma-navy truncate">{row.script_title ?? "(sin título)"}</div>
+                {isEditing ? (
+                  <input
+                    autoFocus
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveEdit(row); if (e.key === "Escape") setEditingId(null); }}
+                    className="h-7 w-full px-2 rounded border border-resma-teal bg-white text-xs"
+                  />
+                ) : (
+                  <div className="font-semibold text-resma-navy truncate flex items-center gap-1.5">
+                    {row.script_title ?? "(sin título)"}
+                    {row.orphan && <span className="text-[9px] font-normal text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">huérfano</span>}
+                  </div>
+                )}
                 <div className="text-[10px] text-slate-400 truncate">{row.exercise_id ?? "—"} · {row.storage_path}</div>
               </div>
               <div className="text-slate-600">{row.minutes ? `${row.minutes} min` : "—"}</div>
               <div className="text-slate-600">{row.country_code ?? "default"}</div>
               <div className="font-mono text-[10px] text-slate-500 truncate">{row.voice_id}</div>
               <div className="text-slate-500">{new Date(row.created_at).toLocaleDateString("es-AR")}</div>
-              <button onClick={() => deleteAudio(row)} className="text-rose-500 hover:text-rose-700 justify-self-end">
-                <Trash2 size={13} />
-              </button>
+              <div className="flex items-center gap-1 justify-end">
+                {isEditing ? (
+                  <>
+                    <button onClick={() => saveEdit(row)} className="text-emerald-600 hover:text-emerald-700 p-1"><CheckIcon size={14} /></button>
+                    <button onClick={() => setEditingId(null)} className="text-slate-400 hover:text-slate-600 p-1"><XIcon size={14} /></button>
+                  </>
+                ) : (
+                  <>
+                    {!row.orphan && (
+                      <button onClick={() => startEdit(row)} className="text-slate-500 hover:text-resma-teal p-1">
+                        <Pencil size={13} />
+                      </button>
+                    )}
+                    <button onClick={() => deleteAudio(row)} className="text-rose-500 hover:text-rose-700 p-1">
+                      <Trash2 size={13} />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           );
         })}
@@ -192,6 +320,7 @@ function AudiosTab() {
     </div>
   );
 }
+
 
 function VoicesTab() {
   const [rows, setRows] = useState<VoiceRow[]>([]);

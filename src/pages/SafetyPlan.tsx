@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Phone, Plus, ShieldAlert, Trash2, Loader2, Pencil, X,
-  AlertTriangle, Sparkles, Users, Home as HomeIcon, LifeBuoy, Check,
+  AlertTriangle, Sparkles, Users, Home as HomeIcon, Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,8 +54,8 @@ const STEPS = [
   { key: "coping",      title: "Estrategias para calmarme", icon: Sparkles,   sub: "Recursos personales que puedo activar antes de pedir ayuda." },
   { key: "network",     title: "Red de apoyo",             icon: Users,        sub: "Personas de confianza a las que puedo llamar." },
   { key: "env",         title: "Modificar el entorno",     icon: HomeIcon,     sub: "Reducir el acceso a medios que pueden hacerme daño." },
-  { key: "emergencies", title: "Líneas de emergencia",     icon: LifeBuoy,     sub: "Números profesionales disponibles 24/7." },
 ] as const;
+
 
 const isPlanEmpty = (p: Plan) =>
   p.signs.length === 0 &&
@@ -448,20 +448,14 @@ function EditWizard({
               onRemove={(i) => setPlan(p => ({ ...p, network: p.network.filter((_, idx) => idx !== i) }))}
             />
           )}
-          {current.key === "emergencies" && (
-            <ContactEditor
-              items={plan.emergencies}
-              placeholderName="Ej: Línea de crisis local"
-              onAdd={(c) => setPlan(p => ({ ...p, emergencies: [...p.emergencies, c] }))}
-              onRemove={(i) => setPlan(p => ({ ...p, emergencies: p.emergencies.filter((_, idx) => idx !== i) }))}
-              hint="Las líneas de tu país ya están cargadas. Agregá otras si querés."
-            />
-          )}
         </div>
+
       </div>
 
-      {/* Footer CTA */}
-      <div className="fixed inset-x-0 bottom-0 px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 bg-gradient-to-t from-[#f4f7f9] via-[#f4f7f9]/95 to-transparent">
+      {/* Footer CTA — sits above the bottom nav */}
+      <div className="fixed inset-x-0 bottom-0 px-5 pt-4 bg-gradient-to-t from-[#f4f7f9] via-[#f4f7f9]/95 to-transparent"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 6.5rem)" }}
+      >
         <div className="mx-auto max-w-md">
           <button
             onClick={next}
@@ -471,6 +465,7 @@ function EditWizard({
           </button>
         </div>
       </div>
+
     </motion.div>
   );
 }
@@ -553,42 +548,46 @@ function ContactEditor({
   return (
     <div className="space-y-3">
       {hint && <p className="rounded-xl bg-[#7cc2c8]/10 px-3 py-2 text-[11.5px] text-[#2c6e73]">{hint}</p>}
-      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+
+      {items.map((c, i) => (
+        <div key={`${c.name}-${i}`} className="rounded-2xl border border-slate-100 bg-white/90 p-3 shadow-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Contacto {i + 1}</p>
+            <button onClick={() => onRemove(i)} className="text-slate-400 hover:text-rose-500">
+              <X size={14} />
+            </button>
+          </div>
+          <p className="text-[13px] font-semibold text-slate-800">{c.name}</p>
+          {c.phone && <p className="font-mono text-[12px] text-slate-500">{c.phone}</p>}
+        </div>
+      ))}
+
+      <div className="rounded-2xl border border-dashed border-[#7cc2c8]/50 bg-white/70 p-3 space-y-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#2c6e73]">
+          Contacto {items.length + 1}
+        </p>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={placeholderName}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7cc2c8]"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7cc2c8]"
         />
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="Teléfono"
           inputMode="tel"
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7cc2c8]"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#7cc2c8]"
         />
         <button
           onClick={commit}
-          className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#101927] text-white active:scale-95"
+          disabled={!name.trim()}
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#101927] py-2.5 text-sm font-semibold text-white active:scale-[0.98] disabled:opacity-40"
         >
-          <Plus size={18} />
+          <Plus size={16} /> Agregar contacto
         </button>
       </div>
-      {items.length > 0 && (
-        <ul className="space-y-1.5 pt-1">
-          {items.map((c, i) => (
-            <li key={`${c.name}-${i}`} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2.5 animate-[slideIn_0.3s_ease-out]">
-              <div className="flex-1">
-                <p className="text-[13px] font-semibold text-slate-800">{c.name}</p>
-                {c.phone && <p className="font-mono text-[11.5px] text-slate-500">{c.phone}</p>}
-              </div>
-              <button onClick={() => onRemove(i)} className="p-1 text-slate-400 hover:text-rose-500">
-                <X size={14} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+
     </div>
   );
 }
