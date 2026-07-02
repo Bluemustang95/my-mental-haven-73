@@ -354,7 +354,7 @@ function NewAmbientDialog({ open, onOpenChange, onCreated }: {
   const submit = async () => {
     if (!label.trim()) { toast.error("Ingresá un nombre"); return; }
     if (!file) { toast.error("Subí un archivo MP3"); return; }
-    if (file.size > 12 * 1024 * 1024) { toast.error("Máximo 12 MB"); return; }
+    if (file.size > 50 * 1024 * 1024) { toast.error("Máximo 50 MB"); return; }
     setSaving(true);
     try {
       const slug = label.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "ambiente";
