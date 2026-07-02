@@ -46,14 +46,16 @@ export default function Settings() {
     if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("display_name, prefers_dark, notifications_on")
+      .select("display_name, prefers_dark, notifications_on, voice_gender_preference")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         setName(data?.display_name || user.email?.split("@")[0] || "");
         if (data?.prefers_dark != null) setDark(!!data.prefers_dark);
         if (data?.notifications_on != null) setNotifications(!!data.notifications_on);
+        if (data?.voice_gender_preference) setVoiceGender(data.voice_gender_preference as "female" | "male");
       });
+
   }, [user]);
   useEffect(() => { setBioOn(isBiometricEnabled()); }, []);
 
