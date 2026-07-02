@@ -680,10 +680,11 @@ function WriteView({
         </AlertDialogContent>
       </AlertDialog>
 
-      <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
     </motion.div>
   );
 }
+
+
 
 
 /* ────────────── Subcomponents ────────────── */
