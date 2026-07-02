@@ -104,6 +104,8 @@ import BAProgram from "@/pages/pack/ba/BAProgram";
 import PackOverview from "@/pages/admin/pack/PackOverview";
 import BAContentEditor from "@/pages/admin/pack/BAContentEditor";
 import DashboardGlobal from "@/pages/admin/modules/DashboardGlobal";
+import GeneralAdmin from "@/pages/admin/modules/GeneralAdmin";
+
 import CrmPacientes from "@/pages/admin/modules/CrmPacientes";
 import PensamientosAdmin from "@/pages/admin/modules/PensamientosAdmin";
 import RegulacionDbtAdmin from "@/pages/admin/modules/RegulacionDbtAdmin";
@@ -245,6 +247,8 @@ const App = () => (
             <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
               <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin/dashboard" element={<DashboardGlobal />} />
+              <Route path="/admin/general" element={<GeneralAdmin />} />
+
               <Route path="/admin/pacientes" element={<CrmPacientes />} />
               <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
               <Route path="/admin/pensamientos" element={<PensamientosAdmin />} />

@@ -1,81 +1,252 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui/AdminPrimitives";
-import { loadSetting, saveSetting } from "@/lib/admin/settings";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Folder, FileAudio, Volume2 } from "lucide-react";
+import { Folder, FileAudio, Volume2, Plus, Trash2, CheckCircle2, Loader2, PlayCircle } from "lucide-react";
+import { getGlobalVoice } from "@/lib/globalVoice";
 
-type Script = { id: string; name: string; minutes: number; script: string };
-const DEFAULT: Script[] = [
-  { id: "478", name: "4-7-8 (Sueño)", minutes: 5, script: "Inhalá durante cuatro segundos por la nariz…\nSostené el aire siete segundos…\nExhalá ocho segundos por la boca con sonido de hojas secas…" },
-  { id: "sigh", name: "Suspiro fisiológico", minutes: 3, script: "Doble inhalación por la nariz, exhalación larga por la boca…" },
-  { id: "box", name: "Respiración cuadrada", minutes: 5, script: "Inhalá cuatro, sostené cuatro, exhalá cuatro, pausa cuatro…" },
-  { id: "coh", name: "Coherencia cardíaca", minutes: 5, script: "Inhalá cinco segundos, exhalá cinco segundos. Sintonizá el ritmo del corazón…" },
+type Script = {
+  id: string;
+  exercise_id: string;
+  minutes: number;
+  version: number;
+  title: string;
+  script_text: string;
+  active: boolean;
+};
+
+const EXERCISES = [
+  { id: "478", name: "4-7-8 (Sueño)" },
+  { id: "sigh", name: "Suspiro fisiológico" },
+  { id: "box", name: "Respiración cuadrada" },
+  { id: "coh", name: "Coherencia cardíaca" },
 ];
+const MINUTES_OPTIONS = [5, 10, 15, 20] as const;
+
+type AudioRow = { script_id: string; voice_id: string; storage_path: string };
 
 export default function MindfulnessAdmin() {
-  const [scripts, setScripts] = useState<Script[]>(DEFAULT);
-  const [activeId, setActiveId] = useState("478");
-  const current = scripts.find((s) => s.id === activeId) ?? scripts[0];
+  const [scripts, setScripts] = useState<Script[]>([]);
+  const [audio, setAudio] = useState<AudioRow[]>([]);
+  const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
+  const [minutes, setMinutes] = useState<number>(5);
+  const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const globalVoiceId = useMemo(() => getGlobalVoice().voiceId, []);
 
-  useEffect(() => { loadSetting<Script[]>("mindfulness_scripts", DEFAULT).then(setScripts); }, []);
-
-  const update = (patch: Partial<Script>) => {
-    setScripts(scripts.map((s) => (s.id === activeId ? { ...s, ...patch } : s)));
+  const reload = async () => {
+    const { data } = await supabase
+      .from("mindfulness_scripts_v2")
+      .select("*")
+      .order("exercise_id")
+      .order("minutes")
+      .order("version");
+    setScripts((data as Script[]) ?? []);
+    const { data: aud } = await supabase.from("mindfulness_audio_cache").select("script_id, voice_id, storage_path");
+    setAudio((aud as AudioRow[]) ?? []);
   };
+  useEffect(() => { reload(); }, []);
+
+  const versionsForBucket = scripts.filter(s => s.exercise_id === exerciseId && s.minutes === minutes);
+  const current = versionsForBucket.find(s => s.id === activeVersionId) ?? versionsForBucket[0];
+
+  useEffect(() => {
+    setActiveVersionId(versionsForBucket[0]?.id ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exerciseId, minutes, scripts.length]);
+
+  const addVersion = async () => {
+    const nextVersion = Math.max(0, ...versionsForBucket.map(v => v.version)) + 1;
+    const { data, error } = await supabase
+      .from("mindfulness_scripts_v2")
+      .insert({
+        exercise_id: exerciseId,
+        minutes,
+        version: nextVersion,
+        title: `Versión ${nextVersion}`,
+        script_text: "",
+        active: true,
+      })
+      .select("*")
+      .single();
+    if (error) { toast.error(error.message); return; }
+    setScripts([...scripts, data as Script]);
+    setActiveVersionId((data as Script).id);
+  };
+
+  const updateCurrent = (patch: Partial<Script>) => {
+    if (!current) return;
+    setScripts(scripts.map(s => s.id === current.id ? { ...s, ...patch } : s));
+  };
+
+  const save = async () => {
+    if (!current) return;
+    setSaving(true);
+    const { error } = await supabase.from("mindfulness_scripts_v2").update({
+      title: current.title,
+      script_text: current.script_text,
+      active: current.active,
+    }).eq("id", current.id);
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else toast.success("Guion guardado");
+  };
+
+  const remove = async () => {
+    if (!current) return;
+    if (!confirm("¿Eliminar esta versión?")) return;
+    const { error } = await supabase.from("mindfulness_scripts_v2").delete().eq("id", current.id);
+    if (error) { toast.error(error.message); return; }
+    setScripts(scripts.filter(s => s.id !== current.id));
+    setActiveVersionId(null);
+  };
+
+  const generateAudio = async () => {
+    if (!current) return;
+    if (!current.script_text.trim()) { toast.error("Redactá el guion primero"); return; }
+    setGenerating(true);
+    const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
+      body: { scriptId: current.id, voiceId: globalVoiceId, force: false },
+    });
+    setGenerating(false);
+    if (error) { toast.error(error.message); return; }
+    if ((data as { error?: string })?.error) { toast.error(String((data as { error?: string }).error)); return; }
+    toast.success((data as { cached?: boolean })?.cached ? "Audio ya estaba en cache" : "Audio generado y cacheado");
+    reload();
+  };
+
+  const hasAudio = (scriptId: string) =>
+    audio.some(a => a.script_id === scriptId && a.voice_id === globalVoiceId);
 
   return (
     <>
-      <AdminPageHeader title="Mindfulness & Respiración" subtitle="Guiones para ElevenLabs" />
+      <AdminPageHeader title="Mindfulness & Respiración" subtitle="Guiones por duración y versión · Audio pregenerado con ElevenLabs" />
       <div className="admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32">
+        {/* Ejercicio */}
+        <AdminCard className="p-4 mb-4">
+          <div className="font-admin-label text-[10px] text-slate-500 mb-2">Ejercicio</div>
+          <div className="flex flex-wrap gap-2">
+            {EXERCISES.map(e => (
+              <button
+                key={e.id}
+                onClick={() => setExerciseId(e.id)}
+                className={`px-3 py-2 rounded-lg text-sm font-semibold transition ${
+                  exerciseId === e.id ? "bg-resma-teal text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {e.name}
+              </button>
+            ))}
+          </div>
+        </AdminCard>
+
+        {/* Duración */}
+        <AdminCard className="p-4 mb-4">
+          <div className="font-admin-label text-[10px] text-slate-500 mb-2">Duración</div>
+          <div className="flex gap-2">
+            {MINUTES_OPTIONS.map(m => (
+              <button
+                key={m}
+                onClick={() => setMinutes(m)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                  minutes === m ? "bg-resma-purple text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {m} min
+              </button>
+            ))}
+          </div>
+        </AdminCard>
+
         <div className="grid grid-cols-[280px_1fr] gap-5">
+          {/* Versiones */}
           <AdminCard className="p-3 h-fit">
-            <div className="font-admin-label text-[10px] text-slate-500 px-2 py-2">Ejercicios</div>
+            <div className="flex items-center justify-between px-2 mb-2">
+              <div className="font-admin-label text-[10px] text-slate-500">Versiones ({versionsForBucket.length})</div>
+              <button onClick={addVersion} className="text-resma-teal hover:text-resma-teal/70">
+                <Plus size={16} />
+              </button>
+            </div>
             <div className="space-y-0.5">
-              {scripts.map((s) => {
-                const active = s.id === activeId;
+              {versionsForBucket.length === 0 && (
+                <div className="text-xs text-slate-400 px-2 py-6 text-center">
+                  Sin versiones aún.<br/>Creá la primera con "+"
+                </div>
+              )}
+              {versionsForBucket.map((s) => {
+                const active = s.id === (current?.id ?? "");
                 return (
-                  <button key={s.id} onClick={() => setActiveId(s.id)}
-                          className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition text-left ${
-                            active ? "bg-resma-teal/10 text-resma-teal font-semibold" : "text-slate-600 hover:bg-slate-50"
-                          }`}>
+                  <button
+                    key={s.id}
+                    onClick={() => setActiveVersionId(s.id)}
+                    className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition text-left ${
+                      active ? "bg-resma-teal/10 text-resma-teal font-semibold" : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
                     <Folder size={14} />
-                    <span className="flex-1 truncate">{s.name}</span>
-                    <span className="text-[10px] text-slate-400">{s.minutes}m</span>
+                    <span className="flex-1 truncate">v{s.version} · {s.title || "Sin título"}</span>
+                    {hasAudio(s.id) && <CheckCircle2 size={12} className="text-emerald-500" />}
                   </button>
                 );
               })}
             </div>
           </AdminCard>
 
+          {/* Editor */}
           <AdminCard className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <FileAudio size={18} className="text-resma-purple" />
-                <h2 className="text-base font-semibold text-resma-navy">{current.name}</h2>
+            {!current ? (
+              <div className="text-sm text-slate-500 text-center py-12">
+                Seleccioná una versión o creá una nueva.
               </div>
-              <div className="flex items-center gap-2">
-                <label className="font-admin-label text-[10px] text-slate-500">Minutos</label>
-                <input type="number" min={1} max={60} value={current.minutes}
-                       onChange={(e) => update({ minutes: Math.max(1, parseInt(e.target.value || "1", 10)) })}
-                       className="w-16 h-9 px-2 rounded-lg border border-slate-200 bg-slate-50 text-sm text-center" />
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2 flex-1">
+                    <FileAudio size={18} className="text-resma-purple" />
+                    <input
+                      value={current.title}
+                      onChange={(e) => updateCurrent({ title: e.target.value })}
+                      placeholder="Título de la versión"
+                      className="flex-1 h-9 px-2 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-resma-navy"
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-slate-500 ml-3">
+                    <input type="checkbox" checked={current.active} onChange={(e) => updateCurrent({ active: e.target.checked })} />
+                    Activo
+                  </label>
+                </div>
 
-            <textarea
-              value={current.script} onChange={(e) => update({ script: e.target.value })}
-              rows={18}
-              placeholder="Redactá aquí el guion que leerá ElevenLabs…"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-relaxed text-resma-navy font-serifElegant focus:outline-none focus:border-resma-teal focus:bg-white admin-scroll resize-none"
-            />
+                <textarea
+                  value={current.script_text}
+                  onChange={(e) => updateCurrent({ script_text: e.target.value })}
+                  rows={18}
+                  placeholder={`Redactá el guion para ${minutes} minutos. La duración debe alinearse con la lectura hablada del texto.`}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-relaxed text-resma-navy font-serifElegant focus:outline-none focus:border-resma-teal focus:bg-white admin-scroll resize-none"
+                />
 
-            <div className="flex justify-end gap-2 mt-4">
-              <AdminButton variant="secondary" onClick={() => toast.info("Reproducción de voz disponible al integrar ElevenLabs TTS")}>
-                <Volume2 size={14} /> Probar Voz
-              </AdminButton>
-              <AdminButton variant="purple" onClick={async () => { await saveSetting("mindfulness_scripts", scripts); toast.success("Guion guardado"); }}>
-                Guardar Guion
-              </AdminButton>
-            </div>
+                <div className="mt-3 text-[11px] text-slate-500 flex items-center justify-between">
+                  <span>{current.script_text.length} caracteres · costo estimado ${(current.script_text.length / 1000 * 0.30).toFixed(3)} USD</span>
+                  {hasAudio(current.id)
+                    ? <span className="text-emerald-600 flex items-center gap-1"><CheckCircle2 size={12} /> audio cacheado</span>
+                    : <span className="text-amber-600">audio no generado</span>}
+                </div>
+
+                <div className="flex justify-between gap-2 mt-4">
+                  <AdminButton variant="secondary" onClick={remove}>
+                    <Trash2 size={14} /> Eliminar
+                  </AdminButton>
+                  <div className="flex gap-2">
+                    <AdminButton variant="secondary" onClick={generateAudio}>
+                      {generating ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Generar audio
+                    </AdminButton>
+                    <AdminButton variant="purple" onClick={save}>
+                      {saving ? <Loader2 size={14} className="animate-spin" /> : <PlayCircle size={14} />} Guardar guion
+                    </AdminButton>
+                  </div>
+                </div>
+              </>
+            )}
           </AdminCard>
         </div>
       </div>

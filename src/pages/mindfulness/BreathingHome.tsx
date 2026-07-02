@@ -518,22 +518,30 @@ function SetupScreen({
         </div>
       </div>
 
-      {/* Tiempo */}
+      {/* Tiempo (opciones fijas) */}
       <div className="mt-4 rounded-[20px] bg-white/70 backdrop-blur-xl border border-white/70 p-4 shadow-sm">
         <div className="flex items-end justify-between">
           <div className="text-[10px] tracking-[0.2em] uppercase text-[#101927]/50 font-semibold">Tiempo de práctica</div>
           <div className="text-[22px] font-bold text-[#101927]">{minutes} <span className="text-[13px] font-medium text-[#101927]/55">Minutos</span></div>
         </div>
-        <input
-          type="range" min={1} max={20} value={minutes}
-          onChange={(e) => setMinutes(parseInt(e.target.value, 10))}
-          className="resma-slider mt-3 w-full"
-          style={{ accentColor: "#7cc2c8" }}
-        />
-        <div className="mt-1 flex justify-between text-[10px] font-semibold text-[#101927]/40">
-          {marks.map((m) => <span key={m}>{m} M</span>)}
+        <div className="mt-3 grid grid-cols-5 gap-2">
+          {marks.map((m) => {
+            const active = minutes === m;
+            return (
+              <button
+                key={m}
+                onClick={() => setMinutes(m)}
+                className={`h-11 rounded-2xl text-[13px] font-bold tabular-nums transition ${
+                  active ? "bg-[#101927] text-white shadow-[0_8px_20px_-8px_rgba(16,25,39,0.5)]" : "bg-white text-[#101927]/70 border border-[#101927]/10"
+                }`}
+              >
+                {m}
+              </button>
+            );
+          })}
         </div>
       </div>
+
 
       {/* Voz */}
       <div className="mt-4 rounded-[20px] bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm overflow-hidden">
@@ -732,9 +740,9 @@ function ImmersivePlayer({
       </div>
 
       {/* Capa 1: UI superpuesta */}
-      <div className="relative z-10 flex flex-col min-h-screen justify-between p-5 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.25rem)]">
+      <div className="relative z-10 flex flex-col min-h-screen p-5 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.25rem)]">
 
-        {/* Header */}
+        {/* Header simple: back + label + help */}
         <div className="flex items-start justify-between">
           <button
             onClick={onBack}
@@ -744,41 +752,31 @@ function ImmersivePlayer({
             <ChevronLeft size={20} />
           </button>
 
-          <div className="flex flex-col items-center gap-1.5 pt-1">
-            <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold">
-              {pattern.title}
-            </span>
-            <button
-              onClick={() => setTimeEditOpen(true)}
-              aria-label="Ajustar tiempo de esta sesión"
-              className="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-semibold text-[15px] tabular-nums active:scale-95 transition"
-            >
-              {formatTime(cycle.remaining)}
-            </button>
-          </div>
+          <span className="text-[10px] uppercase tracking-[0.22em] text-white/50 font-semibold pt-3">
+            {pattern.title}
+          </span>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => setSettingsOpen(true)}
-              aria-label="Ajustes"
-              className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
-            >
-              <Settings2 size={18} />
-            </button>
-            <button
-              onClick={onHelp}
-              aria-label="Ayuda"
-              className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
-            >
-              <HelpCircle size={18} />
-            </button>
-          </div>
+          <button
+            onClick={onHelp}
+            aria-label="Ayuda"
+            className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 flex items-center justify-center active:scale-95"
+          >
+            <HelpCircle size={18} />
+          </button>
         </div>
 
-        {/* Centro libre */}
-        <div className="flex-1" />
+        {/* Centro: contador grande y centrado */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <button
+            onClick={() => setTimeEditOpen(true)}
+            aria-label="Ajustar tiempo de esta sesión"
+            className="px-6 py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-bold text-[26px] tabular-nums active:scale-95 transition"
+          >
+            {formatTime(cycle.remaining)}
+          </button>
+        </div>
 
-        {/* Bloque inferior: instrucción + contador + controles */}
+        {/* Bloque inferior: fase + controles (Ajustes al lado de Pausar) */}
         <div className="flex flex-col items-center text-center gap-3">
           <AnimatePresence mode="wait">
             <motion.div
@@ -798,12 +796,18 @@ function ImmersivePlayer({
             </motion.div>
           </AnimatePresence>
 
-          <div className="mt-2 flex items-center justify-center gap-3">
+          <div className="mt-2 flex items-center justify-center gap-2">
             <button
               onClick={cycle.toggle}
               className="px-5 h-11 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
             >
               {cycle.paused ? <><Play size={14} /> Reanudar</> : <><Pause size={14} /> Pausar</>}
+            </button>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="px-5 h-11 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold text-[13px] flex items-center gap-1.5 active:scale-95"
+            >
+              <Settings2 size={14} /> Ajustes
             </button>
             <button
               onClick={onStop}
@@ -814,6 +818,7 @@ function ImmersivePlayer({
           </div>
         </div>
       </div>
+
 
       {/* Panel de ajustes */}
       <AnimatePresence>
@@ -870,15 +875,23 @@ function TimeEditSheet({
           <span className="text-white/55 text-[10px] uppercase tracking-[0.18em] font-semibold">Duración</span>
           <div className="text-white text-[26px] font-bold tabular-nums">{m} <span className="text-[13px] font-medium text-white/55">min</span></div>
         </div>
-        <input
-          type="range" min={1} max={30} value={m}
-          onChange={(e) => setM(parseInt(e.target.value, 10))}
-          className="resma-slider mt-3 w-full"
-          style={{ accentColor: "#7cc2c8" }}
-        />
-        <div className="mt-1 flex justify-between text-[10px] font-semibold text-white/40">
-          {[1, 5, 10, 15, 20, 30].map((v) => <span key={v}>{v}m</span>)}
+        <div className="mt-3 grid grid-cols-5 gap-2">
+          {[1, 5, 10, 15, 20].map((v) => {
+            const active = m === v;
+            return (
+              <button
+                key={v}
+                onClick={() => setM(v)}
+                className={`h-11 rounded-2xl text-[13px] font-bold tabular-nums transition ${
+                  active ? "bg-[#7cc2c8] text-[#101927]" : "bg-white/10 text-white border border-white/15"
+                }`}
+              >
+                {v}
+              </button>
+            );
+          })}
         </div>
+
 
         <div className="mt-5 flex gap-2">
           <button

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History, Crown, RefreshCw, Sparkles, Fingerprint } from "lucide-react";
+import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History, Crown, RefreshCw, Sparkles, Fingerprint, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -21,6 +21,8 @@ export default function Settings() {
   const [name, setName] = useState("");
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [notifications, setNotifications] = useState(true);
+  const [voiceGender, setVoiceGender] = useState<"female" | "male">("female");
+
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState<null | "manage" | "restore">(null);
   const [bioOn, setBioOn] = useState(false);
@@ -44,14 +46,16 @@ export default function Settings() {
     if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("display_name, prefers_dark, notifications_on")
+      .select("display_name, prefers_dark, notifications_on, voice_gender_preference")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         setName(data?.display_name || user.email?.split("@")[0] || "");
         if (data?.prefers_dark != null) setDark(!!data.prefers_dark);
         if (data?.notifications_on != null) setNotifications(!!data.notifications_on);
+        if (data?.voice_gender_preference) setVoiceGender(data.voice_gender_preference as "female" | "male");
       });
+
   }, [user]);
   useEffect(() => { setBioOn(isBiometricEnabled()); }, []);
 
@@ -217,6 +221,30 @@ export default function Settings() {
             checked={notifications}
             onChange={toggleNotifs}
           />
+          <div className="ml-12 h-px bg-black/[0.06]" />
+          <div className="flex items-center justify-between px-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <Mic size={18} />
+              <span className="text-[15px] font-medium">Voz de mindfulness</span>
+            </div>
+            <div className="flex rounded-xl bg-black/5 p-0.5">
+              {(["female", "male"] as const).map((g) => (
+                <button
+                  key={g}
+                  onClick={() => {
+                    setVoiceGender(g);
+                    updateProfile({ voice_gender_preference: g });
+                    toast.success(g === "female" ? "Voz femenina" : "Voz masculina");
+                  }}
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
+                    voiceGender === g ? "bg-white shadow text-[#101927]" : "text-[#101927]/60"
+                  }`}
+                >
+                  {g === "female" ? "Femenina" : "Masculina"}
+                </button>
+              ))}
+            </div>
+          </div>
           {bioSupported && (
             <RowToggle
               icon={<Fingerprint size={18} />}
@@ -226,6 +254,7 @@ export default function Settings() {
             />
           )}
         </Group>
+
 
         {/* Seguridad */}
         <Group label="Seguridad">
