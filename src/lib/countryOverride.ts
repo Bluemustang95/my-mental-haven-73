@@ -6,13 +6,13 @@ const KEY = "resma_admin_country_override";
 export function getCountryOverride(): string | null {
   if (typeof window === "undefined") return null;
   const v = window.localStorage.getItem(KEY);
-  return v && v.trim() ? v.trim().toUpperCase() : null;
+  return v && v.trim() ? v.trim() : null;
 }
 
 export function setCountryOverride(country: string | null) {
   if (typeof window === "undefined") return;
   if (!country) window.localStorage.removeItem(KEY);
-  else window.localStorage.setItem(KEY, country.trim().toUpperCase());
+  else window.localStorage.setItem(KEY, country.trim());
   // Notify other tabs / listeners
   window.dispatchEvent(new CustomEvent("resma:country-override-change"));
 }
