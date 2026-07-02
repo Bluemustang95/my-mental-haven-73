@@ -777,7 +777,7 @@ function Waveform({ stream }: { stream: MediaStream | null }) {
     }
     const tick = () => {
       if (!analyser || !data) return;
-      analyser.getByteFrequencyData(data);
+      analyser.getByteFrequencyData(data as Uint8Array<ArrayBuffer>);
       const step = Math.max(1, Math.floor(data.length / BAR_COUNT));
       const next: number[] = [];
       for (let i = 0; i < BAR_COUNT; i++) {
