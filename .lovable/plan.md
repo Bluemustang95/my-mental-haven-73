@@ -1,54 +1,35 @@
-## 1. Temporizador y layout del ejercicio
+## Cambios a realizar
 
-**`TimeSetupScreen.tsx`**: reemplazar `OPTIONS = [1, 3, 5, 10]` por `[1, 5, 10, 15, 20]` (grid 3 columnas para que entren las 5 opciones sin permitir valores intermedios).
+### 1) Admin → General → Voces: agregar voces personalizadas
+- El selector actual solo muestra las voces que ElevenLabs devuelve del catálogo de tu cuenta. Para traer nuevas voces reales hay que agregarlas en la biblioteca de ElevenLabs (Voice Library o clonar); una vez agregadas aparecen automáticamente.
+- Además, para casos en que ya se tiene un `voice_id` a mano (voz compartida, voz pública, voz privada aún no sincronizada), agregar en la UI un botón **"+ Agregar voz manual"** que abre un mini formulario con `voice_id`, `label` y `género`. Esa entrada se guarda en una nueva tabla `voice_library_custom` (o se inserta ad-hoc en `voice_settings`) y se fusiona con el listado de ElevenLabs en el `<select>`.
+- Mostrar además un botón "Recargar catálogo" y un enlace/tooltip explicando "Para sumar más voces, agregalas primero a tu cuenta de ElevenLabs (Voice Library)".
 
-**Reproductor inmersivo (`BreathingHome.tsx` → pantalla de sesión)**:
-- Centrar verticalmente el contador de tiempo (mm:ss) — hoy queda desplazado por el header/píldora.
-- Mover el botón "Ajustes" a la fila inferior, al lado de "Pausar" (mismo tamaño y estilo glass). Quitarlo del header.
-- Precargar el guion completo en ElevenLabs **antes** de iniciar (spinner "Preparando tu sesión…" en la transición TimeSetup → Player, para que la voz arranque en cuanto la persona toca Comenzar).
+### 2) Admin → Mindfulness: guiones por país + estado por nacionalidad
+- Agregar columna `country_code TEXT NOT NULL DEFAULT 'default'` a `mindfulness_scripts_v2` y a la unique key (`exercise_id, minutes, version, country_code`).
+- En `MindfulnessAdmin.tsx` agregar un cuarto filtro **"País"** (Default / Argentina / Uruguay / Chile / México / Colombia / Perú / España / EEUU). La lista de versiones y el editor pasan a filtrar también por país.
+- Junto a cada versión mostrar chips con estado del audio por país (✓ verde si `mindfulness_audio_cache` tiene fila para esa `(script_id, voice_id_del_país)`).
+- Botón **"Generar audio para todos los países"**: itera países configurados en `voice_settings` (femenino/masculino) e invoca `mindfulness-precache` por cada uno. Alternativamente, el botón "Generar audio" actual queda país-por-país usando la voz configurada del país activo.
+- Respuesta a "¿se hace de una?": **no**, ElevenLabs cobra por síntesis y cada país usa distinta voz/acento, así que hay que generar por país. La UI lo hace en batch para no tener que hacer clic uno por uno.
 
-## 2. Guiones precargados vía ElevenLabs (cero espera para el usuario final)
+### 3) Reproductor de Mindfulness: honrar voz + ambiente elegidos
+- Bug: `useUserVoice` cae al fallback legacy cuando `voice_settings` no tiene fila para Argentina/género. Además, el reproductor no consulta el guion pre-cacheado por país, solo sintetiza cues (`Inhalá`/`Exhalá`) con la voz global.
+- Cambios:
+  - Al entrar al ejercicio, hacer lookup del guion pre-cacheado por `(exercise_id, minutes, country_code)` + voz del usuario en `mindfulness_audio_cache`; si existe, reproducirlo como pista guía en vez de sintetizar por cue.
+  - Si no hay precache, seguir con cues sintetizados **pero** usando el `voiceId` de `useUserVoice` de forma consistente (hoy hay un `getGlobalVoice()` fallback dentro de `elevenLabsTTS` que puede pisarlo).
+  - Ambiente: leer de localStorage la última selección global al montar el reproductor (hoy usa el estado inicial del padre, que puede quedar desincronizado tras cambiar en Ajustes globales).
 
-Estrategia: **pre-síntesis server-side + cache compartido en Supabase Storage**, en vez de sintetizar por-usuario en el cliente (que es lo que hoy hace `elevenLabsTTS.ts` con IndexedDB).
+### 4) UI del reproductor: timer arriba, chico
+- Mover el chip del timer de `flex-1 justify-center` a un pequeño pill centrado justo **debajo del título** ("DORMIR MEJOR"), tipografía chica (`text-[15px]` tabular), como estaba antes.
+- El centro de la pantalla queda libre para el visualizador (esfera). La fase (`INHALÁ`) y los tres botones (Reanudar / Ajustes / Detener) quedan igual, abajo.
 
-- Nuevo bucket público `mindfulness-audio/` con estructura `{voice_id}/{exercise_id}/{minutes}/{version}.mp3`.
-- Nueva edge function `mindfulness-precache`: recibe `{ scriptId, minutes, version, voiceId }`, sintetiza vía ElevenLabs y sube el MP3 al bucket. La usa el admin al guardar un guion (botón "Generar audio"). Idempotente.
-- Nueva tabla `mindfulness_audio_cache` (script_id, minutes, version, voice_id, storage_path, duration_sec, generated_at).
-- En el cliente, `synthesize()` primero consulta la tabla; si existe, reproduce el MP3 público directo (0 latencia, sin costo de IA por reproducción). Solo cae al flujo actual como fallback.
+### Archivos afectados
+- `supabase/migrations/*` → nueva migración: `country_code` en `mindfulness_scripts_v2` + unique, tabla `voice_library_custom` (id, voice_id, label, gender, created_at) con RLS admin-only.
+- `src/pages/admin/modules/GeneralAdmin.tsx` → botón "+ Agregar voz manual" + merge del catálogo.
+- `src/pages/admin/modules/MindfulnessAdmin.tsx` → filtro país + botón batch multi-país + estado audio por país.
+- `supabase/functions/mindfulness-precache/index.ts` → aceptar `country_code` en la ruta de storage y resolver voz automáticamente si se pasa `country_code` sin `voiceId`.
+- `src/pages/mindfulness/BreathingHome.tsx` → mover timer al header, cargar audio precacheado por país, re-hidratar ambiente desde localStorage al entrar.
+- `src/hooks/useUserVoice.tsx` → asegurar que nunca cae al `getGlobalVoice` cuando hay perfil + voz por país configurada.
 
-## 3. Admin — Guiones por minuto y múltiples versiones
-
-Refactor de `MindfulnessAdmin.tsx`:
-- Modelo nuevo: cada ejercicio (478, sigh, box, coh, etc.) tiene guiones agrupados por **duración** (5, 10, 15, 20 min) y, dentro de cada duración, **N versiones** (mínimo 5, ideal 10).
-- Navegación en 3 niveles: Ejercicio → Duración (tabs 5/10/15/20) → Versión (lista + "Nueva versión").
-- Cada versión: título corto, texto del guion, autor, `audio_status` (sin generar / generado / desactualizado), botón "Generar audio" (llama `mindfulness-precache`).
-- Selección en runtime: cuando el usuario elige minutos, el player toma una versión al azar (o rotativa) de esa duración para variar la experiencia.
-- Persistencia: migrar de `admin_settings` (JSON monolítico) a tabla `mindfulness_scripts_v2` (id, exercise_id, minutes, version, title, script_text, active, created_at). GRANTs + RLS admin-only escritura, lectura autenticada.
-
-## 4. Admin — Nueva sección "General" en Principal
-
-Bajo "Dashboard principal" agregar item de menú **"General"** con dos subpestañas:
-
-### 4.1 Voces (por país, masculino + femenino)
-- Tabla `voice_settings` con `country_code`, `gender` ('male'|'female'), `voice_id`, `label`.
-- UI: lista de países (AR, UY, ES, MX, CO, CL, PE, US, "default"), cada uno con dos selects (M / F) que traen las voces de ElevenLabs (endpoint `/v1/voices` vía nueva edge function `list-elevenlabs-voices`).
-- Perfil del usuario: nuevo campo `voice_gender_preference` en `patient_app_profiles` + control en `Ajustes` ("Preferencia de voz: Femenina / Masculina").
-- `useUserVoice.tsx` resuelve: `profile.voice_id` (override) → `voice_settings[country][gender]` → default. Se aplica en todos los módulos de voz (mindfulness, respiración, sueño).
-
-### 4.2 Gasto de IA
-- Tabla `ai_usage_log` (provider, model, feature, tokens_in, tokens_out, chars, cost_usd, user_id, created_at).
-- Instrumentar edge functions existentes (`mindfulness-tts`, `pensamientos-companion`, `resmita-chat`, `transcribe-voice`, `mindfulness-precache`) para escribir un log por llamada con costo estimado (según tarifas de cada modelo).
-- Dashboard: total mes actual, breakdown por feature (Mindfulness TTS, Pensamientos IA, Resmita, Transcripción), gráfico línea últimos 30 días, top 10 usuarios por consumo. Filtro de rango de fechas.
-
-## Detalles técnicos
-
-- Migraciones nuevas: `mindfulness_scripts_v2`, `mindfulness_audio_cache`, `voice_settings`, `ai_usage_log` (todas con GRANTs a `authenticated`/`service_role` + RLS: lectura autenticada donde aplica, escritura admin-only vía `has_role`).
-- Bucket público `mindfulness-audio` (audio pregenerado, sin datos personales).
-- Nuevas edge functions: `mindfulness-precache`, `list-elevenlabs-voices`.
-- Config: costos por modelo en `admin_settings.ai_pricing` (editable) para calcular `cost_usd` sin hardcodear tarifas.
-- `patient_app_profiles.voice_gender_preference` + UI en `Ajustes`.
-
-## Fuera de alcance
-
-- No se generan aún las 5-10 versiones de guion (queda como tarea de contenido en admin, con la UI lista para cargarlas).
-- No se rehace el motor visual de los ejercicios (Lottie/SVG existentes se mantienen).
+### Nota técnica sobre el costo/tiempo
+Generar 4 ejercicios × 4 duraciones × ~5 versiones × 8 países × 2 géneros = **~1.280 audios**. Cada guion ronda 500-1500 caracteres → costo ElevenLabs multilingüe ~$0.15-0.45 por audio. Se recomienda generar solo la voz por defecto (femenina) para cada país al principio, y masculinas on-demand. La UI del batch va a mostrar un progreso claro.
