@@ -81,6 +81,7 @@ export default function MenteEmocion() {
             </div>
           </motion.button>
         ))}
+        <PensamientosRecentHistory />
       </div>
     </div>
   );
