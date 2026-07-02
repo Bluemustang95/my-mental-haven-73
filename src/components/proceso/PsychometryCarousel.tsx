@@ -82,7 +82,12 @@ export function PsychometryCarousel({ onSelect }: { onSelect: (code: TestKey) =>
         <p className="font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.18em] text-[#7cc2c8]">
           Evaluaciones y psicometría
         </p>
-        <p className="text-[10px] text-[#94a3b8]">Desliza →</p>
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("open-wellbeing-sheet"))}
+          className="text-[10px] font-semibold text-[#3d8a90] hover:underline"
+        >
+          Ver historial →
+        </button>
       </div>
       <div className="-mx-5 flex gap-2.5 overflow-x-auto no-scrollbar px-5 pb-1">
         {CARDS.map((c) => (
