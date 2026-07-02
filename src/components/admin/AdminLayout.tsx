@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, Brain, Sparkles, Wind, Palette, Activity,
   TrendingUp, BookOpen, Zap, Bell, ChevronDown, LogOut, ShieldCheck, Plus,
-  ClipboardList, Star, LifeBuoy, Globe2,
+  ClipboardList, Star, LifeBuoy, Globe2, NotebookPen,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
