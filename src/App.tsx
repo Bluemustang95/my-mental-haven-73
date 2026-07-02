@@ -104,6 +104,8 @@ import BAProgram from "@/pages/pack/ba/BAProgram";
 import PackOverview from "@/pages/admin/pack/PackOverview";
 import BAContentEditor from "@/pages/admin/pack/BAContentEditor";
 import DashboardGlobal from "@/pages/admin/modules/DashboardGlobal";
+import GeneralAdmin from "@/pages/admin/modules/GeneralAdmin";
+
 import CrmPacientes from "@/pages/admin/modules/CrmPacientes";
 import PensamientosAdmin from "@/pages/admin/modules/PensamientosAdmin";
 import RegulacionDbtAdmin from "@/pages/admin/modules/RegulacionDbtAdmin";
