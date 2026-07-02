@@ -18,6 +18,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
+import { useAmbientCatalog } from "@/hooks/useAmbientCatalog";
+import { useAmbientPlayer } from "@/hooks/useAmbientPlayer";
+import { Music } from "lucide-react";
 import { uploadAttachment, deleteAttachment, refreshSignedUrl } from "@/lib/journalAttachments";
 import * as e2e from "@/lib/e2ecipher";
 
