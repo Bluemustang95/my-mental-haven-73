@@ -19,6 +19,7 @@ const tiles: TileWithTarget[] = [
   { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary", target: "/herramientas/mindfulness" },
   { slug: "mente-emocion", name: "Mente & Emoción", desc: "CBT + Regulación DBT.", Icon: Brain, tint: "accent", target: "/herramientas/mente-emocion" },
   { slug: "habitos", name: "Hábitos", desc: "Habit Tracker.", Icon: Zap, tint: "primary", target: "/diario-inteligente/gestion-pensamientos/habitos" },
+  { slug: "pack", name: "Pack Actividades", desc: "Programas guiados.", Icon: Sparkles, tint: "accent", target: "/herramientas/pack" },
 ];
 
 const tintBg: Record<Tile["tint"], string> = {
