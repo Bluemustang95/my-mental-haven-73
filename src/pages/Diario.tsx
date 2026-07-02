@@ -58,24 +58,21 @@ const FALLBACK_PROMPTS: InspirePrompt[] = [
 ];
 const INSPIRE_HISTORY_KEY = "diary:inspire:history";
 
-const EMOTIONS_PRIMARY = [
+type Chip = { k: string; e: string; img?: string | null };
+const FALLBACK_EMOTIONS_PRIMARY: Chip[] = [
   { k: "Calma", e: "🧘" }, { k: "Alegría", e: "☀️" }, { k: "Tristeza", e: "🌧️" },
   { k: "Ansiedad", e: "⚡" }, { k: "Enojo", e: "🔥" }, { k: "Agotamiento", e: "🛌" },
 ];
-const EMOTIONS_EXTRA = [
+const FALLBACK_EMOTIONS_EXTRA: Chip[] = [
   { k: "Amor", e: "💗" }, { k: "Gratitud", e: "🙏" }, { k: "Culpa", e: "😔" },
   { k: "Vergüenza", e: "🫣" }, { k: "Miedo", e: "😨" }, { k: "Frustración", e: "😤" },
-  { k: "Esperanza", e: "🌈" }, { k: "Orgullo", e: "🦁" }, { k: "Nostalgia", e: "🍂" },
-  { k: "Confusión", e: "🌀" }, { k: "Envidia", e: "🥴" }, { k: "Aburrimiento", e: "🥱" },
 ];
-const CAUSES_PRIMARY = [
+const FALLBACK_CAUSES_PRIMARY: Chip[] = [
   { k: "Trabajo", e: "🏢" }, { k: "Pareja", e: "❤️" }, { k: "Salud", e: "🍎" },
   { k: "Finanzas", e: "💵" }, { k: "Sueño", e: "💤" },
 ];
-const CAUSES_EXTRA = [
+const FALLBACK_CAUSES_EXTRA: Chip[] = [
   { k: "Familia", e: "🏡" }, { k: "Amistades", e: "🤝" }, { k: "Estudios", e: "📚" },
-  { k: "Hijes", e: "🧸" }, { k: "Cuerpo", e: "💪" }, { k: "Redes", e: "📱" },
-  { k: "Duelo", e: "🕊️" }, { k: "Mudanza", e: "📦" }, { k: "Rutina", e: "🔁" },
 ];
 
 type Attachment = {
