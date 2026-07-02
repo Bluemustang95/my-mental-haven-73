@@ -1139,11 +1139,48 @@ function HistoryView({ onBack }: { onBack: () => void }) {
                     style={{ fontFamily: "Lora, serif" }}
                   />
                 ) : (
-                  <div
-                    className="text-[14px] leading-relaxed text-[#101927] whitespace-pre-wrap"
-                    style={{ fontFamily: "Lora, serif" }}
-                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(active.content ?? "") || "<em class='opacity-60'>(sin texto)</em>" }}
-                  />
+                  <>
+                    <div
+                      className="text-[14px] leading-relaxed text-[#101927] whitespace-pre-wrap"
+                      style={{ fontFamily: "Lora, serif" }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(active.content ?? "") || "<em class='opacity-60'>(sin texto)</em>" }}
+                    />
+                    {active.attachments && active.attachments.length > 0 && (
+                      <div className="mt-4">
+                        <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">
+                          Adjuntos
+                        </p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {active.attachments.map((a) => {
+                            const url = attUrls[a.id];
+                            if (a.type === "image") {
+                              return (
+                                <a key={a.id} href={url || "#"} target="_blank" rel="noreferrer"
+                                  className="relative block aspect-square overflow-hidden rounded-2xl border border-[#101927]/10 bg-[#101927]/5">
+                                  {url ? <img src={url} alt={a.name} className="h-full w-full object-cover" /> :
+                                    <div className="grid h-full w-full place-items-center text-[10px] text-slate-400">…</div>}
+                                </a>
+                              );
+                            }
+                            if (a.type === "audio") {
+                              return (
+                                <div key={a.id} className="col-span-3 rounded-2xl border border-[#101927]/10 bg-[#101927]/5 p-2">
+                                  {url ? <audio controls src={url} className="w-full" /> : <p className="text-[11px] text-slate-500">Cargando audio…</p>}
+                                </div>
+                              );
+                            }
+                            return (
+                              <a key={a.id} href={url || "#"} target="_blank" rel="noreferrer"
+                                className="flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border border-[#101927]/10 bg-white p-2 text-center">
+                                <FileText size={18} className="opacity-70" />
+                                <span className="line-clamp-2 text-[9.5px] text-[#101927]/70">{a.name}</span>
+                              </a>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
