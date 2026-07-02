@@ -310,8 +310,9 @@ function WriteView({
   };
 
   const reset = () => {
-    setText(""); setPrompt(null); attachments.forEach((a) => URL.revokeObjectURL(a.url));
-    setAttachments([]); setEmo(null); setCauses(new Set()); setOpenAcc(null);
+    setText(""); setPrompt(null); setPromptReuseDate(null);
+    attachments.forEach((a) => URL.revokeObjectURL(a.url));
+    setAttachments([]); setEmos(new Set()); setCauses(new Set());
     setRecording(false); setEntryId(null); setSaveState("idle");
     if (editorRef.current) editorRef.current.innerHTML = "";
     lastLen.current = 0;
@@ -320,30 +321,28 @@ function WriteView({
 
   // Autosave: debounced upsert whenever meaningful content changes
   useEffect(() => {
-    if (!text.trim() && !emo && causes.size === 0 && attachments.length === 0) return;
+    if (!text.trim() && emos.size === 0 && causes.size === 0 && attachments.length === 0) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaveState("saving");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setSaveState("idle"); return; }
-      const tags = [emo, ...Array.from(causes)].filter(Boolean) as string[];
+      const tags = [...Array.from(emos), ...Array.from(causes)];
       // Save only stable (uploaded) attachment metadata, NOT blob URLs.
       const persistedAttachments = attachments
         .filter((a) => !!a.path)
         .map((a) => ({ id: a.id, name: a.name, type: a.type, path: a.path, size: a.size }));
       const audioAtt = persistedAttachments.find((a) => a.type === "audio");
-      const encEnabled = e2e.isE2EEnabled();
       const rawContent = sanitizeHtml(text);
-      const contentForDb = encEnabled ? await e2e.encryptText(rawContent) : rawContent;
       const payload = {
         user_id: user.id,
-        content: contentForDb,
+        content: rawContent,
         entry_date: localDateStr(),
         emotion_tags: tags,
         prompt: prompt?.text ?? null,
         attachments: persistedAttachments as unknown as never,
         voice_note_path: audioAtt?.path ?? null,
-        is_encrypted: encEnabled,
+        is_encrypted: false,
       };
       if (entryId) {
         const { error } = await supabase.from("journal_entries").update(payload).eq("id", entryId);
@@ -357,7 +356,7 @@ function WriteView({
     }, 1200);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, emo, causes, prompt, attachments]);
+  }, [text, emos, causes, prompt, attachments]);
 
 
   /* tone classes */
