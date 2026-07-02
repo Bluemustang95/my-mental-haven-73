@@ -45,6 +45,9 @@ export default function PensamientosAutomaticos() {
   const { draft, patch, reset } = useThoughtDraft();
   const [helpOpen, setHelpOpen] = useState(false);
   const [pasosOpen, setPasosOpen] = useState(false);
+  const [followupOpen, setFollowupOpen] = useState(false);
+  const [savedRecordId, setSavedRecordId] = useState<string | null>(null);
+  const [finishedMode, setFinishedMode] = useState<"reestructuracion" | "abordaje">("reestructuracion");
 
   const step = Math.min(Math.max(draft.step, 1), TOTAL);
   const canContinue = isStepDone(draft, step);
@@ -70,7 +73,7 @@ export default function PensamientosAutomaticos() {
       return;
     }
     const mode = getResolutionMode(draft);
-    const { error } = await supabase.from("thought_records").insert({
+    const { data, error } = await supabase.from("thought_records").insert({
       user_id: user.id,
       situation: draft.triggerEvent || "(sin descripción)",
       automatic_thought: draft.automaticThought || null,
@@ -94,13 +97,20 @@ export default function PensamientosAutomaticos() {
       new_emotion: draft.emotion === "otro" ? draft.emotionOther : draft.emotion,
       new_emotion_intensity: draft.intensityFinal,
       completed_at: new Date().toISOString(),
-    } as any);
+    } as any).select("id").maybeSingle();
     if (error) {
       console.error(error);
       toast.error("No pudimos guardar tu sesión. Probá de nuevo.");
       return;
     }
     toast.success("Sesión guardada. Gran trabajo.");
+    setSavedRecordId((data as any)?.id ?? null);
+    setFinishedMode(mode);
+    setFollowupOpen(true);
+  };
+
+  const closeFollowup = () => {
+    setFollowupOpen(false);
     reset();
     navigate(HUB);
   };
