@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui/AdminPrimitives";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Folder, FileAudio, Volume2, Plus, Trash2, CheckCircle2, Loader2, PlayCircle } from "lucide-react";
-import { getGlobalVoice } from "@/lib/globalVoice";
+import { Folder, FileAudio, Volume2, Plus, Trash2, CheckCircle2, Loader2, PlayCircle, Globe } from "lucide-react";
 
 type Script = {
   id: string;
   exercise_id: string;
   minutes: number;
   version: number;
+  country_code: string;
   title: string;
   script_text: string;
   active: boolean;
@@ -22,18 +22,32 @@ const EXERCISES = [
   { id: "coh", name: "Coherencia cardíaca" },
 ];
 const MINUTES_OPTIONS = [5, 10, 15, 20] as const;
+const COUNTRIES = [
+  { code: "default", label: "Default" },
+  { code: "Argentina", label: "Argentina" },
+  { code: "Uruguay", label: "Uruguay" },
+  { code: "Chile", label: "Chile" },
+  { code: "México", label: "México" },
+  { code: "Colombia", label: "Colombia" },
+  { code: "Perú", label: "Perú" },
+  { code: "España", label: "España" },
+  { code: "Estados Unidos", label: "EE.UU." },
+];
 
 type AudioRow = { script_id: string; voice_id: string; storage_path: string };
+type VoiceRow = { country_code: string; gender: "female" | "male"; voice_id: string };
 
 export default function MindfulnessAdmin() {
   const [scripts, setScripts] = useState<Script[]>([]);
   const [audio, setAudio] = useState<AudioRow[]>([]);
+  const [voiceRows, setVoiceRows] = useState<VoiceRow[]>([]);
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [minutes, setMinutes] = useState<number>(5);
+  const [country, setCountry] = useState<string>("default");
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const globalVoiceId = useMemo(() => getGlobalVoice().voiceId, []);
+  const [batching, setBatching] = useState(false);
 
   const reload = async () => {
     const { data } = await supabase
@@ -45,16 +59,25 @@ export default function MindfulnessAdmin() {
     setScripts((data as Script[]) ?? []);
     const { data: aud } = await supabase.from("mindfulness_audio_cache").select("script_id, voice_id, storage_path");
     setAudio((aud as AudioRow[]) ?? []);
+    const { data: vs } = await supabase.from("voice_settings").select("country_code, gender, voice_id");
+    setVoiceRows((vs as VoiceRow[]) ?? []);
   };
   useEffect(() => { reload(); }, []);
 
-  const versionsForBucket = scripts.filter(s => s.exercise_id === exerciseId && s.minutes === minutes);
+  const versionsForBucket = scripts.filter(
+    s => s.exercise_id === exerciseId && s.minutes === minutes && (s.country_code ?? "default") === country
+  );
   const current = versionsForBucket.find(s => s.id === activeVersionId) ?? versionsForBucket[0];
 
   useEffect(() => {
     setActiveVersionId(versionsForBucket[0]?.id ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exerciseId, minutes, scripts.length]);
+  }, [exerciseId, minutes, country, scripts.length]);
+
+  const voiceForCountry = (c: string, gender: "female" | "male" = "female") =>
+    voiceRows.find(v => v.country_code === c && v.gender === gender)?.voice_id
+    ?? voiceRows.find(v => v.country_code === "default" && v.gender === gender)?.voice_id
+    ?? "";
 
   const addVersion = async () => {
     const nextVersion = Math.max(0, ...versionsForBucket.map(v => v.version)) + 1;
@@ -64,6 +87,7 @@ export default function MindfulnessAdmin() {
         exercise_id: exerciseId,
         minutes,
         version: nextVersion,
+        country_code: country,
         title: `Versión ${nextVersion}`,
         script_text: "",
         active: true,
@@ -102,32 +126,58 @@ export default function MindfulnessAdmin() {
     setActiveVersionId(null);
   };
 
-  const generateAudio = async () => {
-    if (!current) return;
+  const persistCurrent = async () => {
+    if (!current) return null;
     const text = current.script_text.trim();
-    if (!text) { toast.error("Redactá el guion primero"); return; }
-    setGenerating(true);
-    // Persist any unsaved edits first so the edge function sees the latest text.
-    const { error: saveErr } = await supabase.from("mindfulness_scripts_v2").update({
-      title: current.title,
-      script_text: current.script_text,
-      active: current.active,
+    if (!text) { toast.error("Redactá el guion primero"); return null; }
+    const { error } = await supabase.from("mindfulness_scripts_v2").update({
+      title: current.title, script_text: current.script_text, active: current.active,
     }).eq("id", current.id);
-    if (saveErr) { setGenerating(false); toast.error(saveErr.message); return; }
+    if (error) { toast.error(error.message); return null; }
+    return current;
+  };
 
+  const generateAudio = async () => {
+    const s = await persistCurrent();
+    if (!s) return;
+    const voiceId = voiceForCountry(country, "female");
+    if (!voiceId) { toast.error(`Configurá primero la voz para "${country}" en General → Voces`); return; }
+    setGenerating(true);
     const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
-      body: { scriptId: current.id, voiceId: globalVoiceId, force: false },
+      body: { scriptId: s.id, voiceId, countryCode: country, force: false },
     });
     setGenerating(false);
     if (error) { toast.error(error.message); return; }
     if ((data as { error?: string })?.error) { toast.error(String((data as { error?: string }).error)); return; }
-    toast.success((data as { cached?: boolean })?.cached ? "Audio ya estaba en cache" : "Audio generado y cacheado");
+    toast.success((data as { cached?: boolean })?.cached ? "Audio ya estaba en cache" : "Audio generado");
     reload();
   };
 
+  const generateAllCountries = async () => {
+    const s = await persistCurrent();
+    if (!s) return;
+    setBatching(true);
+    let ok = 0, fail = 0;
+    for (const c of COUNTRIES) {
+      const voiceId = voiceForCountry(c.code, "female");
+      if (!voiceId) { fail++; continue; }
+      // eslint-disable-next-line no-await-in-loop
+      const { data, error } = await supabase.functions.invoke("mindfulness-precache", {
+        body: { scriptId: s.id, voiceId, countryCode: c.code, force: false },
+      });
+      if (error || (data as { error?: string })?.error) fail++; else ok++;
+    }
+    setBatching(false);
+    toast.success(`Batch listo: ${ok} ok · ${fail} sin voz/error`);
+    reload();
+  };
 
-  const hasAudio = (scriptId: string) =>
-    audio.some(a => a.script_id === scriptId && a.voice_id === globalVoiceId);
+  const hasAudioForCountry = (scriptId: string, countryCode: string) => {
+    const vid = voiceForCountry(countryCode, "female");
+    if (!vid) return false;
+    return audio.some(a => a.script_id === scriptId && a.voice_id === vid);
+  };
+  const hasAudio = (scriptId: string) => hasAudioForCountry(scriptId, country);
 
   return (
     <>
@@ -166,6 +216,29 @@ export default function MindfulnessAdmin() {
                 {m} min
               </button>
             ))}
+          </div>
+        </AdminCard>
+
+        {/* País */}
+        <AdminCard className="p-4 mb-4">
+          <div className="font-admin-label text-[10px] text-slate-500 mb-2 flex items-center gap-1.5"><Globe size={11} /> País (localización del guion y voz)</div>
+          <div className="flex flex-wrap gap-2">
+            {COUNTRIES.map(c => {
+              const hasVoice = !!voiceForCountry(c.code, "female");
+              return (
+                <button
+                  key={c.code}
+                  onClick={() => setCountry(c.code)}
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                    country === c.code ? "bg-resma-navy text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                  title={hasVoice ? "Voz configurada" : "Configurá la voz en General → Voces"}
+                >
+                  {c.label}
+                  <span className={`h-1.5 w-1.5 rounded-full ${hasVoice ? "bg-emerald-400" : "bg-amber-400"}`} />
+                </button>
+              );
+            })}
           </div>
         </AdminCard>
 
@@ -246,9 +319,12 @@ export default function MindfulnessAdmin() {
                   <AdminButton variant="secondary" onClick={remove}>
                     <Trash2 size={14} /> Eliminar
                   </AdminButton>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap justify-end">
+                    <AdminButton variant="secondary" onClick={generateAllCountries} disabled={batching}>
+                      {batching ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />} Generar en todos los países
+                    </AdminButton>
                     <AdminButton variant="secondary" onClick={generateAudio}>
-                      {generating ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Generar audio
+                      {generating ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} />} Generar audio ({country})
                     </AdminButton>
                     <AdminButton variant="purple" onClick={save}>
                       {saving ? <Loader2 size={14} className="animate-spin" /> : <PlayCircle size={14} />} Guardar guion

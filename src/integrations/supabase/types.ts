@@ -1493,6 +1493,7 @@ export type Database = {
       mindfulness_scripts_v2: {
         Row: {
           active: boolean
+          country_code: string
           created_at: string
           exercise_id: string
           id: string
@@ -1504,6 +1505,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          country_code?: string
           created_at?: string
           exercise_id: string
           id?: string
@@ -1515,6 +1517,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          country_code?: string
           created_at?: string
           exercise_id?: string
           id?: string
@@ -2835,6 +2838,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voice_library_custom: {
+        Row: {
+          accent: string | null
+          created_at: string
+          created_by: string | null
+          gender: string
+          id: string
+          label: string
+          voice_id: string
+        }
+        Insert: {
+          accent?: string | null
+          created_at?: string
+          created_by?: string | null
+          gender: string
+          id?: string
+          label: string
+          voice_id: string
+        }
+        Update: {
+          accent?: string | null
+          created_at?: string
+          created_by?: string | null
+          gender?: string
+          id?: string
+          label?: string
+          voice_id?: string
+        }
+        Relationships: []
       }
       voice_settings: {
         Row: {
