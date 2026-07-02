@@ -878,7 +878,7 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
       const { data } = await supabase.from("journal_entries")
-        .select("id, content, entry_date, emotion_tags, created_at, is_encrypted")
+        .select("id, content, entry_date, emotion_tags, created_at, is_encrypted, attachments")
         .eq("user_id", user.id).order("created_at", { ascending: false });
       const rows = (data ?? []) as Entry[];
       const decoded: Entry[] = await Promise.all(rows.map(async (r) => {
@@ -892,6 +892,26 @@ function HistoryView({ onBack }: { onBack: () => void }) {
       setLoading(false);
     })();
   }, []);
+
+  // Hide bottom nav while detail sheet is open
+  useEffect(() => {
+    if (active) document.body.classList.add("diary-entry-open");
+    else document.body.classList.remove("diary-entry-open");
+    return () => document.body.classList.remove("diary-entry-open");
+  }, [active]);
+
+  // Resolve signed URLs for the active entry's attachments
+  const [attUrls, setAttUrls] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!active?.attachments || active.attachments.length === 0) { setAttUrls({}); return; }
+    (async () => {
+      const entries = await Promise.all(active.attachments!.map(async (a) => {
+        const url = await refreshSignedUrl(a.path);
+        return [a.id, url ?? ""] as const;
+      }));
+      setAttUrls(Object.fromEntries(entries));
+    })();
+  }, [active]);
 
   const fmt = (s: string | null) => {
     if (!s) return "";
