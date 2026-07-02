@@ -54,8 +54,8 @@ const STEPS = [
   { key: "coping",      title: "Estrategias para calmarme", icon: Sparkles,   sub: "Recursos personales que puedo activar antes de pedir ayuda." },
   { key: "network",     title: "Red de apoyo",             icon: Users,        sub: "Personas de confianza a las que puedo llamar." },
   { key: "env",         title: "Modificar el entorno",     icon: HomeIcon,     sub: "Reducir el acceso a medios que pueden hacerme daño." },
-  { key: "emergencies", title: "Líneas de emergencia",     icon: LifeBuoy,     sub: "Números profesionales disponibles 24/7." },
 ] as const;
+
 
 const isPlanEmpty = (p: Plan) =>
   p.signs.length === 0 &&
@@ -448,20 +448,14 @@ function EditWizard({
               onRemove={(i) => setPlan(p => ({ ...p, network: p.network.filter((_, idx) => idx !== i) }))}
             />
           )}
-          {current.key === "emergencies" && (
-            <ContactEditor
-              items={plan.emergencies}
-              placeholderName="Ej: Línea de crisis local"
-              onAdd={(c) => setPlan(p => ({ ...p, emergencies: [...p.emergencies, c] }))}
-              onRemove={(i) => setPlan(p => ({ ...p, emergencies: p.emergencies.filter((_, idx) => idx !== i) }))}
-              hint="Las líneas de tu país ya están cargadas. Agregá otras si querés."
-            />
-          )}
         </div>
+
       </div>
 
-      {/* Footer CTA */}
-      <div className="fixed inset-x-0 bottom-0 px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 bg-gradient-to-t from-[#f4f7f9] via-[#f4f7f9]/95 to-transparent">
+      {/* Footer CTA — sits above the bottom nav */}
+      <div className="fixed inset-x-0 bottom-0 px-5 pt-4 bg-gradient-to-t from-[#f4f7f9] via-[#f4f7f9]/95 to-transparent"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 6.5rem)" }}
+      >
         <div className="mx-auto max-w-md">
           <button
             onClick={next}
@@ -471,6 +465,7 @@ function EditWizard({
           </button>
         </div>
       </div>
+
     </motion.div>
   );
 }
