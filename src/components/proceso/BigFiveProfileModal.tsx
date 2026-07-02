@@ -16,14 +16,6 @@ const TRAITS: Trait[] = [
   { key: "neuroticism",       oceanCode: "N", label: "Estabilidad Emocional", short: "Estabilidad", color: "#ef4444" },
 ];
 
-// Fallback descriptions when admin hasn't loaded custom ones
-const FALLBACK_DESC: Record<string, { description: string; low: string; high: string }> = {
-  O: { description: "Refleja tu curiosidad, imaginación y apertura a nuevas experiencias.", low: "Preferís lo familiar y las rutinas conocidas.", high: "Buscás novedad, ideas y experiencias diversas." },
-  C: { description: "Indica tu grado de organización, disciplina y orientación a objetivos.", low: "Sos más espontáneo y flexible.", high: "Sos organizado, planificás y cumplís lo que te proponés." },
-  E: { description: "Mide tu energía social y disfrute de la interacción con otros.", low: "Preferís entornos tranquilos y contactos cercanos.", high: "Te energizás en compañía y sos expresivo." },
-  A: { description: "Refleja tu tendencia a la cooperación, empatía y trato amable.", low: "Sos más analítico y directo en el trato.", high: "Priorizás la armonía y el bienestar de otros." },
-  N: { description: "Indica tu estabilidad emocional frente al estrés (puntaje alto = más estable).", low: "Sentís las emociones intensamente y con altibajos.", high: "Mantenés la calma bajo presión." },
-};
 
 type TraitDesc = { label?: string; short?: string; color?: string; description?: string; low?: string; high?: string };
 
@@ -208,46 +200,62 @@ export function BigFiveProfileModal({ open, onClose }: { open: boolean; onClose:
                   </div>
                 </div>
 
-                {/* Trait explanations */}
-                <div className="mt-6 space-y-3">
-                  <p className="px-1 font-[Montserrat] text-[11px] font-medium uppercase tracking-[0.16em] text-[#94a3b8]">
-                    Qué significa cada rasgo
-                  </p>
-                  {TRAITS.map((t) => {
-                    const custom = traitDescriptions[t.oceanCode] ?? {};
-                    const fb = FALLBACK_DESC[t.oceanCode];
-                    const description = custom.description || fb.description;
-                    const low = custom.low || fb.low;
-                    const high = custom.high || fb.high;
-                    const color = custom.color || t.color;
-                    const label = custom.label || t.label;
-                    const pct = values?.[t.key] ?? 0;
-                    const isHigh = pct >= 50;
+                {/* Trait explanations — only admin-provided content */}
+                {(() => {
+                  const cardsData = TRAITS
+                    .map((t) => ({ t, custom: traitDescriptions[t.oceanCode] }))
+                    .filter(({ custom }) => !!custom?.description);
+
+                  if (cardsData.length === 0) {
                     return (
-                      <div key={t.key} className="rounded-2xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full" style={{ background: color }} />
-                            <p className="font-serif text-[15px] font-semibold text-[#0f172a]">{label}</p>
-                          </div>
-                          <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                            style={{ background: `${color}1a`, color }}>
-                            {pct}%
-                          </span>
-                        </div>
-                        <p className="mt-2 text-[12.5px] leading-relaxed text-[#475569]">{description}</p>
-                        <div className="mt-3 rounded-xl bg-[#f8fafc] p-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94a3b8]">
-                            {isHigh ? "Tu puntaje es alto" : "Tu puntaje es bajo/medio"}
-                          </p>
-                          <p className="mt-1 text-[12px] leading-relaxed text-[#0f172a]">
-                            {isHigh ? high : low}
-                          </p>
-                        </div>
+                      <div className="mt-6 rounded-2xl border border-dashed border-[#e2e8f0] bg-white p-4 text-center">
+                        <p className="text-[12px] leading-relaxed text-[#94a3b8]">
+                          Las explicaciones de cada rasgo aún no fueron cargadas por el equipo.
+                        </p>
                       </div>
                     );
-                  })}
-                </div>
+                  }
+
+                  return (
+                    <div className="mt-6 space-y-3">
+                      <p className="px-1 font-[Montserrat] text-[11px] font-medium uppercase tracking-[0.16em] text-[#94a3b8]">
+                        Qué significa cada rasgo
+                      </p>
+                      {cardsData.map(({ t, custom }) => {
+                        const color = custom!.color || t.color;
+                        const label = custom!.label || t.label;
+                        const pct = values?.[t.key] ?? 0;
+                        const isHigh = pct >= 50;
+                        const sideText = isHigh ? custom!.high : custom!.low;
+                        return (
+                          <div key={t.key} className="rounded-2xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full" style={{ background: color }} />
+                                <p className="font-serif text-[15px] font-semibold text-[#0f172a]">{label}</p>
+                              </div>
+                              <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                                style={{ background: `${color}1a`, color }}>
+                                {pct}%
+                              </span>
+                            </div>
+                            <p className="mt-2 text-[12.5px] leading-relaxed text-[#475569]">{custom!.description}</p>
+                            {sideText && (
+                              <div className="mt-3 rounded-xl bg-[#f8fafc] p-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94a3b8]">
+                                  {isHigh ? "Tu puntaje es alto" : "Tu puntaje es bajo/medio"}
+                                </p>
+                                <p className="mt-1 text-[12px] leading-relaxed text-[#0f172a]">
+                                  {sideText}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </>
             )}
           </div>
