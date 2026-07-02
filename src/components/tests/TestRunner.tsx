@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BigFiveHexagon } from "./BigFiveHexagon";
 import { useHideBottomNav } from "@/hooks/useUiChrome";
 
+type Baremo = { label: string; min: number; max: number; color: string; message: string };
 type Def = {
   id: string;
   code: string;
@@ -15,13 +16,17 @@ type Def = {
   scale_max: number;
   scale_labels: string[] | null;
   instructions: string | null;
+  baremos: Baremo[] | null;
+  result_message: string | null;
 };
+type ItemOption = { label: string; score: number };
 type Item = {
   id: string;
   sort: number;
   prompt: string;
   reverse: boolean;
   subscale: string | null;
+  options: ItemOption[] | null;
 };
 
 export function TestRunner({
@@ -70,19 +75,21 @@ export function TestRunner({
     const subs: Record<string, number[]> = {};
     items.forEach((it) => {
       const raw = answers[it.id] ?? min;
-      const v = it.reverse ? max + min - raw : raw;
+      // effective min/max for this item (item options override scale)
+      const localMin = it.options && it.options.length > 0 ? Math.min(...it.options.map((o) => o.score)) : min;
+      const localMax = it.options && it.options.length > 0 ? Math.max(...it.options.map((o) => o.score)) : max;
+      const v = it.reverse ? localMax + localMin - raw : raw;
       total += v;
       if (it.subscale) {
         subs[it.subscale] = subs[it.subscale] ?? [];
-        subs[it.subscale].push(v);
+        subs[it.subscale].push((v - localMin) / Math.max(1, localMax - localMin));
       }
     });
     const subMeans: Record<string, number> = {};
     Object.entries(subs).forEach(([k, arr]) => {
-      const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
-      subMeans[k] = (avg - min) / (max - min);
+      subMeans[k] = arr.reduce((a, b) => a + b, 0) / arr.length;
     });
-    const interpretation = interpret(def.code, total);
+    const interpretation = interpret(def, total);
     setResult({ total, subs: subMeans, interpretation });
     setStage("result");
 
