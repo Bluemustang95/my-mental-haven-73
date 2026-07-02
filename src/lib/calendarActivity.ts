@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { localDateStr } from "@/lib/utils";
 
 export interface CalendarActivity {
-  type: "journal" | "thought" | "test" | "exercise" | "dream" | "goal" | "reading" | "dbt" | "medication" | "sleep" | "habit";
+  type: "journal" | "thought" | "test" | "exercise" | "dream" | "goal" | "reading" | "dbt" | "medication" | "sleep" | "habit" | "thought_task";
   label: string;
   detail: string;
   time: string;
@@ -26,7 +26,7 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
   const dayEnd = `${nextDayStr}T03:00:00Z`;
   const activities: CalendarActivity[] = [];
 
-  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap, readings, dbt, meds, sleep, habitDone] = await Promise.all([
+  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap, readings, dbt, meds, sleep, habitDone, tFollowups, tFollowupLogs] = await Promise.all([
     supabase.from("journal_entries").select("id, created_at, content").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("thought_records").select("id, created_at, situation, emotion").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
@@ -41,6 +41,8 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     supabase.from("medication_logs").select("id, taken_at, taken, note, log_date, created_at").eq("user_id", userId).eq("log_date", ds),
     supabase.from("sleep_log").select("id, created_at, quality, score, notes").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("habit_completions").select("id, created_at, completed_date, habits(name, icon)").eq("user_id", userId).eq("completed_date", ds).order("created_at"),
+    supabase.from("thought_followups").select("id, title, type, due_date, status, created_at, completed_at").eq("user_id", userId).eq("due_date", ds),
+    supabase.from("thought_followup_logs").select("id, followup_id, did_it, suds_before, suds_after, achieved, note, created_at, thought_followups!inner(title, type, user_id)").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd),
   ]);
 
   journals.data?.forEach((j: any) => activities.push({ type: "journal", label: "Entrada de diario", detail: j.content?.slice(0, 100) || "", time: format(new Date(j.created_at), "HH:mm") }));
@@ -94,6 +96,29 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
   });
   Object.values(bodyBatches).forEach((batch) => {
     activities.push({ type: "exercise", label: "Check-in somático", detail: `Tensión en ${batch.parts.join(", ")}${batch.note ? ` · ${batch.note.slice(0, 80)}` : ""}`, time: batch.time });
+  });
+
+  tFollowups.data?.forEach((f: any) => {
+    // Only show as pending if it's not completed yet (completion is logged separately below)
+    if (f.status !== "completed") {
+      activities.push({
+        type: "thought_task",
+        label: f.type === "abordaje" ? "Tarea: abordaje de problema" : "Tarea: reestructuración",
+        detail: `${f.title} · Pendiente`,
+        time: "00:00",
+      });
+    }
+  });
+  tFollowupLogs.data?.forEach((l: any) => {
+    const title = l.thought_followups?.title ?? "Tarea";
+    const sudsPart = (l.suds_before != null && l.suds_after != null) ? ` · SUDS ${l.suds_before}→${l.suds_after}` : "";
+    const achievedPart = l.achieved ? ` · ${l.achieved}` : "";
+    activities.push({
+      type: "thought_task",
+      label: l.did_it ? "Tarea completada" : "Tarea no realizada",
+      detail: `${title}${sudsPart}${achievedPart}${l.note ? ` · ${l.note.slice(0, 60)}` : ""}`,
+      time: l.created_at ? format(new Date(l.created_at), "HH:mm") : "00:00",
+    });
   });
 
   return activities.sort((a, b) => a.time.localeCompare(b.time));

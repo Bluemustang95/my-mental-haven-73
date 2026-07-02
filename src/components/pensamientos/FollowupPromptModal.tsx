@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 
 type Props = {
   open: boolean;
@@ -20,6 +21,7 @@ const DUE_OPTS = [
 ];
 
 export default function FollowupPromptModal({ open, thoughtRecordId, userId, mode, defaultTitle, onClose }: Props) {
+  useHideBottomNav(open);
   const [title, setTitle] = useState(defaultTitle);
   const [due, setDue] = useState<"today" | "tomorrow" | "3d">("tomorrow");
   const [saving, setSaving] = useState(false);
