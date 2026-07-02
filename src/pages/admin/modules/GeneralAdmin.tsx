@@ -57,8 +57,8 @@ type CachedAudio = {
   storage_path: string;
   created_at: string;
   script_title: string | null;
-  duration_minutes: number | null;
-  exercise_key: string | null;
+  minutes: number | null;
+  exercise_id: string | null;
   country_code: string | null;
 };
 
@@ -77,20 +77,20 @@ function AudiosTab() {
         .select("id, script_id, voice_id, storage_path, created_at")
         .order("created_at", { ascending: false })
         .limit(500);
-      const list = (cache as Array<Omit<CachedAudio, "script_title" | "duration_minutes" | "exercise_key" | "country_code">>) ?? [];
+      const list = (cache as Array<Omit<CachedAudio, "script_title" | "minutes" | "exercise_id" | "country_code">>) ?? [];
       const scriptIds = [...new Set(list.map(r => r.script_id))];
-      let scriptMap = new Map<string, { title: string | null; duration_minutes: number | null; exercise_key: string | null; country_code: string | null }>();
+      let scriptMap = new Map<string, { title: string | null; minutes: number | null; exercise_id: string | null; country_code: string | null }>();
       if (scriptIds.length) {
         const { data: scripts } = await supabase
           .from("mindfulness_scripts_v2")
-          .select("id, title, duration_minutes, exercise_key, country_code")
+          .select("id, title, minutes, exercise_id, country_code")
           .in("id", scriptIds);
-        scriptMap = new Map((scripts ?? []).map((s: { id: string; title: string | null; duration_minutes: number | null; exercise_key: string | null; country_code: string | null }) =>
-          [s.id, { title: s.title, duration_minutes: s.duration_minutes, exercise_key: s.exercise_key, country_code: s.country_code }]));
+        scriptMap = new Map((scripts ?? []).map((s: { id: string; title: string | null; minutes: number | null; exercise_id: string | null; country_code: string | null }) =>
+          [s.id, { title: s.title, minutes: s.minutes, exercise_id: s.exercise_id, country_code: s.country_code }]));
       }
       setRows(list.map(r => {
         const meta = scriptMap.get(r.script_id);
-        return { ...r, script_title: meta?.title ?? null, duration_minutes: meta?.duration_minutes ?? null, exercise_key: meta?.exercise_key ?? null, country_code: meta?.country_code ?? null };
+        return { ...r, script_title: meta?.title ?? null, minutes: meta?.minutes ?? null, exercise_id: meta?.exercise_id ?? null, country_code: meta?.country_code ?? null };
       }));
       setLoading(false);
     })();
@@ -101,7 +101,7 @@ function AudiosTab() {
     if (!q) return rows;
     return rows.filter(r =>
       (r.script_title ?? "").toLowerCase().includes(q) ||
-      (r.exercise_key ?? "").toLowerCase().includes(q) ||
+      (r.exercise_id ?? "").toLowerCase().includes(q) ||
       (r.country_code ?? "").toLowerCase().includes(q) ||
       r.voice_id.toLowerCase().includes(q)
     );
@@ -176,9 +176,9 @@ function AudiosTab() {
               </button>
               <div className="min-w-0">
                 <div className="font-semibold text-resma-navy truncate">{row.script_title ?? "(sin título)"}</div>
-                <div className="text-[10px] text-slate-400 truncate">{row.exercise_key ?? "—"} · {row.storage_path}</div>
+                <div className="text-[10px] text-slate-400 truncate">{row.exercise_id ?? "—"} · {row.storage_path}</div>
               </div>
-              <div className="text-slate-600">{row.duration_minutes ? `${row.duration_minutes} min` : "—"}</div>
+              <div className="text-slate-600">{row.minutes ? `${row.minutes} min` : "—"}</div>
               <div className="text-slate-600">{row.country_code ?? "default"}</div>
               <div className="font-mono text-[10px] text-slate-500 truncate">{row.voice_id}</div>
               <div className="text-slate-500">{new Date(row.created_at).toLocaleDateString("es-AR")}</div>
