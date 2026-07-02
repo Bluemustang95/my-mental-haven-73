@@ -1,13 +1,35 @@
 import { useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader, AdminTabs, AdminToggle } from "@/components/admin/ui/AdminPrimitives";
-import { Bot, Database, Type } from "lucide-react";
+import { Bot, Database, Type, Plus, Trash2 } from "lucide-react";
 import { loadSetting, saveSetting } from "@/lib/admin/settings";
 import { toast } from "sonner";
 
 type Distortion = { id: string; emoji: string; name: string; description: string; active: boolean };
 type EmoRow = { emotion: string; somatic: string };
+type AiCfg = { prompt: string; model: string; costs: Record<string, string> };
 
-const DEFAULT_PROMPT = "Eres RESMITA, asistente en TCC. Ayuda al paciente a identificar sus pensamientos automáticos sin juzgar.";
+const DEFAULT_PROMPT = `Sos "Reeni", acompañante cognitivo virtual de RESMA en TCC (Beck / Leahy).
+Hablás en español rioplatense con voseo, tono empático, breve y socrático. NO reemplazás terapia.
+Tenés acceso al REGISTRO del usuario. Léelo antes de responder.
+- Si te pide "leé lo que escribí": devolvé un resumen empático de 3 líneas.
+- Si te pide "ayudame a completar": generá 2–3 sugerencias adaptadas al paso actual.
+- Nombrá distorsiones cuando aparezcan.
+- Ante riesgo, sugerí líneas de ayuda.`;
+
+const MODEL_OPTIONS: { id: string; label: string; cost: string }[] = [
+  { id: "google/gemini-3-flash-preview", label: "Gemini 3 Flash (default)", cost: "Bajo" },
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", cost: "Bajo" },
+  { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", cost: "Alto" },
+  { id: "openai/gpt-5-mini", label: "GPT-5 Mini", cost: "Medio" },
+  { id: "openai/gpt-5", label: "GPT-5", cost: "Alto" },
+];
+
+const DEFAULT_AI: AiCfg = {
+  prompt: DEFAULT_PROMPT,
+  model: "google/gemini-3-flash-preview",
+  costs: Object.fromEntries(MODEL_OPTIONS.map((m) => [m.id, m.cost])),
+};
+
 const DEFAULT_DISTORTIONS: Distortion[] = [
   { id: "tn", emoji: "⚫", name: "Todo o nada", description: "Pensamiento dicotómico, sin matices.", active: true },
   { id: "cat", emoji: "🌪", name: "Catastrofismo", description: "Anticipar el peor escenario posible.", active: true },
@@ -24,15 +46,18 @@ const DEFAULT_EMOS: EmoRow[] = [
 
 export default function PensamientosAdmin() {
   const [tab, setTab] = useState<"prompt" | "dist" | "emo">("prompt");
-  const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
+  const [ai, setAi] = useState<AiCfg>(DEFAULT_AI);
   const [distortions, setDistortions] = useState<Distortion[]>(DEFAULT_DISTORTIONS);
   const [emos, setEmos] = useState<EmoRow[]>(DEFAULT_EMOS);
 
   useEffect(() => {
-    loadSetting("pensamientos_prompt", { text: DEFAULT_PROMPT }).then((v: any) => setPrompt(v.text || DEFAULT_PROMPT));
+    loadSetting<AiCfg>("pensamientos_ai", DEFAULT_AI).then((v) => setAi({ ...DEFAULT_AI, ...v, costs: { ...DEFAULT_AI.costs, ...(v?.costs ?? {}) } }));
     loadSetting<Distortion[]>("pensamientos_distortions", DEFAULT_DISTORTIONS).then(setDistortions);
     loadSetting<EmoRow[]>("pensamientos_emotions", DEFAULT_EMOS).then(setEmos);
   }, []);
+
+  const addDistortion = () => setDistortions([...distortions, { id: `d${Date.now()}`, emoji: "✨", name: "Nueva distorsión", description: "", active: true }]);
+  const removeDistortion = (i: number) => setDistortions(distortions.filter((_, j) => j !== i));
 
   return (
     <>
