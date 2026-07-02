@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui/AdminPrimitives";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Folder, FileAudio, Volume2, Plus, Trash2, CheckCircle2, Loader2, PlayCircle } from "lucide-react";
-import { getGlobalVoice } from "@/lib/globalVoice";
+import { Folder, FileAudio, Volume2, Plus, Trash2, CheckCircle2, Loader2, PlayCircle, Globe } from "lucide-react";
 
 type Script = {
   id: string;
   exercise_id: string;
   minutes: number;
   version: number;
+  country_code: string;
   title: string;
   script_text: string;
   active: boolean;
@@ -22,6 +22,17 @@ const EXERCISES = [
   { id: "coh", name: "Coherencia cardíaca" },
 ];
 const MINUTES_OPTIONS = [5, 10, 15, 20] as const;
+const COUNTRIES = [
+  { code: "default", label: "Default" },
+  { code: "Argentina", label: "Argentina" },
+  { code: "Uruguay", label: "Uruguay" },
+  { code: "Chile", label: "Chile" },
+  { code: "México", label: "México" },
+  { code: "Colombia", label: "Colombia" },
+  { code: "Perú", label: "Perú" },
+  { code: "España", label: "España" },
+  { code: "Estados Unidos", label: "EE.UU." },
+];
 
 type AudioRow = { script_id: string; voice_id: string; storage_path: string };
 
