@@ -770,7 +770,7 @@ function Waveform({ stream }: { stream: MediaStream | null }) {
       analyser = ctx.createAnalyser();
       analyser.fftSize = 64;
       src.connect(analyser);
-      data = new Uint8Array(analyser.frequencyBinCount);
+      data = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
     } catch (e) {
       console.warn("[waveform] audio ctx failed", e);
       return;
