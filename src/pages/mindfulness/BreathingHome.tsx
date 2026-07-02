@@ -521,12 +521,13 @@ function PatternCard({
    ============================================================ */
 function SetupScreen({
   pattern, minutes, setMinutes, voice, setVoice, ambient, setAmbient,
-  voiceVolume, setVoiceVolume, ambientId, setAmbientId, ambientVolume, setAmbientVolume,
+  voiceGender, setVoiceGender, voiceVolume, setVoiceVolume, ambientId, setAmbientId, ambientVolume, setAmbientVolume,
   onStart,
 }: {
   pattern: PatternMeta;
   minutes: number; setMinutes: (n: number) => void;
   voice: boolean; setVoice: (b: boolean) => void;
+  voiceGender: VoiceGender; setVoiceGender: (g: VoiceGender) => void;
   ambient: boolean; setAmbient: (b: boolean) => void;
   voiceVolume: number; setVoiceVolume: (n: number) => void;
   ambientId: string; setAmbientId: (id: string) => void;
@@ -589,6 +590,7 @@ function SetupScreen({
         />
         {voice && (
           <div className="px-3.5 pb-3.5">
+            <VoiceGenderSelector value={voiceGender} onChange={setVoiceGender} variant="light" />
             <div className="flex items-center justify-between text-[10px] tracking-[0.18em] uppercase text-[#101927]/50 font-semibold">
               <span>Volumen voz</span>
               <span className="tabular-nums text-[#101927]/70">{Math.round(voiceVolume * 100)}%</span>
@@ -694,6 +696,7 @@ const PATTERN_TEXT_ACCENT: Record<PatternId, string> = {
 function ImmersivePlayer({
   pattern, minutes, setMinutes,
   voice, setVoice,
+  voiceGender, setVoiceGender,
   voiceVolume, setVoiceVolume,
   ambientId, setAmbientId,
   ambientVolume, setAmbientVolume,
@@ -702,6 +705,7 @@ function ImmersivePlayer({
   pattern: PatternMeta;
   minutes: number; setMinutes: (m: number) => void;
   voice: boolean; setVoice: (b: boolean) => void;
+  voiceGender: VoiceGender; setVoiceGender: (g: VoiceGender) => void;
   voiceVolume: number; setVoiceVolume: (n: number) => void;
   ambientId: string; setAmbientId: (id: string) => void;
   ambientVolume: number; setAmbientVolume: (n: number) => void;
@@ -713,7 +717,10 @@ function ImmersivePlayer({
   const secondsLeftInPhase = Math.max(1, Math.ceil(phase.seconds - cycle.phaseElapsed));
   const [timeEditOpen, setTimeEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { voiceId, loading: voiceLoading } = useUserVoice();
+  const { voiceId, country, gender, loading: voiceLoading } = useUserVoice({ genderOverride: voiceGender });
+  const [guideStatus, setGuideStatus] = useState<"loading" | "cached" | "fallback" | "off">("loading");
+  const [guideLabel, setGuideLabel] = useState("");
+  const scriptAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Reflect voice volume to TTS player
   useEffect(() => { setSpeechVolume(voiceVolume); }, [voiceVolume]);
@@ -749,22 +756,96 @@ function ImmersivePlayer({
       ambientStopRef.current?.();
       ctxRef.current?.close().catch(() => {});
       stopSpeak();
+      scriptAudioRef.current?.pause();
+      scriptAudioRef.current = null;
     };
   }, []);
 
-  // Stop playback when the resolved voice changes so the default voice
-  // does not keep playing over the country-specific one.
-  useEffect(() => { stopSpeak(); }, [voiceId]);
-
-  // Speak cue when phase changes. Wait for useUserVoice to resolve so
-  // we never speak the fallback default over the user's country voice.
   useEffect(() => {
-    if (!voice || cycle.paused || voiceLoading) return;
+    stopSpeak();
+    scriptAudioRef.current?.pause();
+    scriptAudioRef.current = null;
+  }, [voiceId, pattern.id, minutes, voiceGender]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadScriptAudio() {
+      scriptAudioRef.current?.pause();
+      scriptAudioRef.current = null;
+      if (!voice) { setGuideStatus("off"); setGuideLabel(""); return; }
+      if (voiceLoading) { setGuideStatus("loading"); return; }
+
+      const resolvedCountry = country || "default";
+      const baseQuery = supabase
+        .from("mindfulness_scripts_v2")
+        .select("id, title, version, country_code")
+        .eq("exercise_id", pattern.id)
+        .eq("minutes", minutes)
+        .eq("active", true)
+        .order("version", { ascending: true });
+
+      const { data: localized } = await baseQuery.eq("country_code", resolvedCountry);
+      let scripts = localized ?? [];
+      if (!scripts.length && resolvedCountry !== "default") {
+        const { data: defaults } = await supabase
+          .from("mindfulness_scripts_v2")
+          .select("id, title, version, country_code")
+          .eq("exercise_id", pattern.id)
+          .eq("minutes", minutes)
+          .eq("active", true)
+          .eq("country_code", "default")
+          .order("version", { ascending: true });
+        scripts = defaults ?? [];
+      }
+
+      const script = scripts.length ? scripts[Math.floor(Math.random() * scripts.length)] : null;
+      if (!script) {
+        if (!cancelled) {
+          setGuideStatus("fallback");
+          setGuideLabel(`Sin guion cargado para ${resolvedCountry} · ${minutes} min`);
+        }
+        return;
+      }
+
+      const url = await getPreloadedScriptUrl(script.id, voiceId);
+      if (cancelled) return;
+      const label = `${script.country_code ?? resolvedCountry} · ${gender === "male" ? "masculina" : "femenina"} · v${script.version}`;
+      if (!url) {
+        setGuideStatus("fallback");
+        setGuideLabel(`Audio pendiente para ${label}`);
+        return;
+      }
+
+      primeAudio();
+      const audio = playUrl(url, voiceVolume);
+      scriptAudioRef.current = audio;
+      setGuideStatus("cached");
+      setGuideLabel(`Audio pregenerado · ${label}`);
+    }
+    loadScriptAudio();
+    return () => { cancelled = true; scriptAudioRef.current?.pause(); scriptAudioRef.current = null; };
+  }, [voice, voiceLoading, country, gender, voiceId, pattern.id, minutes, voiceGender]);
+
+  useEffect(() => {
+    if (scriptAudioRef.current) scriptAudioRef.current.volume = voiceVolume;
+    setSpeechVolume(voiceVolume);
+  }, [voiceVolume]);
+
+  useEffect(() => {
+    const audio = scriptAudioRef.current;
+    if (!audio) return;
+    if (cycle.paused) audio.pause();
+    else audio.play().catch(() => {});
+  }, [cycle.paused]);
+
+  // Fallback: speak cue when phase changes only if there is no cached full guide.
+  useEffect(() => {
+    if (!voice || cycle.paused || voiceLoading || guideStatus === "cached") return;
     primeAudio();
     setSpeechVolume(voiceVolume);
     speakTTS(phase.cue, voiceId).catch(() => {});
     return () => { stopSpeak(); };
-  }, [phase.cue, voice, cycle.paused, voiceId, voiceVolume, voiceLoading]);
+  }, [phase.cue, voice, cycle.paused, voiceId, voiceVolume, voiceLoading, guideStatus]);
 
   return (
     <div
@@ -803,6 +884,11 @@ function ImmersivePlayer({
             >
               {formatTime(cycle.remaining)}
             </button>
+            {voice && (
+              <span className="max-w-[210px] truncate rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-white/55">
+                {guideStatus === "loading" ? "Preparando voz" : guideLabel}
+              </span>
+            )}
           </div>
 
           <button
@@ -868,6 +954,8 @@ function ImmersivePlayer({
           <SessionSettings
             voice={voice}
             setVoice={setVoice}
+            voiceGender={voiceGender}
+            setVoiceGender={setVoiceGender}
             voiceVolume={voiceVolume}
             setVoiceVolume={setVoiceVolume}
             ambientId={ambientId}
