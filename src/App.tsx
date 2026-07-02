@@ -247,6 +247,8 @@ const App = () => (
             <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
               <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin/dashboard" element={<DashboardGlobal />} />
+              <Route path="/admin/general" element={<GeneralAdmin />} />
+
               <Route path="/admin/pacientes" element={<CrmPacientes />} />
               <Route path="/admin/pacientes/:userId" element={<PatientDetail />} />
               <Route path="/admin/pensamientos" element={<PensamientosAdmin />} />
