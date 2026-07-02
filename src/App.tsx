@@ -253,6 +253,7 @@ const App = () => (
               <Route path="/admin/escaner" element={<EscanerAdmin />} />
               <Route path="/admin/habitos" element={<HabitosAdmin />} />
               <Route path="/admin/progreso" element={<ProgresoAdmin />} />
+              <Route path="/admin/diario" element={<DiarioAdmin />} />
               <Route path="/admin/notificaciones" element={<NotificacionesAdmin />} />
               <Route path="/admin/contenido" element={<ContentManager />} />
               <Route path="/admin/contenido-diario" element={<ContenidoDiarioAdmin />} />
