@@ -150,6 +150,15 @@ export default function PensamientosAutomaticos() {
         onJump={(s) => patch({ step: s })}
         onClose={() => setPasosOpen(false)}
       />
+
+      <FollowupPromptModal
+        open={followupOpen}
+        thoughtRecordId={savedRecordId}
+        userId={user?.id ?? null}
+        mode={finishedMode}
+        defaultTitle={finishedMode === "abordaje" ? "Ejecutá tu plan de acción" : "Practicá tu pensamiento alternativo"}
+        onClose={closeFollowup}
+      />
     </>
   );
 }
