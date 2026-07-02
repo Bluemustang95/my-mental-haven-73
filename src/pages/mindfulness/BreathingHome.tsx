@@ -690,7 +690,7 @@ function VoiceGenderSelector({
       <div className={`mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-white/55" : "text-[#101927]/50"}`}>
         Tipo de voz
       </div>
-      <div className={`grid grid-cols-2 gap-1 rounded-2xl p-1 ${dark ? "bg-white/8 border border-white/10" : "bg-[#101927]/5"}`}>
+      <div className={`grid grid-cols-2 gap-1 rounded-2xl p-1 ${dark ? "bg-white/10 border border-white/10" : "bg-[#101927]/5"}`}>
         {(["female", "male"] as const).map((g) => {
           const active = value === g;
           return (
