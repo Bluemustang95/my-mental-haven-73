@@ -37,19 +37,44 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const scriptId = String(body?.scriptId ?? "");
-    const voiceId = String(body?.voiceId ?? "");
+    let voiceId = String(body?.voiceId ?? "");
+    const countryCode = body?.countryCode ? String(body.countryCode) : null;
+    const gender = (body?.gender === "male" ? "male" : "female") as "female" | "male";
     const force = Boolean(body?.force);
-    if (!scriptId || !voiceId) return json({ error: "scriptId and voiceId required" }, 400);
+    if (!scriptId) return json({ error: "scriptId required" }, 400);
 
     // Load script
     const { data: script, error: scriptErr } = await supa
       .from("mindfulness_scripts_v2")
-      .select("id, exercise_id, minutes, version, script_text")
+      .select("id, exercise_id, minutes, version, country_code, script_text")
       .eq("id", scriptId)
       .maybeSingle();
     if (scriptErr || !script) return json({ error: "script not found" }, 404);
     const text = String(script.script_text || "").trim();
     if (!text) return json({ error: "empty script" }, 400);
+
+    // Resolve voice from country if not provided
+    if (!voiceId) {
+      const country = countryCode ?? script.country_code ?? "default";
+      const { data: vs } = await supa
+        .from("voice_settings")
+        .select("voice_id")
+        .eq("country_code", country)
+        .eq("gender", gender)
+        .maybeSingle();
+      voiceId = vs?.voice_id ?? "";
+      if (!voiceId) {
+        // Fallback to default
+        const { data: def } = await supa
+          .from("voice_settings")
+          .select("voice_id")
+          .eq("country_code", "default")
+          .eq("gender", gender)
+          .maybeSingle();
+        voiceId = def?.voice_id ?? "";
+      }
+      if (!voiceId) return json({ error: `no voice configured for country=${country}, gender=${gender}` }, 400);
+    }
 
     // Idempotency check
     if (!force) {
@@ -84,7 +109,7 @@ Deno.serve(async (req) => {
     }
     const audio = new Uint8Array(await ttsRes.arrayBuffer());
 
-    const path = `${script.exercise_id}/${script.minutes}/${script.version}/${voiceId}.mp3`;
+    const path = `${script.exercise_id}/${script.minutes}/${script.country_code}/${script.version}/${voiceId}.mp3`;
     const { error: upErr } = await supa.storage.from(BUCKET).upload(path, audio, {
       contentType: "audio/mpeg",
       upsert: true,
