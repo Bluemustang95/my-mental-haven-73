@@ -23,14 +23,15 @@ export default function AiCompanionDrawer({ draft }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  useHideBottomNav(open);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, streaming]);
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || streaming) return;
-    const next: Msg[] = [...messages, { role: "user", content: text }];
+  const sendText = async (text: string) => {
+    if (!text.trim() || streaming) return;
+    const next: Msg[] = [...messages, { role: "user", content: text.trim() }];
     setMessages([...next, { role: "assistant", content: "" }]);
     setInput("");
     setStreaming(true);
