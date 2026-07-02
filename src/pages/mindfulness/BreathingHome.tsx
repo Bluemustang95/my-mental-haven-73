@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { speak as speakTTS, stopSpeak, primeAudio, setSpeechVolume } from "@/lib/elevenLabsTTS";
 import { useUserVoice } from "@/hooks/useUserVoice";
 import { AMBIENT_SOUNDS, getAmbientById } from "@/lib/ambientLibrary";
+import { getPreloadedScriptUrl, playUrl } from "@/lib/mindfulnessAudio";
 
 
 /* ============================================================
@@ -19,6 +20,7 @@ import { AMBIENT_SOUNDS, getAmbientById } from "@/lib/ambientLibrary";
 
 type PatternId = "478" | "sigh" | "box" | "coherence";
 type Step = "intention" | "setup" | "player";
+type VoiceGender = "female" | "male";
 
 type Phase = {
   id: "inhale" | "inhale2" | "hold" | "exhale" | "pause";
@@ -115,13 +117,14 @@ const ONBOARDED_KEY = "resma.mindfulness.onboarded.v1";
 type Defaults = {
   minutes: number;
   voice: boolean;
+  voiceGender: VoiceGender;
   ambient: boolean;
   voiceVolume: number;
   ambientId: string;
   ambientVolume: number;
 };
 const DEFAULT_VALUES: Defaults = {
-  minutes: 5, voice: true, ambient: false,
+  minutes: 5, voice: true, voiceGender: "female", ambient: false,
   voiceVolume: 0.9, ambientId: "rain_soft", ambientVolume: 0.5,
 };
 function loadDefaults(): Defaults {
@@ -149,6 +152,7 @@ export default function BreathingHome() {
   const initialDefaults = useMemo(() => loadDefaults(), []);
   const [minutes, setMinutes] = useState(initialDefaults.minutes);
   const [voice, setVoice] = useState(initialDefaults.voice);
+  const [voiceGender, setVoiceGenderState] = useState<VoiceGender>(initialDefaults.voiceGender);
   const [ambient, setAmbient] = useState(initialDefaults.ambient);
   const [voiceVolume, setVoiceVolume] = useState(initialDefaults.voiceVolume);
   const [ambientId, setAmbientId] = useState(initialDefaults.ambientId);
@@ -156,8 +160,36 @@ export default function BreathingHome() {
 
   // Persistí los ajustes globales para que la próxima vez sean los defaults.
   useEffect(() => {
-    saveDefaults({ minutes, voice, ambient, voiceVolume, ambientId, ambientVolume });
-  }, [minutes, voice, ambient, voiceVolume, ambientId, ambientVolume]);
+    saveDefaults({ minutes, voice, voiceGender, ambient, voiceVolume, ambientId, ambientVolume });
+  }, [minutes, voice, voiceGender, ambient, voiceVolume, ambientId, ambientVolume]);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getUser().then(async ({ data }) => {
+      const user = data.user;
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from("patient_app_profiles")
+        .select("voice_gender_preference")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled && (profile?.voice_gender_preference === "female" || profile?.voice_gender_preference === "male")) {
+        setVoiceGenderState(profile.voice_gender_preference);
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const setVoiceGender = (gender: VoiceGender) => {
+    setVoiceGenderState(gender);
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      supabase
+        .from("patient_app_profiles")
+        .upsert({ user_id: data.user.id, voice_gender_preference: gender }, { onConflict: "user_id" })
+        .then(({ error }) => { if (error) console.warn("[Mindfulness] voice gender persist failed", error); });
+    });
+  };
 
   // True Quick Start: al elegir un ejercicio, arrancar directo al reproductor.
   // Excepción: la primera vez de todas se muestra el setup para que la persona
@@ -238,6 +270,8 @@ export default function BreathingHome() {
           setMinutes={setMinutes}
           voice={voice}
           setVoice={setVoice}
+          voiceGender={voiceGender}
+          setVoiceGender={setVoiceGender}
           voiceVolume={voiceVolume}
           setVoiceVolume={setVoiceVolume}
           ambientId={ambient ? ambientId : "off"}
@@ -313,6 +347,8 @@ export default function BreathingHome() {
                   setMinutes={setMinutes}
                   voice={voice}
                   setVoice={setVoice}
+                  voiceGender={voiceGender}
+                  setVoiceGender={setVoiceGender}
                   ambient={ambient}
                   setAmbient={setAmbient}
                   voiceVolume={voiceVolume}
