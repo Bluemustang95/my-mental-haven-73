@@ -142,8 +142,9 @@ export default function Onboarding() {
             sleep: pending.sleep,
             format: pending.format,
           });
-          setStep(8);
+          navigate("/", { replace: true });
         });
+
         return;
       } catch {
         sessionStorage.removeItem(PENDING_KEY);
@@ -207,7 +208,8 @@ export default function Onboarding() {
       if (isBiometricSupported()) {
         await enrollBiometric(data.session.user.id, pending.name);
       }
-      setStep(8);
+      navigate("/", { replace: true });
+
     } else {
       sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
       setAuthMessage("Cuenta creada. Iniciá sesión para entrar.");
@@ -594,95 +596,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {step === 8 && (
-        <div className="flex flex-1 flex-col">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-[0_10px_28px_-10px_rgba(232,163,101,0.7)]">
-            <Sparkles size={26} />
-          </div>
-          <h1
-            className="text-center font-display text-[26px] font-semibold leading-tight"
-            style={{ color: INK }}
-          >
-            Elegí tu membresía
-          </h1>
-          <p
-            className="mt-2 text-center text-[12.5px]"
-            style={{ color: "rgba(16,25,39,0.6)" }}
-          >
-            Podés empezar gratis y mejorar cuando quieras.
-          </p>
-
-          <div className="mt-6 space-y-3">
-            <button
-              type="button"
-              onClick={() => setPaywallOpen(true)}
-              className="relative w-full overflow-hidden rounded-3xl border-2 border-amber-300/70 bg-gradient-to-br from-[#fff7e6] via-white to-[#fff0c2] p-5 text-left shadow-[0_18px_40px_-18px_rgba(232,163,101,0.55)] transition active:scale-[0.99]"
-            >
-              <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
-                <Crown size={11} /> Recomendado
-              </span>
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 text-white">
-                  <Crown size={20} />
-                </div>
-                <div>
-                  <p className="font-display text-lg font-bold" style={{ color: INK }}>Premium</p>
-                  <p className="text-[12px] font-medium" style={{ color: "rgba(16,25,39,0.6)" }}>USD 0.99 / semana</p>
-                </div>
-              </div>
-              <ul className="mt-4 space-y-1.5">
-                {["Acceso ilimitado a todos los recursos", "Estadísticas y evaluaciones clínicas", "Herramientas del diario y Modo Zen", "Psicoeducación y podcasts completos"].map((b) => (
-                  <li key={b} className="flex items-start gap-2 text-[13px]" style={{ color: INK }}>
-                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-700">
-                      <Check size={10} strokeWidth={3} />
-                    </span>
-                    {b}
-                  </li>
-                ))}
-              </ul>
-            </button>
-
-            <button
-              type="button"
-              onClick={selectFreePlan}
-              disabled={savingPlan}
-              className="w-full rounded-3xl border border-[#101927]/10 bg-white/80 p-5 text-left shadow-glass backdrop-blur-xl transition active:scale-[0.99] disabled:opacity-60"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#7cc2c8]/20 text-[#101927]">
-                  <Sparkles size={20} />
-                </div>
-                <div>
-                  <p className="font-display text-lg font-bold" style={{ color: INK }}>Gratuita</p>
-                  <p className="text-[12px] font-medium" style={{ color: "rgba(16,25,39,0.6)" }}>Sin costo</p>
-                </div>
-              </div>
-              <ul className="mt-4 space-y-1.5">
-                {["Check-in matinal diario", "Diario libre (modo simple)", "Una categoría de psicoeducación"].map((b) => (
-                  <li key={b} className="flex items-start gap-2 text-[13px]" style={{ color: INK }}>
-                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#7cc2c8]/30 text-[#101927]">
-                      <Check size={10} strokeWidth={3} />
-                    </span>
-                    {b}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-3 text-[11px] font-medium" style={{ color: "rgba(16,25,39,0.5)" }}>
-                Continuar gratis →
-              </p>
-            </button>
-          </div>
-        </div>
-      )}
-
-      <PaywallModal
-        open={paywallOpen}
-        onClose={() => {
-          setPaywallOpen(false);
-          if (step === 8) navigate("/", { replace: true });
-        }}
-        featureName="Plan Premium"
-      />
     </OnboardingShell>
+
   );
 }
