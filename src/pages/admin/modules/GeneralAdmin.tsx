@@ -66,7 +66,204 @@ type CachedAudio = {
   orphan?: boolean;
 };
 
-function AudiosTab() {
+// ---------- Ambient overrides (rain, waves, wind, etc.) ----------
+
+type OverrideRow = { id: string; sound_id: string; storage_path: string; active: boolean; updated_at: string };
+
+function AmbientOverridesSection() {
+  const [overrides, setOverrides] = useState<Map<string, OverrideRow>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const stopRef = useRef<(() => void) | null>(null);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const previewTimeout = useRef<number | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("ambient_audio_overrides")
+      .select("id, sound_id, storage_path, active, updated_at");
+    const map = new Map<string, OverrideRow>();
+    (data as OverrideRow[] | null ?? []).forEach((r) => map.set(r.sound_id, r));
+    setOverrides(map);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const ensureCtx = () => {
+    if (!ctxRef.current) {
+      const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      ctxRef.current = new Ctor();
+    }
+    if (ctxRef.current.state === "suspended") ctxRef.current.resume().catch(() => {});
+    return ctxRef.current;
+  };
+
+  const stopPreview = () => {
+    if (stopRef.current) { try { stopRef.current(); } catch { /* noop */ } stopRef.current = null; }
+    if (previewTimeout.current) { clearTimeout(previewTimeout.current); previewTimeout.current = null; }
+    setPlayingId(null);
+  };
+
+  const preview = async (entry: CatalogEntry) => {
+    if (playingId === entry.id) { stopPreview(); return; }
+    stopPreview();
+    const ctx = ensureCtx();
+    const ov = overrides.get(entry.id);
+    if (ov) {
+      const { data } = await supabase.storage.from("ambient-audio").createSignedUrl(ov.storage_path, 300);
+      if (!data?.signedUrl) { toast.error("No se pudo generar URL"); return; }
+      const audio = new Audio(data.signedUrl);
+      audio.loop = true;
+      audio.volume = 0.7;
+      audio.play().catch(() => toast.error("No se pudo reproducir"));
+      stopRef.current = () => { audio.pause(); audio.src = ""; };
+    } else if (entry.synth) {
+      const handle = entry.synth.build(ctx, 0.7);
+      stopRef.current = handle.stop;
+    } else {
+      toast.info("Este sonido sólo funciona con MP3 subido.");
+      return;
+    }
+    setPlayingId(entry.id);
+    previewTimeout.current = window.setTimeout(stopPreview, 12000);
+  };
+
+  const uploadOverride = async (entry: CatalogEntry, file: File) => {
+    if (file.size > 12 * 1024 * 1024) { toast.error("Máximo 12 MB"); return; }
+    setUploadingId(entry.id);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "mp3";
+      const path = `ambient/${entry.id}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("ambient-audio")
+        .upload(path, file, { cacheControl: "3600", contentType: file.type || "audio/mpeg", upsert: true });
+      if (upErr) throw upErr;
+      const { error: dbErr } = await supabase
+        .from("ambient_audio_overrides")
+        .upsert(
+          { sound_id: entry.id, label: entry.label, category: entry.category, storage_path: path, active: true },
+          { onConflict: "sound_id" }
+        );
+      if (dbErr) throw dbErr;
+      invalidateAmbientOverrides();
+      toast.success(`MP3 subido para "${entry.label}"`);
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al subir");
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
+  const restoreSynth = async (entry: CatalogEntry) => {
+    if (!confirm(`¿Restaurar sonido sintetizado para "${entry.label}"? Se borrará el MP3 subido.`)) return;
+    const ov = overrides.get(entry.id);
+    if (!ov) return;
+    await supabase.storage.from("ambient-audio").remove([ov.storage_path]);
+    await supabase.from("ambient_audio_overrides").delete().eq("id", ov.id);
+    invalidateAmbientOverrides();
+    toast.success("Sonido restaurado");
+    await load();
+  };
+
+  useEffect(() => () => stopPreview(), []);
+
+  const grouped = useMemo(() => {
+    const map = new Map<CatalogCategory, CatalogEntry[]>();
+    AMBIENT_CATALOG.forEach((e) => {
+      if (!map.has(e.category)) map.set(e.category, []);
+      map.get(e.category)!.push(e);
+    });
+    return [...map.entries()];
+  }, []);
+
+  return (
+    <AdminCard className="p-0 overflow-hidden">
+      <div className="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-white flex items-center gap-2">
+        <Wind size={16} className="text-resma-teal" />
+        <div className="flex-1">
+          <div className="text-sm font-semibold text-resma-navy">Sonidos ambientales</div>
+          <div className="text-[11px] text-slate-500">
+            Por defecto generados en tiempo real (Web Audio). Subí un MP3 para reemplazar cualquiera con audio real.
+          </div>
+        </div>
+        <div className="text-[11px] text-slate-500">
+          {loading ? "Cargando…" : `${overrides.size}/${AMBIENT_CATALOG.length} personalizados`}
+        </div>
+      </div>
+
+      {grouped.map(([cat, items]) => (
+        <div key={cat}>
+          <div className="px-4 py-1.5 bg-slate-50 text-[10px] font-admin-label text-slate-500 uppercase tracking-wider">
+            {CATALOG_CATEGORY_LABELS[cat]}
+          </div>
+          {items.map((entry) => {
+            const ov = overrides.get(entry.id);
+            const isPlaying = playingId === entry.id;
+            const isUploading = uploadingId === entry.id;
+            return (
+              <div key={entry.id} className="grid grid-cols-[36px_1fr_auto_auto] gap-3 items-center px-4 py-2.5 border-b border-slate-50 last:border-0">
+                <button
+                  onClick={() => preview(entry)}
+                  className={`h-8 w-8 rounded-full flex items-center justify-center transition ${isPlaying ? "bg-resma-teal text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                >
+                  {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                </button>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-resma-navy truncate">{entry.label}</div>
+                  <div className="text-[10px] text-slate-400 font-mono truncate">{entry.id}</div>
+                </div>
+                <div>
+                  {ov ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-resma-teal/10 text-resma-teal text-[10px] font-semibold">
+                      <Music size={10} /> MP3 personalizado
+                    </span>
+                  ) : entry.synth ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold">
+                      Sintetizado
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-semibold">
+                      Necesita MP3
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <label className="inline-flex items-center gap-1 h-7 px-2 rounded-lg bg-resma-teal text-white text-[11px] font-semibold cursor-pointer hover:opacity-90">
+                    {isUploading ? <Loader2 className="animate-spin" size={11} /> : <Upload size={11} />}
+                    {ov ? "Reemplazar" : "Subir MP3"}
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      className="hidden"
+                      disabled={isUploading}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadOverride(entry, f); e.currentTarget.value = ""; }}
+                    />
+                  </label>
+                  {ov && (
+                    <button
+                      onClick={() => restoreSynth(entry)}
+                      title="Restaurar sintetizado"
+                      className="h-7 w-7 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center"
+                    >
+                      <RotateCcw size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </AdminCard>
+  );
+}
+
+// ---------- Voces de guiones (Mindfulness) ----------
+
+
   const [rows, setRows] = useState<CachedAudio[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
