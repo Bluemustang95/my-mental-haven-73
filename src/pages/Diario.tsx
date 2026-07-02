@@ -626,10 +626,50 @@ function WriteView({
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent align="center" sideOffset={8} className="w-64 rounded-2xl p-3">
+          <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl p-3">
             <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Siento… (podés elegir varias)</p>
+            <ChipCloud
+              primary={EMOTIONS_PRIMARY}
+              extra={EMOTIONS_EXTRA}
+              selected={emos}
+              onToggle={(k) => setEmos((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; })}
+            />
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              className={cn(
+                "relative flex items-center gap-1 rounded-full px-2 py-1.5 transition",
+                causes.size > 0 ? "text-[#7cc2c8]" : iconBtnCls,
+              )}
+              aria-label="Causas"
+              title="Causas…"
+            >
+              <TagPh size={19} weight="duotone" />
+              {causes.size > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-[#7cc2c8] text-[8px] font-bold text-[#101927]">
+                  {causes.size}
+                </span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="center" sideOffset={8} className="w-72 rounded-2xl p-3">
+            <p className="mb-2 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-[#7cc2c8]">Causas…</p>
+            <ChipCloud
+              primary={CAUSES_PRIMARY}
+              extra={CAUSES_EXTRA}
+              selected={causes}
+              onToggle={toggleCause}
+            />
+          </PopoverContent>
+        </Popover>
+        {/* legacy end */}
+        {false && (<>
+          <div>
             <div className="flex flex-wrap gap-1.5">
-              {EMOTIONS.map((it) => {
+              {[].map((it: any) => {
                 const on = emos.has(it.k);
                 return (
                   <button
