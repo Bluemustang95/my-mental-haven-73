@@ -98,5 +98,28 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     activities.push({ type: "exercise", label: "Check-in somático", detail: `Tensión en ${batch.parts.join(", ")}${batch.note ? ` · ${batch.note.slice(0, 80)}` : ""}`, time: batch.time });
   });
 
+  tFollowups.data?.forEach((f: any) => {
+    // Only show as pending if it's not completed yet (completion is logged separately below)
+    if (f.status !== "completed") {
+      activities.push({
+        type: "thought_task",
+        label: f.type === "abordaje" ? "Tarea: abordaje de problema" : "Tarea: reestructuración",
+        detail: `${f.title} · Pendiente`,
+        time: "00:00",
+      });
+    }
+  });
+  tFollowupLogs.data?.forEach((l: any) => {
+    const title = l.thought_followups?.title ?? "Tarea";
+    const sudsPart = (l.suds_before != null && l.suds_after != null) ? ` · SUDS ${l.suds_before}→${l.suds_after}` : "";
+    const achievedPart = l.achieved ? ` · ${l.achieved}` : "";
+    activities.push({
+      type: "thought_task",
+      label: l.did_it ? "Tarea completada" : "Tarea no realizada",
+      detail: `${title}${sudsPart}${achievedPart}${l.note ? ` · ${l.note.slice(0, 60)}` : ""}`,
+      time: l.created_at ? format(new Date(l.created_at), "HH:mm") : "00:00",
+    });
+  });
+
   return activities.sort((a, b) => a.time.localeCompare(b.time));
 }
