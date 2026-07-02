@@ -218,11 +218,13 @@ function AudiosTab() {
   if (loading) return <div className="text-slate-500 flex items-center gap-2"><Loader2 className="animate-spin" size={16} /> Cargando audios…</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <AmbientOverridesSection />
+
       <AdminCard className="p-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-resma-navy">Todos los audios del sistema</div>
+            <div className="text-sm font-semibold text-resma-navy">Voces de guiones (Mindfulness)</div>
             <div className="text-xs text-slate-500 mt-0.5">
               MP3 pregenerados para Mindfulness + archivos personalizados en el bucket <code className="text-[10px] bg-slate-100 px-1 rounded">mindfulness-audio</code>.
             </div>
