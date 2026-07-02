@@ -41,6 +41,8 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     supabase.from("medication_logs").select("id, taken_at, taken, note, log_date, created_at").eq("user_id", userId).eq("log_date", ds),
     supabase.from("sleep_log").select("id, created_at, quality, score, notes").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("habit_completions").select("id, created_at, completed_date, habits(name, icon)").eq("user_id", userId).eq("completed_date", ds).order("created_at"),
+    supabase.from("thought_followups").select("id, title, type, due_date, status, created_at, completed_at").eq("user_id", userId).eq("due_date", ds),
+    supabase.from("thought_followup_logs").select("id, followup_id, did_it, suds_before, suds_after, achieved, note, created_at, thought_followups!inner(title, type, user_id)").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd),
   ]);
 
   journals.data?.forEach((j: any) => activities.push({ type: "journal", label: "Entrada de diario", detail: j.content?.slice(0, 100) || "", time: format(new Date(j.created_at), "HH:mm") }));
