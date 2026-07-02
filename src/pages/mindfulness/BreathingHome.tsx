@@ -518,22 +518,30 @@ function SetupScreen({
         </div>
       </div>
 
-      {/* Tiempo */}
+      {/* Tiempo (opciones fijas) */}
       <div className="mt-4 rounded-[20px] bg-white/70 backdrop-blur-xl border border-white/70 p-4 shadow-sm">
         <div className="flex items-end justify-between">
           <div className="text-[10px] tracking-[0.2em] uppercase text-[#101927]/50 font-semibold">Tiempo de práctica</div>
           <div className="text-[22px] font-bold text-[#101927]">{minutes} <span className="text-[13px] font-medium text-[#101927]/55">Minutos</span></div>
         </div>
-        <input
-          type="range" min={1} max={20} value={minutes}
-          onChange={(e) => setMinutes(parseInt(e.target.value, 10))}
-          className="resma-slider mt-3 w-full"
-          style={{ accentColor: "#7cc2c8" }}
-        />
-        <div className="mt-1 flex justify-between text-[10px] font-semibold text-[#101927]/40">
-          {marks.map((m) => <span key={m}>{m} M</span>)}
+        <div className="mt-3 grid grid-cols-5 gap-2">
+          {marks.map((m) => {
+            const active = minutes === m;
+            return (
+              <button
+                key={m}
+                onClick={() => setMinutes(m)}
+                className={`h-11 rounded-2xl text-[13px] font-bold tabular-nums transition ${
+                  active ? "bg-[#101927] text-white shadow-[0_8px_20px_-8px_rgba(16,25,39,0.5)]" : "bg-white text-[#101927]/70 border border-[#101927]/10"
+                }`}
+              >
+                {m}
+              </button>
+            );
+          })}
         </div>
       </div>
+
 
       {/* Voz */}
       <div className="mt-4 rounded-[20px] bg-white/70 backdrop-blur-xl border border-white/70 shadow-sm overflow-hidden">
