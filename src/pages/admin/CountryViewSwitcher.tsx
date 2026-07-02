@@ -4,7 +4,7 @@ import { getCountryOverride, setCountryOverride } from "@/lib/countryOverride";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { COUNTRY_OPTIONS, countryIso, mindfulnessCountry } from "@/lib/countryCodes";
+import { COUNTRY_OPTIONS, canonicalCountry, countryIso } from "@/lib/countryCodes";
 
 const COMMON_COUNTRIES = COUNTRY_OPTIONS.filter((country) => country.code !== "default");
 
@@ -17,7 +17,7 @@ export default function CountryViewSwitcher() {
   }, []);
 
   const apply = (code: string | null) => {
-    const canonical = code ? mindfulnessCountry(code) : null;
+    const canonical = code ? (canonicalCountry(code) ?? code.trim().toUpperCase()) : null;
     setCountryOverride(canonical);
     setCurrent(canonical);
     toast.success(canonical ? `Viendo la app como ${canonical}` : "Override eliminado — uso tu país real.");

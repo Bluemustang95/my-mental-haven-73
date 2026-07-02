@@ -83,6 +83,7 @@ export function mindfulnessCountry(value?: string | null): CanonicalCountry {
 }
 
 export function countryIso(value?: string | null): string {
-  const canonical = mindfulnessCountry(value);
+  const canonical = canonicalCountry(value);
+  if (!canonical) return value?.trim().toUpperCase() ?? "DEFAULT";
   return COUNTRY_OPTIONS.find((country) => country.code === canonical)?.iso ?? canonical.toUpperCase();
 }
