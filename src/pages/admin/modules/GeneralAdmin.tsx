@@ -6,7 +6,7 @@ import { Loader2, Volume2, DollarSign, Plus, Trash2, Play, Music, Pause, Upload,
 import { COUNTRY_OPTIONS, mindfulnessCountry } from "@/lib/countryCodes";
 import { AMBIENT_CATALOG, CATALOG_CATEGORY_LABELS, type CatalogCategory, type CatalogEntry } from "@/lib/ambientCatalog";
 import { invalidateAmbientOverrides } from "@/lib/ambientResolver";
-import { getAmbientById } from "@/lib/ambientLibrary";
+
 
 const COUNTRIES = COUNTRY_OPTIONS.map((country) => ({ ...country, label: country.code === "default" ? "Predeterminado" : country.label }));
 
