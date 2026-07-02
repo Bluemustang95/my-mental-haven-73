@@ -824,8 +824,8 @@ function ChipCloud({
   selected,
   onToggle,
 }: {
-  primary: { k: string; e: string }[];
-  extra: { k: string; e: string }[];
+  primary: Chip[];
+  extra: Chip[];
   selected: Set<string>;
   onToggle: (k: string) => void;
 }) {
@@ -841,11 +841,23 @@ function ChipCloud({
               key={it.k}
               onClick={() => onToggle(it.k)}
               className={cn(
-                "rounded-full border px-2.5 py-1 text-[11px] transition",
-                on ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#7cc2c8]" : "border-[#101927]/10 bg-white/60 text-[#101927]",
+                "group flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] transition",
+                on
+                  ? "border-[#7cc2c8] bg-[#7cc2c8]/15 text-[#3d8a90]"
+                  : "border-[#101927]/10 bg-white text-[#101927] shadow-[0_1px_2px_rgba(16,25,39,0.04)]",
               )}
             >
-              <span className="mr-0.5">{it.e}</span>{it.k}
+              <span
+                className={cn(
+                  "grid h-6 w-6 place-items-center rounded-full text-[13px] leading-none overflow-hidden",
+                  on ? "bg-[#7cc2c8]/25" : "bg-[#fdf6ec]",
+                )}
+              >
+                {it.img
+                  ? <img src={it.img} alt="" className="h-full w-full object-cover" />
+                  : <span>{it.e}</span>}
+              </span>
+              <span className="font-medium">{it.k}</span>
             </button>
           );
         })}
