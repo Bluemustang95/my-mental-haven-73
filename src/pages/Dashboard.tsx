@@ -313,6 +313,8 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+
+        <div className="mt-3"><ThoughtTaskWidget /></div>
       </div>
       </PullToRefresh>
       )}
