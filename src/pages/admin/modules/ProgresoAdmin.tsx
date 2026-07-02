@@ -33,12 +33,13 @@ export default function ProgresoAdmin() {
 
   return (
     <>
-      <AdminPageHeader title="Progreso y Psicometría" subtitle="Configuración del Índice de Bienestar y protocolos de riesgo" />
+      <AdminPageHeader title="Progreso y Psicometría" subtitle="Configuración del Índice de Bienestar, tests y protocolos de riesgo" />
       <div className="px-8 pt-4">
-        <AdminTabs<"index" | "bar" | "risk">
+        <AdminTabs<Tab>
           tabs={[
             { id: "index", label: "Índice de Bienestar", icon: <Sliders size={14} /> },
-            { id: "bar", label: "Baremos", icon: <Layers size={14} /> },
+            { id: "evaluaciones", label: "Evaluaciones y Psicometría", icon: <ClipboardList size={14} /> },
+            { id: "personalidad", label: "Personalidad", icon: <User size={14} /> },
             { id: "risk", label: "Protocolos de Riesgo", icon: <ShieldAlert size={14} /> },
           ]}
           value={tab} onChange={setTab}
@@ -85,38 +86,8 @@ export default function ProgresoAdmin() {
           </AdminCard>
         )}
 
-        {tab === "bar" && (
-          <AdminCard className="overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left font-admin-label text-[10px] text-slate-500 border-b border-slate-100">
-                  <th className="px-5 py-3">Test</th>
-                  <th className="px-5 py-3 w-1/2">Rangos clínicos</th>
-                  <th className="px-5 py-3">Máx.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bar.map((b, i) => (
-                  <tr key={b.test} className="border-b border-slate-50">
-                    <td className="px-5 py-4 font-semibold text-resma-navy">{b.test}</td>
-                    <td className="px-5 py-4">
-                      <div className="h-3 w-full rounded-full overflow-hidden flex">
-                        <div style={{ width: `${(b.mild / b.max) * 100}%`, background: "#22c55e" }} />
-                        <div style={{ width: `${((b.moderate - b.mild) / b.max) * 100}%`, background: "#facb60" }} />
-                        <div style={{ width: `${((b.severe - b.moderate) / b.max) * 100}%`, background: "#f97316" }} />
-                        <div style={{ width: `${((b.max - b.severe) / b.max) * 100}%`, background: "#dc2626" }} />
-                      </div>
-                      <div className="flex justify-between text-[10px] text-slate-500 mt-1.5">
-                        <span>0</span><span>Leve {b.mild}</span><span>Mod {b.moderate}</span><span>Sev {b.severe}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-slate-500 tabular-nums">{b.max}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </AdminCard>
-        )}
+        {tab === "evaluaciones" && <TestsCrudPanel kind="symptom" />}
+        {tab === "personalidad" && <TestsCrudPanel kind="personality" />}
 
         {tab === "risk" && (
           <div className="space-y-3">
