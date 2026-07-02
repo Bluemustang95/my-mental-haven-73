@@ -575,7 +575,7 @@ function WriteView({
                   >
                     <Pause size={12} />
                   </button>
-                  <Waveform />
+                  <Waveform stream={micStream} />
                   <span className="pr-2 font-mono text-[11px] tabular-nums opacity-80">{mm}:{ss}</span>
                 </>
               ) : (
