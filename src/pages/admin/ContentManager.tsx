@@ -211,7 +211,8 @@ export default function ContentManager() {
   };
 
   return (
-    <div>
+    <div className="admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32">
+
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Psicoeducación</h1>
         {tab !== "categories" && (
