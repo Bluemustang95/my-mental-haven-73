@@ -96,7 +96,7 @@ function LottieFromSource({
     <div className={`my-4 flex ${justify}`}>
       <div className="w-full max-w-[280px]">
         {data ? (
-          <Lottie animationData={data} loop autoplay />
+          <Lottie animationData={data} loop={false} autoplay />
         ) : (
           <div className="aspect-square animate-pulse rounded-2xl bg-[#101927]/5" />
         )}
@@ -139,14 +139,17 @@ export function RichContent({
       ))}
 
       {hasMore && (
-        <button
-          type="button"
-          onClick={() => setRevealed((r) => r + 1)}
-          className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-[#7cc2c8]/40 bg-[#7cc2c8]/10 px-4 py-1.5 text-xs font-semibold text-[#0f766e] transition hover:bg-[#7cc2c8]/20 active:scale-[0.98]"
-        >
-          Más <ChevronDown size={13} />
-        </button>
+        <div className="mt-5 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setRevealed((r) => r + 1)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#7cc2c8]/40 bg-[#7cc2c8]/10 px-4 py-1.5 text-xs font-semibold text-[#0f766e] transition hover:bg-[#7cc2c8]/20 active:scale-[0.98]"
+          >
+            Más <ChevronDown size={13} />
+          </button>
+        </div>
       )}
+
     </div>
   );
 }
