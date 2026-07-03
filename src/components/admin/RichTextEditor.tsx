@@ -64,25 +64,39 @@ function Toolbar({ editor }: { editor: Editor }) {
     const file = e.target.files?.[0];
     if (e.target) e.target.value = "";
     if (!file) return;
+    let text: string;
     try {
-      const text = await file.text();
+      text = await file.text();
       const parsed = JSON.parse(text);
       if (!parsed || typeof parsed !== "object") throw new Error("bad");
-      const align =
-        (window.prompt("Alineación de la animación: left / center / right", "center") || "center")
-          .trim()
-          .toLowerCase();
-      const safeAlign = ["left", "center", "right"].includes(align) ? align : "center";
-      const b64 = btoa(unescape(encodeURIComponent(text)));
-      editor
-        .chain()
-        .focus()
-        .insertContent(`<p>[[lottie:${b64}:${safeAlign}]]</p><p></p>`)
-        .run();
-      toast.success("Animación insertada");
     } catch {
       toast.error("Archivo JSON de animación inválido");
+      return;
     }
+    const align =
+      (window.prompt("Alineación de la animación: left / center / right", "center") || "center")
+        .trim()
+        .toLowerCase();
+    const safeAlign = ["left", "center", "right"].includes(align) ? align : "center";
+
+    const path = `lottie-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`;
+    const toastId = toast.loading("Subiendo animación…");
+    const { error } = await supabase.storage
+      .from("lottie-animations")
+      .upload(path, new Blob([text], { type: "application/json" }), {
+        contentType: "application/json",
+        upsert: false,
+      });
+    if (error) {
+      toast.error(`No se pudo subir: ${error.message}`, { id: toastId });
+      return;
+    }
+    editor
+      .chain()
+      .focus()
+      .insertContent(`<p>[[lottie:storage://${path}:${safeAlign}]]</p><p></p>`)
+      .run();
+    toast.success("Animación insertada", { id: toastId });
   };
 
   return (
