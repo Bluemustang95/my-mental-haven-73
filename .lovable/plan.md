@@ -1,32 +1,50 @@
-## Cambios en /admin/contenido (Psicoeducación)
+## Dos correcciones en Psicoeducación
 
-### 1. Filtro por categoría en el admin
+### 1. Admin Textos no scrollea
 
-En `src/pages/admin/ContentManager.tsx`, agregar un selector de categoría encima de la tabla dentro de cada pestaña (Videos / Textos / Podcasts).
+**Causa:** `AdminLayout` renderiza `<main class="flex-1 h-full overflow-hidden flex flex-col">`. Los módulos que sí scrollean (Mindfulness, General) envuelven su contenido en `admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32`. `ContentManager.tsx` NO lo hace: su `return` es un `<div>` plano, por eso al pasar cierta altura el contenido queda cortado.
 
-- Nuevo estado `categoryFilter: string` (por defecto `"all"`).
-- Se resetea al cambiar de pestaña.
-- El `filtered` incluye la condición extra:
-  `(categoryFilter === "all" || item.category_id === categoryFilter)`.
-- UI: un `<Select>` alineado a la derecha del encabezado de la tabla, con opciones "Todas las categorías" + las categorías del `content_type` actual (`catsForType(tab)`).
-- Muestra un contador tipo `"12 elementos"` al lado del filtro.
+**Fix (`src/pages/admin/ContentManager.tsx`):** envolver todo el `return` en `<div className="admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32">…</div>` y mover el `<div>` actual dentro. Aplica a las tres pestañas (Videos / Textos / Podcasts) y a Categorías.
 
-### 2. Texto invisible en prácticas del front-end
+### 2. Front-end de Psicoeducación se ve oscuro/negro, no matchea el resto de la app
 
-**Causa:** el editor rich-text del admin (`RichTextEditor`) envuelve el texto sin color en `<p>` heredando el negro por defecto. En el front-end, `PracticeView.tsx` usa fondo oscuro `#0B0B10` y los bloques `InstructionsBlock` / `ExampleBlock` renderizan HTML crudo con `prose prose-invert`. Cualquier `color: #000 / rgb(0,0,0) / black` inline del editor pisa `prose-invert` y el texto queda negro sobre negro.
+**Causa:** `Psicoeducacion.tsx` (hub) usa `resma-bg-gradient` (crema con glow-blobs teal/amarillo, texto navy). Sin embargo, al entrar a una categoría o lección, `CategoryDetail.tsx`, `LessonView.tsx` y `PracticeView.tsx` usan fondo `#0B0B10` con texto blanco — rompe la coherencia.
 
-**Fix:** sanear el HTML antes de renderizarlo en los dos bloques (frontend-only, sin tocar el editor ni la base):
+**Fix estético — pasar a paleta clara (crema + navy + teal), manteniendo funcionalidad:**
 
-- Nueva utilidad `stripDefaultBlackColor(html: string)` en `src/lib/utils.ts` (o en un nuevo `src/lib/richTextSanitize.ts`) que:
-  - Quita de cualquier atributo `style="..."` las declaraciones `color: #000`, `color: #000000`, `color: black`, `color: rgb(0, 0, 0)` (con o sin espacios/mayúsculas).
-  - Deja intactos los colores explícitos que el admin sí eligió (violeta, naranja, verde, rojo, teal, pasteles).
-- `InstructionsBlock.tsx` y `ExampleBlock.tsx` pasan `html` por esa función antes del `dangerouslySetInnerHTML`.
-- Además, refuerzo defensivo en `InstructionsBlock` con clase Tailwind `[&_*:not([style*="color"])]:text-white/85` para que párrafos sin color explícito hereden el claro correcto (por si viniera texto sin estilo inline).
+- `src/pages/psicoeducacion/CategoryDetail.tsx`
+  - Wrapper: `resma-bg-gradient relative min-h-screen overflow-hidden pb-32 safe-area-top` + dos `glow-blob` (teal y amarillo) como en el hub.
+  - Sticky header: fondo `bg-[#FDFCFB]/85 backdrop-blur-md`, botón/título en `text-[#101927]`.
+  - Título, descripción y meta pasan a `text-[#101927]` / `text-[#101927]/70`.
+  - Tarjetas: fondo `bg-white/70 backdrop-blur border-white ring-1 ring-black/[0.04]`, sombras suaves; el color del tipo (video/podcast/teórico/práctico) sigue como acento.
+  - Badge "Leído/Hecho" con `bg-[#7cc2c8]/15 text-[#0f766e]`.
+
+- `src/pages/psicoeducacion/LessonView.tsx`
+  - Wrapper: `resma-bg-gradient relative min-h-screen overflow-hidden pb-28 safe-area-top`, mismos `glow-blob`.
+  - Header sticky: `bg-[#FDFCFB]/90`, textos `text-[#101927]`.
+  - Título en `text-[#101927]`, chip "Teórico" con `bg-[#c5b8e8]/25 text-[#6B4EFF]`.
+  - Cuerpo `body_html`: pasar de `prose prose-invert` a `prose prose-slate` con `prose-headings:font-display prose-headings:text-[#101927] prose-p:text-[#101927]/85 prose-strong:text-[#101927] prose-a:text-[#0f766e]`. Sanea HTML con `stripDefaultBlackColor` no es necesario aquí porque el fondo ya es claro, pero se puede reutilizar para consistencia.
+  - Barra fija inferior: `bg-[#FDFCFB]/90 border-t border-black/5`, botón "Entendido, continuar" con `bg-[#7cc2c8] text-[#0f172a]`; cuando leído, `bg-emerald-500 text-white`.
+
+- `src/pages/psicoeducacion/PracticeView.tsx`
+  - Mismo wrapper crema + glow-blobs.
+  - Header sticky claro.
+  - Chip "Práctico" con `bg-[#7cc2c8]/20 text-[#0f766e]`.
+  - Título `text-[#101927]`, intro `text-[#101927]/70`.
+  - Placeholder "aún no tiene bloques" con `bg-white/70 border-black/10 text-[#101927]/70`.
+  - Barra fija: fondo claro; botón "Guardar y finalizar" con `bg-[#7cc2c8] text-[#0f172a]`.
+
+- `src/components/practice/blocks/InstructionsBlock.tsx` y `ExampleBlock.tsx`
+  - Cambiar `prose prose-invert` → `prose prose-slate`.
+  - Instrucciones: `prose-p:text-[#101927]/85 prose-strong:text-[#101927] prose-a:text-[#0f766e]`. Quitar el `[&_*:not([style*='color'])]:text-white/85` (ya no aplica en fondo claro) y dejar `stripDefaultBlackColor` (inocuo).
+  - Example: contenedor cambia a `border-[#7cc2c8]/40 bg-[#7cc2c8]/10`, título/ícono `text-[#0f766e]`, prose slate.
 
 ### Archivos a tocar
-- `src/pages/admin/ContentManager.tsx` — filtro por categoría.
-- `src/lib/richTextSanitize.ts` — nueva utilidad.
-- `src/components/practice/blocks/InstructionsBlock.tsx` — usar utilidad + clase defensiva.
-- `src/components/practice/blocks/ExampleBlock.tsx` — usar utilidad.
+- `src/pages/admin/ContentManager.tsx` — envolver return en contenedor scrollable.
+- `src/pages/psicoeducacion/CategoryDetail.tsx` — repintado crema.
+- `src/pages/psicoeducacion/LessonView.tsx` — repintado crema + prose slate.
+- `src/pages/psicoeducacion/PracticeView.tsx` — repintado crema.
+- `src/components/practice/blocks/InstructionsBlock.tsx` — prose slate.
+- `src/components/practice/blocks/ExampleBlock.tsx` — prose slate + acento teal.
 
-Sin cambios de base de datos, ni al `RichTextEditor`, ni al flujo de guardado.
+Sin cambios de base de datos ni de rutas. Solo estilos y un wrapper de scroll.

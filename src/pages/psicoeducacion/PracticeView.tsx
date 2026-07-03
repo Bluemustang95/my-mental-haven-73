@@ -101,19 +101,19 @@ export default function PracticeView() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0B0B10]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent" />
+      <div className="resma-bg-gradient flex min-h-screen items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0f766e] border-t-transparent" />
       </div>
     );
   }
 
   if (!content) {
     return (
-      <div className="min-h-screen bg-[#0B0B10] p-6 text-white">
-        <button onClick={() => navigate(-1)} className="text-white/70">
+      <div className="resma-bg-gradient min-h-screen p-6 text-[#101927]">
+        <button onClick={() => navigate(-1)} className="text-[#101927]/70">
           <ArrowLeft size={22} />
         </button>
-        <p className="mt-10 text-center text-white/60">Práctica no encontrada.</p>
+        <p className="mt-10 text-center text-[#101927]/60">Práctica no encontrada.</p>
       </div>
     );
   }
@@ -121,31 +121,34 @@ export default function PracticeView() {
   const blocks = (content.practice_blocks ?? []) as PracticeBlock[];
 
   return (
-    <div className="min-h-screen bg-[#0B0B10] pb-28 text-white safe-area-top">
-      <div className="sticky top-0 z-10 border-b border-white/5 bg-[#0B0B10]/95 backdrop-blur-md">
+    <div className="resma-bg-gradient relative min-h-screen overflow-hidden pb-28 safe-area-top">
+      <div className="glow-blob" style={{ background: "#7cc2c8", width: 260, height: 260, top: -80, left: -80, opacity: 0.3 }} />
+      <div className="glow-blob" style={{ background: "#facb60", width: 240, height: 240, top: 220, right: -80, opacity: 0.25 }} />
+
+      <div className="sticky top-0 z-10 border-b border-black/5 bg-[#FDFCFB]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-md items-center gap-3 px-5 py-4">
-          <button onClick={() => navigate(-1)} className="text-white/80" aria-label="Volver">
+          <button onClick={() => navigate(-1)} className="text-[#101927]" aria-label="Volver">
             <ArrowLeft size={22} />
           </button>
-          <h2 className="font-display text-sm font-semibold text-white/80">
+          <h2 className="font-display text-sm font-semibold text-[#101927]/80">
             {categoryTitle || "Práctica"}
           </h2>
-          {saving && <span className="ml-auto text-[10px] text-white/45">Guardando…</span>}
+          {saving && <span className="ml-auto text-[10px] text-[#101927]/50">Guardando…</span>}
         </div>
       </div>
 
-      <div className="mx-auto max-w-md px-5 pt-6">
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300">
+      <div className="relative mx-auto max-w-md px-5 pt-6">
+        <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#7cc2c8]/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#0f766e]">
           <Sparkles size={12} /> Práctico
         </div>
-        <h1 className="font-mindful text-3xl leading-tight text-white">{content.title}</h1>
+        <h1 className="font-mindful text-3xl leading-tight text-[#101927]">{content.title}</h1>
         {content.practice_intro && (
-          <p className="mt-3 text-sm leading-relaxed text-white/70">{content.practice_intro}</p>
+          <p className="mt-3 text-sm leading-relaxed text-[#101927]/70">{content.practice_intro}</p>
         )}
 
         <div className="mt-6 space-y-5">
           {blocks.length === 0 && (
-            <p className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center text-sm text-white/55">
+            <p className="rounded-2xl border border-black/10 bg-white/70 p-6 text-center text-sm text-[#101927]/60 backdrop-blur">
               Esta práctica aún no tiene bloques configurados.
             </p>
           )}
@@ -211,11 +214,11 @@ export default function PracticeView() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/5 bg-[#0B0B10]/95 p-4 backdrop-blur-md">
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-black/5 bg-[#FDFCFB]/90 p-4 backdrop-blur-md">
         <div className="mx-auto max-w-md">
           <button
             onClick={finish}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-4 font-display text-sm font-semibold text-white transition active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7cc2c8] py-4 font-display text-sm font-semibold text-[#0f172a] transition active:scale-[0.98]"
           >
             <CheckCircle2 size={16} /> Guardar y finalizar
           </button>
@@ -224,3 +227,4 @@ export default function PracticeView() {
     </div>
   );
 }
+
