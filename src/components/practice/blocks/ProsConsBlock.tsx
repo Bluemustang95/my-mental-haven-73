@@ -21,15 +21,15 @@ function Cell({
   onChange: (v: ProsConsCell) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-      <p className="mb-2 font-display text-[10px] font-semibold uppercase tracking-widest text-emerald-300">
+    <div className="rounded-2xl border border-[#101927]/10 bg-white/70 p-3 backdrop-blur">
+      <p className="mb-2 font-display text-[10px] font-semibold uppercase tracking-widest text-[#0f766e]">
         {label}
       </p>
       <textarea
         value={value.text}
         onChange={(e) => onChange({ ...value, text: e.target.value })}
         rows={3}
-        className="mb-2 w-full resize-none rounded-lg border border-white/10 bg-black/30 p-2 text-sm text-white placeholder:text-white/40 focus:border-emerald-400/50 focus:outline-none"
+        className="mb-2 w-full resize-none rounded-lg border border-[#101927]/10 bg-white p-2 text-sm text-[#101927] placeholder:text-[#101927]/40 focus:border-[#7cc2c8] focus:outline-none"
         placeholder="Escribí acá…"
       />
       <input
@@ -38,11 +38,11 @@ function Cell({
         max={100}
         value={value.suds}
         onChange={(e) => onChange({ ...value, suds: Number(e.target.value) })}
-        className="w-full accent-emerald-500"
+        className="w-full accent-[#7cc2c8]"
       />
-      <div className="mt-0.5 flex justify-between text-[10px] text-white/55">
+      <div className="mt-0.5 flex justify-between text-[10px] text-[#101927]/60">
         <span>Intensidad</span>
-        <span className="font-display font-bold text-emerald-300">{value.suds}/100</span>
+        <span className="font-display font-bold text-[#0f766e]">{value.suds}/100</span>
       </div>
     </div>
   );
@@ -70,21 +70,21 @@ export function ProsConsBlock({
   return (
     <div className="space-y-3">
       <div>
-        <p className="mb-2 font-display text-xs font-semibold text-white/80">{rowA}</p>
+        <p className="mb-2 font-display text-xs font-semibold text-[#101927]">{rowA}</p>
         <div className="grid gap-2 sm:grid-cols-2">
           <Cell label={colPros} value={v.prosA} onChange={(c) => onChange({ ...v, prosA: c })} />
           <Cell label={colCons} value={v.consA} onChange={(c) => onChange({ ...v, consA: c })} />
         </div>
       </div>
       <div>
-        <p className="mb-2 font-display text-xs font-semibold text-white/80">{rowB}</p>
+        <p className="mb-2 font-display text-xs font-semibold text-[#101927]">{rowB}</p>
         <div className="grid gap-2 sm:grid-cols-2">
           <Cell label={colPros} value={v.prosB} onChange={(c) => onChange({ ...v, prosB: c })} />
           <Cell label={colCons} value={v.consB} onChange={(c) => onChange({ ...v, consB: c })} />
         </div>
       </div>
       {(v.prosA.suds || v.consA.suds || v.prosB.suds || v.consB.suds) > 0 && (
-        <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-3 text-xs text-emerald-200">
+        <div className="rounded-xl border border-[#7cc2c8]/30 bg-[#7cc2c8]/10 p-3 text-xs text-[#0f766e]">
           Diferencia neta a favor de <b>{net >= 0 ? rowA.toLowerCase() : rowB.toLowerCase()}</b>:{" "}
           <span className="font-display font-bold">{Math.abs(net)} pts</span>
         </div>
