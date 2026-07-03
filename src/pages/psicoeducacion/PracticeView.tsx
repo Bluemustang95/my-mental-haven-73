@@ -146,72 +146,12 @@ export default function PracticeView() {
           <p className="mt-3 text-sm leading-relaxed text-[#101927]/70">{content.practice_intro}</p>
         )}
 
-        <div className="mt-6 space-y-5">
-          {blocks.length === 0 && (
-            <p className="rounded-2xl border border-black/10 bg-white/70 p-6 text-center text-sm text-[#101927]/60 backdrop-blur">
-              Esta práctica aún no tiene bloques configurados.
-            </p>
-          )}
-          {blocks.map((b) => {
-            switch (b.type) {
-              case "instructions":
-                return <InstructionsBlock key={b.id} html={b.html} />;
-              case "example":
-                return <ExampleBlock key={b.id} html={b.html} />;
-              case "pros_cons":
-                return (
-                  <ProsConsBlock
-                    key={b.id}
-                    labels={b.labels}
-                    value={answers[b.id]}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              case "columns":
-                return (
-                  <ColumnsBlock
-                    key={b.id}
-                    columns={b.columns}
-                    value={answers[b.id] ?? []}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              case "suds":
-                return (
-                  <SudsBlock
-                    key={b.id}
-                    label={b.label}
-                    minLabel={b.minLabel}
-                    maxLabel={b.maxLabel}
-                    value={answers[b.id] ?? 0}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              case "free_text":
-                return (
-                  <FreeTextBlock
-                    key={b.id}
-                    prompt={b.prompt}
-                    placeholder={b.placeholder}
-                    minChars={b.minChars}
-                    value={answers[b.id] ?? ""}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              case "checklist":
-                return (
-                  <ChecklistBlock
-                    key={b.id}
-                    items={b.items}
-                    value={answers[b.id] ?? []}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              default:
-                return null;
-            }
-          })}
-        </div>
+        <PracticeBlocks
+          contentId={content.id}
+          blocks={blocks}
+          answers={answers}
+          onUpdate={updateBlock}
+        />
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-black/5 bg-[#FDFCFB]/90 p-4 backdrop-blur-md">
