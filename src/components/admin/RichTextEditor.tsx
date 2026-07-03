@@ -54,8 +54,47 @@ function ToolbarBtn({
 }
 
 function Toolbar({ editor }: { editor: Editor }) {
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const insertMore = () => {
+    editor.chain().focus().insertContent("<p>[[more]]</p><p></p>").run();
+  };
+
+  const onLottieFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (e.target) e.target.value = "";
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || typeof parsed !== "object") throw new Error("bad");
+      const align =
+        (window.prompt("Alineación de la animación: left / center / right", "center") || "center")
+          .trim()
+          .toLowerCase();
+      const safeAlign = ["left", "center", "right"].includes(align) ? align : "center";
+      const b64 = btoa(unescape(encodeURIComponent(text)));
+      editor
+        .chain()
+        .focus()
+        .insertContent(`<p>[[lottie:${b64}:${safeAlign}]]</p><p></p>`)
+        .run();
+      toast.success("Animación insertada");
+    } catch {
+      toast.error("Archivo JSON de animación inválido");
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-slate-200 bg-slate-50 p-2">
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={onLottieFile}
+      />
+
       <ToolbarBtn title="Negrita" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
         <Bold size={14} />
       </ToolbarBtn>
