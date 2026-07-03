@@ -16,8 +16,11 @@ import {
   Palette,
   Quote,
   Heading2,
+  ChevronDown,
+  FileJson,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 const COLORS = ["#0F172A", "#6B4EFF", "#E8A365", "#16A34A", "#DC2626", "#0891B2"];
 const HIGHLIGHTS = ["#FEF3C7", "#DBEAFE", "#FCE7F3", "#DCFCE7", "#F3E8FF"];
