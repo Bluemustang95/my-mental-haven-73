@@ -1,50 +1,61 @@
-## Dos correcciones en Psicoeducación
 
-### 1. Admin Textos no scrollea
+## 1. Aprender como "camino de aprendizaje" (CategoryDetail.tsx)
 
-**Causa:** `AdminLayout` renderiza `<main class="flex-1 h-full overflow-hidden flex flex-col">`. Los módulos que sí scrollean (Mindfulness, General) envuelven su contenido en `admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32`. `ContentManager.tsx` NO lo hace: su `return` es un `<div>` plano, por eso al pasar cierta altura el contenido queda cortado.
+Rediseñar la lista de lecciones/prácticas como un **learning path** vertical estilo Duolingo/Resma: tarjetas más compactas, número de orden a la derecha marcado como nodo, y línea punteada conectando cada nodo.
 
-**Fix (`src/pages/admin/ContentManager.tsx`):** envolver todo el `return` en `<div className="admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32">…</div>` y mover el `<div>` actual dentro. Aplica a las tres pestañas (Videos / Textos / Podcasts) y a Categorías.
+**Estructura por item:**
 
-### 2. Front-end de Psicoeducación se ve oscuro/negro, no matchea el resto de la app
+```text
+┌──────────────────────────────┐    ○ ← nodo (círculo con nº)
+│ [icon]  TEÓRICO              │    ┊
+│         Título de la lección │    ┊ ← línea punteada vertical
+│         ⏱ 2 min · ✓ Leído    │    ┊
+└──────────────────────────────┘    ○
+```
 
-**Causa:** `Psicoeducacion.tsx` (hub) usa `resma-bg-gradient` (crema con glow-blobs teal/amarillo, texto navy). Sin embargo, al entrar a una categoría o lección, `CategoryDetail.tsx`, `LessonView.tsx` y `PracticeView.tsx` usan fondo `#0B0B10` con texto blanco — rompe la coherencia.
+- Card compacta: `p-3` (antes `p-4`), icono `h-11 w-11` (antes `h-14 w-14`), título `text-sm` (antes `text-base`), radio `rounded-xl`, sombra sutil, `bg-white/80`.
+- Columna derecha fija de 40px con el nodo del camino:
+  - Círculo `h-9 w-9 rounded-full` con el número `it.sort_order` (o índice+1) en `font-display`.
+  - Nodo **completado** → fondo teal `#7cc2c8`, texto `#0f172a`, ring teal.
+  - Nodo **pendiente** → fondo blanco, borde `dashed` del color de la categoría, texto navy `#101927`.
+- Línea punteada vertical entre nodos: pseudo-elemento / `<div className="absolute left-1/2 -translate-x-1/2 top-9 bottom-0 border-l-2 border-dashed border-[#101927]/20" />` en cada fila menos la última.
+- Layout: `grid grid-cols-[1fr_44px] gap-3 items-stretch` para alinear card + track de nodos.
+- Mantener `motion.button` con `whileTap` y navegación a `/leccion/:id` o `/practica/:id`.
+- Se retira el badge grande "LEÍDO" a la derecha (redundante con el nodo teal); se mueve a un `✓ Leído` inline junto al `⏱ 2 min`.
 
-**Fix estético — pasar a paleta clara (crema + navy + teal), manteniendo funcionalidad:**
+## 2. Fix estético de bloques de Práctica
 
-- `src/pages/psicoeducacion/CategoryDetail.tsx`
-  - Wrapper: `resma-bg-gradient relative min-h-screen overflow-hidden pb-32 safe-area-top` + dos `glow-blob` (teal y amarillo) como en el hub.
-  - Sticky header: fondo `bg-[#FDFCFB]/85 backdrop-blur-md`, botón/título en `text-[#101927]`.
-  - Título, descripción y meta pasan a `text-[#101927]` / `text-[#101927]/70`.
-  - Tarjetas: fondo `bg-white/70 backdrop-blur border-white ring-1 ring-black/[0.04]`, sombras suaves; el color del tipo (video/podcast/teórico/práctico) sigue como acento.
-  - Badge "Leído/Hecho" con `bg-[#7cc2c8]/15 text-[#0f766e]`.
+Los bloques todavía usan tema oscuro (`bg-white/[0.03]`, `text-white`, `border-white/10`, `bg-black/30`) sobre el fondo claro `resma-bg-gradient`, lo que produce el efecto "gris sobre gris ilegible" de la imagen 2. Migrar los 4 bloques restantes al tema claro Resma (cream + navy + teal):
 
-- `src/pages/psicoeducacion/LessonView.tsx`
-  - Wrapper: `resma-bg-gradient relative min-h-screen overflow-hidden pb-28 safe-area-top`, mismos `glow-blob`.
-  - Header sticky: `bg-[#FDFCFB]/90`, textos `text-[#101927]`.
-  - Título en `text-[#101927]`, chip "Teórico" con `bg-[#c5b8e8]/25 text-[#6B4EFF]`.
-  - Cuerpo `body_html`: pasar de `prose prose-invert` a `prose prose-slate` con `prose-headings:font-display prose-headings:text-[#101927] prose-p:text-[#101927]/85 prose-strong:text-[#101927] prose-a:text-[#0f766e]`. Sanea HTML con `stripDefaultBlackColor` no es necesario aquí porque el fondo ya es claro, pero se puede reutilizar para consistencia.
-  - Barra fija inferior: `bg-[#FDFCFB]/90 border-t border-black/5`, botón "Entendido, continuar" con `bg-[#7cc2c8] text-[#0f172a]`; cuando leído, `bg-emerald-500 text-white`.
+**`ProsConsBlock.tsx`** (el de la imagen):
+- Cell wrapper: `border-[#101927]/10 bg-white/70 backdrop-blur` (era `border-white/10 bg-white/[0.03]`).
+- Label superior: `text-[#0f766e]` (era `text-emerald-300`).
+- Textarea: `border-[#101927]/10 bg-white text-[#101927] placeholder:text-[#101927]/40 focus:border-[#7cc2c8]`.
+- Slider: `accent-[#7cc2c8]`; footer "Intensidad / 0/100" → `text-[#101927]/60` y valor `text-[#0f766e]`.
+- Títulos de fila ("Practicar" / "No practicar"): `text-[#101927]`.
+- Resumen "Diferencia neta": `border-[#7cc2c8]/30 bg-[#7cc2c8]/10 text-[#0f766e]`.
 
-- `src/pages/psicoeducacion/PracticeView.tsx`
-  - Mismo wrapper crema + glow-blobs.
-  - Header sticky claro.
-  - Chip "Práctico" con `bg-[#7cc2c8]/20 text-[#0f766e]`.
-  - Título `text-[#101927]`, intro `text-[#101927]/70`.
-  - Placeholder "aún no tiene bloques" con `bg-white/70 border-black/10 text-[#101927]/70`.
-  - Barra fija: fondo claro; botón "Guardar y finalizar" con `bg-[#7cc2c8] text-[#0f172a]`.
+**`FreeTextBlock.tsx`**:
+- Wrapper: `border-[#101927]/10 bg-white/70 backdrop-blur`.
+- Prompt: `text-[#101927]`.
+- Textarea: `border-[#101927]/10 bg-white text-[#101927] placeholder:text-[#101927]/40 focus:border-[#7cc2c8]`.
+- Contador: `text-[#101927]/50`.
 
-- `src/components/practice/blocks/InstructionsBlock.tsx` y `ExampleBlock.tsx`
-  - Cambiar `prose prose-invert` → `prose prose-slate`.
-  - Instrucciones: `prose-p:text-[#101927]/85 prose-strong:text-[#101927] prose-a:text-[#0f766e]`. Quitar el `[&_*:not([style*='color'])]:text-white/85` (ya no aplica en fondo claro) y dejar `stripDefaultBlackColor` (inocuo).
-  - Example: contenedor cambia a `border-[#7cc2c8]/40 bg-[#7cc2c8]/10`, título/ícono `text-[#0f766e]`, prose slate.
+**`SudsBlock.tsx`**:
+- Wrapper: `border-[#101927]/10 bg-white/70 backdrop-blur`.
+- Label: `text-[#101927]`.
+- Slider: `accent-[#7cc2c8]`.
+- Escala inferior: `text-[#101927]/60` con valor central `text-[#0f766e]`.
 
-### Archivos a tocar
-- `src/pages/admin/ContentManager.tsx` — envolver return en contenedor scrollable.
-- `src/pages/psicoeducacion/CategoryDetail.tsx` — repintado crema.
-- `src/pages/psicoeducacion/LessonView.tsx` — repintado crema + prose slate.
-- `src/pages/psicoeducacion/PracticeView.tsx` — repintado crema.
-- `src/components/practice/blocks/InstructionsBlock.tsx` — prose slate.
-- `src/components/practice/blocks/ExampleBlock.tsx` — prose slate + acento teal.
+**`ColumnsBlock.tsx` y `ChecklistBlock.tsx`**: revisar y aplicar el mismo mapping (border/bg/text) si aún tienen clases oscuras.
 
-Sin cambios de base de datos ni de rutas. Solo estilos y un wrapper de scroll.
+## Archivos a tocar
+
+- `src/pages/psicoeducacion/CategoryDetail.tsx` — camino con nodos + línea punteada + cards compactas.
+- `src/components/practice/blocks/ProsConsBlock.tsx`
+- `src/components/practice/blocks/FreeTextBlock.tsx`
+- `src/components/practice/blocks/SudsBlock.tsx`
+- `src/components/practice/blocks/ColumnsBlock.tsx` (verificar/ajustar)
+- `src/components/practice/blocks/ChecklistBlock.tsx` (verificar/ajustar)
+
+Sin cambios de DB, rutas, ni lógica de guardado.
