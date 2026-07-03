@@ -169,6 +169,31 @@ function Toolbar({ editor }: { editor: Editor }) {
           />
         ))}
       </div>
+
+      <div className="mx-1 h-6 w-px bg-slate-300" />
+
+      <button
+        type="button"
+        title="Insertar punto 'Más' (revelar más al lector)"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          insertMore();
+        }}
+        className="flex h-8 items-center gap-1 rounded-md bg-white/70 px-2 text-[11px] font-semibold text-slate-600 hover:bg-white"
+      >
+        <ChevronDown size={12} /> Más
+      </button>
+      <button
+        type="button"
+        title="Insertar animación Lottie (.json)"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          fileRef.current?.click();
+        }}
+        className="flex h-8 items-center gap-1 rounded-md bg-white/70 px-2 text-[11px] font-semibold text-slate-600 hover:bg-white"
+      >
+        <FileJson size={12} /> Animación
+      </button>
     </div>
   );
 }
