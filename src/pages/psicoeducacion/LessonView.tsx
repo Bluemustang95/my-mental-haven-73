@@ -192,7 +192,7 @@ export default function LessonView() {
             <h1 className="font-mindful text-3xl leading-tight text-[#101927]">{lesson.title}</h1>
             {lesson.body_html ? (
               <div className="mt-6">
-                <RichContent html={lesson.body_html} />
+                <RichContent html={lesson.body_html} storageKey={`${lesson.id}:body`} />
               </div>
             ) : (
               <p className="mt-6 text-[#101927]/60">Sin contenido.</p>
