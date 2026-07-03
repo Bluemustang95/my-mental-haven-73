@@ -144,19 +144,19 @@ export default function LessonView() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0B0B10]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+      <div className="resma-bg-gradient flex min-h-screen items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#101927]/30 border-t-transparent" />
       </div>
     );
   }
 
   if (!lesson) {
     return (
-      <div className="min-h-screen bg-[#0B0B10] p-6 text-white">
-        <button onClick={() => navigate(-1)} className="text-white/70">
+      <div className="resma-bg-gradient min-h-screen p-6 text-[#101927]">
+        <button onClick={() => navigate(-1)} className="text-[#101927]/70">
           <ArrowLeft size={22} />
         </button>
-        <p className="mt-10 text-center text-white/60">Contenido no encontrado.</p>
+        <p className="mt-10 text-center text-[#101927]/60">Contenido no encontrado.</p>
       </div>
     );
   }
@@ -164,35 +164,38 @@ export default function LessonView() {
   const url = lesson.media_url ?? lesson.content_url ?? "";
 
   return (
-    <div className="min-h-screen bg-[#0B0B10] pb-28 text-white safe-area-top">
-      <div className="sticky top-0 z-10 border-b border-white/5 bg-[#0B0B10]/95 backdrop-blur-md">
+    <div className="resma-bg-gradient relative min-h-screen overflow-hidden pb-28 safe-area-top">
+      <div className="glow-blob" style={{ background: "#7cc2c8", width: 260, height: 260, top: -80, left: -80, opacity: 0.3 }} />
+      <div className="glow-blob" style={{ background: "#facb60", width: 240, height: 240, top: 220, right: -80, opacity: 0.25 }} />
+
+      <div className="sticky top-0 z-10 border-b border-black/5 bg-[#FDFCFB]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-md items-center gap-3 px-5 py-4">
-          <button onClick={() => navigate(-1)} className="text-white/80" aria-label="Volver">
+          <button onClick={() => navigate(-1)} className="text-[#101927]" aria-label="Volver">
             <ArrowLeft size={22} />
           </button>
-          <h2 className="font-display text-sm font-semibold text-white/80">{categoryTitle || "Lección"}</h2>
+          <h2 className="font-display text-sm font-semibold text-[#101927]/80">{categoryTitle || "Lección"}</h2>
         </div>
       </div>
 
-      <div className="mx-auto max-w-md px-5 pt-6">
+      <div className="relative mx-auto max-w-md px-5 pt-6">
         {lesson.content_type === "text" && (
           <>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#8B7CF6]/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#A78BFA]">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#c5b8e8]/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#6B4EFF]">
               Teórico
               {alreadyRead && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#7cc2c8] text-white">
                   <Check size={10} strokeWidth={3} />
                 </span>
               )}
             </div>
-            <h1 className="font-mindful text-3xl leading-tight text-white">{lesson.title}</h1>
+            <h1 className="font-mindful text-3xl leading-tight text-[#101927]">{lesson.title}</h1>
             {lesson.body_html ? (
               <div
-                className="prose prose-invert prose-slate mt-6 max-w-none prose-headings:font-display prose-strong:text-white prose-a:text-[#8B7CF6]"
+                className="prose prose-slate mt-6 max-w-none prose-headings:font-display prose-headings:text-[#101927] prose-p:text-[#101927]/85 prose-strong:text-[#101927] prose-a:text-[#0f766e] prose-li:text-[#101927]/85"
                 dangerouslySetInnerHTML={{ __html: lesson.body_html }}
               />
             ) : (
-              <p className="mt-6 text-white/60">Sin contenido.</p>
+              <p className="mt-6 text-[#101927]/60">Sin contenido.</p>
             )}
             <div ref={endSentinelRef} className="h-1" />
           </>
@@ -200,7 +203,7 @@ export default function LessonView() {
 
         {lesson.content_type === "video" && (
           <>
-            <h1 className="mb-4 font-display text-2xl font-bold text-white">{lesson.title}</h1>
+            <h1 className="mb-4 font-display text-2xl font-bold text-[#101927]">{lesson.title}</h1>
             {(() => {
               const yt = youTubeEmbed(url);
               if (yt) {
@@ -219,13 +222,13 @@ export default function LessonView() {
                 <video controls className="w-full overflow-hidden rounded-2xl bg-black" src={url} />
               );
             })()}
-            {lesson.description && <p className="mt-4 text-sm text-white/70">{lesson.description}</p>}
+            {lesson.description && <p className="mt-4 text-sm text-[#101927]/70">{lesson.description}</p>}
           </>
         )}
 
         {lesson.content_type === "podcast" && (
           <>
-            <h1 className="mb-4 font-display text-2xl font-bold text-white">{lesson.title}</h1>
+            <h1 className="mb-4 font-display text-2xl font-bold text-[#101927]">{lesson.title}</h1>
             <iframe
               style={{ borderRadius: 12 }}
               src={spotifyEmbed(url)}
@@ -235,17 +238,17 @@ export default function LessonView() {
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
             />
-            {lesson.description && <p className="mt-4 text-sm text-white/70">{lesson.description}</p>}
+            {lesson.description && <p className="mt-4 text-sm text-[#101927]/70">{lesson.description}</p>}
           </>
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/5 bg-[#0B0B10]/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md">
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-black/5 bg-[#FDFCFB]/90 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md">
         <div className="mx-auto max-w-md">
           <button
             onClick={markDone}
-            className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-sm font-semibold text-white transition active:scale-[0.98] ${
-              alreadyRead ? "bg-emerald-500" : "bg-[#6B4EFF]"
+            className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-sm font-semibold transition active:scale-[0.98] ${
+              alreadyRead ? "bg-[#7cc2c8] text-[#0f172a]" : "bg-[#7cc2c8] text-[#0f172a]"
             }`}
           >
             {alreadyRead ? (
@@ -261,3 +264,4 @@ export default function LessonView() {
     </div>
   );
 }
+
