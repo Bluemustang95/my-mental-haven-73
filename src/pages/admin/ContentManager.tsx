@@ -237,7 +237,29 @@ export default function ContentManager() {
 
         {TABS.map((t) => (
           <TabsContent key={t.key} value={t.key}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Categoría</Label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="h-9 w-56">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las categorías</SelectItem>
+                    {catsForType(t.key).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {loading ? "—" : `${filtered.length} elemento${filtered.length === 1 ? "" : "s"}`}
+              </span>
+            </div>
             <div className="rounded-lg border bg-white">
+
               <Table>
                 <TableHeader>
                   <TableRow>
