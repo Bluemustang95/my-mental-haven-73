@@ -106,7 +106,7 @@ export default function CategoryDetail() {
             {cat.description && <p className="mt-2 text-sm text-[#101927]/70">{cat.description}</p>}
 
             <div className="mt-6 space-y-3">
-              {items.map((it) => {
+              {items.map((it, idx) => {
                 const meta = metaFor(it);
                 const Icon = meta.Icon;
                 const isPractice = it.content_type === "text" && it.text_kind === "practice";
@@ -114,39 +114,62 @@ export default function CategoryDetail() {
                   ? `/herramientas/contenido/practica/${it.id}`
                   : `/herramientas/contenido/leccion/${it.id}`;
                 const done = doneIds.has(it.id);
+                const isLast = idx === items.length - 1;
+                const stepNum = it.sort_order ?? idx + 1;
                 return (
-                  <motion.button
-                    key={it.id}
-                    onClick={() => navigate(route)}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex w-full items-center gap-4 rounded-2xl border bg-white/70 p-4 text-left ring-1 ring-black/[0.04] backdrop-blur"
-                    style={{
-                      borderColor: done ? "#7cc2c866" : `${meta.color}33`,
-                    }}
-                  >
-                    <div
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
-                      style={{ background: `${meta.color}1f`, color: meta.color }}
+                  <div key={it.id} className="relative grid grid-cols-[1fr_40px] items-center gap-3">
+                    <motion.button
+                      onClick={() => navigate(route)}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex w-full items-center gap-3 rounded-xl border bg-white/80 p-3 text-left shadow-sm ring-1 ring-black/[0.03] backdrop-blur"
+                      style={{ borderColor: done ? "#7cc2c866" : `${meta.color}33` }}
                     >
-                      <Icon size={22} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: meta.color }}>
-                        {meta.label}
-                      </p>
-                      <p className="mt-0.5 font-display text-base font-semibold text-[#101927] line-clamp-2">{it.title}</p>
-                      <div className="mt-1 flex items-center gap-1 text-xs text-[#101927]/60">
-                        <Clock size={12} />
-                        {it.duration_minutes ? `${it.duration_minutes} min.` : it.duration ?? "—"}
+                      <div
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                        style={{ background: `${meta.color}1f`, color: meta.color }}
+                      >
+                        <Icon size={18} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: meta.color }}>
+                          {meta.label}
+                        </p>
+                        <p className="mt-0.5 font-display text-sm font-semibold text-[#101927] line-clamp-2">{it.title}</p>
+                        <div className="mt-1 flex items-center gap-2 text-[11px] text-[#101927]/60">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock size={11} />
+                            {it.duration_minutes ? `${it.duration_minutes} min.` : it.duration ?? "—"}
+                          </span>
+                          {done && (
+                            <span className="inline-flex items-center gap-1 font-semibold text-[#0f766e]">
+                              <Check size={11} strokeWidth={3} />
+                              {isPractice ? "Hecho" : "Leído"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.button>
+
+                    {/* Nodo del camino */}
+                    <div className="relative flex h-full items-center justify-center">
+                      {!isLast && (
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute left-1/2 top-[calc(50%+18px)] h-[calc(100%-18px)] -translate-x-1/2 border-l-2 border-dashed border-[#101927]/20"
+                        />
+                      )}
+                      <div
+                        className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full font-display text-xs font-bold ${
+                          done
+                            ? "bg-[#7cc2c8] text-[#0f172a] ring-2 ring-[#7cc2c8]/40"
+                            : "bg-white text-[#101927]"
+                        }`}
+                        style={done ? undefined : { border: `2px dashed ${meta.color}66` }}
+                      >
+                        {done ? <Check size={14} strokeWidth={3} /> : stepNum}
                       </div>
                     </div>
-                    {done && (
-                      <div className="flex shrink-0 items-center gap-1 rounded-full bg-[#7cc2c8]/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#0f766e]">
-                        <Check size={12} strokeWidth={3} />
-                        {isPractice ? "Hecho" : "Leído"}
-                      </div>
-                    )}
-                  </motion.button>
+                  </div>
                 );
               })}
               {items.length === 0 && <p className="py-6 text-center text-sm text-[#101927]/60">Aún no hay lecciones.</p>}
