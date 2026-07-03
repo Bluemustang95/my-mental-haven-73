@@ -4,6 +4,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { RichContent } from "@/components/psico/RichContent";
 
 type Lesson = {
   id: string;
@@ -190,10 +191,9 @@ export default function LessonView() {
             </div>
             <h1 className="font-mindful text-3xl leading-tight text-[#101927]">{lesson.title}</h1>
             {lesson.body_html ? (
-              <div
-                className="prose prose-slate mt-6 max-w-none prose-headings:font-display prose-headings:text-[#101927] prose-p:text-[#101927]/85 prose-strong:text-[#101927] prose-a:text-[#0f766e] prose-li:text-[#101927]/85"
-                dangerouslySetInnerHTML={{ __html: lesson.body_html }}
-              />
+              <div className="mt-6">
+                <RichContent html={lesson.body_html} />
+              </div>
             ) : (
               <p className="mt-6 text-[#101927]/60">Sin contenido.</p>
             )}

@@ -16,8 +16,11 @@ import {
   Palette,
   Quote,
   Heading2,
+  ChevronDown,
+  FileJson,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 const COLORS = ["#0F172A", "#6B4EFF", "#E8A365", "#16A34A", "#DC2626", "#0891B2"];
 const HIGHLIGHTS = ["#FEF3C7", "#DBEAFE", "#FCE7F3", "#DCFCE7", "#F3E8FF"];
@@ -51,8 +54,47 @@ function ToolbarBtn({
 }
 
 function Toolbar({ editor }: { editor: Editor }) {
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const insertMore = () => {
+    editor.chain().focus().insertContent("<p>[[more]]</p><p></p>").run();
+  };
+
+  const onLottieFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (e.target) e.target.value = "";
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || typeof parsed !== "object") throw new Error("bad");
+      const align =
+        (window.prompt("Alineación de la animación: left / center / right", "center") || "center")
+          .trim()
+          .toLowerCase();
+      const safeAlign = ["left", "center", "right"].includes(align) ? align : "center";
+      const b64 = btoa(unescape(encodeURIComponent(text)));
+      editor
+        .chain()
+        .focus()
+        .insertContent(`<p>[[lottie:${b64}:${safeAlign}]]</p><p></p>`)
+        .run();
+      toast.success("Animación insertada");
+    } catch {
+      toast.error("Archivo JSON de animación inválido");
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-slate-200 bg-slate-50 p-2">
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={onLottieFile}
+      />
+
       <ToolbarBtn title="Negrita" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
         <Bold size={14} />
       </ToolbarBtn>
@@ -127,6 +169,31 @@ function Toolbar({ editor }: { editor: Editor }) {
           />
         ))}
       </div>
+
+      <div className="mx-1 h-6 w-px bg-slate-300" />
+
+      <button
+        type="button"
+        title="Insertar punto 'Más' (revelar más al lector)"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          insertMore();
+        }}
+        className="flex h-8 items-center gap-1 rounded-md bg-white/70 px-2 text-[11px] font-semibold text-slate-600 hover:bg-white"
+      >
+        <ChevronDown size={12} /> Más
+      </button>
+      <button
+        type="button"
+        title="Insertar animación Lottie (.json)"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          fileRef.current?.click();
+        }}
+        className="flex h-8 items-center gap-1 rounded-md bg-white/70 px-2 text-[11px] font-semibold text-slate-600 hover:bg-white"
+      >
+        <FileJson size={12} /> Animación
+      </button>
     </div>
   );
 }
