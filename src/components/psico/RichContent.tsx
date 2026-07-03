@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Lottie from "lottie-react";
 import { ChevronDown } from "lucide-react";
 import { stripDefaultBlackColor } from "@/lib/richTextSanitize";
+import { supabase } from "@/integrations/supabase/client";
 
 type Part =
   | { type: "html"; data: string }
-  | { type: "lottie"; data: any; align: "left" | "center" | "right" };
+  | { type: "lottie"; source: string; align: "left" | "center" | "right" };
 
 function decodeBase64Utf8(b64: string): string {
   try {
@@ -19,14 +20,16 @@ function decodeBase64Utf8(b64: string): string {
   }
 }
 
+const lottieCache = new Map<string, any>();
+
 function parse(html: string): Part[][] {
   let s = stripDefaultBlackColor(html || "");
-  // Unwrap <p>token</p>
   s = s.replace(/<p>\s*(\[\[more\]\])\s*<\/p>/g, "$1");
   s = s.replace(/<p>\s*(\[\[lottie:[^\]]+\]\])\s*<\/p>/g, "$1");
 
   const sections = s.split(/\[\[more\]\]/);
-  const lottieRe = /\[\[lottie:([A-Za-z0-9+/=]+):(left|center|right)\]\]/g;
+  // token: [[lottie:<source>:<align>]] where <source> may contain ':' (URLs)
+  const lottieRe = /\[\[lottie:(.+?):(left|center|right)\]\]/g;
 
   return sections.map((sec) => {
     const parts: Part[] = [];
@@ -35,14 +38,7 @@ function parse(html: string): Part[][] {
     lottieRe.lastIndex = 0;
     while ((m = lottieRe.exec(sec)) !== null) {
       if (m.index > last) parts.push({ type: "html", data: sec.slice(last, m.index) });
-      const json = decodeBase64Utf8(m[1]);
-      let data: any = null;
-      try {
-        data = JSON.parse(json);
-      } catch {
-        data = null;
-      }
-      if (data) parts.push({ type: "lottie", data, align: m[2] as any });
+      parts.push({ type: "lottie", source: m[1], align: m[2] as any });
       last = lottieRe.lastIndex;
     }
     if (last < sec.length) parts.push({ type: "html", data: sec.slice(last) });
@@ -50,14 +46,67 @@ function parse(html: string): Part[][] {
   });
 }
 
+function LottieFromSource({
+  source,
+  align,
+}: {
+  source: string;
+  align: "left" | "center" | "right";
+}) {
+  const [data, setData] = useState<any>(() => lottieCache.get(source) ?? null);
+
+  useEffect(() => {
+    if (data) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        let json: any = null;
+        if (source.startsWith("storage://")) {
+          const path = source.slice("storage://".length);
+          const { data: blob, error } = await supabase.storage
+            .from("lottie-animations")
+            .download(path);
+          if (error || !blob) return;
+          json = JSON.parse(await blob.text());
+        } else if (source.startsWith("http://") || source.startsWith("https://")) {
+          const res = await fetch(source);
+          json = await res.json();
+        } else {
+          // legacy: base64-encoded JSON inline
+          const text = decodeBase64Utf8(source);
+          json = text ? JSON.parse(text) : null;
+        }
+        if (!cancelled && json) {
+          lottieCache.set(source, json);
+          setData(json);
+        }
+      } catch {
+        /* silent */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [source, data]);
+
+  const justify =
+    align === "left" ? "justify-start" : align === "right" ? "justify-end" : "justify-center";
+
+  return (
+    <div className={`my-4 flex ${justify}`}>
+      <div className="w-full max-w-[280px]">
+        {data ? (
+          <Lottie animationData={data} loop autoplay />
+        ) : (
+          <div className="aspect-square animate-pulse rounded-2xl bg-[#101927]/5" />
+        )}
+      </div>
+    </div>
+  );
+}
+
 const proseClass =
   "prose prose-slate max-w-none prose-headings:font-display prose-headings:text-[#101927] prose-p:text-[#101927]/85 prose-strong:text-[#101927] prose-a:text-[#0f766e] prose-li:text-[#101927]/85";
-
-function alignWrap(align: "left" | "center" | "right") {
-  if (align === "left") return "flex justify-start";
-  if (align === "right") return "flex justify-end";
-  return "flex justify-center";
-}
 
 export function RichContent({
   html,
@@ -83,11 +132,7 @@ export function RichContent({
             p.type === "html" ? (
               <div key={i} className={cls} dangerouslySetInnerHTML={{ __html: p.data }} />
             ) : (
-              <div key={i} className={`my-4 ${alignWrap(p.align)}`}>
-                <div className="w-full max-w-[280px]">
-                  <Lottie animationData={p.data} loop autoplay />
-                </div>
-              </div>
+              <LottieFromSource key={i} source={p.source} align={p.align} />
             )
           )}
         </div>
