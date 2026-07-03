@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Lottie from "lottie-react";
 import { ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { stripDefaultBlackColor } from "@/lib/richTextSanitize";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,7 +29,6 @@ function parse(html: string): Part[][] {
   s = s.replace(/<p>\s*(\[\[lottie:[^\]]+\]\])\s*<\/p>/g, "$1");
 
   const sections = s.split(/\[\[more\]\]/);
-  // token: [[lottie:<source>:<align>]] where <source> may contain ':' (URLs)
   const lottieRe = /\[\[lottie:(.+?):(left|center|right)\]\]/g;
 
   return sections.map((sec) => {
@@ -72,7 +72,6 @@ function LottieFromSource({
           const res = await fetch(source);
           json = await res.json();
         } else {
-          // legacy: base64-encoded JSON inline
           const text = decodeBase64Utf8(source);
           json = text ? JSON.parse(text) : null;
         }
@@ -108,48 +107,108 @@ function LottieFromSource({
 const proseClass =
   "prose prose-slate max-w-none prose-headings:font-display prose-headings:text-[#101927] prose-p:text-[#101927]/85 prose-strong:text-[#101927] prose-a:text-[#0f766e] prose-li:text-[#101927]/85";
 
+// Shared "Más ⌄" pill — used by RichContent and by PracticeView between blocks.
+export function MoreButton({
+  onClick,
+  label = "Más",
+}: {
+  onClick: () => void;
+  label?: string;
+}) {
+  return (
+    <div className="my-5 flex justify-center">
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex items-center gap-1.5 rounded-full border border-[#7cc2c8]/40 bg-[#7cc2c8]/10 px-4 py-1.5 text-xs font-semibold text-[#0f766e] transition hover:bg-[#7cc2c8]/20 active:scale-[0.98]"
+      >
+        {label} <ChevronDown size={13} />
+      </button>
+    </div>
+  );
+}
+
+// Persist a reveal count in localStorage under `psico:reveal:{key}`.
+export function usePersistedReveal(key: string | undefined, total: number) {
+  const storageKey = key ? `psico:reveal:${key}` : null;
+  const [revealed, setRevealed] = useState<number>(() => {
+    if (!storageKey || typeof window === "undefined") return 1;
+    const raw = window.localStorage.getItem(storageKey);
+    const n = raw ? parseInt(raw, 10) : 1;
+    if (!Number.isFinite(n) || n < 1) return 1;
+    return Math.min(Math.max(1, n), Math.max(1, total));
+  });
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      window.localStorage.setItem(storageKey, String(revealed));
+    } catch {
+      /* quota / private mode */
+    }
+  }, [storageKey, revealed]);
+
+  return [revealed, setRevealed] as const;
+}
+
 export function RichContent({
   html,
   size = "base",
+  storageKey,
 }: {
   html: string;
   size?: "base" | "sm";
+  storageKey?: string;
 }) {
   const sections = useMemo(() => parse(html), [html]);
-  const [revealed, setRevealed] = useState(1);
+  const [revealed, setRevealed] = usePersistedReveal(storageKey, sections.length);
 
   if (sections.length === 0) return null;
 
   const cls = size === "sm" ? `${proseClass} prose-sm` : proseClass;
-  const visible = sections.slice(0, revealed);
   const hasMore = revealed < sections.length;
 
   return (
     <div>
-      {visible.map((parts, si) => (
-        <div key={si} className={si > 0 ? "mt-4" : ""}>
-          {parts.map((p, i) =>
-            p.type === "html" ? (
-              <div key={i} className={cls} dangerouslySetInnerHTML={{ __html: p.data }} />
-            ) : (
-              <LottieFromSource key={i} source={p.source} align={p.align} />
-            )
-          )}
-        </div>
-      ))}
+      {/* first section always visible */}
+      <div>
+        {sections[0].map((p, i) =>
+          p.type === "html" ? (
+            <div key={i} className={cls} dangerouslySetInnerHTML={{ __html: p.data }} />
+          ) : (
+            <LottieFromSource key={i} source={p.source} align={p.align} />
+          )
+        )}
+      </div>
 
-      {hasMore && (
-        <div className="mt-5 flex justify-center">
-          <button
-            type="button"
-            onClick={() => setRevealed((r) => r + 1)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[#7cc2c8]/40 bg-[#7cc2c8]/10 px-4 py-1.5 text-xs font-semibold text-[#0f766e] transition hover:bg-[#7cc2c8]/20 active:scale-[0.98]"
-          >
-            Más <ChevronDown size={13} />
-          </button>
-        </div>
-      )}
+      {sections.slice(1).map((parts, idx) => {
+        const isRevealed = idx + 1 < revealed;
+        return (
+          <AnimatePresence key={idx} initial={false}>
+            {isRevealed && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                style={{ overflow: "hidden" }}
+              >
+                <div className="mt-4">
+                  {parts.map((p, i) =>
+                    p.type === "html" ? (
+                      <div key={i} className={cls} dangerouslySetInnerHTML={{ __html: p.data }} />
+                    ) : (
+                      <LottieFromSource key={i} source={p.source} align={p.align} />
+                    )
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        );
+      })}
 
+      {hasMore && <MoreButton onClick={() => setRevealed((r) => r + 1)} />}
     </div>
   );
 }

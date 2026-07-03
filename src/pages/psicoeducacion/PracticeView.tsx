@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { MoreButton, usePersistedReveal } from "@/components/psico/RichContent";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -146,72 +148,12 @@ export default function PracticeView() {
           <p className="mt-3 text-sm leading-relaxed text-[#101927]/70">{content.practice_intro}</p>
         )}
 
-        <div className="mt-6 space-y-5">
-          {blocks.length === 0 && (
-            <p className="rounded-2xl border border-black/10 bg-white/70 p-6 text-center text-sm text-[#101927]/60 backdrop-blur">
-              Esta práctica aún no tiene bloques configurados.
-            </p>
-          )}
-          {blocks.map((b) => {
-            switch (b.type) {
-              case "instructions":
-                return <InstructionsBlock key={b.id} html={b.html} />;
-              case "example":
-                return <ExampleBlock key={b.id} html={b.html} />;
-              case "pros_cons":
-                return (
-                  <ProsConsBlock
-                    key={b.id}
-                    labels={b.labels}
-                    value={answers[b.id]}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              case "columns":
-                return (
-                  <ColumnsBlock
-                    key={b.id}
-                    columns={b.columns}
-                    value={answers[b.id] ?? []}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              case "suds":
-                return (
-                  <SudsBlock
-                    key={b.id}
-                    label={b.label}
-                    minLabel={b.minLabel}
-                    maxLabel={b.maxLabel}
-                    value={answers[b.id] ?? 0}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              case "free_text":
-                return (
-                  <FreeTextBlock
-                    key={b.id}
-                    prompt={b.prompt}
-                    placeholder={b.placeholder}
-                    minChars={b.minChars}
-                    value={answers[b.id] ?? ""}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              case "checklist":
-                return (
-                  <ChecklistBlock
-                    key={b.id}
-                    items={b.items}
-                    value={answers[b.id] ?? []}
-                    onChange={(v) => updateBlock(b.id, v)}
-                  />
-                );
-              default:
-                return null;
-            }
-          })}
-        </div>
+        <PracticeBlocks
+          contentId={content.id}
+          blocks={blocks}
+          answers={answers}
+          onUpdate={updateBlock}
+        />
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-black/5 bg-[#FDFCFB]/90 p-4 backdrop-blur-md">
@@ -227,4 +169,152 @@ export default function PracticeView() {
     </div>
   );
 }
+
+function PracticeBlocks({
+  contentId,
+  blocks,
+  answers,
+  onUpdate,
+}: {
+  contentId: string;
+  blocks: PracticeBlock[];
+  answers: PracticeAnswers;
+  onUpdate: (id: string, v: any) => void;
+}) {
+  // Split blocks into sections around `more` markers.
+  const sections = useMemo(() => {
+    const out: { label: string; items: PracticeBlock[] }[] = [{ label: "Más", items: [] }];
+    for (const b of blocks) {
+      if (b.type === "more") {
+        out.push({ label: b.label?.trim() || "Más", items: [] });
+      } else {
+        out[out.length - 1].items.push(b);
+      }
+    }
+    return out;
+  }, [blocks]);
+
+  const [revealed, setRevealed] = usePersistedReveal(
+    `${contentId}:practice`,
+    sections.length
+  );
+
+  if (blocks.length === 0) {
+    return (
+      <div className="mt-6">
+        <p className="rounded-2xl border border-black/10 bg-white/70 p-6 text-center text-sm text-[#101927]/60 backdrop-blur">
+          Esta práctica aún no tiene bloques configurados.
+        </p>
+      </div>
+    );
+  }
+
+  const renderBlock = (b: PracticeBlock) => {
+    switch (b.type) {
+      case "instructions":
+        return (
+          <InstructionsBlock
+            key={b.id}
+            html={b.html}
+            storageKey={`${contentId}:instructions:${b.id}`}
+          />
+        );
+      case "example":
+        return (
+          <ExampleBlock
+            key={b.id}
+            html={b.html}
+            storageKey={`${contentId}:example:${b.id}`}
+          />
+        );
+      case "pros_cons":
+        return (
+          <ProsConsBlock
+            key={b.id}
+            labels={b.labels}
+            value={answers[b.id]}
+            onChange={(v) => onUpdate(b.id, v)}
+          />
+        );
+      case "columns":
+        return (
+          <ColumnsBlock
+            key={b.id}
+            columns={b.columns}
+            value={answers[b.id] ?? []}
+            onChange={(v) => onUpdate(b.id, v)}
+          />
+        );
+      case "suds":
+        return (
+          <SudsBlock
+            key={b.id}
+            label={b.label}
+            minLabel={b.minLabel}
+            maxLabel={b.maxLabel}
+            value={answers[b.id] ?? 0}
+            onChange={(v) => onUpdate(b.id, v)}
+          />
+        );
+      case "free_text":
+        return (
+          <FreeTextBlock
+            key={b.id}
+            prompt={b.prompt}
+            placeholder={b.placeholder}
+            minChars={b.minChars}
+            value={answers[b.id] ?? ""}
+            onChange={(v) => onUpdate(b.id, v)}
+          />
+        );
+      case "checklist":
+        return (
+          <ChecklistBlock
+            key={b.id}
+            items={b.items}
+            value={answers[b.id] ?? []}
+            onChange={(v) => onUpdate(b.id, v)}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="mt-6 space-y-5">
+      {/* first section always visible */}
+      {sections[0].items.map(renderBlock)}
+
+      {sections.slice(1).map((section, idx) => {
+        const isRevealed = idx + 1 < revealed;
+        const isNext = idx + 1 === revealed;
+        return (
+          <div key={idx}>
+            {isNext && (
+              <MoreButton
+                label={section.label}
+                onClick={() => setRevealed((r) => r + 1)}
+              />
+            )}
+            <AnimatePresence initial={false}>
+              {isRevealed && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <div className="space-y-5">{section.items.map(renderBlock)}</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 

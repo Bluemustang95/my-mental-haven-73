@@ -5,7 +5,8 @@ export type PracticeBlockType =
   | "columns"
   | "suds"
   | "free_text"
-  | "checklist";
+  | "checklist"
+  | "more";
 
 export type PracticeBlock =
   | { id: string; type: "instructions"; html: string }
@@ -18,7 +19,8 @@ export type PracticeBlock =
   | { id: string; type: "columns"; columns: { title: string }[] }
   | { id: string; type: "suds"; label: string; minLabel?: string; maxLabel?: string }
   | { id: string; type: "free_text"; prompt: string; placeholder?: string; minChars?: number }
-  | { id: string; type: "checklist"; items: string[] };
+  | { id: string; type: "checklist"; items: string[] }
+  | { id: string; type: "more"; label?: string };
 
 export type ProsConsCell = { text: string; suds: number };
 export type ProsConsAnswer = {
@@ -38,6 +40,7 @@ export const BLOCK_LABELS: Record<PracticeBlockType, string> = {
   suds: "Escala 0–100",
   free_text: "Texto libre",
   checklist: "Checklist",
+  more: "Punto 'Más' (ocultar lo siguiente)",
 };
 
 export function newBlock(type: PracticeBlockType): PracticeBlock {
@@ -61,5 +64,7 @@ export function newBlock(type: PracticeBlockType): PracticeBlock {
       return { id, type, prompt: "Escribí tu reflexión", placeholder: "" };
     case "checklist":
       return { id, type, items: ["Paso 1", "Paso 2"] };
+    case "more":
+      return { id, type, label: "Más" };
   }
 }

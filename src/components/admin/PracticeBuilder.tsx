@@ -250,5 +250,19 @@ function BlockEditor({
           />
         </div>
       );
+    case "more":
+      return (
+        <div className="space-y-1">
+          <Label className="text-xs">Etiqueta del botón</Label>
+          <Input
+            value={block.label ?? ""}
+            placeholder="Más"
+            onChange={(e) => onChange({ ...block, label: e.target.value })}
+          />
+          <p className="text-[11px] text-slate-500">
+            Todo lo que venga después de este bloque queda oculto hasta que el usuario apriete el botón.
+          </p>
+        </div>
+      );
   }
 }
