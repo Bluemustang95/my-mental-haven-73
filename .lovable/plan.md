@@ -1,43 +1,32 @@
-## Objetivo
-1. Permitir subir MP3 de ambientes de **hasta 50 MB** (hoy hay un límite implícito ~12 MB).
-2. Confirmar/garantizar que un audio más corto que el ejercicio (ej. 9 min en una práctica de 20 min) **se repita en loop automáticamente** sin cortes.
+## Cambios en /admin/contenido (Psicoeducación)
 
-## 1. Ampliar límite de subida a 50 MB
+### 1. Filtro por categoría en el admin
 
-**Dónde vive el límite hoy:**
-- Bucket `ambient-audio` en Storage: cada bucket tiene un `file_size_limit`. El default suele ser ~10-12 MB, por eso te rechaza archivos más grandes.
-- Además, el input de admin (`GeneralAdmin.tsx`, pestaña Audios → "Nuevo ambiente" y overrides) no valida ni informa el máximo.
+En `src/pages/admin/ContentManager.tsx`, agregar un selector de categoría encima de la tabla dentro de cada pestaña (Videos / Textos / Podcasts).
 
-**Cambios:**
-- **Migration**: actualizar el bucket `ambient-audio` para `file_size_limit = 52428800` (50 MB) y `allowed_mime_types = ['audio/mpeg','audio/mp4','audio/wav','audio/ogg']`. Hacer lo mismo con `mindfulness-audio` por consistencia.
-- **`src/pages/admin/modules/GeneralAdmin.tsx`**:
-  - Validación client-side: si `file.size > 50 MB`, toast con mensaje claro ("Máximo 50 MB").
-  - Mostrar el peso del archivo elegido y el máximo en el diálogo de "Nuevo ambiente" y en el override de sonidos built-in.
-  - Manejar el error del bucket (`Payload too large`) con un toast entendible en lugar del error crudo.
+- Nuevo estado `categoryFilter: string` (por defecto `"all"`).
+- Se resetea al cambiar de pestaña.
+- El `filtered` incluye la condición extra:
+  `(categoryFilter === "all" || item.category_id === categoryFilter)`.
+- UI: un `<Select>` alineado a la derecha del encabezado de la tabla, con opciones "Todas las categorías" + las categorías del `content_type` actual (`catsForType(tab)`).
+- Muestra un contador tipo `"12 elementos"` al lado del filtro.
 
-Nota: 50 MB alcanza para ~50 min en MP3 128 kbps o ~35 min en 192 kbps. Si más adelante necesitás archivos más largos, conviene bajar el bitrate del MP3 antes de subir (a 96–128 kbps la calidad de un ambiente es indistinguible).
+### 2. Texto invisible en prácticas del front-end
 
-## 2. Loop automático cuando el audio dura menos que el ejercicio
+**Causa:** el editor rich-text del admin (`RichTextEditor`) envuelve el texto sin color en `<p>` heredando el negro por defecto. En el front-end, `PracticeView.tsx` usa fondo oscuro `#0B0B10` y los bloques `InstructionsBlock` / `ExampleBlock` renderizan HTML crudo con `prose prose-invert`. Cualquier `color: #000 / rgb(0,0,0) / black` inline del editor pisa `prose-invert` y el texto queda negro sobre negro.
 
-**Estado actual (`src/lib/ambientResolver.ts` → `playOverride`):**
-- Los MP3 override se reproducen con un `AudioBufferSourceNode` (o `<audio>`) y **ya deberían** setear `loop = true`. Hay que verificar los 2 caminos:
-  - `playOverride(ctx, url, volume)` para overrides de built-in.
-  - El nuevo camino para "custom" agregado recientemente en `useAmbientPlayer.setSound` (usa la misma función `playOverride`).
+**Fix:** sanear el HTML antes de renderizarlo en los dos bloques (frontend-only, sin tocar el editor ni la base):
 
-**Cambios (solo si falta alguno):**
-- Asegurar `source.loop = true` en el `AudioBufferSourceNode`, o `audio.loop = true` si usa `<audio>`.
-- Fade-in muy corto (~150 ms) al arrancar y crossfade suave en el punto de loop si el archivo no está preparado para loopear sin "click". Implementación mínima: al detectar `ended` (no debería dispararse con loop=true, pero como safety) rearrancar.
-- Un `console.log` de diagnóstico en dev cuando se carga el buffer, indicando duración + `loop=true`, para poder verificar.
+- Nueva utilidad `stripDefaultBlackColor(html: string)` en `src/lib/utils.ts` (o en un nuevo `src/lib/richTextSanitize.ts`) que:
+  - Quita de cualquier atributo `style="..."` las declaraciones `color: #000`, `color: #000000`, `color: black`, `color: rgb(0, 0, 0)` (con o sin espacios/mayúsculas).
+  - Deja intactos los colores explícitos que el admin sí eligió (violeta, naranja, verde, rojo, teal, pasteles).
+- `InstructionsBlock.tsx` y `ExampleBlock.tsx` pasan `html` por esa función antes del `dangerouslySetInnerHTML`.
+- Además, refuerzo defensivo en `InstructionsBlock` con clase Tailwind `[&_*:not([style*="color"])]:text-white/85` para que párrafos sin color explícito hereden el claro correcto (por si viniera texto sin estilo inline).
 
-**Comportamiento resultante:**
-- MP3 de 9 min en ejercicio de 20 min → se reproduce continuo, reiniciando internamente cada 9 min.
-- El usuario no percibe corte siempre que el archivo termine con silencio o fade-out (recomendación en el tooltip de "Nuevo ambiente": "para loop perfecto, subí audios con fade-in/out o extremos silenciosos").
+### Archivos a tocar
+- `src/pages/admin/ContentManager.tsx` — filtro por categoría.
+- `src/lib/richTextSanitize.ts` — nueva utilidad.
+- `src/components/practice/blocks/InstructionsBlock.tsx` — usar utilidad + clase defensiva.
+- `src/components/practice/blocks/ExampleBlock.tsx` — usar utilidad.
 
-## Archivos a tocar
-- Migration (schema del bucket).
-- `src/pages/admin/modules/GeneralAdmin.tsx` — validación y UX del uploader.
-- `src/lib/ambientResolver.ts` — confirmar/garantizar loop.
-
-## Fuera de alcance
-- No cambia el catálogo dinámico ni el resolver de overrides ya construidos.
-- No se tocan Mindfulness ni Diario: el loop es transparente para ambos consumidores.
+Sin cambios de base de datos, ni al `RichTextEditor`, ni al flujo de guardado.

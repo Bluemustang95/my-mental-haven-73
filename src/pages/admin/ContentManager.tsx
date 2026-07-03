@@ -78,6 +78,7 @@ export default function ContentManager() {
   const [items, setItems] = useState<Content[]>([]);
   const [cats, setCats] = useState<Cat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -107,12 +108,20 @@ export default function ContentManager() {
       .select("id,title,content_type")
       .order("sort_order", { ascending: true })
       .then(({ data }) => setCats((data as any) ?? []));
+    setCategoryFilter("all");
   }, [tab]);
 
   const filtered = useMemo(
-    () => items.filter((i) => tab !== "categories" && i.content_type === tab),
-    [items, tab]
+    () =>
+      items.filter(
+        (i) =>
+          tab !== "categories" &&
+          i.content_type === tab &&
+          (categoryFilter === "all" || i.category_id === categoryFilter)
+      ),
+    [items, tab, categoryFilter]
   );
+
 
   const catsForType = (t: ContentType) => cats.filter((c) => (c.content_type ?? "video") === t);
 
@@ -228,7 +237,29 @@ export default function ContentManager() {
 
         {TABS.map((t) => (
           <TabsContent key={t.key} value={t.key}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Categoría</Label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="h-9 w-56">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las categorías</SelectItem>
+                    {catsForType(t.key).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {loading ? "—" : `${filtered.length} elemento${filtered.length === 1 ? "" : "s"}`}
+              </span>
+            </div>
             <div className="rounded-lg border bg-white">
+
               <Table>
                 <TableHeader>
                   <TableRow>
