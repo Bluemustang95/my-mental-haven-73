@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+mport { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,34 +23,6 @@ const EMOTIONS = [
   { e: "😶‍🌫️", l: "Confuso" },
   { e: "🥰", l: "Cariño" },
 ];
-
-// Diccionario de preguntas y etiquetas dinámicas según la categoría del onboarding
-const categoryPrompts: Record<string, { title: string; tags: string[] }> = {
-  sueno: {
-    title: "¿Cómo sentís tu energía y descanso hoy?",
-    tags: ["Fatiga", "Insomnio", "Buen descanso", "Pesadez", "Recuperación"]
-  },
-  ansiedad: {
-    title: "¿Qué te generó más tensión o ruido mental?",
-    tags: ["Sobrecarga", "Incertidumbre", "Mente en blanco", "Músculos tensos", "Exigencia"]
-  },
-  recuperacion: {
-    title: "¿Algo tocó esa herida que estás sanando?",
-    tags: ["Nostalgia", "Tristeza repentina", "Alivio", "Culpa", "Aceptación"]
-  },
-  activacion: {
-    title: "¿Qué te motivó o te frenó hoy?",
-    tags: ["Procrastinación", "Logro", "Apatía", "Foco", "Bloqueo"]
-  },
-  autoconocimiento: {
-    title: "¿Qué descubriste de vos mismo/a hoy?",
-    tags: ["Límites", "Autocrítica", "Compasión", "Niño interior", "Pausa"]
-  },
-  integral: {
-    title: "¿Qué situaciones influyeron más en tu día?",
-    tags: ["Trabajo", "Familia", "Salud", "Pareja", "Dinero"]
-  }
-};
 
 export function CheckinModal({
   open,
@@ -82,9 +54,6 @@ export function CheckinModal({
   const [weekCount, setWeekCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [popKey, setPopKey] = useState(0);
-  
-  // Estado para guardar la categoría del onboarding
-  const [userCategory, setUserCategory] = useState<string>("integral");
 
   useEffect(() => {
     if (open) {
@@ -99,23 +68,6 @@ export function CheckinModal({
       setImproveText("");
     }
   }, [open, isMorning]);
-
-  // Cargar la categoría del usuario
-  useEffect(() => {
-    if (!open || !user) return;
-    const fetchUserCategory = async () => {
-      const { data } = await supabase
-        .from("patient_app_profiles")
-        .select("onboarding_category")
-        .eq("id", user.id)
-        .single();
-      
-      if (data?.onboarding_category) {
-        setUserCategory(data.onboarding_category);
-      }
-    };
-    fetchUserCategory();
-  }, [open, user]);
 
   // Load week progress for stats step
   useEffect(() => {
@@ -136,15 +88,6 @@ export function CheckinModal({
   const toggleEmotion = (l: string) => {
     setEmotions((p) => (p.includes(l) ? p.filter((x) => x !== l) : [...p, l]));
     setPopKey((k) => k + 1);
-  };
-
-  // Agregar la etiqueta seleccionada al campo de texto correspondiente
-  const handleTagClick = (tag: string) => {
-    if (isMorning) {
-      setThoughtText((prev) => (prev ? `${prev}, ${tag}` : tag));
-    } else {
-      setHighlightText((prev) => (prev ? `${prev}, ${tag}` : tag));
-    }
   };
 
   const submit = async () => {
@@ -179,9 +122,6 @@ export function CheckinModal({
 
   const accentText = isMorning ? "text-resma-teal" : "text-resma-gold";
   const accentBg = isMorning ? "bg-resma-teal" : "bg-resma-gold";
-
-  // Obtenemos los textos personalizados
-  const currentPrompt = categoryPrompts[userCategory] || categoryPrompts.integral;
 
   const EmotionGrid = () => (
     <div className="grid grid-cols-3 gap-3">
@@ -290,30 +230,13 @@ export function CheckinModal({
                   )}
                 </AnimatePresence>
               </div>
-              
-              {/* Sección dinámica de la mañana */}
-              <div>
-                <p className="mb-2 px-1 text-[12.5px] font-bold text-resma-navy">{currentPrompt.title}</p>
-                <div className="mb-3 flex flex-wrap gap-2 px-1">
-                  {currentPrompt.tags.map(tag => (
-                    <button
-                      key={tag}
-                      onClick={() => handleTagClick(tag)}
-                      className="rounded-full border border-resma-teal/40 bg-white/60 px-3 py-1 text-[11px] font-bold text-resma-navy shadow-sm transition hover:bg-resma-teal/20 active:scale-95"
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  value={thoughtText}
-                  onChange={(e) => setThoughtText(e.target.value)}
-                  placeholder="Algún pensamiento particular para hoy…"
-                  rows={2}
-                  className="w-full resize-none rounded-2xl border border-foreground/10 bg-white/70 px-3.5 py-3 text-[13px] focus:border-resma-teal/60 focus:outline-none"
-                />
-              </div>
-
+              <textarea
+                value={thoughtText}
+                onChange={(e) => setThoughtText(e.target.value)}
+                placeholder="Algún pensamiento particular para hoy…"
+                rows={2}
+                className="w-full resize-none rounded-2xl border border-foreground/10 bg-white/70 px-3.5 py-3 text-[13px] focus:border-resma-teal/60 focus:outline-none"
+              />
               <div>
                 <p className="mb-1 px-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/80">Tu objetivo de hoy</p>
                 <textarea
@@ -358,22 +281,9 @@ export function CheckinModal({
     return (
       <div>
         <StepHeader title="Balance nocturno" sub="Un cierre introspectivo" />
-        <div className="space-y-4">
-          
-          {/* Sección dinámica de la noche */}
+        <div className="space-y-3">
           <div>
-             <p className="mb-2 px-1 text-[12.5px] font-bold text-resma-navy">{currentPrompt.title}</p>
-             <div className="mb-3 flex flex-wrap gap-2 px-1">
-               {currentPrompt.tags.map(tag => (
-                 <button
-                   key={tag}
-                   onClick={() => handleTagClick(tag)}
-                   className="rounded-full border border-resma-teal/40 bg-white/60 px-3 py-1 text-[11px] font-bold text-resma-navy shadow-sm transition hover:bg-resma-teal/20 active:scale-95"
-                 >
-                   {tag}
-                 </button>
-               ))}
-             </div>
+            <p className="mb-1 px-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/80">¿Qué destacarías de tu día?</p>
             <textarea
               value={highlightText}
               onChange={(e) => setHighlightText(e.target.value)}
