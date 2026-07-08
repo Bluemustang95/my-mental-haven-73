@@ -1,235 +1,275 @@
-import { ReactNode } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+// src/components/onboarding/OnboardingShell.tsx
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ChevronRight, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  OnboardingResponses,
+  calculateHomeModules,
+} from "@/lib/onboardingAlgorithm";
 
-const TEAL = "#7cc2c8";
-const GOLD = "#facb60";
-const INK = "#101927";
+// Textos y copys de la pantalla final según tu documento
+const categoryContent: Record<string, { titulo: string; descripcion: string }> = {
+  sueno: {
+    titulo: "Armamos tu plan de mejora del sueño",
+    descripcion: "Tu descanso importa más de lo que creés. Construimos un camino para que puedas recuperar la calma nocturna, soltar el cuerpo y despertar con más energía.",
+  },
+  ansiedad: {
+    titulo: "Armamos tu plan de manejo de la ansiedad",
+    descripcion: "Aprender a soltar el control es un proceso. Preparamos herramientas para que puedas calmar tu mente, reducir el ruido interno y encontrar más equilibrio en el día a día.",
+  },
+  recuperacion: {
+    titulo: "Armamos tu plan de recuperación emocional",
+    descripcion: "Las emociones no se borran, se procesan. Diseñamos un espacio para que puedas transitar lo que sentís, sanar a tu propio ritmo y avanzar con más liviandad.",
+  },
+  activacion: {
+    titulo: "Armamos tu plan de activación y motivación",
+    descripcion: "Reconectar con lo que te mueve es el primer paso. Tu plan está pensado para ayudarte a retomar acciones, crear nuevos hábitos y recuperar esa chispa que a veces se apaga.",
+  },
+  autoconocimiento: {
+    titulo: "Armamos tu plan de autoconocimiento",
+    descripcion: "Mirarte por dentro es un acto de valentía. Construimos un camino para que puedas pausar, entenderte mejor y construir una relación más honesta y compasiva con vos mismo/a.",
+  },
+  integral: {
+    titulo: "Armamos tu plan integral de bienestar",
+    descripcion: "Tu bienestar tiene muchas dimensiones. Diseñamos un plan completo y equilibrado para que puedas trabajar distintos aspectos de tu salud emocional a tu propio ritmo.",
+  },
+};
 
-/**
- * Light Glassmorphism Onboarding Shell.
- * White background with ambient teal + gold glows. Dark ink typography.
- * Pass totalSteps=0 to hide the progress indicator (for splash / value-slides).
- */
-export function OnboardingShell({
-  step,
-  totalSteps,
-  onBack,
-  children,
-}: {
-  step: number;
-  totalSteps: number;
-  onBack?: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className="relative min-h-[100dvh] w-full overflow-hidden"
-      style={{ background: "#FFFFFF", color: INK }}
-    >
-      {/* Ambient glows */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-40 -left-32 h-[28rem] w-[28rem] rounded-full"
-        style={{ background: TEAL, opacity: 0.12, filter: "blur(120px)" }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 -bottom-48 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full"
-        style={{ background: GOLD, opacity: 0.14, filter: "blur(140px)" }}
-      />
+export const OnboardingShell = () => {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const [isSaving, setIsSaving] = useState(false);
+  const [finalResult, setFinalResult] = useState<{
+    category: string;
+    dynamic: string[];
+  } | null>(null);
 
-      <div className="relative mx-auto flex min-h-[100dvh] max-w-md flex-col px-5 pt-6 pb-4 safe-area-top">
-        {(totalSteps > 0 || onBack) && (
-          <div className="mb-4 flex items-center gap-3">
-            {onBack ? (
-              <button
-                onClick={onBack}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#101927]/8 bg-white/80 shadow-glass backdrop-blur-xl transition active:scale-95"
-              >
-                <ArrowLeft className="h-4 w-4" style={{ color: INK }} />
-              </button>
-            ) : (
-              <div className="h-9 w-9" />
-            )}
-            {totalSteps > 0 && (
-              <div className="flex flex-1 items-center justify-center gap-1.5">
-                {Array.from({ length: totalSteps }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-[3px] flex-1 max-w-[36px] rounded-full transition-colors"
-                    style={{ background: i < step ? TEAL : "rgba(16,25,39,0.08)" }}
-                  />
-                ))}
-              </div>
-            )}
-            <div className="h-9 w-9" />
-          </div>
-        )}
+  // Estado para guardar las respuestas del usuario
+  const [responses, setResponses] = useState<OnboardingResponses>({
+    q1: [],
+    q2: "",
+    q3: "",
+    q4: "",
+  });
 
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-          className="flex flex-1 flex-col"
-        >
-          {children}
-        </motion.div>
-      </div>
-    </div>
-  );
-}
+  const handleNext = () => {
+    // Validaciones simples para no avanzar si no seleccionó nada
+    if (step === 1 && responses.q1.length === 0) return toast.error("Seleccioná al menos una opción");
+    if (step === 2 && !responses.q2) return toast.error("Seleccioná una opción");
+    if (step === 3 && !responses.q3) return toast.error("Seleccioná una opción");
 
-export function GlassInput(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
-  const { label, className, ...rest } = props;
-  return (
-    <label className="block rounded-[22px] border border-[#101927]/5 bg-white/75 px-4 py-3 shadow-glass backdrop-blur-xl transition focus-within:border-[#7cc2c8]/60">
-      <span
-        className="block text-[10px] font-bold uppercase tracking-[0.18em]"
-        style={{ color: TEAL }}
-      >
-        {label}
-      </span>
-      <input
-        {...rest}
-        className={`mt-1 w-full bg-transparent text-[14px] font-medium text-[#101927] placeholder:font-light placeholder:text-[#101927]/35 focus:outline-none ${className ?? ""}`}
-      />
-    </label>
-  );
-}
+    if (step < 4) {
+      setStep(step + 1);
+    } else {
+      if (!responses.q4) return toast.error("Seleccioná una opción");
+      finishOnboarding();
+    }
+  };
 
-export function GlassSelect({
-  label,
-  value,
-  onChange,
-  options,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-  placeholder?: string;
-}) {
-  return (
-    <label className="block rounded-[22px] border border-[#101927]/5 bg-white/75 px-4 py-3 shadow-glass backdrop-blur-xl transition focus-within:border-[#7cc2c8]/60">
-      <span
-        className="block text-[10px] font-bold uppercase tracking-[0.18em]"
-        style={{ color: TEAL }}
-      >
-        {label}
-      </span>
-      <div className="relative mt-1">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none bg-transparent pr-7 text-[14px] font-medium text-[#101927] focus:outline-none"
-        >
-          {placeholder && (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          )}
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[#101927]/40" />
-      </div>
-    </label>
-  );
-}
+  const finishOnboarding = async () => {
+    setIsSaving(true);
+    try {
+      // 1. Calculamos la categoría y los módulos usando el algoritmo que creamos en el Paso 1
+      const result = calculateHomeModules(responses);
+      setFinalResult(result);
+      
+      // Pasamos al "paso 5" (Pantalla final de resultados)
+      setStep(5);
 
-export function GlassChoice({
-  label,
-  selected,
-  onClick,
-  compact = false,
-}: {
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-  compact?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      type="button"
-      className={`flex w-full items-center justify-between rounded-full border bg-white/75 px-4 ${
-        compact ? "py-2.5 text-[13px]" : "py-3 text-[13.5px]"
-      } text-left font-medium shadow-glass backdrop-blur-xl transition active:scale-[0.99]`}
-      style={
-        selected
-          ? { borderColor: TEAL, color: INK, boxShadow: "0 8px 22px -10px rgba(124,194,200,0.5)" }
-          : { borderColor: "rgba(16,25,39,0.06)", color: INK }
+      // 2. Intentamos guardar en Supabase (Opcional, si el usuario ya está logueado)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+         await supabase
+          .from("patient_app_profiles")
+          .update({
+             onboarding_category: result.category,
+             // Aquí a futuro podrías guardar result.dynamic (los módulos) en una columna JSON
+          })
+          .eq("id", user.id);
       }
-    >
-      <span className="pr-3">{label}</span>
-      <span
-        className="flex h-4.5 w-4.5 flex-shrink-0 items-center justify-center rounded-full border-[1.5px]"
-        style={
-          selected
-            ? { borderColor: TEAL, background: TEAL, width: 18, height: 18 }
-            : { borderColor: "rgba(16,25,39,0.2)", background: "#fff", width: 18, height: 18 }
-        }
-      >
-        {selected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
-      </span>
-    </button>
-  );
-}
+    } catch (error) {
+      console.error("Error guardando onboarding:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-export function GlassPrimaryButton({
-  children,
-  disabled,
-  onClick,
-  type = "button",
-  variant = "teal",
-}: {
-  children: ReactNode;
-  disabled?: boolean;
-  onClick?: () => void;
-  type?: "button" | "submit";
-  variant?: "teal" | "white";
-}) {
-  const isWhite = variant === "white";
-  return (
-    <button
-      type={type}
-      disabled={disabled}
-      onClick={onClick}
-      style={{
-        background: disabled
-          ? "rgba(16,25,39,0.05)"
-          : isWhite
-            ? "#FFFFFF"
-            : TEAL,
-        color: disabled ? "rgba(16,25,39,0.3)" : INK,
-        boxShadow: disabled
-          ? "none"
-          : isWhite
-            ? "0 8px 32px rgba(16,25,39,0.06)"
-            : "0 14px 30px -12px rgba(124,194,200,0.55)",
-        border: isWhite ? "1px solid rgba(16,25,39,0.06)" : "none",
-      }}
-      className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-display text-[14.5px] font-bold transition hover:brightness-[1.03] active:scale-[0.98]"
-    >
-      {children}
-    </button>
-  );
-}
+  const handleComplete = () => {
+    // Redirigir al inicio
+    navigate("/");
+    toast.success("¡Plan configurado correctamente!");
+  };
 
-/**
- * Sticky bottom container for primary CTAs so users never need to scroll
- * to reach the "Next" button.
- */
-export function StickyFooter({ children }: { children: ReactNode }) {
-  return (
-    <div className="sticky bottom-0 left-0 right-0 mt-4 -mx-5 px-5 pt-3 pb-2 bg-gradient-to-t from-white via-white/95 to-white/0">
-      {children}
-    </div>
-  );
-}
+  // ---- RENDERIZADO DE LAS PREGUNTAS ----
+
+  if (step === 1) {
+    return (
+      <div className="p-6 max-w-md mx-auto min-h-screen flex flex-col justify-center">
+        <h2 className="text-2xl font-bold mb-2">¿Qué brújula guía tu viaje?</h2>
+        <p className="text-muted-foreground mb-6">Podés elegir más de una opción</p>
+        <div className="space-y-3 mb-8">
+          {[
+            { id: "almohada", label: "Hacer las paces con mi almohada" },
+            { id: "control", label: "Aprender a soltar el control" },
+            { id: "ruido", label: "Apagar el ruido mental" },
+            { id: "chispa", label: "Reconectar con mi chispa" },
+            { id: "refugio", label: "Construir un refugio interno" },
+            { id: "tristeza", label: "Navegar la tristeza sin ahogarme" },
+            { id: "mente", label: "Enfocar mi mente dispersa" },
+            { id: "creativo", label: "Despertar mi lado creativo" },
+          ].map((opt) => (
+            <Card
+              key={opt.id}
+              className={`p-4 cursor-pointer transition-colors ${
+                responses.q1.includes(opt.id) ? "border-primary bg-primary/5" : ""
+              }`}
+              onClick={() => {
+                setResponses(prev => ({
+                  ...prev,
+                  q1: prev.q1.includes(opt.id)
+                    ? prev.q1.filter(i => i !== opt.id)
+                    : [...prev.q1, opt.id]
+                }));
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span>{opt.label}</span>
+                {responses.q1.includes(opt.id) && <Check className="w-5 h-5 text-primary" />}
+              </div>
+            </Card>
+          ))}
+        </div>
+        <Button onClick={handleNext} className="w-full">Siguiente <ChevronRight className="w-4 h-4 ml-2"/></Button>
+      </div>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <div className="p-6 max-w-md mx-auto min-h-screen flex flex-col justify-center">
+        <h2 className="text-2xl font-bold mb-2">¿Qué maleta querés aligerar?</h2>
+        <p className="text-muted-foreground mb-6">Elegí la que más resuene hoy</p>
+        <div className="space-y-3 mb-8">
+          {[
+            { id: "nino", label: "Abrazar a mi niño/a interior" },
+            { id: "habito", label: "Despedirme de un hábito caduco" },
+            { id: "pausa", label: "Pausar y mirarme por dentro" },
+            { id: "comida", label: "Hacer las paces con la comida" },
+            { id: "no", label: "Aprender a decir 'no' sin culpa" },
+            { id: "perdon", label: "Perdonarme por el pasado" },
+          ].map((opt) => (
+            <Card
+              key={opt.id}
+              className={`p-4 cursor-pointer transition-colors ${
+                responses.q2 === opt.id ? "border-primary bg-primary/5" : ""
+              }`}
+              onClick={() => setResponses(prev => ({ ...prev, q2: opt.id }))}
+            >
+              <span>{opt.label}</span>
+            </Card>
+          ))}
+        </div>
+        <Button onClick={handleNext} className="w-full">Siguiente <ChevronRight className="w-4 h-4 ml-2"/></Button>
+      </div>
+    );
+  }
+
+  if (step === 3) {
+    return (
+      <div className="p-6 max-w-md mx-auto min-h-screen flex flex-col justify-center">
+        <h2 className="text-2xl font-bold mb-2">¿Cómo dormís últimamente?</h2>
+        <div className="space-y-3 mb-8">
+          {[
+            { id: "reparador", label: "Reparador (Me levanto descansado/a)" },
+            { id: "interrumpido", label: "Interrumpido (Me despierto varias veces)" },
+            { id: "cuesta", label: "Cuesta dormirme (Tardo mucho en conciliar)" },
+            { id: "pesadillas", label: "Pesadillas (Sueños intensos o angustia)" },
+          ].map((opt) => (
+            <Card
+              key={opt.id}
+              className={`p-4 cursor-pointer transition-colors ${
+                responses.q3 === opt.id ? "border-primary bg-primary/5" : ""
+              }`}
+              onClick={() => setResponses(prev => ({ ...prev, q3: opt.id }))}
+            >
+              <span>{opt.label}</span>
+            </Card>
+          ))}
+        </div>
+        <Button onClick={handleNext} className="w-full">Siguiente <ChevronRight className="w-4 h-4 ml-2"/></Button>
+      </div>
+    );
+  }
+
+  if (step === 4) {
+    return (
+      <div className="p-6 max-w-md mx-auto min-h-screen flex flex-col justify-center">
+        <h2 className="text-2xl font-bold mb-2">¿Cómo te gusta aprender?</h2>
+        <div className="space-y-3 mb-8">
+          {[
+            { id: "lectura", label: "Lecturas y teoría (Aprendo leyendo)" },
+            { id: "audios", label: "Audios y meditaciones (Prefiero escuchar)" },
+            { id: "practico", label: "Ejercicios prácticos (Aprendo haciendo)" },
+          ].map((opt) => (
+            <Card
+              key={opt.id}
+              className={`p-4 cursor-pointer transition-colors ${
+                responses.q4 === opt.id ? "border-primary bg-primary/5" : ""
+              }`}
+              onClick={() => setResponses(prev => ({ ...prev, q4: opt.id }))}
+            >
+              <span>{opt.label}</span>
+            </Card>
+          ))}
+        </div>
+        <Button onClick={handleNext} disabled={isSaving} className="w-full">
+          {isSaving ? "Armando tu plan..." : "Finalizar"}
+        </Button>
+      </div>
+    );
+  }
+
+  // ---- PANTALLA FINAL (RESULTADO DEL ALGORITMO) ----
+  if (step === 5 && finalResult) {
+    const content = categoryContent[finalResult.category] || categoryContent.integral;
+    
+    return (
+      <div className="p-6 max-w-md mx-auto min-h-screen flex flex-col justify-center text-center">
+        <div className="w-20 h-20 bg-primary/10 rounded-full mx-auto mb-6 flex items-center justify-center">
+          <Check className="w-10 h-10 text-primary" />
+        </div>
+        
+        <h1 className="text-3xl font-bold mb-4">{content.titulo}</h1>
+        <p className="text-muted-foreground text-lg mb-8">
+          {content.descripcion}
+        </p>
+        
+        <div className="bg-muted/50 p-4 rounded-lg mb-8 text-sm text-left">
+           <p className="font-medium mb-2">Tu Home incluirá:</p>
+           <ul className="list-disc list-inside pl-4 text-muted-foreground">
+             <li>Valoraciones (Fijo)</li>
+             {finalResult.dynamic.map(mod => (
+               <li key={mod} className="capitalize">{mod.replace(/_/g, ' ')}</li>
+             ))}
+           </ul>
+        </div>
+
+        <p className="text-sm text-muted-foreground mb-4">Tu home está lista para empezar.</p>
+        
+        <Button onClick={handleComplete} size="lg" className="w-full mb-4">
+          Empezar mi plan <ChevronRight className="w-4 h-4 ml-2"/>
+        </Button>
+
+        <p className="text-xs text-muted-foreground">
+          Podés cambiar esto en Configuración cuando quieras.
+        </p>
+      </div>
+    );
+  }
+
+  return null;
+};
