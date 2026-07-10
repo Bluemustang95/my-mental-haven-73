@@ -199,7 +199,7 @@ export default function Dashboard() {
       description: "Arrancá tu día regulando tu energía somática, emociones y valores.",
       actionLabel: "Cultivar mi día",
       actionTone: "gold",
-      onAction: () => setCheckinOpen("morning"),
+      onAction: () => navigate("/sintonia-manana"),
       done: morningDone,
       doneSummary: morningDone ? "Ritual matutino completado" : undefined,
     },

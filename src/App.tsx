@@ -119,6 +119,7 @@ import PatientReviews from "@/pages/admin/PatientReviews";
 import CrisisHotlinesManager from "@/pages/admin/CrisisHotlinesManager";
 import CountryViewSwitcher from "@/pages/admin/CountryViewSwitcher";
 import MenteEmocion from "@/pages/MenteEmocion";
+import SintoniaManana from "@/pages/ritual/SintoniaManana";
 import { NotificationForegroundListener } from "@/components/system/NotificationForegroundListener";
 import { IosInstallHint } from "@/components/system/IosInstallHint";
 import { UiChromeProvider } from "@/hooks/useUiChrome";
@@ -152,6 +153,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/sintonia-manana" element={<ProtectedRoute><SintoniaManana /></ProtectedRoute>} />
             <Route path="/herramientas/contenido/leccion/:id" element={<ProtectedRoute><LessonView /></ProtectedRoute>} />
             <Route path="/herramientas/contenido/practica/:id" element={<ProtectedRoute><PracticeView /></ProtectedRoute>} />
             <Route path="/herramientas/pack" element={<ProtectedRoute><PackHome /></ProtectedRoute>} />
