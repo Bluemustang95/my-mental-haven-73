@@ -49,9 +49,9 @@ const DEFAULT_WIDGETS: WidgetState[] = [
 ];
 
 const LABELS: Record<WidgetId, string> = {
-  morning: "Valoración de la mañana",
-  recommended: "Recurso recomendado",
-  night: "Valoración de la noche",
+  morning: "Sintonía de la mañana",
+  recommended: "Práctica recomendada",
+  night: "Balance nocturno",
   sleep_zone: "Zona de descanso",
   pending: "Pendientes para vos",
   mini_habits: "Mini Hábitos",

@@ -26,6 +26,7 @@ import { PsyNewsWidget } from "@/components/home/PsyNewsWidget";
 import { PendingBento } from "@/components/home/PendingBento";
 import { PullToRefresh } from "@/components/home/PullToRefresh";
 import { HomeSkeleton } from "@/components/home/HomeSkeleton";
+import { PriorityStack, type PriorityCard } from "@/components/home/PriorityStack";
 import ThoughtTaskWidget from "@/components/pensamientos/ThoughtTaskWidget";
 
 const GROUP_ORDER_KEY = "home_groups_order_v2";
@@ -183,7 +184,49 @@ export default function Dashboard() {
     }
   };
 
+  const PRIORITY_IDS: WidgetId[] = ["morning", "recommended", "night"];
   const visibleOrdered = widgets.widgets.filter((w) => w.enabled && !w.hidden);
+  const gridWidgets = widgets.editMode
+    ? visibleOrdered
+    : visibleOrdered.filter((w) => !PRIORITY_IDS.includes(w.id as WidgetId));
+
+  const priorityCards: PriorityCard[] = [
+    {
+      id: "morning",
+      chip: "Prioridad mañana",
+      chipTone: "gold",
+      title: "Sintonía de la mañana",
+      description: "Arrancá tu día regulando tu energía somática, emociones y valores.",
+      actionLabel: "Cultivar mi día",
+      actionTone: "gold",
+      onAction: () => setCheckinOpen("morning"),
+      done: morningDone,
+      doneSummary: morningDone ? "Ritual matutino completado" : undefined,
+    },
+    {
+      id: "recommended",
+      chip: "Práctica recomendada",
+      chipTone: "teal",
+      title: "Manejo de distorsiones",
+      description: "Identificá pensamientos automáticos y desarmá los sesgos cognitivos.",
+      actionLabel: "Desarmar sesgos",
+      actionTone: "teal",
+      onAction: () => navigate("/pensamientos"),
+    },
+    {
+      id: "night",
+      chip: "Prioridad noche",
+      chipTone: "navy",
+      title: "Balance nocturno",
+      description: "Cerrá tu día, evalúa emociones y hacé tu balance introspectivo.",
+      actionLabel: "Cerrar mi día",
+      actionTone: "navy",
+      onAction: () => setCheckinOpen("night"),
+      done: nightDone,
+      doneSummary: nightDone ? "Balance nocturno completado" : undefined,
+    },
+  ];
+
 
   return (
     <div className="resma-bg-gradient relative min-h-screen overflow-hidden pb-24 safe-area-top">
@@ -245,11 +288,14 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Camino + manage */}
-        <div className="mt-5 mb-2 flex items-center justify-between px-1">
+        {/* Enfoque prioritario — stacked cards */}
+        {!widgets.editMode && <PriorityStack cards={priorityCards} />}
+
+        {/* Tus herramientas + manage */}
+        <div className="mt-6 mb-2 flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <p className="font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-              Tu camino de hoy
+            <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Tus herramientas
             </p>
             {(() => {
               // streak = consecutive days with any checkin
@@ -300,7 +346,7 @@ export default function Dashboard() {
           );
         })() : (
           <div className="relative grid grid-cols-2 gap-3">
-            {visibleOrdered.map((w) => (
+            {gridWidgets.map((w) => (
               <WidgetCell
                 key={w.id}
                 id={w.id}
