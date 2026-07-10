@@ -359,17 +359,25 @@ export default function Dashboard() {
           );
         })() : (
           <div className="relative grid grid-cols-2 gap-3">
-            {gridWidgets.map((w) => (
-              <WidgetCell
-                key={w.id}
-                id={w.id}
-                editMode={false}
-                size={w.size}
-                onLongPress={widgets.activateEdit}
-              >
-                {renderWidget(w.id)}
-              </WidgetCell>
-            ))}
+            {gridWidgets.map((w, i) => {
+              const forcedSize: "full" | "half" = i === 0 ? "full" : "half";
+              return (
+                <WidgetCell
+                  key={w.id}
+                  id={w.id}
+                  editMode={false}
+                  size={forcedSize}
+                  onLongPress={widgets.activateEdit}
+                >
+                  {renderWidget(w.id)}
+                </WidgetCell>
+              );
+            })}
+            {gridWidgets.length === 0 && (
+              <div className="col-span-2 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
+                Aún no elegiste herramientas. Tocá <b>+</b> arriba para sumar hasta 3.
+              </div>
+            )}
           </div>
         )}
 
