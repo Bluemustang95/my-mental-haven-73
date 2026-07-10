@@ -402,7 +402,6 @@ export default function Dashboard() {
 
         {widgets.editMode ? (
           <EditSlots
-            priority={<PriorityStack cards={priorityCards} />}
             items={gridWidgets.map((w, i) => ({
               id: w.id as WidgetId,
               size: (i === 0 ? "full" : "half") as "full" | "half",
