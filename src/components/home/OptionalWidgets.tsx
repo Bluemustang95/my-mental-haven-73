@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
-import { Check, Droplet, Sparkles, NotebookPen } from "lucide-react";
+import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { localDateStr } from "@/lib/utils";
 import { toast } from "sonner";
+import { WidgetShell, WIDGET_IDENTITY } from "@/components/home/WidgetVisual";
 
 export function MiniHabitsWidget() {
   const { user } = useAuth();
   const [habit, setHabit] = useState<{ id: string; name: string } | null>(null);
   const [doneToday, setDoneToday] = useState(false);
+  const ink = WIDGET_IDENTITY.mini_habits.ink;
 
   useEffect(() => {
     if (!user) return;
@@ -53,35 +55,34 @@ export function MiniHabitsWidget() {
     }
   };
 
-
-  if (!habit) {
-    return (
-      <div className="glass-premium rounded-[22px] p-3.5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">Mini hábitos</p>
-        <p className="mt-1 text-sm text-muted-foreground">Aún no tenés hábitos activos.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="glass-premium flex items-center justify-between rounded-[22px] p-3.5">
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">Mini hábitos</p>
-        <p className="mt-0.5 truncate font-display text-[15px] font-bold text-resma-navy">
-          <Droplet size={13} className="mr-1 inline text-resma-teal" />
-          {habit.name}
+    <WidgetShell id="mini_habits">
+      <p className="mt-1 font-display text-[14px] font-bold" style={{ color: ink }}>
+        Mini hábitos
+      </p>
+      {habit ? (
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate font-serifElegant text-[15px]" style={{ color: ink }}>
+            {habit.name}
+          </p>
+          <button
+            onClick={toggle}
+            aria-label="Marcar"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition active:scale-90"
+            style={{
+              background: doneToday ? ink : "rgba(255,255,255,0.7)",
+              color: doneToday ? "#ffffff" : ink,
+            }}
+          >
+            <Check size={16} strokeWidth={3} />
+          </button>
+        </div>
+      ) : (
+        <p className="mt-2 text-[12px]" style={{ color: ink, opacity: 0.75 }}>
+          Aún no tenés hábitos activos.
         </p>
-      </div>
-      <button
-        onClick={toggle}
-        aria-label="Marcar"
-        className={`flex h-10 w-10 items-center justify-center rounded-full transition active:scale-90 ${
-          doneToday ? "bg-resma-teal text-white" : "border border-foreground/10 bg-white text-resma-navy/60"
-        }`}
-      >
-        <Check size={18} strokeWidth={3} />
-      </button>
-    </div>
+      )}
+    </WidgetShell>
   );
 }
 
@@ -89,6 +90,7 @@ export function GratitudeWidget() {
   const { user } = useAuth();
   const [val, setVal] = useState("");
   const [saved, setSaved] = useState(false);
+  const ink = WIDGET_IDENTITY.gratitude.ink;
 
   const save = async () => {
     if (!val.trim() || !user) return;
@@ -105,31 +107,34 @@ export function GratitudeWidget() {
   };
 
   return (
-    <div className="glass-premium rounded-[22px] p-3.5">
-      <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
-        <Sparkles size={10} /> Agradecimiento
+    <WidgetShell id="gratitude">
+      <p className="mt-1 font-display text-[14px] font-bold" style={{ color: ink }}>
+        Agradecimiento
       </p>
       <input
         value={val}
         onChange={(e) => setVal(e.target.value)}
         placeholder="Hoy agradezco…"
-        className="mt-2 w-full bg-transparent font-serifElegant text-[14px] italic text-resma-navy placeholder:text-muted-foreground/60 focus:outline-none"
+        className="mt-2 w-full bg-transparent font-serifElegant text-[14px] italic focus:outline-none"
+        style={{ color: ink }}
       />
       {val && (
         <button
           onClick={save}
-          className="mt-2 rounded-full bg-resma-navy px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white"
+          className="mt-2 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white"
+          style={{ background: ink }}
         >
           {saved ? "Guardado ✓" : "Guardar"}
         </button>
       )}
-    </div>
+    </WidgetShell>
   );
 }
 
 export function ContentionNotesWidget() {
   const { user } = useAuth();
   const [val, setVal] = useState("");
+  const ink = WIDGET_IDENTITY.contention_notes.ink;
 
   const save = async () => {
     if (!val.trim() || !user) return;
@@ -144,9 +149,9 @@ export function ContentionNotesWidget() {
   };
 
   return (
-    <div className="glass-premium rounded-[22px] p-3.5">
-      <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
-        <NotebookPen size={10} /> Notas rápidas de contención
+    <WidgetShell id="contention_notes">
+      <p className="mt-1 font-display text-[14px] font-bold" style={{ color: ink }}>
+        Notas de contención
       </p>
       <textarea
         value={val}
@@ -154,8 +159,9 @@ export function ContentionNotesWidget() {
         placeholder="Escribe pensamientos para revisar más tarde…"
         rows={2}
         onBlur={save}
-        className="mt-2 w-full resize-none rounded-2xl border border-foreground/5 bg-white/60 px-3 py-2 text-[13px] text-resma-navy placeholder:text-muted-foreground/55 focus:border-resma-teal/50 focus:outline-none"
+        className="mt-2 w-full resize-none rounded-xl border border-white/50 bg-white/70 px-2.5 py-2 text-[13px] focus:outline-none"
+        style={{ color: ink }}
       />
-    </div>
+    </WidgetShell>
   );
 }
