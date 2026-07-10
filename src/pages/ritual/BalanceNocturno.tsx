@@ -49,6 +49,9 @@ export default function BalanceNocturno() {
   const [energy, setEnergy] = useState(55);
   // Paso 2 — emociones que sintió durante el día
   const [emotions, setEmotions] = useState<string[]>([]);
+  // Puente emocional: emociones de la mañana + nota de qué generó el cambio
+  const [morningEmotions, setMorningEmotions] = useState<string[]>([]);
+  const [shiftNote, setShiftNote] = useState("");
   // Paso 3 — valores que honró (chips seleccionables)
   const [morningValues, setMorningValues] = useState<string[]>([]);
   const [morningGoals, setMorningGoals] = useState<string[]>([]);
@@ -62,7 +65,7 @@ export default function BalanceNocturno() {
     (async () => {
       const { data } = await supabase
         .from("daily_checkins")
-        .select("thought_note, day_goal")
+        .select("thought_note, day_goal, emotions")
         .eq("user_id", user.id)
         .eq("checkin_date", localDateStr(new Date()))
         .eq("mode", "morning")
@@ -72,8 +75,25 @@ export default function BalanceNocturno() {
       if (match) setMorningValues(match[1].split(",").map((s) => s.trim()).filter(Boolean));
       const goal = (data as any)?.day_goal ?? "";
       if (goal) setMorningGoals(goal.split(" · ").map((s: string) => s.trim()).filter(Boolean));
+      const ems = (data as any)?.emotions ?? [];
+      if (Array.isArray(ems)) setMorningEmotions(ems as string[]);
     })();
   }, [user]);
+
+  // Comparación mañana ↔ noche (por label)
+  const emotionLabelsNow = useMemo(
+    () => emotions.map((id) => EMOCIONES.find((e) => e.id === id)?.label ?? id),
+    [emotions]
+  );
+  const shiftSummary = useMemo(() => {
+    const morningSet = new Set(morningEmotions);
+    const nightSet = new Set(emotionLabelsNow);
+    const sostenidas = emotionLabelsNow.filter((l) => morningSet.has(l));
+    const sumadas = emotionLabelsNow.filter((l) => !morningSet.has(l));
+    const disueltas = morningEmotions.filter((l) => !nightSet.has(l));
+    return { sostenidas, sumadas, disueltas };
+  }, [morningEmotions, emotionLabelsNow]);
+  const hasShift = shiftSummary.sumadas.length > 0 || shiftSummary.disueltas.length > 0;
 
   const energyState = useMemo(() => energyStateFromValue(energy), [energy]);
 
@@ -97,6 +117,8 @@ export default function BalanceNocturno() {
         thought_note: honored.length ? `Valores honrados: ${honored.join(", ")}` : null,
         balance_improve: improve || null,
         balance_highlight: gratitude || null,
+        emotion_shift_note: shiftNote.trim() || null,
+        emotion_shift_summary: morningEmotions.length ? (shiftSummary as any) : null,
       },
       { onConflict: "user_id,checkin_date,mode" as any }
     );
