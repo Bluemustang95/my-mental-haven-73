@@ -96,7 +96,7 @@ export default function BalanceNocturno() {
         emotions: emotionLabels.length ? emotionLabels : null,
         thought_note: honored.length ? `Valores honrados: ${honored.join(", ")}` : null,
         balance_improve: improve || null,
-        gratitude: gratitude || null,
+        balance_highlight: gratitude || null,
       },
       { onConflict: "user_id,checkin_date,mode" as any }
     );
