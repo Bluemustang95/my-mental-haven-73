@@ -22,7 +22,7 @@ export default function MiProceso() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { isPremium, realPlan } = usePlan();
+  // app gratis: sin plan gating
   const [inTherapy, setInTherapy] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [linkedLastName, setLinkedLastName] = useState<string | null>(null);
@@ -33,16 +33,12 @@ export default function MiProceso() {
   const [overrideCountry, setOverrideCountry] = useState<string | null>(getCountryOverride());
   const { isAdmin } = useAdminRole();
   const country = isAdmin && overrideCountry ? overrideCountry : realCountry;
-  const [paywallOpen, setPaywallOpen] = useState(false);
+  
 
   const [surveyOpen, setSurveyOpen] = useState(false);
   const { shouldShow: surveyAvailable, dismiss: dismissSurvey, recheck: recheckSurvey } = useSatisfactionSurveyTrigger();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [bigFiveOpen, setBigFiveOpen] = useState(false);
-  
-  const [genericTest, setGenericTest] = useState<null | "symptom">(null);
-  const [directTestCode, setDirectTestCode] = useState<string | null>(null);
 
   const [snap, setSnap] = useState<WellbeingSnapshot | null>(null);
 
@@ -97,9 +93,6 @@ export default function MiProceso() {
     setBridgeLastState("searching");
   };
 
-  const handleSelectTest = (code: "BDI" | "BAI" | "PSWQ") => {
-    setDirectTestCode(code);
-  };
 
 
   return (
