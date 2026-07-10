@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
 import { TherapySyncModal } from "@/components/modals/TherapySyncModal";
 import { TherapyMiniTracker } from "@/components/proceso/TherapyMiniTracker";
+import { TherapyStatusHelp } from "@/components/proceso/TherapyStatusHelp";
+
 import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
 import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
 import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
@@ -103,8 +105,8 @@ export default function MiProceso() {
       <div className="relative mx-auto w-full max-w-md flex-1 px-5 pt-4 pb-24">
         <div className="flex items-baseline justify-between gap-3">
           <h1 className="font-serif text-[17px] font-medium leading-tight text-[#0f172a]">Mi Proceso</h1>
-          <p className="text-[11px] italic text-[#64748b]">Tu evolución, paso a paso.</p>
         </div>
+
         {isAdmin && overrideCountry && (
           <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-800">
             👁 Vista admin · país simulado: {overrideCountry}
@@ -127,11 +129,15 @@ export default function MiProceso() {
         {(!country || country === "AR") ? (
           <>
             <div className="flex items-center justify-between gap-4">
-              <p className="font-[Montserrat] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0f172a]">
-                Terapia y sincronización {inTherapy && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-[Montserrat] text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0f172a]">
+                  Terapia y sincronización {inTherapy && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />}
+                </p>
+                <TherapyStatusHelp />
+              </div>
               <IOSToggle checked={inTherapy} onChange={updateTherapy} label="En terapia" />
             </div>
+
 
             {surveyAvailable && (
               <button
