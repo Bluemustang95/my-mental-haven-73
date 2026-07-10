@@ -158,7 +158,7 @@ export default function SintoniaManana() {
               .map((v) => VALORES.find((x) => x.id === v)?.label ?? v)
               .join(", ")}`
           : null,
-        day_goal: goalText || null,
+        day_goal: goals.filter((g) => g.trim()).join(" · ") || null,
       },
       { onConflict: "user_id,checkin_date,mode" as any }
     );
