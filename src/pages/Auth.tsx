@@ -78,7 +78,7 @@ export default function Auth() {
       return;
     }
     const ok = await verifyBiometric();
-    if (ok) navigate("/", { replace: true });
+    if (ok) navigate(postLoginTarget(), { replace: true });
     else setError("No pudimos verificar tu identidad biométrica.");
   };
 
