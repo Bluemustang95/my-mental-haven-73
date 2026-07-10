@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { loadFeatureConfig } from "../_shared/ai-feature-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +45,11 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurada");
 
     const prompt = PROMPTS[task](payload);
+    const cfg = await loadFeatureConfig("dbt_ai", {
+      model: "google/gemini-3-flash-preview",
+      temperature: 0.6,
+      system_prompt: "Sos una asistente clínica DBT en español rioplatense (voseo). Tono empático, claro, breve. Siempre recordá que esto es orientación, no reemplaza terapia profesional.",
+    });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -52,9 +58,10 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: cfg.model,
+        temperature: cfg.temperature,
         messages: [
-          { role: "system", content: "Sos una asistente clínica DBT en español rioplatense (voseo). Tono empático, claro, breve. Siempre recordá que esto es orientación, no reemplaza terapia profesional." },
+          { role: "system", content: cfg.system_prompt ?? "" },
           { role: "user", content: prompt },
         ],
       }),
