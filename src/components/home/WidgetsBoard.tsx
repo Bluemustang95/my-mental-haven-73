@@ -508,8 +508,14 @@ export function ManageWidgetsButton({
   widgets: WidgetState[];
   onToggle: (id: WidgetId) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const listener = () => setOpen(true);
+    window.addEventListener("resma:open-manage-widgets", listener);
+    return () => window.removeEventListener("resma:open-manage-widgets", listener);
+  }, []);
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
           aria-label="Gestionar widgets"
@@ -519,6 +525,7 @@ export function ManageWidgetsButton({
         </button>
       </SheetTrigger>
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-[28px] border-0 bg-white/95 backdrop-blur-2xl">
+
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 font-serifElegant text-xl text-resma-navy">
             <Settings size={16} /> Tus herramientas
