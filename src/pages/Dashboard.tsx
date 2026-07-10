@@ -19,6 +19,8 @@ import {
   ReorderableGroupStack,
   WidgetId,
   type GroupItem,
+  PRIORITY_IDS,
+  TOOL_IDS,
 } from "@/components/home/WidgetsBoard";
 import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
 import { DailyQuoteWidget } from "@/components/home/DailyQuoteWidget";
@@ -103,6 +105,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadToday();
+    // Recargar al volver a la pestaña / regresar de un ritual
+    const refresh = () => loadToday();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [loadToday]);
 
   // Determine position within the "camino" sequence (morning → recommended → night)
@@ -184,11 +194,14 @@ export default function Dashboard() {
     }
   };
 
-  const PRIORITY_IDS: WidgetId[] = ["morning", "recommended", "night"];
-  const visibleOrdered = widgets.widgets.filter((w) => w.enabled && !w.hidden);
+  const PRIORITY_ID_SET = new Set<WidgetId>(PRIORITY_IDS);
+  // Herramientas: prioridades siempre fuera. Máximo 3 activas.
+  const toolWidgets = widgets.widgets
+    .filter((w) => TOOL_IDS.includes(w.id as WidgetId) && w.enabled && !w.hidden)
+    .slice(0, 3);
   const gridWidgets = widgets.editMode
-    ? visibleOrdered
-    : visibleOrdered.filter((w) => !PRIORITY_IDS.includes(w.id as WidgetId));
+    ? widgets.widgets.filter((w) => !PRIORITY_ID_SET.has(w.id as WidgetId) && w.enabled && !w.hidden)
+    : toolWidgets;
 
   const priorityCards: PriorityCard[] = [
     {
@@ -221,7 +234,7 @@ export default function Dashboard() {
       description: "Cerrá tu día, evalúa emociones y hacé tu balance introspectivo.",
       actionLabel: "Cerrar mi día",
       actionTone: "navy",
-      onAction: () => setCheckinOpen("night"),
+      onAction: () => navigate("/balance-nocturno"),
       done: nightDone,
       doneSummary: nightDone ? "Balance nocturno completado" : undefined,
     },
@@ -321,7 +334,7 @@ export default function Dashboard() {
         {widgets.editMode ? (() => {
           /* Every visible widget is independently draggable + resizable. */
           const persistedOrder = loadGroupOrder();
-          const ordered = [...visibleOrdered].sort((a, b) => {
+          const ordered = [...gridWidgets].sort((a, b) => {
             const ia = persistedOrder.indexOf(a.id);
             const ib = persistedOrder.indexOf(b.id);
             return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
@@ -346,17 +359,25 @@ export default function Dashboard() {
           );
         })() : (
           <div className="relative grid grid-cols-2 gap-3">
-            {gridWidgets.map((w) => (
-              <WidgetCell
-                key={w.id}
-                id={w.id}
-                editMode={false}
-                size={w.size}
-                onLongPress={widgets.activateEdit}
-              >
-                {renderWidget(w.id)}
-              </WidgetCell>
-            ))}
+            {gridWidgets.map((w, i) => {
+              const forcedSize: "full" | "half" = i === 0 ? "full" : "half";
+              return (
+                <WidgetCell
+                  key={w.id}
+                  id={w.id}
+                  editMode={false}
+                  size={forcedSize}
+                  onLongPress={widgets.activateEdit}
+                >
+                  {renderWidget(w.id)}
+                </WidgetCell>
+              );
+            })}
+            {gridWidgets.length === 0 && (
+              <div className="col-span-2 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
+                Aún no elegiste herramientas. Tocá <b>+</b> arriba para sumar hasta 3.
+              </div>
+            )}
           </div>
         )}
 

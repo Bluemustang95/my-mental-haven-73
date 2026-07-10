@@ -28,6 +28,20 @@ export type WidgetId =
   | "daily_quote"
   | "psy_news";
 
+// Prioridades: siempre visibles en el PriorityStack, no se gestionan como widgets.
+export const PRIORITY_IDS: WidgetId[] = ["morning", "recommended", "night"];
+// Herramientas: el usuario elige hasta 3 para su Home.
+export const TOOL_IDS: WidgetId[] = [
+  "sleep_zone",
+  "pending",
+  "mini_habits",
+  "gratitude",
+  "contention_notes",
+  "daily_quote",
+  "psy_news",
+];
+export const MAX_TOOLS = 3;
+
 export type WidgetState = {
   id: WidgetId;
   enabled: boolean;
@@ -40,12 +54,12 @@ const DEFAULT_WIDGETS: WidgetState[] = [
   { id: "recommended", enabled: true, hidden: false, size: "full" },
   { id: "night", enabled: true, hidden: false, size: "full" },
   { id: "sleep_zone", enabled: true, hidden: false, size: "full" },
-  { id: "pending", enabled: true, hidden: false, size: "full" },
-  { id: "mini_habits", enabled: true, hidden: false, size: "full" },
-  { id: "daily_quote", enabled: false, hidden: false, size: "full" },
-  { id: "psy_news", enabled: false, hidden: false, size: "full" },
+  { id: "pending", enabled: true, hidden: false, size: "half" },
+  { id: "mini_habits", enabled: true, hidden: false, size: "half" },
+  { id: "daily_quote", enabled: false, hidden: false, size: "half" },
+  { id: "psy_news", enabled: false, hidden: false, size: "half" },
   { id: "gratitude", enabled: false, hidden: false, size: "half" },
-  { id: "contention_notes", enabled: false, hidden: false, size: "full" },
+  { id: "contention_notes", enabled: false, hidden: false, size: "half" },
 ];
 
 const LABELS: Record<WidgetId, string> = {
@@ -162,7 +176,19 @@ export function useHomeWidgets() {
   const setSize = (id: WidgetId, size: "full" | "half") =>
     setWidgets((p) => p.map((w) => (w.id === id ? { ...w, size } : w)));
   const toggleEnabled = (id: WidgetId) =>
-    setWidgets((p) => p.map((w) => (w.id === id ? { ...w, enabled: !w.enabled, hidden: false } : w)));
+    setWidgets((p) => {
+      const target = p.find((w) => w.id === id);
+      const enabling = target ? !target.enabled : false;
+      // Cap: máximo MAX_TOOLS herramientas encendidas al mismo tiempo
+      if (enabling && TOOL_IDS.includes(id)) {
+        const activeTools = p.filter((w) => TOOL_IDS.includes(w.id) && w.enabled && !w.hidden).length;
+        if (activeTools >= MAX_TOOLS) {
+          toast(`Podés elegir hasta ${MAX_TOOLS} herramientas. Desactivá otra primero.`);
+          return p;
+        }
+      }
+      return p.map((w) => (w.id === id ? { ...w, enabled: !w.enabled, hidden: false } : w));
+    });
   const hide = (id: WidgetId) => setWidgets((p) => p.map((w) => (w.id === id ? { ...w, hidden: true } : w)));
   const reorder = (ids: WidgetId[]) => {
     setWidgets((prev) => {
@@ -492,22 +518,42 @@ export function ManageWidgetsButton({
           <Plus size={14} strokeWidth={2.6} />
         </button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="max-h-[80vh] rounded-t-[28px] border-0 bg-white/95 backdrop-blur-2xl">
+      <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-[28px] border-0 bg-white/95 backdrop-blur-2xl">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 font-serifElegant text-xl text-resma-navy">
-            <Settings size={16} /> Gestionar widgets
+            <Settings size={16} /> Tus herramientas
           </SheetTitle>
+          <p className="text-[12px] text-muted-foreground">
+            Elegí hasta {MAX_TOOLS}. Se muestran debajo de tus prioridades del día.
+          </p>
         </SheetHeader>
-        <div className="mt-4 space-y-2">
-          {widgets.map((w) => (
-            <div key={w.id} className="flex items-center justify-between rounded-2xl border border-foreground/5 bg-white px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold text-resma-navy">{LABELS[w.id]}</p>
-                <p className="text-[11px] text-muted-foreground">{w.enabled ? (w.hidden ? "Oculto" : "Visible") : "Desactivado"}</p>
-              </div>
-              <Switch checked={w.enabled && !w.hidden} onCheckedChange={() => onToggle(w.id)} />
-            </div>
-          ))}
+        <div className="mt-4 space-y-2 pb-6">
+          {widgets
+            .filter((w) => TOOL_IDS.includes(w.id))
+            .map((w) => {
+              const activeCount = widgets.filter(
+                (x) => TOOL_IDS.includes(x.id) && x.enabled && !x.hidden
+              ).length;
+              const disabled = !w.enabled && activeCount >= MAX_TOOLS;
+              return (
+                <div
+                  key={w.id}
+                  className={`flex items-center justify-between rounded-2xl border border-foreground/5 bg-white px-4 py-3 ${disabled ? "opacity-50" : ""}`}
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-resma-navy">{LABELS[w.id]}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {w.enabled ? (w.hidden ? "Oculto" : "Visible") : disabled ? "Cupo lleno" : "Desactivado"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={w.enabled && !w.hidden}
+                    disabled={disabled}
+                    onCheckedChange={() => onToggle(w.id)}
+                  />
+                </div>
+              );
+            })}
         </div>
       </SheetContent>
     </Sheet>

@@ -44,7 +44,16 @@ const VALORES = [
   { id: "gratitud",     label: "Gratitud",     hint: "Reconocer lo que hay" },
 ];
 
+// Paleta por slot — cada hoja se pinta distinto al elegirse
+const SLOT_COLORS = [
+  { grad: "linear-gradient(135deg, #a9dcc4 0%, #5dbf9a 100%)", border: "#3f9c78", chip: "#3f9c78" }, // esmeralda
+  { grad: "linear-gradient(135deg, #ffd58a 0%, #f2a65a 100%)", border: "#c9803a", chip: "#c9803a" }, // ámbar
+  { grad: "linear-gradient(135deg, #c9a6ff 0%, #8a6ee0 100%)", border: "#6d4fbf", chip: "#6d4fbf" }, // lavanda
+  { grad: "linear-gradient(135deg, #ffb0b0 0%, #f28b82 100%)", border: "#d15a52", chip: "#d15a52" }, // coral
+];
+
 const MAX_VALUES = 4;
+const MAX_GOALS = 3;
 
 // ---------- Helpers ----------
 function sleepStateFromValue(v: number) {
@@ -70,7 +79,7 @@ export default function SintoniaManana() {
   // Paso 3
   const [values, setValues] = useState<string[]>([]);
   const [pickerSlot, setPickerSlot] = useState<number | null>(null);
-  const [goalText, setGoalText] = useState("");
+  const [goals, setGoals] = useState<string[]>([""]);
   const [improveFromYesterday, setImproveFromYesterday] = useState<string | null>(null);
 
   useEffect(() => {
@@ -149,7 +158,7 @@ export default function SintoniaManana() {
               .map((v) => VALORES.find((x) => x.id === v)?.label ?? v)
               .join(", ")}`
           : null,
-        day_goal: goalText || null,
+        day_goal: goals.filter((g) => g.trim()).join(" · ") || null,
       },
       { onConflict: "user_id,checkin_date,mode" as any }
     );
@@ -409,17 +418,53 @@ export default function SintoniaManana() {
           </div>
 
           <div className="mt-6">
-            <p className="mb-1 px-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Intención de hoy (opcional)
-            </p>
-            <textarea
-              value={goalText}
-              onChange={(e) => setGoalText(e.target.value)}
-              placeholder="Una frase corta que oriente tu día…"
-              rows={3}
-              className="w-full resize-y rounded-2xl border border-resma-gold/40 bg-white px-3.5 py-3 text-[13.5px] leading-relaxed focus:border-resma-gold focus:outline-none"
-              style={{ minHeight: 96 }}
-            />
+            <div className="mb-2 flex items-center justify-between px-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                Intenciones de hoy (opcional)
+              </p>
+              <span className="text-[10px] font-semibold text-muted-foreground/70">
+                {goals.filter((g) => g.trim()).length}/{MAX_GOALS}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {goals.map((g, i) => (
+                <div key={i} className="relative">
+                  <textarea
+                    value={g}
+                    onChange={(e) =>
+                      setGoals((prev) => prev.map((x, idx) => (idx === i ? e.target.value : x)))
+                    }
+                    placeholder={
+                      i === 0
+                        ? "Una frase corta que oriente tu día…"
+                        : `Otra intención (${i + 1}/${MAX_GOALS})`
+                    }
+                    rows={2}
+                    className="w-full resize-y rounded-2xl border border-resma-gold/40 bg-white px-3.5 py-3 pr-9 text-[13.5px] leading-relaxed focus:border-resma-gold focus:outline-none"
+                    style={{ minHeight: 60 }}
+                  />
+                  {goals.length > 1 && (
+                    <button
+                      onClick={() =>
+                        setGoals((prev) => prev.filter((_, idx) => idx !== i))
+                      }
+                      aria-label="Quitar intención"
+                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-muted-foreground shadow-sm active:scale-90"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {goals.length < MAX_GOALS && (
+                <button
+                  onClick={() => setGoals((prev) => [...prev, ""])}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-resma-gold/50 bg-white/60 px-3 py-2.5 text-[12px] font-semibold text-resma-gold active:scale-[0.98]"
+                >
+                  <Plus size={13} /> Agregar otra intención
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Picker propio (evita colisión de z-index con RitualShell) */}
@@ -478,10 +523,14 @@ export default function SintoniaManana() {
                 </span>
               )}
             </div>
-            {goalText && (
-              <p className="mt-4 border-t border-foreground/5 pt-3 font-serifElegant text-[15px] italic text-resma-navy/85">
-                "{goalText}"
-              </p>
+            {goals.filter((g) => g.trim()).length > 0 && (
+              <div className="mt-4 space-y-2 border-t border-foreground/5 pt-3">
+                {goals.filter((g) => g.trim()).map((g, i) => (
+                  <p key={i} className="font-serifElegant text-[14.5px] italic leading-snug text-resma-navy/85">
+                    "{g}"
+                  </p>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -630,6 +679,7 @@ function ValueBranch({
       {slots.map((s) => {
         const id = selected[s.idx];
         const filled = !!id;
+        const palette = SLOT_COLORS[s.idx % SLOT_COLORS.length];
         const style: React.CSSProperties = {
           top: `${s.y}%`,
           [s.side === "L" ? "right" : "left"]: "52%",
@@ -640,22 +690,19 @@ function ValueBranch({
             <button
               onClick={() => (filled ? onClear(s.idx) : onSlot(s.idx))}
               className={`group relative flex h-[58px] w-[126px] items-center justify-center px-3 text-[11.5px] font-bold uppercase tracking-[0.12em] transition ${
-                filled
-                  ? "text-resma-navy shadow-[0_10px_24px_-14px_rgba(93,191,154,0.6)]"
-                  : "text-muted-foreground/70"
+                filled ? "text-resma-navy" : "text-muted-foreground/70"
               }`}
               style={{
-                background: filled
-                  ? "linear-gradient(135deg, #a9dcc4 0%, #7cc2c8 100%)"
-                  : "rgba(255,255,255,0.55)",
-                border: filled ? "1.5px solid #5dbf9a" : "1.5px dashed #b8b3a8",
+                background: filled ? palette.grad : "rgba(255,255,255,0.55)",
+                border: filled ? `1.5px solid ${palette.border}` : "1.5px dashed #b8b3a8",
                 borderRadius: s.side === "L" ? "60% 20% 60% 20% / 50% 30% 70% 50%" : "20% 60% 20% 60% / 30% 50% 50% 70%",
                 backdropFilter: "blur(4px)",
+                boxShadow: filled ? `0 12px 26px -14px ${palette.border}aa` : undefined,
               }}
             >
               {filled ? (
                 <span className="flex items-center gap-1 text-center leading-tight">
-                  <Leaf size={12} className="shrink-0 text-emerald-700" />
+                  <Leaf size={12} className="shrink-0" style={{ color: palette.border }} />
                   <span className="truncate">{valueLabel(id)}</span>
                 </span>
               ) : (
