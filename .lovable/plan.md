@@ -1,30 +1,63 @@
-## 1. Inicio — todo más chico
+# Widgets con utilidad real en Inicio
 
-En `src/pages/Dashboard.tsx`:
-- **Zona de descanso** (rectángulo): bajar altura de `h-[150px]` a `h-[110px]`. Ícono en caja 9x9 (era 11x11), label `text-[14px]`. Glyph decorativo detrás más chico (~80).
-- **Bentos cuadrados** (Pack de activación / Mini hábitos / etc.): reemplazar `aspect-square` por altura fija `h-[130px]` para que queden proporcionalmente más chicos y no se estiren con el ancho de columna.
-  - En `PendingBento.tsx`: cambiar `aspect-square` → `h-[130px]`, reducir gap a `gap-2` y padding a `p-3`; ícono en caja 9x9; label `text-[13px]`.
-  - En `WidgetVisual.tsx` (variante `tile` que usa Mini hábitos): mismo cambio — `aspect-square` → `h-[130px]`, padding `p-3.5`, ícono caja 10x10, label `text-[14px]`. Esto afecta solo tiles compactos (Mini hábitos, Gratitud, Notas de contención).
+## Objetivo
+Convertir los tiles de Inicio en mini-herramientas interactivas (no solo accesos), y limpiar la jerarquía visual eliminando los títulos de sección.
 
-## 2. Mi Proceso — bentos más chicos + reordenar
+## Cambios en Inicio (`src/pages/Dashboard.tsx`)
+1. **Quitar títulos**: eliminar el header "Tus herramientas" + streak; `PriorityStack` sin encabezado "Enfoque prioritario".
+2. **`ManageWidgetsButton`** se mueve a un ícono discreto (sin texto) en la esquina sup-der del grid. Long-press sigue activando modo edición.
+3. Ajustar márgenes verticales tras remover los títulos.
 
-En `src/components/proceso/TherapyMiniTracker.tsx` y `NextSessionCard.tsx`:
+## Widgets interactivos
 
-### Nuevo orden (2×2)
-```
-┌──────────────┐ ┌──────────────┐
-│ Próx. Sesión │ │ Medicación   │
-└──────────────┘ └──────────────┘
-┌──────────────┐ ┌──────────────┐
-│ Resumen Psico│ │ Notas Sesión │
-└──────────────┘ └──────────────┘
-```
-Cambiar el orden en ambos grids (bloque `contactConfirmed` y bloque normal): `NextSessionCard` → `Medicación` → `Resumen Psico` → `Notas de Sesión`.
+Cada tile mantiene tamaño cuadrado `h-[130px]` y muestra contenido real. Interacción por **swipe horizontal con snap** cuando hay >1 item (indicadores de puntitos abajo). Tap en header/ícono navega al módulo completo.
 
-### Tamaño
-- `MiniBento`: quitar `aspect-square`, poner `h-[120px]`, `gap-2`, `p-3`, ícono `size={26}`, label `text-[13px]`.
-- `NextSessionCard`: mismo tratamiento — `h-[120px]`, `gap-2`, `p-3`, ícono `size={26}`, label `text-[13px]`.
-- Grid: `gap-2.5` está bien.
+### A. `MiniHabitsWidget`
+- Lista de hábitos activos (`useHabits`).
+- Item visible: ícono + nombre corto + botón circular de check para marcar hoy (`toggle(habitId, today)`).
+- Swipe entre hábitos.
 
-## Alcance
-Solo presentación. Archivos: `src/pages/Dashboard.tsx`, `src/components/home/PendingBento.tsx`, `src/components/home/WidgetVisual.tsx`, `src/components/proceso/TherapyMiniTracker.tsx`, `src/components/proceso/NextSessionCard.tsx`.
+### B. `pensamientos_quick`
+- `thought_followups` pendientes (mismo query que `ThoughtTaskWidget`, limit 3).
+- Item con check que abre `FollowupCompleteSheet`.
+- Swipe entre pendientes; estado vacío "Todo al día".
+
+### C. `sleep_zone`
+- Último `sleep_log` / audio de sueño. Muestra "Continuar: <nombre>" con ▶︎.
+- Si no hay checkin nocturno: "Registrar sueño de anoche".
+
+### D. `psico_quick`
+- Última lección con `progress < 1` de `content_progress` + `psychoeducation_content`.
+- "Seguí con: <título>" + barra de progreso + ▶︎ que navega directo a la lección.
+
+### E. `pack_quick`, `mindfulness_quick`, `diario_quick`
+- **Pack**: día actual del programa BA (`ba_programs` + `ba_day_logs`), check rápido.
+- **Mindfulness**: última práctica (`mindfulness_audio_cache`/favoritos), ▶︎ para repetir.
+- **Diario**: si no hay entry hoy → "Escribir hoy" abre **mini-sheet**; si ya hay → "Registrado ✓".
+
+### F. `gratitude`, `contention_notes`
+- Chip "+ Añadir" abre **mini-sheet** para escribir una línea sin salir de Inicio.
+- Debajo, últimos 2 items como texto compacto (swipe si son varios).
+
+## Patrón compartido
+Nuevo `src/components/home/InteractiveTile.tsx`:
+- `h-[130px] rounded-[22px] p-3`.
+- Header: ícono + nombre corto (izq), acción principal (der).
+- Cuerpo: contenido del item actual.
+- Footer: dots si `items.length > 1`.
+- Props: `items`, `renderItem`, `onNavigate`, `onPrimaryAction`.
+- Swipe implementado con Framer Motion `drag="x"` + snap por índice.
+
+Mini-sheets: componente `QuickCaptureSheet.tsx` reutilizable (textarea + guardar), usado por diario/gratitud/contención.
+
+## Archivos
+- `src/pages/Dashboard.tsx` — quitar títulos, ajustar layout, mover botón manage.
+- `src/components/home/InteractiveTile.tsx` — **nuevo**.
+- `src/components/home/QuickCaptureSheet.tsx` — **nuevo**.
+- `src/components/home/OptionalWidgets.tsx` — reescribir Mini/Gratitude/Contention.
+- `src/components/home/QuickToolWidget.tsx` — dividir por id en implementaciones funcionales (o crear archivos `MindfulnessQuick.tsx`, `PensamientosQuick.tsx`, `PackQuick.tsx`, `DiarioQuick.tsx`, `PsicoQuick.tsx`, `SleepZoneQuick.tsx`).
+- Sin cambios de schema; se usan tablas existentes.
+
+## Fuera de alcance
+- Sin cambios en rutas, permisos, ni tamaño del grid.
+- Sin cambios en `PriorityStack` interno ni en los widgets de "camino" (mañana/recomendado/noche).
