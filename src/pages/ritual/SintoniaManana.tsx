@@ -547,7 +547,7 @@ function EmotionOrb({
   em,
   active,
 }: {
-  em: { color: string; anim: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }> };
+  em: { color: string; anim: string; Icon: React.ComponentType<any> };
   active: boolean;
 }) {
   const { color, anim, Icon } = em;
