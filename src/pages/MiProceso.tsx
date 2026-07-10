@@ -111,26 +111,15 @@ export default function MiProceso() {
           </div>
         )}
 
-        <PremiumLock featureName="Estadísticas de impacto" variant="section">
-          <div className="mt-3">
-            <WellbeingCardV2
-              score={snap?.score ?? 0}
-              delta={snap?.delta ?? 0}
-              message={snap?.message ?? "Cargando tu evolución…"}
-              trend={snap?.trend ?? [0,0,0,0,0,0,0]}
-              onOpen={() => setSheetOpen(true)}
-            />
-          </div>
-
-          <div className="mt-5">
-            <PsychometryCarousel onSelect={handleSelectTest} />
-          </div>
-
-          <div className="mt-5">
-            <BigFiveCard onOpen={() => setBigFiveOpen(true)} />
-          </div>
-
-        </PremiumLock>
+        <div className="mt-3">
+          <WellbeingCardV2
+            score={snap?.score ?? 0}
+            delta={snap?.delta ?? 0}
+            message={snap?.message ?? "Cargando tu evolución…"}
+            trend={snap?.trend ?? [0,0,0,0,0,0,0]}
+            onOpen={() => setSheetOpen(true)}
+          />
+        </div>
 
         <div className="my-6 h-px bg-black/[0.06]" />
 
@@ -194,11 +183,6 @@ export default function MiProceso() {
 
 
       <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} snapshot={snap} />
-      <BigFiveProfileModal open={bigFiveOpen} onClose={() => setBigFiveOpen(false)} />
-      
-      <SymptomsTestModal open={!!genericTest} kind={genericTest ?? "symptom"} onClose={() => setGenericTest(null)} />
-      {directTestCode && <TestRunner testCode={directTestCode} onClose={() => setDirectTestCode(null)} />}
-      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} featureName="Premium" />
       <TherapySyncModal open={syncOpen} onClose={() => setSyncOpen(false)} onSynced={handleSynced} />
       <SatisfactionSurveySheet
         open={surveyOpen}
@@ -207,25 +191,5 @@ export default function MiProceso() {
         onDismiss={() => { dismissSurvey(); }}
       />
     </div>
-  );
-}
-
-function BentoCard({
-  icon, iconBg, title, sub, onClick,
-}: {
-  icon: React.ReactNode; iconBg: string; title: string; sub: string; onClick: () => void;
-}) {
-  return (
-    <motion.button
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="flex flex-col items-start gap-2 rounded-[18px] border border-white/70 bg-white/80 p-3 text-left shadow-[0_6px_20px_-16px_rgba(16,25,39,0.22)] backdrop-blur-xl"
-    >
-      <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${iconBg}`}>{icon}</div>
-      <div>
-        <p className="font-display text-[12.5px] font-bold leading-tight text-[#0f172a]">{title}</p>
-        <p className="mt-0.5 text-[10.5px] leading-snug text-[#64748b]">{sub}</p>
-      </div>
-    </motion.button>
   );
 }
