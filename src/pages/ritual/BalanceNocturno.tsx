@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { localDateStr } from "@/lib/utils";
 import { toast } from "sonner";
 import { RitualShell } from "@/components/ritual/RitualShell";
+import { PlanContextHint } from "@/components/ritual/PlanContextHint";
 
 // ---------- Datos ----------
 const EMOCIONES = [
@@ -170,6 +171,7 @@ export default function BalanceNocturno() {
           title="¿Cómo se sintió tu día?"
           sub="Deslizá para ubicar tu constelación"
         >
+          <PlanContextHint variant="night" />
           <div className="mt-8 flex items-center justify-center">
             <NightSky value={energy} state={energyState} />
           </div>

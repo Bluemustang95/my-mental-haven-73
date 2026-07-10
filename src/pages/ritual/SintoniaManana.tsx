@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { localDateStr } from "@/lib/utils";
 import { toast } from "sonner";
 import { RitualShell } from "@/components/ritual/RitualShell";
+import { PlanContextHint } from "@/components/ritual/PlanContextHint";
 
 // ---------- Datos ----------
 const EMOCIONES = [
@@ -218,6 +219,7 @@ export default function SintoniaManana() {
           title="¿Cómo despertaste?"
           sub="Deslizá para sintonizar tu descanso"
         >
+          <PlanContextHint variant="morning" />
           {shiftFromYesterday && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}

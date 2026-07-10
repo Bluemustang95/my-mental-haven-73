@@ -6,6 +6,7 @@ import {
   type PlanCategory,
   type ToolModule,
 } from "@/lib/onboardingAlgorithm";
+import { getCategoryContentOverride } from "@/lib/algoConfigLoader";
 import { GlassPrimaryButton, StickyFooter } from "@/components/onboarding/OnboardingShell";
 
 const INK = "#101927";
@@ -28,8 +29,9 @@ export function PlanCategoryScreen({
   top3: ToolModule[];
   onContinue: () => void;
 }) {
-  const content = CATEGORY_CONTENT[category];
-  const Icon = ICONS[content.icon];
+  const override = getCategoryContentOverride()[category] ?? {};
+  const content = { ...CATEGORY_CONTENT[category], ...override };
+  const Icon = ICONS[(content.icon as keyof typeof ICONS)] ?? Orbit;
 
   return (
     <div className="flex flex-1 flex-col">
