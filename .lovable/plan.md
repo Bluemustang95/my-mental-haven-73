@@ -1,29 +1,30 @@
-## 1. Inicio — layout tal cual la imagen
+## 1. Inicio — todo más chico
 
-Estructura fija (como en la captura):
+En `src/pages/Dashboard.tsx`:
+- **Zona de descanso** (rectángulo): bajar altura de `h-[150px]` a `h-[110px]`. Ícono en caja 9x9 (era 11x11), label `text-[14px]`. Glyph decorativo detrás más chico (~80).
+- **Bentos cuadrados** (Pack de activación / Mini hábitos / etc.): reemplazar `aspect-square` por altura fija `h-[130px]` para que queden proporcionalmente más chicos y no se estiren con el ancho de columna.
+  - En `PendingBento.tsx`: cambiar `aspect-square` → `h-[130px]`, reducir gap a `gap-2` y padding a `p-3`; ícono en caja 9x9; label `text-[13px]`.
+  - En `WidgetVisual.tsx` (variante `tile` que usa Mini hábitos): mismo cambio — `aspect-square` → `h-[130px]`, padding `p-3.5`, ícono caja 10x10, label `text-[14px]`. Esto afecta solo tiles compactos (Mini hábitos, Gratitud, Notas de contención).
 
+## 2. Mi Proceso — bentos más chicos + reordenar
+
+En `src/components/proceso/TherapyMiniTracker.tsx` y `NextSessionCard.tsx`:
+
+### Nuevo orden (2×2)
 ```
-┌───────────────────────────────┐
-│   Zona de descanso  (rect)    │  ← full-width, alto reducido (no tan grande como ahora)
-└───────────────────────────────┘
 ┌──────────────┐ ┌──────────────┐
-│ Pack activ.  │ │ Mini hábitos │  ← dos cuadrados iguales
+│ Próx. Sesión │ │ Medicación   │
+└──────────────┘ └──────────────┘
+┌──────────────┐ ┌──────────────┐
+│ Resumen Psico│ │ Notas Sesión │
 └──────────────┘ └──────────────┘
 ```
+Cambiar el orden en ambos grids (bloque `contactConfirmed` y bloque normal): `NextSessionCard` → `Medicación` → `Resumen Psico` → `Notas de Sesión`.
 
-Cambios en `src/pages/Dashboard.tsx`:
-- El primer widget (Zona de descanso) sigue siendo `size: "full"` **rectangular**, pero con **altura acotada** (ej. `h-[180px]` o `aspect-[16/9]`) en lugar de expandirse tanto como ahora. Ese es el tamaño "de antes" que pide el usuario.
-- Los siguientes tiles se renderizan en una grilla `grid-cols-2 gap-3` donde cada uno es `aspect-square`. Ahí caen Pack de activación (`PendingBento`) y Mini hábitos (`MiniHabitsWidget`), del mismo tamaño.
-- Case `mini_habits`: quitar el wrapper de "widgets activos" y renderizar `<MiniHabitsWidget />` como tile plano cuadrado (sin header ni borde extra).
-- `PendingBento` ya está en `aspect-square` — mantener.
-
-## 2. Quitar "Enfoque prioritario" duplicado en modo edición
-
-En `Dashboard.tsx` `PriorityStack` se renderiza dos veces:
-- Línea ~373: `<PriorityStack cards={priorityCards} />` (siempre visible)
-- Línea ~405: dentro de `EditSlots` como prop `priority={<PriorityStack …/>}`
-
-Fix: dejar solo el render externo (siempre visible, arriba). Eliminar la prop `priority` que se pasa a `EditSlots` y su render interno, para que en modo edición no aparezca dos veces.
+### Tamaño
+- `MiniBento`: quitar `aspect-square`, poner `h-[120px]`, `gap-2`, `p-3`, ícono `size={26}`, label `text-[13px]`.
+- `NextSessionCard`: mismo tratamiento — `h-[120px]`, `gap-2`, `p-3`, ícono `size={26}`, label `text-[13px]`.
+- Grid: `gap-2.5` está bien.
 
 ## Alcance
-Solo `src/pages/Dashboard.tsx` (y ajuste menor en `EditSlots.tsx` si la prop `priority` era requerida — hacerla opcional / omitirla).
+Solo presentación. Archivos: `src/pages/Dashboard.tsx`, `src/components/home/PendingBento.tsx`, `src/components/home/WidgetVisual.tsx`, `src/components/proceso/TherapyMiniTracker.tsx`, `src/components/proceso/NextSessionCard.tsx`.

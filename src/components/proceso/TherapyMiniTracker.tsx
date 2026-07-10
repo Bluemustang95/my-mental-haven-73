@@ -162,9 +162,9 @@ export function TherapyMiniTracker({
       {/* Acceso a herramientas siempre disponible cuando el toggle está activo */}
       <div className="grid grid-cols-2 gap-2.5 pt-1">
         <NextSessionCard />
-        <MiniBento icon={<FileText size={32} strokeWidth={2} className="text-[#101927]" />} bg="#facb60" textColor="#101927" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
-        <MiniBento icon={<NotebookPen size={32} strokeWidth={2} className="text-white" />} bg="#7c3aed" textColor="#ffffff" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
-        <MiniBento icon={<Pill size={32} strokeWidth={2} className="text-[#7cc2c8]" />} bg="#101927" textColor="#ffffff" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
+        <MiniBento icon={<Pill size={26} strokeWidth={2} className="text-[#7cc2c8]" />} bg="#101927" textColor="#ffffff" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
+        <MiniBento icon={<FileText size={26} strokeWidth={2} className="text-[#101927]" />} bg="#facb60" textColor="#101927" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
+        <MiniBento icon={<NotebookPen size={26} strokeWidth={2} className="text-white" />} bg="#7c3aed" textColor="#ffffff" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
       </div>
 
 
@@ -254,9 +254,9 @@ function FullProfessionalCard({
 
       <div className="grid grid-cols-2 gap-2.5">
         <NextSessionCard />
-        <MiniBento icon={<FileText size={32} strokeWidth={2} className="text-[#101927]" />} bg="#facb60" textColor="#101927" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
-        <MiniBento icon={<NotebookPen size={32} strokeWidth={2} className="text-white" />} bg="#7c3aed" textColor="#ffffff" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
-        <MiniBento icon={<Pill size={32} strokeWidth={2} className="text-[#7cc2c8]" />} bg="#101927" textColor="#ffffff" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
+        <MiniBento icon={<Pill size={26} strokeWidth={2} className="text-[#7cc2c8]" />} bg="#101927" textColor="#ffffff" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
+        <MiniBento icon={<FileText size={26} strokeWidth={2} className="text-[#101927]" />} bg="#facb60" textColor="#101927" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
+        <MiniBento icon={<NotebookPen size={26} strokeWidth={2} className="text-white" />} bg="#7c3aed" textColor="#ffffff" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
       </div>
     </div>
   );
@@ -267,11 +267,11 @@ function MiniBento({ icon, bg, textColor, title, onClick }: any) {
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="flex aspect-square flex-col items-center justify-center gap-3 rounded-[22px] p-4 text-center"
+      className="flex h-[120px] flex-col items-center justify-center gap-2 rounded-[22px] p-3 text-center"
       style={{ background: bg }}
     >
       {icon}
-      <p className="font-display text-[14px] font-bold leading-tight" style={{ color: textColor }}>{title}</p>
+      <p className="font-display text-[13px] font-bold leading-tight" style={{ color: textColor }}>{title}</p>
     </motion.button>
   );
 }

@@ -320,7 +320,7 @@ export function WidgetShell({
     return (
       <Tag
         onClick={onClick}
-        className="relative flex aspect-square w-full flex-col justify-between overflow-hidden rounded-[24px] p-4 text-left transition active:scale-[0.985]"
+        className="relative flex h-[130px] w-full flex-col justify-between overflow-hidden rounded-[22px] p-3.5 text-left transition active:scale-[0.985]"
         style={{
           background: isDark
             ? `linear-gradient(160deg, ${ident.from} 0%, ${ident.to} 90%)`
@@ -328,13 +328,13 @@ export function WidgetShell({
           color: ident.ink,
         }}
       >
-        <div className="pointer-events-none absolute -right-6 -top-8 opacity-25" style={{ color: ident.ink }}>
-          <WidgetGlyph glyph={ident.glyph} color={ident.ink} size={120} />
+        <div className="pointer-events-none absolute -right-5 -top-6 opacity-25" style={{ color: ident.ink }}>
+          <WidgetGlyph glyph={ident.glyph} color={ident.ink} size={90} />
         </div>
-        <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm" style={{ color: ident.ink }}>
-          <WidgetGlyph glyph={ident.glyph} color={ident.ink} size={22} />
+        <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/25 backdrop-blur-sm" style={{ color: ident.ink }}>
+          <WidgetGlyph glyph={ident.glyph} color={ident.ink} size={18} />
         </div>
-        <p className="relative font-display text-[15px] font-bold leading-tight" style={{ color: ident.ink }}>
+        <p className="relative font-display text-[14px] font-bold leading-tight" style={{ color: ident.ink }}>
           {ident.label}
         </p>
       </Tag>

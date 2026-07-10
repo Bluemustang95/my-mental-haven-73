@@ -560,22 +560,22 @@ function SleepZoneCard({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="relative flex h-[150px] w-full items-center justify-between overflow-hidden rounded-[24px] px-5 text-left transition active:scale-[0.985]"
+      className="relative flex h-[110px] w-full items-center justify-between overflow-hidden rounded-[22px] px-4 text-left transition active:scale-[0.985]"
       style={{
         background: "linear-gradient(160deg, #6d5bd0 0%, #241c5a 100%)",
         color: "#ffffff",
       }}
     >
-      <div className="relative z-10 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm">
-          <MoonIcon size={22} className="text-white" />
+      <div className="relative z-10 flex items-center gap-2.5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/25 backdrop-blur-sm">
+          <MoonIcon size={18} className="text-white" />
         </div>
-        <p className="font-display text-[16px] font-bold leading-tight text-white">
+        <p className="font-display text-[14px] font-bold leading-tight text-white">
           Zona de descanso
         </p>
       </div>
-      <div className="pointer-events-none absolute -right-4 -top-4 opacity-30">
-        <MoonIcon size={110} className="text-white" strokeWidth={1.2} />
+      <div className="pointer-events-none absolute -right-3 -top-3 opacity-30">
+        <MoonIcon size={80} className="text-white" strokeWidth={1.2} />
       </div>
     </button>
   );
