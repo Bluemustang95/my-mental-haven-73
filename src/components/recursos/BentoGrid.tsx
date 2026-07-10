@@ -1,9 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Wind, Sparkles, Lock, Brain, ShieldCheck, type LucideIcon } from "lucide-react";
+import { Zap, Wind, Sparkles, Brain, ShieldCheck, ClipboardList, User, type LucideIcon } from "lucide-react";
 import { readLocalProfile } from "@/lib/clinicalAlgorithm";
-import { usePlan } from "@/hooks/usePlan";
-import { PaywallModal } from "@/components/modals/PaywallModal";
 
 type Tile = {
   slug: string;
@@ -11,15 +9,16 @@ type Tile = {
   desc: string;
   Icon: LucideIcon;
   tint: "primary" | "accent";
+  target: string;
 };
 
-type TileWithTarget = Tile & { target: string };
-
-const tiles: TileWithTarget[] = [
+const tiles: Tile[] = [
   { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary", target: "/herramientas/mindfulness" },
   { slug: "mente-emocion", name: "Mente & Emoción", desc: "CBT + Regulación DBT.", Icon: Brain, tint: "accent", target: "/herramientas/mente-emocion" },
   { slug: "habitos", name: "Hábitos", desc: "Habit Tracker.", Icon: Zap, tint: "primary", target: "/diario-inteligente/gestion-pensamientos/habitos" },
   { slug: "pack", name: "Pack Actividades", desc: "Programas guiados.", Icon: Sparkles, tint: "accent", target: "/herramientas/pack" },
+  { slug: "inventarios", name: "Tests e inventarios", desc: "BDI, BAI, PHQ-9, GAD-7 y más.", Icon: ClipboardList, tint: "primary", target: "/herramientas/inventarios" },
+  { slug: "personalidad", name: "Personalidad", desc: "Tu perfil Big Five.", Icon: User, tint: "accent", target: "/herramientas/personalidad" },
 ];
 
 const tintBg: Record<Tile["tint"], string> = {
@@ -31,17 +30,6 @@ export function BentoGrid() {
   const navigate = useNavigate();
   const profile = useMemo(() => readLocalProfile(), []);
   const priority = profile?.priority;
-  const { plan } = usePlan();
-  const isPremium = plan === "premium";
-  const [paywall, setPaywall] = useState<{ open: boolean; name?: string }>({ open: false });
-
-  const open = (slug: string, name: string, target: string) => {
-    if (!isPremium) {
-      setPaywall({ open: true, name });
-      return;
-    }
-    navigate(target);
-  };
 
   const orderedTiles = useMemo(() => {
     if (!priority) return tiles;
@@ -55,11 +43,10 @@ export function BentoGrid() {
       <div className="grid grid-cols-2 gap-3">
         {orderedTiles.map((t) => {
           const isPriority = t.slug === priority;
-          const locked = !isPremium;
           return (
             <button
               key={t.slug}
-              onClick={() => open(t.slug, t.name, t.target)}
+              onClick={() => navigate(t.target)}
               className="pressable glass-premium relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl p-4 text-left transition"
               style={isPriority ? { borderColor: "rgba(124,194,200,0.55)", boxShadow: "0 18px 36px -14px rgba(124,194,200,0.45), inset 0 1px 0 rgba(255,255,255,0.7)" } : undefined}
             >
@@ -67,11 +54,6 @@ export function BentoGrid() {
               {isPriority && (
                 <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#7cc2c8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
                   <Sparkles size={9} /> Tu foco
-                </span>
-              )}
-              {locked && !isPriority && (
-                <span className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-foreground/85 text-white">
-                  <Lock size={11} strokeWidth={2.6} />
                 </span>
               )}
               <div className={`relative flex h-11 w-11 items-center justify-center rounded-2xl ${tintBg[t.tint]}`}>
@@ -85,7 +67,6 @@ export function BentoGrid() {
           );
         })}
       </div>
-
 
       <button
         onClick={() => navigate("/herramientas/plan-seguridad")}
@@ -102,12 +83,6 @@ export function BentoGrid() {
         </div>
         <span className="text-[18px] text-[#c0392b]">→</span>
       </button>
-
-      <PaywallModal
-        open={paywall.open}
-        featureName={paywall.name}
-        onClose={() => setPaywall({ open: false })}
-      />
     </div>
   );
 }

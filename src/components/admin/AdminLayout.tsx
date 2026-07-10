@@ -20,6 +20,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { title: "Dashboard Global", url: "/admin/dashboard", icon: LayoutDashboard },
       { title: "General", url: "/admin/general", icon: Settings2 },
+      { title: "Estadísticas", url: "/admin/estadisticas-bienestar", icon: TrendingUp },
     ],
   },
 

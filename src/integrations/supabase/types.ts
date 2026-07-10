@@ -3138,6 +3138,7 @@ export type Database = {
             Returns: undefined
           }
       admin_stats_overview: { Args: never; Returns: Json }
+      admin_wellbeing_stats: { Args: { _user_id?: string }; Returns: Json }
       get_daily_quote: {
         Args: never
         Returns: {

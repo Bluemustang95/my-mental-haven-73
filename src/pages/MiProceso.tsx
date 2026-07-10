@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Sparkles,
-} from "lucide-react";
-import { usePlan } from "@/hooks/usePlan";
-import { PaywallModal } from "@/components/modals/PaywallModal";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
@@ -13,16 +8,8 @@ import { TherapySyncModal } from "@/components/modals/TherapySyncModal";
 import { TherapyMiniTracker } from "@/components/proceso/TherapyMiniTracker";
 import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
 import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
-import { PremiumLock } from "@/components/PremiumLock";
 import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
 import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
-import { PsychometryCarousel } from "@/components/proceso/PsychometryCarousel";
-import { BigFiveCard } from "@/components/proceso/BigFiveCard";
-import { BigFiveProfileModal } from "@/components/proceso/BigFiveProfileModal";
-
-import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
-import { TestRunner } from "@/components/tests/TestRunner";
-import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
@@ -35,7 +22,7 @@ export default function MiProceso() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { isPremium, realPlan } = usePlan();
+  // app gratis: sin plan gating
   const [inTherapy, setInTherapy] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [linkedLastName, setLinkedLastName] = useState<string | null>(null);
@@ -46,16 +33,12 @@ export default function MiProceso() {
   const [overrideCountry, setOverrideCountry] = useState<string | null>(getCountryOverride());
   const { isAdmin } = useAdminRole();
   const country = isAdmin && overrideCountry ? overrideCountry : realCountry;
-  const [paywallOpen, setPaywallOpen] = useState(false);
+  
 
   const [surveyOpen, setSurveyOpen] = useState(false);
   const { shouldShow: surveyAvailable, dismiss: dismissSurvey, recheck: recheckSurvey } = useSatisfactionSurveyTrigger();
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [bigFiveOpen, setBigFiveOpen] = useState(false);
-  
-  const [genericTest, setGenericTest] = useState<null | "symptom">(null);
-  const [directTestCode, setDirectTestCode] = useState<string | null>(null);
 
   const [snap, setSnap] = useState<WellbeingSnapshot | null>(null);
 
@@ -110,9 +93,6 @@ export default function MiProceso() {
     setBridgeLastState("searching");
   };
 
-  const handleSelectTest = (code: "BDI" | "BAI" | "PSWQ") => {
-    setDirectTestCode(code);
-  };
 
 
   return (
@@ -131,26 +111,15 @@ export default function MiProceso() {
           </div>
         )}
 
-        <PremiumLock featureName="Estadísticas de impacto" variant="section">
-          <div className="mt-3">
-            <WellbeingCardV2
-              score={snap?.score ?? 0}
-              delta={snap?.delta ?? 0}
-              message={snap?.message ?? "Cargando tu evolución…"}
-              trend={snap?.trend ?? [0,0,0,0,0,0,0]}
-              onOpen={() => setSheetOpen(true)}
-            />
-          </div>
-
-          <div className="mt-5">
-            <PsychometryCarousel onSelect={handleSelectTest} />
-          </div>
-
-          <div className="mt-5">
-            <BigFiveCard onOpen={() => setBigFiveOpen(true)} />
-          </div>
-
-        </PremiumLock>
+        <div className="mt-3">
+          <WellbeingCardV2
+            score={snap?.score ?? 0}
+            delta={snap?.delta ?? 0}
+            message={snap?.message ?? "Cargando tu evolución…"}
+            trend={snap?.trend ?? [0,0,0,0,0,0,0]}
+            onOpen={() => setSheetOpen(true)}
+          />
+        </div>
 
         <div className="my-6 h-px bg-black/[0.06]" />
 
@@ -214,11 +183,6 @@ export default function MiProceso() {
 
 
       <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} snapshot={snap} />
-      <BigFiveProfileModal open={bigFiveOpen} onClose={() => setBigFiveOpen(false)} />
-      
-      <SymptomsTestModal open={!!genericTest} kind={genericTest ?? "symptom"} onClose={() => setGenericTest(null)} />
-      {directTestCode && <TestRunner testCode={directTestCode} onClose={() => setDirectTestCode(null)} />}
-      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} featureName="Premium" />
       <TherapySyncModal open={syncOpen} onClose={() => setSyncOpen(false)} onSynced={handleSynced} />
       <SatisfactionSurveySheet
         open={surveyOpen}
@@ -227,25 +191,5 @@ export default function MiProceso() {
         onDismiss={() => { dismissSurvey(); }}
       />
     </div>
-  );
-}
-
-function BentoCard({
-  icon, iconBg, title, sub, onClick,
-}: {
-  icon: React.ReactNode; iconBg: string; title: string; sub: string; onClick: () => void;
-}) {
-  return (
-    <motion.button
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="flex flex-col items-start gap-2 rounded-[18px] border border-white/70 bg-white/80 p-3 text-left shadow-[0_6px_20px_-16px_rgba(16,25,39,0.22)] backdrop-blur-xl"
-    >
-      <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${iconBg}`}>{icon}</div>
-      <div>
-        <p className="font-display text-[12.5px] font-bold leading-tight text-[#0f172a]">{title}</p>
-        <p className="mt-0.5 text-[10.5px] leading-snug text-[#64748b]">{sub}</p>
-      </div>
-    </motion.button>
   );
 }
