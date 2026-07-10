@@ -303,15 +303,44 @@ export function WidgetShell({
   children,
   compact,
   onClick,
+  tile,
 }: {
   id: WidgetId;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   compact?: boolean;
   onClick?: () => void;
+  /** Minimal tile: only the glyph + label. */
+  tile?: boolean;
 }) {
   const ident = WIDGET_IDENTITY[id];
   const isDark = ident.ink === "#ffffff";
   const Tag = onClick ? "button" : "div";
+
+  if (tile) {
+    return (
+      <Tag
+        onClick={onClick}
+        className="relative flex aspect-square w-full flex-col justify-between overflow-hidden rounded-[24px] p-4 text-left transition active:scale-[0.985]"
+        style={{
+          background: isDark
+            ? `linear-gradient(160deg, ${ident.from} 0%, ${ident.to} 90%)`
+            : `linear-gradient(160deg, ${ident.from}f2 0%, ${ident.to}e6 100%)`,
+          color: ident.ink,
+        }}
+      >
+        <div className="pointer-events-none absolute -right-6 -top-8 opacity-25" style={{ color: ident.ink }}>
+          <WidgetGlyph glyph={ident.glyph} color={ident.ink} size={120} />
+        </div>
+        <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm" style={{ color: ident.ink }}>
+          <WidgetGlyph glyph={ident.glyph} color={ident.ink} size={22} />
+        </div>
+        <p className="relative font-display text-[15px] font-bold leading-tight" style={{ color: ident.ink }}>
+          {ident.label}
+        </p>
+      </Tag>
+    );
+  }
+
   return (
     <Tag
       onClick={onClick}
@@ -333,16 +362,9 @@ export function WidgetShell({
         >
           <WidgetGlyph glyph={ident.glyph} color={ident.ink} size={100} />
         </div>
-        <div className="relative">
-          <p
-            className="text-[10px] font-bold uppercase tracking-[0.18em]"
-            style={{ color: ident.ink, opacity: 0.7 }}
-          >
-            {ident.tagline}
-          </p>
-          {children}
-        </div>
+        <div className="relative">{children}</div>
       </div>
     </Tag>
   );
 }
+
