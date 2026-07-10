@@ -1,4 +1,4 @@
-mport { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
