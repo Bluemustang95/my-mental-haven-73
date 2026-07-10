@@ -6,6 +6,7 @@ import { GoogleLogo } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 import {
   OnboardingShell,
