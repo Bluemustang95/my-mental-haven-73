@@ -741,6 +741,8 @@ export type Database = {
           dawn_score: string | null
           day_goal: string | null
           dream_note: string | null
+          emotion_shift_note: string | null
+          emotion_shift_summary: Json | null
           emotions: string[] | null
           goal_completed: string | null
           id: string
@@ -759,6 +761,8 @@ export type Database = {
           dawn_score?: string | null
           day_goal?: string | null
           dream_note?: string | null
+          emotion_shift_note?: string | null
+          emotion_shift_summary?: Json | null
           emotions?: string[] | null
           goal_completed?: string | null
           id?: string
@@ -777,6 +781,8 @@ export type Database = {
           dawn_score?: string | null
           day_goal?: string | null
           dream_note?: string | null
+          emotion_shift_note?: string | null
+          emotion_shift_summary?: Json | null
           emotions?: string[] | null
           goal_completed?: string | null
           id?: string
