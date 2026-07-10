@@ -334,7 +334,7 @@ export default function Dashboard() {
         {widgets.editMode ? (() => {
           /* Every visible widget is independently draggable + resizable. */
           const persistedOrder = loadGroupOrder();
-          const ordered = [...visibleOrdered].sort((a, b) => {
+          const ordered = [...gridWidgets].sort((a, b) => {
             const ia = persistedOrder.indexOf(a.id);
             const ib = persistedOrder.indexOf(b.id);
             return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
