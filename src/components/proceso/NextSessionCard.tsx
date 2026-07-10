@@ -31,12 +31,11 @@ export function NextSessionCard() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex aspect-square w-full flex-col items-start justify-between rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-sm transition active:scale-95"
+        className="flex aspect-square w-full flex-col items-center justify-center gap-3 rounded-[22px] p-4 text-center transition active:scale-95"
+        style={{ background: "#7cc2c8" }}
       >
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
-          <Calendar size={20} />
-        </div>
-        <p className="font-display text-[15px] font-bold leading-tight text-[#0f172a]">
+        <Calendar size={32} strokeWidth={2} className="text-white" />
+        <p className="font-display text-[14px] font-bold leading-tight text-white">
           Próxima Sesión
         </p>
       </button>
