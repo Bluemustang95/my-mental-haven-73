@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { loadAlgoConfig } from "@/lib/algoConfigLoader";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
 import { GoogleLogo } from "@phosphor-icons/react";
@@ -177,6 +178,11 @@ export default function Onboarding() {
   );
 
   // If user is already authed when they reach onboarding, just save & go home
+  // Preload admin overrides so calculatePlan uses live weights
+  useEffect(() => {
+    loadAlgoConfig().catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (loading) return;
     if (!user) return;
