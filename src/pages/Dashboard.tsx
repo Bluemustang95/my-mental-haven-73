@@ -19,6 +19,8 @@ import {
   ReorderableGroupStack,
   WidgetId,
   type GroupItem,
+  PRIORITY_IDS,
+  TOOL_IDS,
 } from "@/components/home/WidgetsBoard";
 import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
 import { DailyQuoteWidget } from "@/components/home/DailyQuoteWidget";
@@ -103,6 +105,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadToday();
+    // Recargar al volver a la pestaña / regresar de un ritual
+    const refresh = () => loadToday();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [loadToday]);
 
   // Determine position within the "camino" sequence (morning → recommended → night)
@@ -184,11 +194,14 @@ export default function Dashboard() {
     }
   };
 
-  const PRIORITY_IDS: WidgetId[] = ["morning", "recommended", "night"];
-  const visibleOrdered = widgets.widgets.filter((w) => w.enabled && !w.hidden);
+  const PRIORITY_ID_SET = new Set<WidgetId>(PRIORITY_IDS);
+  // Herramientas: prioridades siempre fuera. Máximo 3 activas.
+  const toolWidgets = widgets.widgets
+    .filter((w) => TOOL_IDS.includes(w.id as WidgetId) && w.enabled && !w.hidden)
+    .slice(0, 3);
   const gridWidgets = widgets.editMode
-    ? visibleOrdered
-    : visibleOrdered.filter((w) => !PRIORITY_IDS.includes(w.id as WidgetId));
+    ? widgets.widgets.filter((w) => !PRIORITY_ID_SET.has(w.id as WidgetId) && w.enabled && !w.hidden)
+    : toolWidgets;
 
   const priorityCards: PriorityCard[] = [
     {
