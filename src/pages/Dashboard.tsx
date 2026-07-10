@@ -30,9 +30,15 @@ import { PullToRefresh } from "@/components/home/PullToRefresh";
 import { HomeSkeleton } from "@/components/home/HomeSkeleton";
 import { PriorityStack, type PriorityCard } from "@/components/home/PriorityStack";
 import ThoughtTaskWidget from "@/components/pensamientos/ThoughtTaskWidget";
-import { WidgetShell } from "@/components/home/WidgetVisual";
 import { EditSlots } from "@/components/home/EditSlots";
-import { QuickToolWidget } from "@/components/home/QuickToolWidget";
+import {
+  PensamientosQuickWidget,
+  PsicoQuickWidget,
+  PackQuickWidget,
+  MindfulnessQuickWidget,
+  DiarioQuickWidget,
+  SleepZoneWidget,
+} from "@/components/home/QuickToolWidget";
 import { TOOL_META, type ToolModule } from "@/lib/onboardingAlgorithm";
 
 const GROUP_ORDER_KEY = "home_groups_order_v2";
@@ -179,7 +185,7 @@ export default function Dashboard() {
         );
       }
       case "sleep_zone":
-        return <SleepZoneCard onClick={() => navigate("/herramientas/sueno")} />;
+        return <SleepZoneWidget />;
       case "pending":
         return <PendingBento />;
       case "mini_habits":
@@ -193,28 +199,15 @@ export default function Dashboard() {
       case "psy_news":
         return <PsyNewsWidget />;
       case "mindfulness_quick":
+        return <MindfulnessQuickWidget />;
       case "pensamientos_quick":
+        return <PensamientosQuickWidget />;
       case "pack_quick":
+        return <PackQuickWidget />;
       case "diario_quick":
-      case "psico_quick": {
-        const map: Record<string, ToolModule> = {
-          mindfulness_quick: "mindfulness",
-          pensamientos_quick: "pensamientos",
-          pack_quick: "pack_actividades",
-          diario_quick: "diario",
-          psico_quick: "psicoeducacion",
-        };
-        const mod = map[id];
-        const meta = TOOL_META[mod];
-        return (
-          <QuickToolWidget
-            id={id}
-            title={meta.short}
-            subtitle={meta.label}
-            route={meta.route}
-          />
-        );
-      }
+        return <DiarioQuickWidget />;
+      case "psico_quick":
+        return <PsicoQuickWidget />;
       default:
         return null;
     }
@@ -373,30 +366,8 @@ export default function Dashboard() {
         <PriorityStack cards={priorityCards} />
 
 
-        {/* Tus herramientas + manage */}
-        <div className="mt-6 mb-2 flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Tus herramientas
-            </p>
-            {(() => {
-              // streak = consecutive days with any checkin
-              let s = 0;
-              const d = new Date();
-              for (let i = 0; i < 60; i++) {
-                const ds = localDateStr(d);
-                if ((weekProgress[ds] ?? 0) > 0) { s++; d.setDate(d.getDate() - 1); }
-                else if (s === 0 && i === 0) { d.setDate(d.getDate() - 1); }
-                else break;
-              }
-              if (s < 2) return null;
-              return (
-                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
-                  🔥 {s} días
-                </span>
-              );
-            })()}
-          </div>
+        {/* Herramientas — sin título, solo botón de gestión discreto */}
+        <div className="mt-5 mb-2 flex items-center justify-end px-1">
           <ManageWidgetsButton widgets={widgets.widgets} onToggle={widgets.toggleEnabled} />
         </div>
 
