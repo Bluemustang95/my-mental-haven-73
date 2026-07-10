@@ -44,7 +44,16 @@ const VALORES = [
   { id: "gratitud",     label: "Gratitud",     hint: "Reconocer lo que hay" },
 ];
 
+// Paleta por slot — cada hoja se pinta distinto al elegirse
+const SLOT_COLORS = [
+  { grad: "linear-gradient(135deg, #a9dcc4 0%, #5dbf9a 100%)", border: "#3f9c78", chip: "#3f9c78" }, // esmeralda
+  { grad: "linear-gradient(135deg, #ffd58a 0%, #f2a65a 100%)", border: "#c9803a", chip: "#c9803a" }, // ámbar
+  { grad: "linear-gradient(135deg, #c9a6ff 0%, #8a6ee0 100%)", border: "#6d4fbf", chip: "#6d4fbf" }, // lavanda
+  { grad: "linear-gradient(135deg, #ffb0b0 0%, #f28b82 100%)", border: "#d15a52", chip: "#d15a52" }, // coral
+];
+
 const MAX_VALUES = 4;
+const MAX_GOALS = 3;
 
 // ---------- Helpers ----------
 function sleepStateFromValue(v: number) {
@@ -70,7 +79,7 @@ export default function SintoniaManana() {
   // Paso 3
   const [values, setValues] = useState<string[]>([]);
   const [pickerSlot, setPickerSlot] = useState<number | null>(null);
-  const [goalText, setGoalText] = useState("");
+  const [goals, setGoals] = useState<string[]>([""]);
   const [improveFromYesterday, setImproveFromYesterday] = useState<string | null>(null);
 
   useEffect(() => {

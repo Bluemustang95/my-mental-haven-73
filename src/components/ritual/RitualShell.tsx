@@ -71,7 +71,7 @@ export function RitualShell({
 
       {/* Body scrollable */}
       <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar smooth-scroll">
-        <div className="mx-auto max-w-md px-5 pb-40 pt-2">
+        <div className="mx-auto max-w-md px-5 pb-56 pt-2">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
