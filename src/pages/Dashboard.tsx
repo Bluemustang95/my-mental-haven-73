@@ -32,6 +32,8 @@ import { PriorityStack, type PriorityCard } from "@/components/home/PriorityStac
 import ThoughtTaskWidget from "@/components/pensamientos/ThoughtTaskWidget";
 import { WidgetShell } from "@/components/home/WidgetVisual";
 import { EditSlots } from "@/components/home/EditSlots";
+import { QuickToolWidget } from "@/components/home/QuickToolWidget";
+import { TOOL_META, type ToolModule } from "@/lib/onboardingAlgorithm";
 
 const GROUP_ORDER_KEY = "home_groups_order_v2";
 function loadGroupOrder(): string[] {
@@ -52,6 +54,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [name, setName] = useState("");
+  const [priorityModule, setPriorityModule] = useState<ToolModule | null>(null);
   const today = new Date();
   const todayStr = localDateStr(today);
   const greeting = useMemo(getGreeting, []);
@@ -73,12 +76,14 @@ export default function Dashboard() {
     if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("display_name")
+      .select("display_name, priority_module")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         const n = data?.display_name || user.user_metadata?.display_name || user.email?.split("@")[0] || "";
         setName(n.split(" ")[0]);
+        const pm = (data as any)?.priority_module as string | null;
+        if (pm && pm in TOOL_META) setPriorityModule(pm as ToolModule);
       });
   }, [user]);
 
