@@ -254,23 +254,24 @@ function FullProfessionalCard({
 
       <div className="grid grid-cols-2 gap-2.5">
         <NextSessionCard />
-        <MiniBento icon={<FileText size={20} className="text-[#b45309]" />} iconBg="bg-[#facb60]/20" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
-        <MiniBento icon={<NotebookPen size={20} className="text-[#7c3aed]" />} iconBg="bg-[#7c3aed]/12" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
-        <MiniBento icon={<Pill size={20} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
+        <MiniBento icon={<FileText size={32} strokeWidth={2} className="text-[#101927]" />} bg="#facb60" textColor="#101927" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
+        <MiniBento icon={<NotebookPen size={32} strokeWidth={2} className="text-white" />} bg="#7c3aed" textColor="#ffffff" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
+        <MiniBento icon={<Pill size={32} strokeWidth={2} className="text-[#7cc2c8]" />} bg="#101927" textColor="#ffffff" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
       </div>
     </div>
   );
 }
 
-function MiniBento({ icon, iconBg, title, onClick }: any) {
+function MiniBento({ icon, bg, textColor, title, onClick }: any) {
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="flex aspect-square flex-col items-start justify-between rounded-[18px] border border-white/70 bg-white/80 p-4 text-left shadow-[0_6px_20px_-16px_rgba(16,25,39,0.22)] backdrop-blur-xl"
+      className="flex aspect-square flex-col items-center justify-center gap-3 rounded-[22px] p-4 text-center"
+      style={{ background: bg }}
     >
-      <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${iconBg}`}>{icon}</div>
-      <p className="font-display text-[13.5px] font-bold leading-tight text-[#0f172a]">{title}</p>
+      {icon}
+      <p className="font-display text-[14px] font-bold leading-tight" style={{ color: textColor }}>{title}</p>
     </motion.button>
   );
 }
