@@ -218,6 +218,20 @@ export default function SintoniaManana() {
           title="¿Cómo despertaste?"
           sub="Deslizá para sintonizar tu descanso"
         >
+          {shiftFromYesterday && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-5 rounded-2xl border border-indigo-200/60 bg-indigo-50/70 p-3.5 backdrop-blur"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-700/80">
+                Ayer notaste este cambio
+              </p>
+              <p className="mt-1 text-[13px] italic leading-snug text-resma-navy/85">
+                "{shiftFromYesterday}"
+              </p>
+            </motion.div>
+          )}
           <div className="mt-8 flex items-center justify-center">
             <SleepOrb value={sleep} state={sleepState} />
           </div>
