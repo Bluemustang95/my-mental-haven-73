@@ -1,80 +1,49 @@
-## Recap del algoritmo actual de Índice de Bienestar (`src/lib/wellbeingScore.ts`)
+# Limpieza estética global
 
-Score 0–100 = promedio de los **componentes disponibles** (los null se ignoran para no castigar):
+Objetivo: reducir ruido visual. Todos los bentos quedan con **ícono + nombre** (y máximo un dato clave cuando aporta). Sin descripciones largas, sin CTAs redundantes, sin banners explicativos.
 
-- **mood** — promedio `mood_score` de `daily_checkins` últimos 7 días.
-- **sleep** — promedio `sleep_score` de `daily_checkins` últimos 7 días.
-- **habits** — % días con al menos 1 completación en `habit_completions`.
-- **tests** — último resultado por test clínico (excluye Big Five), severidad invertida.
-- **engagement** — `thought_records` + `dbt_emotion_sessions` + `journal_entries` últimos 7d, mapeado 0/40/70/100.
-- **delta** — variación % de mood 7d vs 7d anteriores. **trend** — 7 puntos diarios de mood.
+## 1) Home — Enfoque prioritario (carrusel)
+Archivo: `src/components/home/PriorityFocusCarousel.tsx` (y card interna).
+- Quitar descripción larga ("Arrancá tu día regulando…").
+- Quitar chip "Paso obligatorio".
+- Quitar botón "CULTIVAR MI DÍA →" — toda la card es tappable.
+- Mantener: chip de categoría ("PRIORIDAD MAÑANA"), título grande ("Sintonía de la mañana"), ilustración/glow de fondo.
+- Altura de card se reduce proporcionalmente.
 
-Lo que **no** entraba hoy: mindfulness/respiración, medicación, pack, objetivos semanales, reflexiones de valores. Los hábitos ya se cuentan por **completación**, no por creación (si armás pero no marcás → habits=null, no penaliza). Lo mismo con CBT/DBT: solo cuenta sesiones cerradas.
+## 2) Home — Tus herramientas / Pendientes / Widgets
+Archivos: `src/components/home/PendingForYouGrid.tsx`, `WidgetsActiveGrid.tsx` (o similares en `src/components/home/`).
+- Quitar los headers "PENDIENTES PARA VOS" y "TUS WIDGETS · GESTIONAR · ACTIVOS".
+- Todas las tiles del bento pasan a formato uniforme: **ícono arriba + nombre debajo**. Sin subtítulos ("Día 2 en curso", "Respiración 4-7-8 · 3 min", "Ruidos protocolo…", etc.).
+- Mantener color/gradiente de fondo por tile (identidad visual).
+- Header único de sección: "TUS HERRAMIENTAS" con el "+" ya existente.
 
-**Cambios al algoritmo (esta iteración)** — ampliar engagement + agregar medicación:
+## 3) Mi Proceso — Índice de bienestar
+Archivo: `src/components/proceso/WellbeingCardV2.tsx`.
+- Quitar mensaje ("Días difíciles. Bajá la exigencia…").
+- Quitar sparkline.
+- Quitar chevron "Ver mi análisis" (la card entera sigue abriendo el sheet).
+- Mantener: label "ÍNDICE DE BIENESTAR", número grande "56/100", chip de delta en verde/rojo ("-12%" / "+X%").
+- Resultado: card compacta, sólo número + porcentaje.
 
-- **engagement** ahora suma: `thought_records` + `dbt_emotion_sessions` + `journal_entries` + `exercise_sessions` (mindfulness/respiración) + `weekly_reflections` + completaciones de días del Pack (`ba_day_logs`). Escala: 0→null, 1→35, 3→60, 6→80, 10+→100.
-- **medication** (nuevo componente opcional) — `taken / total` de `medication_logs` últimos 7 días. Solo aporta si el usuario registra medicación.
-- **Ponderación** (sobre los componentes presentes, se renormaliza): mood 25 · sleep 20 · habits 15 · engagement 15 · tests 15 · medication 10. Componentes null se descartan y los pesos se reescalan.
-- El texto del `?` explica todo esto en criollo.
+## 4) Mi Proceso — Terapia y sincronización
+Archivo: `src/components/proceso/TherapyMiniTracker.tsx` (stepper Buscando/Asignado).
+- Quitar la línea explicativa "Estamos buscando un profesional ideal para vos. Te avisamos apenas se asigne."
+- Agregar botón "?" pequeño junto al título "TERAPIA Y SINCRONIZACIÓN" que abre popover con la leyenda de estados (Buscando → Asignando → Asignado → En espera → …). Reutilizar patrón de `WellbeingHelpPopover.tsx`.
+
+## 5) Mi Proceso — Bentos Próxima Sesión / Resumen Psico / Notas / Medicación
+Archivos: `src/pages/MiProceso.tsx` y componentes de cada card.
+- Formato uniforme cuadrado: **ícono + nombre**. Sin subtítulos ("Tocá para agendar tu encuentro.", "Reportes y hábitos.", "Temas y dudas.", "Próxima toma: Al día") ni acciones inline ("Agendar / Editar").
+- La acción principal se dispara al tocar la card.
+
+## 6) Tests e inventarios — recuperar estilo previo
+Archivo: `src/pages/InventariosHub.tsx`.
+- Reemplazar tiles cuadradas grandes con gradiente por el **estilo carrusel/lista horizontal** que usaba `PsychometryCarousel` (cards angostas con nombre + subtítulo corto + fecha "Último: …", diseño limpio sobre fondo claro).
+- Mantener el header sticky y `TestRunner` al tocar.
+- Referencia visual: `src/components/proceso/PsychometryCarousel.tsx` (recuperar su look & feel).
 
 ---
 
-## Fase 1 — Recursos: sumar bentos Tests / Personalidad
-
-**`src/components/recursos/BentoGrid.tsx`** — sacar el gating premium (la app ahora es gratis) y agregar dos tiles: **"Tests e inventarios"** y **"Personalidad"**. Ambos accesibles sin paywall.
-
-**Nuevas pantallas**
-- `src/pages/InventariosHub.tsx` — lista visual de BDI, BAI, PSWQ, PHQ-9, GAD-7, PSS-10, Rosenberg. Muestra "Último: hace X días". Toca → abre `TestRunner`.
-- `src/pages/PersonalidadHome.tsx` — abre `BigFiveProfileModal` directo; si no hay resultado inicia BFI-20.
-- Rutas nuevas en `src/App.tsx`: `/herramientas/inventarios`, `/herramientas/personalidad`.
-
-**`src/pages/MiProceso.tsx`**
-- Quitar `PsychometryCarousel`, `BigFiveCard`, `BigFiveProfileModal`, `TestRunner`, `SymptomsTestModal`, `directTestCode`, `bigFiveOpen` y sus imports.
-- Quitar el wrapper `<PremiumLock>` (app gratis).
-- Quedan: `WellbeingCardV2` (con `?` de ayuda) + bloque Terapia + encuesta de satisfacción.
-
-## Fase 2 — Rediseñar `WellbeingAnalysisSheet`
-
-**Eliminar**: banner "Tu semana / Tu mes", título "Cómo estuvo tu semana", grilla 2x2 "Qué influyó", "Esta semana vs la anterior", "De dónde viene tu número".
-
-**Nuevo layout**:
-
-1. **Header** — número del índice + delta + botón `?` con popover explicando qué mide, qué no cuenta, por qué a veces baja aunque estés bien.
-2. **Gráfico interactivo** (`WellbeingChart` nuevo) — toggle **Semana / Mes** que reemplaza el rango de todo lo que está debajo. Swipe/flechas para retroceder períodos anteriores. Header dinámico ("Semana del 3 al 9 nov" / "Nov 2026"). Semana = 7 barras diarias; Mes = 4 barras semanales con promedio.
-3. **Actividad del período** (`ActivityBreakdown` nuevo) — un solo item colapsable: "N actividades esta semana/este mes". Al tocar despliega desglose por tipo (mindfulness min, check-ins, hábitos ✓, CBT, DBT, diario, pack, medicación). Reactivo al rango + offset del gráfico.
-4. **Historial de evaluaciones** — se queda, filtrado al mismo rango del gráfico.
-5. **Qué se conecta con qué** (nuevo, no lo llamamos "correlaciones"):
-   - Card A: *Actividad y bienestar* — Pearson entre actividad diaria total y `mood_score` diario del rango elegido. Muestra número interpretado ("+0.42 · conexión media positiva"). Toca → `/proceso/conexiones/actividad-bienestar` (scatter + tendencia).
-   - Card B: *Actividad e inventarios* — Pearson entre actividad semanal y evolución del score del test más registrado. Toca → `/proceso/conexiones/actividad-tests` (líneas + barras).
-   - Si <7 puntos: mensaje "Necesitás más registros" con contador.
-
-**Archivos nuevos**
-- `src/components/proceso/WellbeingChart.tsx`, `ActivityBreakdown.tsx`, `CorrelationCards.tsx`, `WellbeingHelpPopover.tsx`.
-- `src/pages/proceso/CorrelacionActividadBienestar.tsx`, `CorrelacionActividadTests.tsx` (Recharts full-screen).
-- `src/lib/correlations.ts` (Pearson + agregadores diarios/semanales por rango).
-- `src/lib/activityAggregator.ts` (conteo unificado por rango, reutilizado por sheet, correlaciones y admin).
-
-**`src/lib/wellbeingScore.ts`** — sumar mindfulness/weekly_reflections/ba_day_logs a engagement, agregar componente `medication`, aplicar pesos renormalizados. Mantener null-skip.
-
-## Fase 3 — Admin > Principal > "Estadísticas"
-
-**Nueva RPC** `admin_wellbeing_stats(_user_id uuid default null)` (SECURITY DEFINER, admin-only):
-- Con `_user_id`: índice actual, componentes, evolución 30d, últimos 3 resultados por test, adherencia hábitos, correlación actividad↔bienestar individual.
-- Sin `_user_id` (global): promedio índice, distribución por rango (bajo/medio/alto), % con al menos 1 test, adherencia promedio de hábitos, sesiones totales por módulo, DAU/MAU, minutos mindfulness, ratio "creó hábito vs cumplió hábito", top hábitos activos, correlación global uso↔bienestar.
-
-**Página nueva** `src/pages/admin/modules/EstadisticasAdmin.tsx` con 3 tabs:
-1. **Bienestar general** — promedio índice, distribución (Pie), evolución del promedio (Line), correlación uso↔bienestar.
-2. **Uso de la app** — top módulos (Bar), minutos por recurso, retención por módulo, ratio armado/cumplido de hábitos.
-3. **Por usuario** — buscador → índice, componentes, evolución 30d, tests, actividades por tipo, correlación individual.
-
-**Sidebar** — agregar en Principal `{ title: "Estadísticas", url: "/admin/estadisticas-bienestar", icon: TrendingUp }`. Ruta en `App.tsx` → `EstadisticasAdmin`. Se mantiene la vieja `/admin/estadisticas`.
-
-## Fuera de alcance
-- Rediseño visual de `WellbeingCardV2` (solo `?`).
-- Notificaciones basadas en correlaciones.
-- Cache persistido de correlaciones (se calcula on-demand).
-
-## Riesgos
-- Correlación con <7 puntos → mostramos estado "faltan X días" en vez de un `r` engañoso.
-- El toggle Semana/Mes cambia el rango de todo lo de abajo (gráfico, actividad, historial, correlaciones) — confirmado por vos.
+### Notas
+- Sin cambios de lógica ni de datos — sólo presentación.
+- Se mantienen colores/tokens actuales (Cream, Dark Blue, Teal).
+- Cada card sigue siendo tappable con la misma navegación que hoy.
