@@ -679,6 +679,7 @@ function ValueBranch({
       {slots.map((s) => {
         const id = selected[s.idx];
         const filled = !!id;
+        const palette = SLOT_COLORS[s.idx % SLOT_COLORS.length];
         const style: React.CSSProperties = {
           top: `${s.y}%`,
           [s.side === "L" ? "right" : "left"]: "52%",
@@ -689,22 +690,19 @@ function ValueBranch({
             <button
               onClick={() => (filled ? onClear(s.idx) : onSlot(s.idx))}
               className={`group relative flex h-[58px] w-[126px] items-center justify-center px-3 text-[11.5px] font-bold uppercase tracking-[0.12em] transition ${
-                filled
-                  ? "text-resma-navy shadow-[0_10px_24px_-14px_rgba(93,191,154,0.6)]"
-                  : "text-muted-foreground/70"
+                filled ? "text-resma-navy" : "text-muted-foreground/70"
               }`}
               style={{
-                background: filled
-                  ? "linear-gradient(135deg, #a9dcc4 0%, #7cc2c8 100%)"
-                  : "rgba(255,255,255,0.55)",
-                border: filled ? "1.5px solid #5dbf9a" : "1.5px dashed #b8b3a8",
+                background: filled ? palette.grad : "rgba(255,255,255,0.55)",
+                border: filled ? `1.5px solid ${palette.border}` : "1.5px dashed #b8b3a8",
                 borderRadius: s.side === "L" ? "60% 20% 60% 20% / 50% 30% 70% 50%" : "20% 60% 20% 60% / 30% 50% 50% 70%",
                 backdropFilter: "blur(4px)",
+                boxShadow: filled ? `0 12px 26px -14px ${palette.border}aa` : undefined,
               }}
             >
               {filled ? (
                 <span className="flex items-center gap-1 text-center leading-tight">
-                  <Leaf size={12} className="shrink-0 text-emerald-700" />
+                  <Leaf size={12} className="shrink-0" style={{ color: palette.border }} />
                   <span className="truncate">{valueLabel(id)}</span>
                 </span>
               ) : (
