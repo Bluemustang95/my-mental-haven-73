@@ -32,6 +32,8 @@ import { PriorityStack, type PriorityCard } from "@/components/home/PriorityStac
 import ThoughtTaskWidget from "@/components/pensamientos/ThoughtTaskWidget";
 import { WidgetShell } from "@/components/home/WidgetVisual";
 import { EditSlots } from "@/components/home/EditSlots";
+import { QuickToolWidget } from "@/components/home/QuickToolWidget";
+import { TOOL_META, type ToolModule } from "@/lib/onboardingAlgorithm";
 
 const GROUP_ORDER_KEY = "home_groups_order_v2";
 function loadGroupOrder(): string[] {
@@ -52,6 +54,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [name, setName] = useState("");
+  const [priorityModule, setPriorityModule] = useState<ToolModule | null>(null);
   const today = new Date();
   const todayStr = localDateStr(today);
   const greeting = useMemo(getGreeting, []);
@@ -73,12 +76,14 @@ export default function Dashboard() {
     if (!user) return;
     supabase
       .from("patient_app_profiles")
-      .select("display_name")
+      .select("display_name, priority_module")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         const n = data?.display_name || user.user_metadata?.display_name || user.email?.split("@")[0] || "";
         setName(n.split(" ")[0]);
+        const pm = (data as any)?.priority_module as string | null;
+        if (pm && pm in TOOL_META) setPriorityModule(pm as ToolModule);
       });
   }, [user]);
 
@@ -191,6 +196,29 @@ export default function Dashboard() {
         return <DailyQuoteWidget />;
       case "psy_news":
         return <PsyNewsWidget />;
+      case "mindfulness_quick":
+      case "pensamientos_quick":
+      case "pack_quick":
+      case "diario_quick":
+      case "psico_quick": {
+        const map: Record<string, ToolModule> = {
+          mindfulness_quick: "mindfulness",
+          pensamientos_quick: "pensamientos",
+          pack_quick: "pack_actividades",
+          diario_quick: "diario",
+          psico_quick: "psicoeducacion",
+        };
+        const mod = map[id];
+        const meta = TOOL_META[mod];
+        return (
+          <QuickToolWidget
+            id={id}
+            title={meta.short}
+            subtitle={meta.label}
+            route={meta.route}
+          />
+        );
+      }
       default:
         return null;
     }
@@ -204,6 +232,45 @@ export default function Dashboard() {
   const gridWidgets = widgets.editMode
     ? widgets.widgets.filter((w) => !PRIORITY_ID_SET.has(w.id as WidgetId) && w.enabled && !w.hidden)
     : toolWidgets;
+
+  const RECOMMENDED_BY_MODULE: Record<ToolModule, { title: string; description: string; label: string }> = {
+    mindfulness: {
+      title: "Práctica de mindfulness",
+      description: "Anclate al presente con una respiración guiada breve.",
+      label: "Respirar 3 minutos",
+    },
+    pensamientos: {
+      title: "Manejo de distorsiones",
+      description: "Identificá pensamientos automáticos y desarmá los sesgos cognitivos.",
+      label: "Desarmar sesgos",
+    },
+    psicohigiene_sueno: {
+      title: "Higiene del sueño",
+      description: "Preparación consciente para dormir mejor esta noche.",
+      label: "Preparar mi noche",
+    },
+    habitos: {
+      title: "Micro-hábito de hoy",
+      description: "Sumá una pequeña acción alineada con quien querés ser.",
+      label: "Elegir mi hábito",
+    },
+    pack_actividades: {
+      title: "Pack de activación",
+      description: "Una actividad breve para reactivar tu energía y estado de ánimo.",
+      label: "Activarme",
+    },
+    diario: {
+      title: "Escribir en el diario",
+      description: "Un espacio íntimo para procesar lo que sentís hoy.",
+      label: "Abrir diario",
+    },
+    psicoeducacion: {
+      title: "Lectura recomendada",
+      description: "Una cápsula de psicoeducación para entenderte mejor.",
+      label: "Leer",
+    },
+  };
+  const rec = priorityModule ? RECOMMENDED_BY_MODULE[priorityModule] : null;
 
   const priorityCards: PriorityCard[] = [
     {
@@ -222,11 +289,13 @@ export default function Dashboard() {
       id: "recommended",
       chip: "Práctica recomendada",
       chipTone: "teal",
-      title: "Manejo de distorsiones",
-      description: "Identificá pensamientos automáticos y desarmá los sesgos cognitivos.",
-      actionLabel: "Desarmar sesgos",
+      title: rec?.title ?? "Manejo de distorsiones",
+      description:
+        rec?.description ?? "Identificá pensamientos automáticos y desarmá los sesgos cognitivos.",
+      actionLabel: rec?.label ?? "Desarmar sesgos",
       actionTone: "teal",
-      onAction: () => navigate("/pensamientos"),
+      onAction: () =>
+        navigate(priorityModule ? TOOL_META[priorityModule].route : "/pensamientos"),
     },
     {
       id: "night",

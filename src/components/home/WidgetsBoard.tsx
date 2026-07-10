@@ -26,7 +26,13 @@ export type WidgetId =
   | "gratitude"
   | "contention_notes"
   | "daily_quote"
-  | "psy_news";
+  | "psy_news"
+  // Onboarding-seeded quick launchers (deep-link tools):
+  | "mindfulness_quick"
+  | "pensamientos_quick"
+  | "pack_quick"
+  | "diario_quick"
+  | "psico_quick";
 
 // Prioridades: siempre visibles en el PriorityStack, no se gestionan como widgets.
 export const PRIORITY_IDS: WidgetId[] = ["morning", "recommended", "night"];
@@ -39,6 +45,11 @@ export const TOOL_IDS: WidgetId[] = [
   "contention_notes",
   "daily_quote",
   "psy_news",
+  "mindfulness_quick",
+  "pensamientos_quick",
+  "pack_quick",
+  "diario_quick",
+  "psico_quick",
 ];
 export const MAX_TOOLS = 3;
 
@@ -60,6 +71,12 @@ const DEFAULT_WIDGETS: WidgetState[] = [
   { id: "psy_news", enabled: false, hidden: false, size: "half" },
   { id: "gratitude", enabled: false, hidden: false, size: "half" },
   { id: "contention_notes", enabled: false, hidden: false, size: "half" },
+  // Quick launchers — disabled by default; onboarding seeds enable them.
+  { id: "mindfulness_quick", enabled: false, hidden: false, size: "half" },
+  { id: "pensamientos_quick", enabled: false, hidden: false, size: "half" },
+  { id: "pack_quick", enabled: false, hidden: false, size: "half" },
+  { id: "diario_quick", enabled: false, hidden: false, size: "half" },
+  { id: "psico_quick", enabled: false, hidden: false, size: "half" },
 ];
 
 const LABELS: Record<WidgetId, string> = {
@@ -73,6 +90,11 @@ const LABELS: Record<WidgetId, string> = {
   contention_notes: "Notas de contención",
   daily_quote: "Frase del día",
   psy_news: "Noticias de psicología",
+  mindfulness_quick: "Mindfulness y respiración",
+  pensamientos_quick: "Gestión de pensamientos",
+  pack_quick: "Pack de activación",
+  diario_quick: "Diario íntimo",
+  psico_quick: "Biblioteca psicoeducativa",
 };
 
 

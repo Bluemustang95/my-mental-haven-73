@@ -1,104 +1,110 @@
 
-## Cómo se conectan hoy los rituales con el calendario
+# Fase A — Cerrar el loop Onboarding → Home
 
-Ambos rituales escriben en la misma tabla `daily_checkins` usando `checkin_date = hoy` y `mode = 'morning' | 'night'` (upsert por `user_id + checkin_date + mode`). Eso permite:
+Objetivo: que las respuestas del onboarding realmente cambien qué ve la persona en la home, y que la pantalla de "tu plan" aparezca antes del signup como motivador.
 
-- **Mañana → Noche (mismo día)**: Balance Nocturno lee el registro `mode='morning'` de hoy y trae los `valores` (parseados de `thought_note`) y `day_goal` (intenciones) para el paso "Constelación".
-- **Noche → Mañana (día siguiente)**: Sintonía Mañana lee el `mode='night'` de ayer y muestra `balance_improve` como banner en el paso 3.
-- **Calendario**: el `WeekStrip` y `MonthCalendarSheet` cuentan filas de `daily_checkins` por fecha (`weekProgress`) — cada modo suma un punto en el día. La `DayHistorySheet` renderiza ambos.
-
-Faltante actual: las **emociones de la noche no se comparan con las de la mañana**, y no queda registrada la razón del cambio.
-
----
-
-## Lo que vamos a construir
-
-### 1) Puente emocional Mañana ↔ Noche
-
-**Balance Nocturno · Paso 2 (Nebulosa)**
-- Al entrar, cargar `emotions` del `mode='morning'` de hoy (`morningEmotions`).
-- Debajo de las orbes, panel **"¿Coincide con cómo despertaste?"**:
-  - Chips comparativos: 🌅 emociones matinales vs 🌙 emociones actuales.
-  - Detección: `sumadas` = solo de noche, `sostenidas` = en ambas, `disueltas` = solo de mañana.
-  - Si hay diferencia (sumadas o disueltas > 0), aparece un textarea suave: **"¿Qué generó este cambio a lo largo del día?"** (opcional, guardado en un campo nuevo `emotion_shift_note`).
-- Persistencia: `emotion_shift_note` (texto) y `emotion_shift_summary` (jsonb con `{sostenidas, sumadas, disueltas}`) en `daily_checkins`.
-
-**Sintonía Mañana · Paso 1 (Cuerpo)**
-- Si la noche anterior guardó `emotion_shift_note`, mostrar un mini card contextual "Ayer notaste este cambio: …" para dar continuidad.
-
-**Migración**: agregar dos columnas nullables a `daily_checkins`:
-```
-emotion_shift_note text
-emotion_shift_summary jsonb
-```
-(sin CHECK constraints; RLS y GRANTs existentes ya cubren la tabla).
+Decisiones ya confirmadas:
+- Maleta (Q3 actual, "recent_feelings") queda **multi-select** como hoy.
+- La pantalla de categoría del plan va **antes del signup**.
+- Solo Fase A por ahora (sin admin todavía).
 
 ---
 
-### 2) Estilo único por widget (igual que Psicoeducación / Leo)
+## 1. Unificar el algoritmo
 
-Cada tarjeta tendrá **color**, **nombre**, **forma abstracta** e **ícono/glifo** propio. Se crea un registro central `WIDGET_IDENTITY` con:
+Un único archivo `src/lib/onboardingAlgorithm.ts` (reescrito). Reemplaza a `clinicalAlgorithm.ts` como fuente de verdad.
 
-```ts
-{ id, label, palette:{from,to,ink,glowRgb}, glyph:'orb'|'wave'|'leaf'|'spark'|'moon'|'flame'|'grid', accent, tagline }
-```
+- **Módulos válidos** (solo los que tienen ruta real): `mindfulness`, `pensamientos`, `psicoeducacion`, `psicohigiene_sueno`, `habitos`, `pack_actividades`, `diario`.
+- **Widgets sugeridos aparte** (sin ruta, solo home widgets): `frases_del_dia`, `noticias_psicologia`. No entran en `top3_tools`, van al pool de widgets opcionales.
+- **Categorías** (con fallback real a `integral`): `sueno`, `ansiedad`, `recuperacion`, `activacion`, `autoconocimiento`, `integral`. Cada una con `{ title, description, icon, accent }`.
+- **Modificadores suaves**:
+  - `country != 'AR'` → `pack_actividades` se descarta de top3 (contenido AR-only por ahora, ya gateado en la app).
+  - `life_stage in ['adolescente','joven-adulto']` → boost x1.2 a `habitos`.
+- **Tiebreaker determinístico** por prioridad clínica fija: `mindfulness > pensamientos > psicohigiene_sueno > pack_actividades > habitos > diario > psicoeducacion`.
+- **Versionado**: `ALGO_VERSION = 1` exportado en el módulo.
+- Devuelve: `{ plan_category, priority_module, top3_tools: string[], suggested_widgets: string[], module_scores, algo_version }`.
 
-Nueva estética por widget (paleta ya alineada al brand):
+## 2. Migración de DB
 
-| Widget | Color base | Glifo abstracto | Sensación |
-|---|---|---|---|
-| `sleep_zone` | Índigo/violeta nocturno | Luna con partículas orbitales | Descanso |
-| `pending` | Naranja arena | Circuito de checks apilados | Acción |
-| `mini_habits` | Verde salvia | Anillos de progreso concéntricos | Constancia |
-| `gratitude` | Rosa cálido | Corazón "líquido" con blur | Ternura |
-| `contention_notes` | Terracota | Post-it con líneas onduladas | Refugio |
-| `daily_quote` | Crema/dorado | Comillas grandes en serif | Inspiración |
-| `psy_news` | Azul agua | Ondas de radio | Actualidad |
+Nuevas columnas en `patient_app_profiles`:
+- `plan_category text` — la categoría final ("sueno", "ansiedad", …).
+- `top3_tools jsonb` — array de IDs de módulos (ej: `["mindfulness","pensamientos","habitos"]`).
+- `algo_version int default 1`.
+- `home_seeded boolean default false` — bandera para saber si ya sembramos `home_layouts` con `top3_tools`.
 
-**Enfoque prioritario (PriorityStack)** también recibe identidad diferenciada por tarjeta:
-- `morning` → amanecer (gradiente ámbar→crema, glifo sol emergente).
-- `recommended` → agua turquesa, glifo espiral.
-- `night` → índigo profundo, glifo luna con estrellas.
+`priority_module` y `module_scores` ya existen, se reusan.
 
-Se crea `src/components/home/WidgetVisual.tsx` con los SVG abstractos y un helper `useWidgetIdentity(id)`. Todos los widgets pasan a consumirlo (sin emojis, ilustración vectorial contenida).
+## 3. Wizard de onboarding (`Onboarding.tsx`)
+
+- Reemplazar la llamada actual a `computePriority` (de `clinicalAlgorithm`) por el nuevo `calculatePlan()`.
+- Persistir en `patient_app_profiles`: `plan_category`, `top3_tools`, `algo_version`, `priority_module`, `module_scores`.
+- Reordenar los pasos finales así:
+  1. Q respondidas (pasos actuales 0-5, sin cambios).
+  2. `AlgorithmTransition` (animación corta "sintonizando tu plan", como hoy).
+  3. **Nueva pantalla `PlanCategoryScreen`** — muestra categoría, título, descripción cálida, ícono, y los 3 módulos recomendados con sus nombres. CTA "Crear mi cuenta →".
+  4. Paso de cuenta (email + Google, como hoy).
+- Guardado en `sessionStorage` (`resma:onboarding_pending`) ya persiste `top3_tools` + `plan_category` para que sobrevivan al OAuth redirect.
+
+## 4. Sembrar la home después del onboarding
+
+Al hacer `persistProfile()` con éxito:
+- Si `home_seeded === false` → inicializar `home_layouts.widgets` con los `top3_tools` mapeados a widgets de home. Set `home_seeded = true`.
+- Mapeo módulo → widget de home:
+  - `psicohigiene_sueno` → `sleep_zone` (widget existente).
+  - `mindfulness` → nuevo widget `mindfulness_quick` (link a `/herramientas/mindfulness`, reusa `WidgetShell`).
+  - `pensamientos` → nuevo widget `pensamientos_quick` (link a `/herramientas/pensamientos`).
+  - `habitos` → `mini_habits` (widget existente).
+  - `pack_actividades` → nuevo widget `pack_quick` (link a `/herramientas/pack`).
+  - `diario` → nuevo widget `diario_quick` (link a `/diario`).
+  - `psicoeducacion` → nuevo widget `psico_quick` (link a `/psicoeducacion`).
+- Layout inicial: primer slot `full`, siguientes dos `half` (encaja con `EditSlots`).
+
+## 5. Home lee `priority_module` para la card "Recomendado"
+
+`Dashboard.tsx` ya arma un `priorityCards` hardcodeado. Cambio mínimo:
+- Cargar `patient_app_profiles.priority_module` (junto con `display_name`, en la misma query).
+- La card `recommended` toma su `title`, `description`, `actionLabel`, `onAction` de un mapa `PRIORITY_CARD_BY_MODULE[priority_module]`. Si no hay `priority_module`, cae al default actual ("Manejo de distorsiones").
+- `RecommendedResourceCard` sigue funcionando igual (usa `get_daily_recommendations`), pero cuando el RPC devuelve vacío hace fallback al `priority_module` en vez del pool hardcodeado.
+
+## 6. Nuevos widgets tipo "quick launcher"
+
+Componente único genérico `QuickToolWidget` en `src/components/home/QuickToolWidget.tsx` que recibe `{ id, title, subtitle, route }` y usa `WidgetShell` con la identidad ya definida en `WidgetVisual.tsx`. Agregar entradas a `WIDGET_IDENTITY` para los IDs nuevos (`mindfulness_quick`, `pensamientos_quick`, `pack_quick`, `diario_quick`, `psico_quick`).
+
+Registro en `WidgetsBoard.tsx`:
+- Agregar los IDs nuevos a `TOOL_IDS`.
+- Extender `DEFAULT_WIDGETS` para que existan (deshabilitados por defecto — el seed del punto 4 los habilita según top3).
+
+## 7. Retirar `clinicalAlgorithm.ts`
+
+- Redirigir todos los imports actuales al nuevo `onboardingAlgorithm.ts` (export compat: `computePriority` sigue existiendo con la misma firma que hoy pero llama internamente al nuevo `calculatePlan`).
+- No borrar el archivo aún — deja un `re-export` para no romper nada. Se elimina en Fase B cuando el admin esté en pie.
 
 ---
 
-### 3) Modo edición del Home
+## Fuera de alcance de esta fase (van en B y C)
 
-Ajustes en `Dashboard.tsx` + `WidgetsBoard.tsx`:
-
-- **Enfoque prioritario fijo arriba**: el `PriorityStack` sigue renderizándose en edit mode, con un chip "Fijo · no se mueve" y sin handles. Se aplica `pointer-events: none` a las cards del stack pero se mantienen visualmente.
-- **3 slots fijos punteados** debajo del stack, correspondientes a los 3 tools máximos:
-  - Layout: 1 slot horizontal grande arriba + 2 slots cuadrados abajo (respeta el mismo grid que en vista normal).
-  - Cada slot muestra:
-    - Si tiene widget asignado → tarjeta con handle de drag, botón "×" para quitar, botón para intercambiar tamaño solo en el slot horizontal.
-    - Si está vacío → borde `dashed` + botón "+ Agregar herramienta" que abre el sheet de gestión.
-  - Drag & drop **solo entre estos 3 slots** (reemplazo/permutación, no reordenamiento libre).
-- El sheet de gestión sigue limitando a `MAX_TOOLS = 3`.
-
-Componentes nuevos:
-- `src/components/home/EditSlots.tsx` — 3 slots (1 full + 2 half) con drag-swap.
-- Actualización de `ReorderableGroupStack` para modo "swap-in-fixed-slots".
+- Admin `/admin/onboarding` (editor de preguntas, pesos, categorías, métricas).
+- Botón "Recalcular plan" en `PatientDetail`.
+- Sembrar `algo_user_answers` desde el onboarding (mejora `get_daily_recommendations`).
+- Bridge de `plan_category` en Sintonía / Balance (copy contextual).
+- Recomendación diaria mejorada con fallback a `priority_module`.
 
 ---
 
-## Detalle técnico (resumen)
+## Archivos que se tocan
 
-- **DB**: migración `add_emotion_shift_to_daily_checkins` con las 2 columnas + comentarios; no toca policies (ya scoped a `auth.uid()`).
-- **Balance Nocturno**: cargar `morning` checkin junto al `improve` actual; nuevo componente `EmotionCompare` en el paso 2; guardar `emotion_shift_note` y `emotion_shift_summary` en el `upsert`.
-- **Sintonía Mañana**: leer `emotion_shift_note` del `night` de ayer y mostrarlo como micro-card en paso 1.
-- **Identidad widgets**: `WidgetVisual.tsx` con SVG abstractos + tokens de gradiente en `index.css` (`--widget-sleep-from`, etc.). Refactor de `PendingBento`, `MiniHabitsWidget`, `GratitudeWidget`, `ContentionNotesWidget`, `DailyQuoteWidget`, `PsyNewsWidget`, `SleepZoneCard` y `PriorityStack` para pintar con esos tokens.
-- **Edición**: `EditSlots` reemplaza la grilla en `widgets.editMode`; `PriorityStack` se muestra pero con overlay "Fijo". El drag-swap usa `@dnd-kit` (ya disponible).
+**Nuevos:**
+- `src/components/home/QuickToolWidget.tsx`
+- `src/components/onboarding/PlanCategoryScreen.tsx`
+- `supabase/migrations/<timestamp>_onboarding_plan_fields.sql` (columnas nuevas en `patient_app_profiles`)
 
-## Archivos afectados
-- `supabase/migrations/*` (nuevo)
-- `src/pages/ritual/BalanceNocturno.tsx`
-- `src/pages/ritual/SintoniaManana.tsx`
-- `src/pages/Dashboard.tsx`
-- `src/components/home/WidgetsBoard.tsx`
-- `src/components/home/PriorityStack.tsx`
-- `src/components/home/WidgetVisual.tsx` (nuevo)
-- `src/components/home/EditSlots.tsx` (nuevo)
-- `src/components/home/OptionalWidgets.tsx`, `PendingBento.tsx`, `DailyQuoteWidget.tsx`, `PsyNewsWidget.tsx`, `SleepZoneCard` (dentro de Dashboard)
-- `src/index.css` (tokens de widget)
+**Modificados:**
+- `src/lib/onboardingAlgorithm.ts` (reescrito completo, unificado)
+- `src/lib/clinicalAlgorithm.ts` (re-export delgado hacia el nuevo, para compat)
+- `src/pages/Onboarding.tsx` (nueva pantalla de categoría antes del signup + persist de campos nuevos + seed de `home_layouts`)
+- `src/pages/Dashboard.tsx` (lee `priority_module` para la card recomendado)
+- `src/components/home/WidgetsBoard.tsx` (nuevos IDs, DEFAULT_WIDGETS extendido)
+- `src/components/home/WidgetVisual.tsx` (identidad para los 5 widgets nuevos)
+- `src/components/home/RecommendedResourceCard.tsx` (fallback a `priority_module`)
+
+Cuando confirmes, arranco.

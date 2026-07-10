@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Headphones, BookOpen, Wind, Sparkles, ChevronRight, Compass } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { TOOL_META, type ToolModule } from "@/lib/onboardingAlgorithm";
 
 type Resource = {
   tag: string;
@@ -54,21 +55,47 @@ export function RecommendedResourceCard() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // 1. Try personalized daily recommendation from the algo tables.
       const { data, error } = await supabase.rpc("get_daily_recommendations", { _user_id: user.id, _limit: 1 });
-      if (error || !data?.length) return;
-      const top: any = data[0];
-      setPersonalized({
-        tag: "PARA VOS HOY",
-        duration: "· personalizado",
-        title: top.sub_resource_name ?? "Recurso recomendado",
-        subtitle: "Sugerencia calculada según tus últimas respuestas.",
-        icon: Compass,
-        route: top.sub_resource_route ?? "/psicoeducacion",
-        iconBg: "bg-teal-100",
-        iconColor: "text-teal-700",
-      });
+      if (!error && data?.length) {
+        const top: any = data[0];
+        setPersonalized({
+          tag: "PARA VOS HOY",
+          duration: "· personalizado",
+          title: top.sub_resource_name ?? "Recurso recomendado",
+          subtitle: "Sugerencia calculada según tus últimas respuestas.",
+          icon: Compass,
+          route: top.sub_resource_route ?? "/psicoeducacion",
+          iconBg: "bg-teal-100",
+          iconColor: "text-teal-700",
+        });
+        return;
+      }
+
+      // 2. Fallback: use the onboarding priority_module.
+      const { data: profile } = await supabase
+        .from("patient_app_profiles")
+        .select("priority_module")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const pm = (profile as any)?.priority_module as string | null;
+      if (pm && pm in TOOL_META) {
+        const meta = TOOL_META[pm as ToolModule];
+        setPersonalized({
+          tag: "TU PRIORIDAD",
+          duration: "· personalizado",
+          title: meta.label,
+          subtitle: "Basado en tus respuestas del onboarding.",
+          icon: Compass,
+          route: meta.route,
+          iconBg: "bg-teal-100",
+          iconColor: "text-teal-700",
+        });
+      }
     })();
   }, []);
+
 
   const resource = useMemo(() => {
     if (personalized) return personalized;
