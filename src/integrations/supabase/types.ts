@@ -1705,12 +1705,14 @@ export type Database = {
       }
       patient_app_profiles: {
         Row: {
+          algo_version: number
           areas_of_interest: string[] | null
           bridge_assigned_at: string | null
           bridge_last_state: string | null
           country: string | null
           created_at: string | null
           display_name: string | null
+          home_seeded: boolean
           id: string
           in_therapy: boolean | null
           learning_format: string | null
@@ -1723,6 +1725,7 @@ export type Database = {
           notifications_on: boolean | null
           onboarding_completed: boolean | null
           plan: string
+          plan_category: string | null
           plan_expires_at: string | null
           plan_started_at: string | null
           prefers_dark: boolean | null
@@ -1736,6 +1739,7 @@ export type Database = {
           therapist_license: string | null
           therapist_name: string | null
           therapist_phone: string | null
+          top3_tools: Json | null
           treatment_status: string | null
           updated_at: string | null
           user_id: string
@@ -1743,12 +1747,14 @@ export type Database = {
           voice_id: string | null
         }
         Insert: {
+          algo_version?: number
           areas_of_interest?: string[] | null
           bridge_assigned_at?: string | null
           bridge_last_state?: string | null
           country?: string | null
           created_at?: string | null
           display_name?: string | null
+          home_seeded?: boolean
           id?: string
           in_therapy?: boolean | null
           learning_format?: string | null
@@ -1761,6 +1767,7 @@ export type Database = {
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
           plan?: string
+          plan_category?: string | null
           plan_expires_at?: string | null
           plan_started_at?: string | null
           prefers_dark?: boolean | null
@@ -1774,6 +1781,7 @@ export type Database = {
           therapist_license?: string | null
           therapist_name?: string | null
           therapist_phone?: string | null
+          top3_tools?: Json | null
           treatment_status?: string | null
           updated_at?: string | null
           user_id: string
@@ -1781,12 +1789,14 @@ export type Database = {
           voice_id?: string | null
         }
         Update: {
+          algo_version?: number
           areas_of_interest?: string[] | null
           bridge_assigned_at?: string | null
           bridge_last_state?: string | null
           country?: string | null
           created_at?: string | null
           display_name?: string | null
+          home_seeded?: boolean
           id?: string
           in_therapy?: boolean | null
           learning_format?: string | null
@@ -1799,6 +1809,7 @@ export type Database = {
           notifications_on?: boolean | null
           onboarding_completed?: boolean | null
           plan?: string
+          plan_category?: string | null
           plan_expires_at?: string | null
           plan_started_at?: string | null
           prefers_dark?: boolean | null
@@ -1812,6 +1823,7 @@ export type Database = {
           therapist_license?: string | null
           therapist_name?: string | null
           therapist_phone?: string | null
+          top3_tools?: Json | null
           treatment_status?: string | null
           updated_at?: string | null
           user_id?: string
@@ -3006,12 +3018,14 @@ export type Database = {
       admin_get_patient: {
         Args: { _user_id: string }
         Returns: {
+          algo_version: number
           areas_of_interest: string[] | null
           bridge_assigned_at: string | null
           bridge_last_state: string | null
           country: string | null
           created_at: string | null
           display_name: string | null
+          home_seeded: boolean
           id: string
           in_therapy: boolean | null
           learning_format: string | null
@@ -3024,6 +3038,7 @@ export type Database = {
           notifications_on: boolean | null
           onboarding_completed: boolean | null
           plan: string
+          plan_category: string | null
           plan_expires_at: string | null
           plan_started_at: string | null
           prefers_dark: boolean | null
@@ -3037,6 +3052,7 @@ export type Database = {
           therapist_license: string | null
           therapist_name: string | null
           therapist_phone: string | null
+          top3_tools: Json | null
           treatment_status: string | null
           updated_at: string | null
           user_id: string
