@@ -178,34 +178,51 @@ function emptyScores(): Record<AnyModule, number> {
   };
 }
 
+// Runtime-overridable weights (mutated by applyAlgoOverrides from admin config).
+export const RUNTIME_WEIGHTS = {
+  q1_multiplier: 3,
+  q2_multiplier: 2,
+  q3_multiplier: 2.5,
+  age_teen_boost: 1.2,
+  pack_ar_only: true,
+};
+
+export function applyAlgoOverrides(w: Partial<typeof RUNTIME_WEIGHTS> | null | undefined) {
+  if (!w) return;
+  for (const k of Object.keys(RUNTIME_WEIGHTS) as (keyof typeof RUNTIME_WEIGHTS)[]) {
+    if (w[k] !== undefined && w[k] !== null) (RUNTIME_WEIGHTS as any)[k] = w[k];
+  }
+}
+
 export function calculatePlan(input: AlgoInput): AlgoResult {
   const scores = emptyScores();
+  const W = RUNTIME_WEIGHTS;
 
-  // Q1 — multi, weight × 3
+  // Q1 — multi
   input.brujula.forEach((label) => {
     const key = BRUJULA_KEY[label];
     if (!key) return;
     const row = Q1_SCORES[key] ?? {};
     for (const [mod, pts] of Object.entries(row)) {
-      scores[mod as AnyModule] += (pts ?? 0) * 3;
+      scores[mod as AnyModule] += (pts ?? 0) * W.q1_multiplier;
     }
   });
 
-  // Q2 — multi (kept multi per user preference), weight × 2
+  // Q2 — multi
   input.maleta.forEach((label) => {
     const key = MALETA_KEY[label];
     if (!key) return;
     const row = Q2_SCORES[key] ?? {};
     for (const [mod, pts] of Object.entries(row)) {
-      scores[mod as AnyModule] += (pts ?? 0) * 2;
+      scores[mod as AnyModule] += (pts ?? 0) * W.q2_multiplier;
     }
   });
 
-  // Q3 — sleep, weight × 2.5
+  // Q3 — sleep
   if (input.sleep) {
     const row = Q3_SCORES[input.sleep] ?? {};
     for (const [mod, pts] of Object.entries(row)) {
-      scores[mod as AnyModule] += (pts ?? 0) * 2.5;
+      scores[mod as AnyModule] += (pts ?? 0) * W.q3_multiplier;
     }
   }
 
@@ -225,15 +242,15 @@ export function calculatePlan(input: AlgoInput): AlgoResult {
     countryNorm === "ar" ||
     countryNorm === "argentina" ||
     countryNorm.includes("argentin");
-  if (!isAR) {
-    // Pack is AR-only content — remove from tool ranking
+  if (W.pack_ar_only && !isAR) {
     scores.pack_actividades = 0;
   }
 
   const ageNum = parseInt(input.life_stage ?? "", 10);
   if (!Number.isNaN(ageNum) && ageNum >= 13 && ageNum <= 25) {
-    scores.habitos *= 1.2;
+    scores.habitos *= W.age_teen_boost;
   }
+
 
   // Rank tool modules with deterministic tiebreaker
   const rankedTools = [...TOOL_MODULES]
