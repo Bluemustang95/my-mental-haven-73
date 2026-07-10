@@ -101,6 +101,7 @@ import SettingsHistory from "@/pages/SettingsHistory";
 import DiarioInteligente from "@/pages/DiarioInteligente";
 import Psicoeducacion from "@/pages/Psicoeducacion";
 import SystemSettings from "@/pages/admin/SystemSettings";
+import AiFeaturesManager from "@/pages/admin/AiFeaturesManager";
 import AdminStats from "@/pages/admin/AdminStats";
 import CategoryDetail from "@/pages/psicoeducacion/CategoryDetail";
 import LessonView from "@/pages/psicoeducacion/LessonView";
@@ -288,6 +289,7 @@ const App = () => (
               <Route path="/admin/estadisticas-bienestar" element={<EstadisticasAdmin />} />
               <Route path="/admin/pack" element={<PackOverview />} />
               <Route path="/admin/pack/ba" element={<BAContentEditor />} />
+              <Route path="/admin/ia" element={<AiFeaturesManager />} />
               <Route path="/admin/legacy" element={<AdminDashboard />} />
             </Route>
             <Route path="*" element={<NotFound />} />

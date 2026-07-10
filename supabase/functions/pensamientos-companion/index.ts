@@ -1,4 +1,5 @@
 import { streamLovableChat } from "../_shared/ai-gateway.ts";
+import { loadFeatureConfig } from "../_shared/ai-feature-config.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -82,24 +83,11 @@ function describeDraft(ctx: DraftCtx): string {
 }
 
 async function loadAiConfig(): Promise<{ prompt: string; model: string }> {
-  try {
-    const url = Deno.env.get("SUPABASE_URL");
-    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!url || !key) return { prompt: DEFAULT_PROMPT, model: "google/gemini-3-flash-preview" };
-    const sb = createClient(url, key);
-    const { data } = await sb
-      .from("admin_settings")
-      .select("value")
-      .eq("key", "pensamientos_ai")
-      .maybeSingle();
-    const v: any = data?.value ?? {};
-    return {
-      prompt: (v.prompt as string) || DEFAULT_PROMPT,
-      model: (v.model as string) || "google/gemini-3-flash-preview",
-    };
-  } catch {
-    return { prompt: DEFAULT_PROMPT, model: "google/gemini-3-flash-preview" };
-  }
+  const cfg = await loadFeatureConfig("pensamientos_companion", {
+    model: "google/gemini-3-flash-preview",
+    system_prompt: DEFAULT_PROMPT,
+  });
+  return { prompt: cfg.system_prompt ?? DEFAULT_PROMPT, model: cfg.model };
 }
 
 Deno.serve(async (req) => {
