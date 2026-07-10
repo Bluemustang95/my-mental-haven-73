@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { ArrowRight, Envelope, GoogleLogo, Fingerprint } from "@phosphor-icons/react";
@@ -11,31 +11,47 @@ const INK = "#101927";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
-  const [email, setEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const prefillEmail = searchParams.get("prefill") || "";
+  const fromOnboarding = searchParams.get("fromOnboarding") === "1";
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">(
+    prefillEmail || fromOnboarding ? "login" : "login"
+  );
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [bioReady, setBioReady] = useState(false);
   const [bioPromptUser, setBioPromptUser] = useState<{ id: string; name: string } | null>(null);
+  const hasPendingOnboarding = useMemo(
+    () => typeof window !== "undefined" && !!sessionStorage.getItem("resma:onboarding_pending"),
+    []
+  );
 
   const BIO_PROMPTED_KEY = "resma:bio_prompted";
 
+  const postLoginTarget = () =>
+    typeof window !== "undefined" && sessionStorage.getItem("resma:onboarding_pending")
+      ? "/onboarding"
+      : "/";
+
   const maybePromptBiometric = async () => {
+    const dest = postLoginTarget();
     const isStandalone =
       typeof window !== "undefined" &&
       (window.matchMedia?.("(display-mode: standalone)").matches ||
         // iOS Safari
         // @ts-ignore
         window.navigator.standalone === true);
-    if (!isStandalone) return navigate("/", { replace: true });
-    if (!isBiometricSupported() || isBiometricEnabled()) return navigate("/", { replace: true });
-    if (localStorage.getItem(BIO_PROMPTED_KEY) === "never") return navigate("/", { replace: true });
+    if (!isStandalone) return navigate(dest, { replace: true });
+    if (!isBiometricSupported() || isBiometricEnabled()) return navigate(dest, { replace: true });
+    if (localStorage.getItem(BIO_PROMPTED_KEY) === "never") return navigate(dest, { replace: true });
     const { data } = await supabase.auth.getUser();
-    if (!data.user) return navigate("/", { replace: true });
+    if (!data.user) return navigate(dest, { replace: true });
     setBioPromptUser({ id: data.user.id, name: data.user.email?.split("@")[0] || "RESMA" });
   };
+
 
   useEffect(() => {
     setBioReady(isBiometricSupported() && isBiometricEnabled());
@@ -48,7 +64,7 @@ export default function Auth() {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         const ok = await verifyBiometric();
-        if (ok) navigate("/", { replace: true });
+        if (ok) navigate(postLoginTarget(), { replace: true });
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -62,7 +78,7 @@ export default function Auth() {
       return;
     }
     const ok = await verifyBiometric();
-    if (ok) navigate("/", { replace: true });
+    if (ok) navigate(postLoginTarget(), { replace: true });
     else setError("No pudimos verificar tu identidad biométrica.");
   };
 
@@ -139,13 +155,28 @@ export default function Auth() {
         <h1 className="mb-2 font-display text-[24px] font-bold" style={{ color: INK }}>
           {mode === "login" ? "Bienvenido/a" : mode === "signup" ? "Crear cuenta" : "Recuperar contraseña"}
         </h1>
-        <p className="mb-8 text-center text-[13px] font-light text-[#101927]/55">
+        <p className="mb-6 text-center text-[13px] font-light text-[#101927]/55">
           {mode === "login"
             ? "Ingresá a tu cuenta RESMA"
             : mode === "signup"
               ? "Empezá a cuidar tu salud mental"
               : "Te enviaremos un link por email"}
         </p>
+
+        {(fromOnboarding || hasPendingOnboarding) && mode === "login" && (
+          <div
+            className="mb-6 w-full rounded-2xl border px-4 py-3 text-center text-[12px] font-medium"
+            style={{
+              borderColor: "rgba(124,194,200,0.35)",
+              background: "rgba(124,194,200,0.10)",
+              color: INK,
+            }}
+          >
+            Confirmá tu correo y volvé acá para entrar. <br />
+            <span className="text-[#101927]/70">Tu plan personalizado te está esperando.</span>
+          </div>
+        )}
+
 
         {mode !== "forgot" && (
           <>
@@ -270,7 +301,7 @@ export default function Auth() {
         onClose={(result) => {
           if (result === "never") localStorage.setItem(BIO_PROMPTED_KEY, "never");
           setBioPromptUser(null);
-          navigate("/", { replace: true });
+          navigate(postLoginTarget(), { replace: true });
         }}
       />
     </div>

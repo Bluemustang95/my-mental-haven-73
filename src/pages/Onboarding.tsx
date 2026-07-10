@@ -6,6 +6,7 @@ import { GoogleLogo } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 import {
   OnboardingShell,
@@ -278,7 +279,11 @@ export default function Onboarding() {
 
     } else {
       sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-      setAuthMessage("Cuenta creada. Iniciá sesión para entrar.");
+      sessionStorage.setItem("onboarding_pending_email", email);
+      toast("Revisá tu correo para confirmar. Te llevamos al login…");
+      setTimeout(() => {
+        navigate(`/auth?prefill=${encodeURIComponent(email)}&fromOnboarding=1`, { replace: true });
+      }, 700);
     }
     setSubmitting(false);
   };
