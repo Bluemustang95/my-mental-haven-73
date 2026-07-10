@@ -298,16 +298,6 @@ export default function Dashboard() {
         navigate(priorityModule ? TOOL_META[priorityModule].route : "/pensamientos"),
     },
     {
-      id: "recommended",
-      chip: "Práctica recomendada",
-      chipTone: "teal",
-      title: "Manejo de distorsiones",
-      description: "Identificá pensamientos automáticos y desarmá los sesgos cognitivos.",
-      actionLabel: "Desarmar sesgos",
-      actionTone: "teal",
-      onAction: () => navigate("/pensamientos"),
-    },
-    {
       id: "night",
       chip: "Prioridad noche",
       chipTone: "navy",
