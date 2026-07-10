@@ -523,10 +523,14 @@ export default function SintoniaManana() {
                 </span>
               )}
             </div>
-            {goalText && (
-              <p className="mt-4 border-t border-foreground/5 pt-3 font-serifElegant text-[15px] italic text-resma-navy/85">
-                "{goalText}"
-              </p>
+            {goals.filter((g) => g.trim()).length > 0 && (
+              <div className="mt-4 space-y-2 border-t border-foreground/5 pt-3">
+                {goals.filter((g) => g.trim()).map((g, i) => (
+                  <p key={i} className="font-serifElegant text-[14.5px] italic leading-snug text-resma-navy/85">
+                    "{g}"
+                  </p>
+                ))}
+              </div>
             )}
           </div>
         </div>
