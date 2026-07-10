@@ -183,11 +183,7 @@ export default function Dashboard() {
       case "pending":
         return <PendingBento />;
       case "mini_habits":
-        return (
-          <ActiveWidgetWrapper title="Tus widgets activos" onManageClick={() => {}}>
-            <MiniHabitsWidget />
-          </ActiveWidgetWrapper>
-        );
+        return <MiniHabitsWidget />;
       case "gratitude":
         return <GratitudeWidget />;
       case "contention_notes":
