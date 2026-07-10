@@ -168,8 +168,7 @@ export function TherapyMiniTracker({
       </div>
 
 
-      <ContactConfirmDialog
-      </div>
+
 
 
       <ContactConfirmDialog
