@@ -104,6 +104,33 @@ export type Database = {
         }
         Relationships: []
       }
+      algo_onboarding_config: {
+        Row: {
+          algo_version: number
+          category_content: Json
+          id: number
+          updated_at: string
+          updated_by: string | null
+          weights: Json
+        }
+        Insert: {
+          algo_version?: number
+          category_content?: Json
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+          weights?: Json
+        }
+        Update: {
+          algo_version?: number
+          category_content?: Json
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+          weights?: Json
+        }
+        Relationships: []
+      }
       algo_option_links: {
         Row: {
           created_at: string
@@ -3082,6 +3109,15 @@ export type Database = {
           treatment_status: string
           user_id: string
         }[]
+      }
+      admin_onboarding_metrics: { Args: never; Returns: Json }
+      admin_reset_plan: {
+        Args: { _reason?: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_save_algo_config: {
+        Args: { _category_content: Json; _weights: Json }
+        Returns: undefined
       }
       admin_set_admin_role: {
         Args: { _is_admin: boolean; _user_id: string }
