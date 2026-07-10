@@ -306,13 +306,13 @@ export function SleepZoneWidget() {
     (async () => {
       const { data } = await supabase
         .from("sleep_log")
-        .select("log_date, sleep_quality")
+        .select("log_date, score")
         .eq("user_id", user.id)
         .order("log_date", { ascending: false })
         .limit(1)
         .maybeSingle();
       const d: any = data;
-      if (d) setLastLog({ date: d.log_date, score: d.sleep_quality ?? null });
+      if (d) setLastLog({ date: d.log_date, score: d.score ?? null });
     })();
   }, [user?.id]);
 
