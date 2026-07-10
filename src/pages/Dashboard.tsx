@@ -184,7 +184,49 @@ export default function Dashboard() {
     }
   };
 
+  const PRIORITY_IDS: WidgetId[] = ["morning", "recommended", "night"];
   const visibleOrdered = widgets.widgets.filter((w) => w.enabled && !w.hidden);
+  const gridWidgets = widgets.editMode
+    ? visibleOrdered
+    : visibleOrdered.filter((w) => !PRIORITY_IDS.includes(w.id as WidgetId));
+
+  const priorityCards: PriorityCard[] = [
+    {
+      id: "morning",
+      chip: "Prioridad mañana",
+      chipTone: "gold",
+      title: "Sintonía de la mañana",
+      description: "Arrancá tu día regulando tu energía somática, emociones y valores.",
+      actionLabel: "Cultivar mi día",
+      actionTone: "gold",
+      onAction: () => setCheckinOpen("morning"),
+      done: morningDone,
+      doneSummary: morningDone ? "Ritual matutino completado" : undefined,
+    },
+    {
+      id: "recommended",
+      chip: "Práctica recomendada",
+      chipTone: "teal",
+      title: "Manejo de distorsiones",
+      description: "Identificá pensamientos automáticos y desarmá los sesgos cognitivos.",
+      actionLabel: "Desarmar sesgos",
+      actionTone: "teal",
+      onAction: () => navigate("/pensamientos"),
+    },
+    {
+      id: "night",
+      chip: "Prioridad noche",
+      chipTone: "navy",
+      title: "Balance nocturno",
+      description: "Cerrá tu día, evalúa emociones y hacé tu balance introspectivo.",
+      actionLabel: "Cerrar mi día",
+      actionTone: "navy",
+      onAction: () => setCheckinOpen("night"),
+      done: nightDone,
+      doneSummary: nightDone ? "Balance nocturno completado" : undefined,
+    },
+  ];
+
 
   return (
     <div className="resma-bg-gradient relative min-h-screen overflow-hidden pb-24 safe-area-top">
