@@ -302,12 +302,13 @@ export default function Onboarding() {
     (step === 5 && format.length > 0);
 
   const wizardStep = step < 0 ? 0 : Math.min(step, 5) + 1;
+  const hideChrome = step < 0 || step === 6 || step === 7;
 
   return (
     <OnboardingShell
       step={wizardStep}
-      totalSteps={step < 0 || step === 6 ? 0 : totalSteps}
-      onBack={step > -2 && step !== 6 ? () => setStep((s) => s - 1) : undefined}
+      totalSteps={hideChrome ? 0 : totalSteps}
+      onBack={step > -2 && !hideChrome && step !== 8 ? () => setStep((s) => s - 1) : undefined}
 
     >
       {step === -2 && <SplashIntro onContinue={() => setStep(-1)} />}
