@@ -159,19 +159,14 @@ export function TherapyMiniTracker({
         </motion.div>
       )}
 
-      {!assigned && (
-        <p className="px-1 text-[11px] leading-snug text-[#64748b]">
-          Estamos buscando un profesional ideal para vos. Te avisamos apenas se asigne.
-        </p>
-      )}
-
       {/* Acceso a herramientas siempre disponible cuando el toggle está activo */}
       <div className="grid grid-cols-2 gap-2.5 pt-1">
         <NextSessionCard />
-        <MiniBento icon={<FileText size={15} className="text-[#b45309]" />} iconBg="bg-[#facb60]/20" title="Resumen Psico" sub="Reportes y hábitos." onClick={() => navigate("/mi-proceso/resumen")} />
-        <MiniBento icon={<NotebookPen size={15} className="text-[#7c3aed]" />} iconBg="bg-[#7c3aed]/12" title="Notas de Sesión" sub="Temas y dudas." onClick={() => navigate("/mi-proceso/terapia")} />
-        <MiniBento icon={<Pill size={15} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Medicación" sub="Próxima toma: Al día" onClick={() => navigate("/mi-proceso/medicacion")} />
+        <MiniBento icon={<FileText size={20} className="text-[#b45309]" />} iconBg="bg-[#facb60]/20" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
+        <MiniBento icon={<NotebookPen size={20} className="text-[#7c3aed]" />} iconBg="bg-[#7c3aed]/12" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
+        <MiniBento icon={<Pill size={20} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
       </div>
+
 
       <ContactConfirmDialog
         open={confirmOpen}
@@ -256,26 +251,24 @@ function FullProfessionalCard({
 
       <div className="grid grid-cols-2 gap-2.5">
         <NextSessionCard />
-        <MiniBento icon={<FileText size={15} className="text-[#b45309]" />} iconBg="bg-[#facb60]/20" title="Resumen Psico" sub="Reportes y hábitos." onClick={() => navigate("/mi-proceso/resumen")} />
-        <MiniBento icon={<NotebookPen size={15} className="text-[#7c3aed]" />} iconBg="bg-[#7c3aed]/12" title="Notas de Sesión" sub="Temas y dudas." onClick={() => navigate("/mi-proceso/terapia")} />
-        <MiniBento icon={<Pill size={15} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Medicación" sub="Próxima toma: Al día" onClick={() => navigate("/mi-proceso/medicacion")} />
+        <MiniBento icon={<FileText size={20} className="text-[#b45309]" />} iconBg="bg-[#facb60]/20" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
+        <MiniBento icon={<NotebookPen size={20} className="text-[#7c3aed]" />} iconBg="bg-[#7c3aed]/12" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
+        <MiniBento icon={<Pill size={20} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
       </div>
     </div>
   );
 }
 
-function MiniBento({ icon, iconBg, title, sub, onClick }: any) {
+function MiniBento({ icon, iconBg, title, onClick }: any) {
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="flex flex-col items-start gap-2 rounded-[18px] border border-white/70 bg-white/80 p-3 text-left shadow-[0_6px_20px_-16px_rgba(16,25,39,0.22)] backdrop-blur-xl"
+      className="flex aspect-square flex-col items-start justify-between rounded-[18px] border border-white/70 bg-white/80 p-4 text-left shadow-[0_6px_20px_-16px_rgba(16,25,39,0.22)] backdrop-blur-xl"
     >
-      <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${iconBg}`}>{icon}</div>
-      <div>
-        <p className="font-display text-[12.5px] font-bold leading-tight text-[#0f172a]">{title}</p>
-        <p className="mt-0.5 text-[10.5px] leading-snug text-[#64748b]">{sub}</p>
-      </div>
+      <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${iconBg}`}>{icon}</div>
+      <p className="font-display text-[13.5px] font-bold leading-tight text-[#0f172a]">{title}</p>
     </motion.button>
   );
 }
+
