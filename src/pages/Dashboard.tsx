@@ -26,6 +26,7 @@ import { PsyNewsWidget } from "@/components/home/PsyNewsWidget";
 import { PendingBento } from "@/components/home/PendingBento";
 import { PullToRefresh } from "@/components/home/PullToRefresh";
 import { HomeSkeleton } from "@/components/home/HomeSkeleton";
+import { PriorityStack, type PriorityCard } from "@/components/home/PriorityStack";
 import ThoughtTaskWidget from "@/components/pensamientos/ThoughtTaskWidget";
 
 const GROUP_ORDER_KEY = "home_groups_order_v2";
