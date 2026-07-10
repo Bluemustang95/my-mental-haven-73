@@ -31,20 +31,27 @@ export default function Auth() {
 
   const BIO_PROMPTED_KEY = "resma:bio_prompted";
 
+  const postLoginTarget = () =>
+    typeof window !== "undefined" && sessionStorage.getItem("resma:onboarding_pending")
+      ? "/onboarding"
+      : "/";
+
   const maybePromptBiometric = async () => {
+    const dest = postLoginTarget();
     const isStandalone =
       typeof window !== "undefined" &&
       (window.matchMedia?.("(display-mode: standalone)").matches ||
         // iOS Safari
         // @ts-ignore
         window.navigator.standalone === true);
-    if (!isStandalone) return navigate("/", { replace: true });
-    if (!isBiometricSupported() || isBiometricEnabled()) return navigate("/", { replace: true });
-    if (localStorage.getItem(BIO_PROMPTED_KEY) === "never") return navigate("/", { replace: true });
+    if (!isStandalone) return navigate(dest, { replace: true });
+    if (!isBiometricSupported() || isBiometricEnabled()) return navigate(dest, { replace: true });
+    if (localStorage.getItem(BIO_PROMPTED_KEY) === "never") return navigate(dest, { replace: true });
     const { data } = await supabase.auth.getUser();
-    if (!data.user) return navigate("/", { replace: true });
+    if (!data.user) return navigate(dest, { replace: true });
     setBioPromptUser({ id: data.user.id, name: data.user.email?.split("@")[0] || "RESMA" });
   };
+
 
   useEffect(() => {
     setBioReady(isBiometricSupported() && isBiometricEnabled());
