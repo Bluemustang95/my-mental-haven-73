@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Sparkles, Wind, Calendar } from "lucide-react";
-const ICON_SIZE = 26;
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { readDraft, draftHasProgress } from "@/hooks/useChangeResponseFlow";
