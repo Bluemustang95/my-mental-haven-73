@@ -64,7 +64,7 @@ export default function Auth() {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         const ok = await verifyBiometric();
-        if (ok) navigate("/", { replace: true });
+        if (ok) navigate(postLoginTarget(), { replace: true });
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
