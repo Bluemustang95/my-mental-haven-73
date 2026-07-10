@@ -30,6 +30,8 @@ import { PullToRefresh } from "@/components/home/PullToRefresh";
 import { HomeSkeleton } from "@/components/home/HomeSkeleton";
 import { PriorityStack, type PriorityCard } from "@/components/home/PriorityStack";
 import ThoughtTaskWidget from "@/components/pensamientos/ThoughtTaskWidget";
+import { WidgetShell } from "@/components/home/WidgetVisual";
+import { EditSlots } from "@/components/home/EditSlots";
 
 const GROUP_ORDER_KEY = "home_groups_order_v2";
 function loadGroupOrder(): string[] {
@@ -496,23 +498,11 @@ function TimelineCard({
 
 function SleepZoneCard({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      className="relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-[24px] bg-gradient-to-br from-violet-700 via-purple-700 to-indigo-900 p-3.5 text-left text-white shadow-[0_14px_36px_-18px_rgba(76,29,149,0.7)] transition active:scale-[0.98]"
-    >
-      <div className="pointer-events-none absolute -right-6 -top-10 h-32 w-32 rounded-full bg-fuchsia-400/30 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-10 -left-6 h-32 w-32 rounded-full bg-indigo-400/30 blur-2xl" />
-      <div className="relative flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md">
-          <MoonIcon size={16} />
-        </div>
-        <div>
-          <p className="text-[9.5px] font-semibold uppercase tracking-[0.18em] text-white/70">Zona de descanso</p>
-          <p className="font-display text-[14px] font-semibold">Santuario del sueño</p>
-          <p className="text-[10.5px] text-white/70">Ruidos blancos y protocolos nocturnos.</p>
-        </div>
-      </div>
-      <ChevronRight size={16} className="relative text-white/80" />
+    <button onClick={onClick} className="block w-full text-left">
+      <WidgetShell id="sleep_zone">
+        <p className="mt-1 font-display text-[15px] font-bold text-white">Santuario del sueño</p>
+        <p className="text-[11px] text-white/75">Ruidos blancos y protocolos nocturnos.</p>
+      </WidgetShell>
     </button>
   );
 }
