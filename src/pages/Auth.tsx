@@ -286,7 +286,7 @@ export default function Auth() {
         onClose={(result) => {
           if (result === "never") localStorage.setItem(BIO_PROMPTED_KEY, "never");
           setBioPromptUser(null);
-          navigate("/", { replace: true });
+          navigate(postLoginTarget(), { replace: true });
         }}
       />
     </div>
