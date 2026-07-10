@@ -11,23 +11,17 @@ type Status = "ok" | "due" | "never";
 const STATUS_DOT: Record<Status, string> = { ok: "#34d399", due: "#facb60", never: "#fbbf24" };
 const STATUS_TEXT: Record<Status, string> = { ok: "✓ Al día", due: "Toca actualizar", never: "Pendiente" };
 
-type Item = {
-  code: string;
-  label: string;
-  title: string;
-  gradient: string;
-  art: React.ReactNode;
-};
-
-const INVENTORIES: Item[] = [
-  { code: "BDI", label: "BDI-II", title: "Depresión de Beck", gradient: "linear-gradient(135deg,#7cc2c8 0%,#5fa8af 100%)", art: <ArtBars /> },
-  { code: "BAI", label: "BAI", title: "Ansiedad de Beck", gradient: "linear-gradient(135deg,#4f46e5 0%,#3b32c0 100%)", art: <ArtSine /> },
-  { code: "PSWQ", label: "PSWQ", title: "Preocupación", gradient: "linear-gradient(135deg,#f59e0b 0%,#d97706 100%)", art: <ArtSpiral /> },
-  { code: "PHQ-9", label: "PHQ-9", title: "Depresión (screening)", gradient: "linear-gradient(135deg,#0ea5e9 0%,#0369a1 100%)", art: <ArtBars /> },
-  { code: "GAD-7", label: "GAD-7", title: "Ansiedad generalizada", gradient: "linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)", art: <ArtSine /> },
-  { code: "PSS-10", label: "PSS-10", title: "Estrés percibido", gradient: "linear-gradient(135deg,#ec4899 0%,#be185d 100%)", art: <ArtSpiral /> },
-  { code: "Rosenberg", label: "Rosenberg", title: "Autoestima", gradient: "linear-gradient(135deg,#10b981 0%,#047857 100%)", art: <ArtBars /> },
+const GRADIENTS = [
+  "linear-gradient(135deg,#7cc2c8 0%,#5fa8af 100%)",
+  "linear-gradient(135deg,#4f46e5 0%,#3b32c0 100%)",
+  "linear-gradient(135deg,#f59e0b 0%,#d97706 100%)",
+  "linear-gradient(135deg,#0ea5e9 0%,#0369a1 100%)",
+  "linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)",
+  "linear-gradient(135deg,#ec4899 0%,#be185d 100%)",
+  "linear-gradient(135deg,#10b981 0%,#047857 100%)",
 ];
+
+type Item = { code: string; label: string; title: string; gradient: string; art: React.ReactNode };
 
 function statusFromDays(days: number | null): { status: Status; recency: string } {
   if (days === null) return { status: "never", recency: "Nunca" };
@@ -38,23 +32,48 @@ function statusFromDays(days: number | null): { status: Status; recency: string 
 export default function InventariosHub() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [items, setItems] = useState<Item[]>([]);
   const [lastByCode, setLastByCode] = useState<Record<string, number | null>>({});
   const [activeCode, setActiveCode] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    supabase
+      .from("test_definitions" as any)
+      .select("code,name,kind,active,sort")
+      .eq("kind", "symptom")
+      .eq("active", true)
+      .order("sort")
+      .then(({ data }) => {
+        const arts = [<ArtBars key="b" />, <ArtSine key="s" />, <ArtSpiral key="sp" />];
+        const rows = (data as any[]) ?? [];
+        setItems(
+          rows.map((r, i) => ({
+            code: r.code,
+            label: r.code,
+            title: r.name,
+            gradient: GRADIENTS[i % GRADIENTS.length],
+            art: arts[i % arts.length],
+          })),
+        );
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!user || items.length === 0) return;
     supabase
       .from("test_results")
       .select("test_type, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(80)
+      .limit(120)
       .then(({ data }) => {
         const map: Record<string, number | null> = {};
         const now = Date.now();
         (data ?? []).forEach((r: any) => {
           const t = String(r.test_type ?? "").toUpperCase();
-          for (const it of INVENTORIES) {
+          for (const it of items) {
             const codeU = it.code.toUpperCase();
             if (map[it.code] !== undefined) continue;
             if (t === codeU || t.startsWith(codeU)) {
@@ -64,7 +83,7 @@ export default function InventariosHub() {
         });
         setLastByCode(map);
       });
-  }, [user]);
+  }, [user, items]);
 
   return (
     <div className="min-h-screen bg-[#f9f9fb] pb-24">
@@ -82,36 +101,45 @@ export default function InventariosHub() {
         <p className="mb-2.5 font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.18em] text-[#7cc2c8]">
           Evaluaciones y psicometría
         </p>
-        <div className="grid grid-cols-2 gap-3">
-          {INVENTORIES.map((it) => {
-            const { status, recency } = statusFromDays(lastByCode[it.code] ?? null);
-            return (
-              <motion.button
-                key={it.code}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setActiveCode(it.code)}
-                className="relative h-44 shrink-0 overflow-hidden rounded-[20px] p-3 text-left text-white shadow-[0_10px_24px_-14px_rgba(16,25,39,0.4)]"
-                style={{ background: it.gradient }}
-              >
-                <div className="absolute inset-0 opacity-90">{it.art}</div>
-                <div className="relative flex h-full flex-col justify-between">
-                  <div className="flex items-start justify-end">
-                    <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider backdrop-blur-md">
-                      {it.label}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-serif text-[14px] font-medium leading-tight drop-shadow">{it.title}</p>
-                    <div className="mt-1 flex items-center gap-1 text-[10px] text-white/85">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: STATUS_DOT[status] }} />
-                      <span>{STATUS_TEXT[status]} · {recency}</span>
+
+        {loading ? (
+          <div className="py-16 text-center text-[13px] text-[#64748b]">Cargando…</div>
+        ) : items.length === 0 ? (
+          <div className="rounded-[20px] border border-dashed border-[#e2e8f0] bg-white/60 p-8 text-center text-[12.5px] leading-relaxed text-[#64748b]">
+            Aún no hay inventarios cargados. Pedile al admin que agregue tests desde el panel.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {items.map((it) => {
+              const { status, recency } = statusFromDays(lastByCode[it.code] ?? null);
+              return (
+                <motion.button
+                  key={it.code}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setActiveCode(it.code)}
+                  className="relative h-44 shrink-0 overflow-hidden rounded-[20px] p-3 text-left text-white shadow-[0_10px_24px_-14px_rgba(16,25,39,0.4)]"
+                  style={{ background: it.gradient }}
+                >
+                  <div className="absolute inset-0 opacity-90">{it.art}</div>
+                  <div className="relative flex h-full flex-col justify-between">
+                    <div className="flex items-start justify-end">
+                      <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider backdrop-blur-md">
+                        {it.label}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-serif text-[14px] font-medium leading-tight drop-shadow">{it.title}</p>
+                      <div className="mt-1 flex items-center gap-1 text-[10px] text-white/85">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: STATUS_DOT[status] }} />
+                        <span>{STATUS_TEXT[status]} · {recency}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.button>
-            );
-          })}
-        </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {activeCode && <TestRunner testCode={activeCode} onClose={() => setActiveCode(null)} />}

@@ -71,7 +71,7 @@ export function PendingBento() {
         title: "Cambiar respuestas",
         subtitle: d.selectedEmotion ? `${d.selectedEmotion} · ${stageMap[d.stage] ?? "En curso"}` : "Sesión en curso",
         to: "/herramientas/cambiar-respuestas",
-        icon: <Heart size={16} className="text-white" />,
+        icon: <Heart size={26} className="text-white" />,
         from: "#7cc2c8",
         to2: "#facb60",
       });
@@ -85,7 +85,7 @@ export function PendingBento() {
         title: "Práctica de mindfulness",
         subtitle: m.exerciseName,
         to: m.returnPath,
-        icon: <Wind size={16} className="text-white" />,
+        icon: <Wind size={26} className="text-white" />,
         from: "#FB923C",
         to2: "#FCD34D",
       });
@@ -104,7 +104,7 @@ export function PendingBento() {
               ? `${st.pending} de ${st.total} bloques pendientes hoy`
               : `Todo completado hoy ✓`,
           to: "/herramientas/construir-bienestar?tab=seguimiento&day=hoy",
-          icon: <Calendar size={16} className="text-white" />,
+          icon: <Calendar size={26} className="text-white" />,
           from: "#7cc2c8",
           to2: "#34D399",
         });
@@ -114,7 +114,7 @@ export function PendingBento() {
           title: "Continuá tu plan",
           subtitle: `Paso ${b.step} de 4`,
           to: "/herramientas/construir-bienestar",
-          icon: <Sparkles size={16} className="text-white" />,
+          icon: <Sparkles size={26} className="text-white" />,
           from: "#7cc2c8",
           to2: "#facb60",
         });
@@ -135,7 +135,7 @@ export function PendingBento() {
           title: "Pack de activación",
           subtitle: `Día ${prog.current_day ?? 1} en curso`,
           to: "/herramientas/pack-actividades",
-          icon: <Sparkles size={16} className="text-white" />,
+          icon: <Sparkles size={26} className="text-white" />,
           from: "#FB923C",
           to2: "#F472B6",
         });
@@ -183,7 +183,7 @@ export function PendingBento() {
             title: "Te puede aliviar",
             subtitle: "Respiración 4-7-8 · 3 min",
             to: "/herramientas/mindfulness/respiracion?intention=ansiedad&minutes=3",
-            icon: <Wind size={16} className="text-white" />,
+            icon: <Wind size={26} className="text-white" />,
             from: "#60A5FA",
             to2: "#A78BFA",
           });
@@ -200,30 +200,24 @@ export function PendingBento() {
 
   if (items.length === 0) return null;
 
+  const it = items[0];
   return (
-    <div className="mt-4">
-      <div className="grid grid-cols-2 gap-2">
-        {items.map((it) => (
-          <motion.button
-            key={it.key}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => navigate(it.to)}
-            className="flex aspect-square flex-col items-start justify-between rounded-2xl p-3 text-left text-white shadow-md"
-            style={{
-              background: `linear-gradient(135deg, ${it.from}, ${it.to2})`,
-              boxShadow: `0 10px 24px -14px ${it.from}`,
-            }}
-          >
-            <div className="h-9 w-9 rounded-lg flex items-center justify-center bg-white/25 backdrop-blur-sm">
-              {it.icon}
-            </div>
-            <p className="font-display text-[13px] font-bold text-white leading-tight">
-              {it.title}
-            </p>
-          </motion.button>
-        ))}
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      onClick={() => navigate(it.to)}
+      className="flex aspect-square w-full flex-col items-center justify-center gap-3 rounded-[22px] p-4 text-center text-white"
+      style={{
+        background: `linear-gradient(135deg, ${it.from}, ${it.to2})`,
+        boxShadow: `0 10px 24px -14px ${it.from}`,
+      }}
+    >
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm">
+        {it.icon}
       </div>
-    </div>
+      <p className="font-display text-[14px] font-bold leading-tight text-white">
+        {it.title}
+      </p>
+    </motion.button>
   );
 }
 

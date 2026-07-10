@@ -1,49 +1,49 @@
-# Limpieza estética global
+## 1. Mi Proceso — Bento tiles con íconos centrados
 
-Objetivo: reducir ruido visual. Todos los bentos quedan con **ícono + nombre** (y máximo un dato clave cuando aporta). Sin descripciones largas, sin CTAs redundantes, sin banners explicativos.
+En `TherapyMiniTracker.tsx` (`MiniBento` y las tarjetas cuando hay pro asignado) y en `NextSessionCard.tsx` rediseñar los 4 tiles con **fill de color + ícono centrado grande + nombre debajo, centrado**. Estética moderna: sin sombras aparatosas, radio 22px, ícono blanco a ~30px sobre fondo pleno.
 
-## 1) Home — Enfoque prioritario (carrusel)
-Archivo: `src/components/home/PriorityFocusCarousel.tsx` (y card interna).
-- Quitar descripción larga ("Arrancá tu día regulando…").
-- Quitar chip "Paso obligatorio".
-- Quitar botón "CULTIVAR MI DÍA →" — toda la card es tappable.
-- Mantener: chip de categoría ("PRIORIDAD MAÑANA"), título grande ("Sintonía de la mañana"), ilustración/glow de fondo.
-- Altura de card se reduce proporcionalmente.
+Íconos y colores propuestos (paleta ya validada por vos, la mantengo):
 
-## 2) Home — Tus herramientas / Pendientes / Widgets
-Archivos: `src/components/home/PendingForYouGrid.tsx`, `WidgetsActiveGrid.tsx` (o similares en `src/components/home/`).
-- Quitar los headers "PENDIENTES PARA VOS" y "TUS WIDGETS · GESTIONAR · ACTIVOS".
-- Todas las tiles del bento pasan a formato uniforme: **ícono arriba + nombre debajo**. Sin subtítulos ("Día 2 en curso", "Respiración 4-7-8 · 3 min", "Ruidos protocolo…", etc.).
-- Mantener color/gradiente de fondo por tile (identidad visual).
-- Header único de sección: "TUS HERRAMIENTAS" con el "+" ya existente.
+| Tile | Color fill | Ícono (lucide) |
+|---|---|---|
+| Próxima Sesión | Teal `#7cc2c8` | `CalendarClock` |
+| Resumen Psico | Amber `#facb60` | `FileText` (ícono en `#101927`) |
+| Notas de Sesión | Violeta `#7c3aed` | `NotebookPen` |
+| Medicación | Dark Blue `#101927` | `Pill` (ícono teal `#7cc2c8`) |
 
-## 3) Mi Proceso — Índice de bienestar
-Archivo: `src/components/proceso/WellbeingCardV2.tsx`.
-- Quitar mensaje ("Días difíciles. Bajá la exigencia…").
-- Quitar sparkline.
-- Quitar chevron "Ver mi análisis" (la card entera sigue abriendo el sheet).
-- Mantener: label "ÍNDICE DE BIENESTAR", número grande "56/100", chip de delta en verde/rojo ("-12%" / "+X%").
-- Resultado: card compacta, sólo número + porcentaje.
+Layout tile: `aspect-square`, `flex flex-col items-center justify-center gap-3`, ícono grande arriba centrado, nombre debajo centrado (font-display 14px bold, blanco salvo Amber que usa dark).
 
-## 4) Mi Proceso — Terapia y sincronización
-Archivo: `src/components/proceso/TherapyMiniTracker.tsx` (stepper Buscando/Asignado).
-- Quitar la línea explicativa "Estamos buscando un profesional ideal para vos. Te avisamos apenas se asigne."
-- Agregar botón "?" pequeño junto al título "TERAPIA Y SINCRONIZACIÓN" que abre popover con la leyenda de estados (Buscando → Asignando → Asignado → En espera → …). Reutilizar patrón de `WellbeingHelpPopover.tsx`.
+## 2. Inicio — bento uniforme sin extras
 
-## 5) Mi Proceso — Bentos Próxima Sesión / Resumen Psico / Notas / Medicación
-Archivos: `src/pages/MiProceso.tsx` y componentes de cada card.
-- Formato uniforme cuadrado: **ícono + nombre**. Sin subtítulos ("Tocá para agendar tu encuentro.", "Reportes y hábitos.", "Temas y dudas.", "Próxima toma: Al día") ni acciones inline ("Agendar / Editar").
-- La acción principal se dispara al tocar la card.
+Problemas observados en la captura anotada:
+- **Zona de descanso** ocupa 2 columnas (rectangular grande) → correcto, mantener.
+- **Pack de activación** aparece chico (½ ancho de un tile normal). Debe ser un **cuadrado igual de grande** que Mini hábitos.
+- **Mini hábitos** viene envuelto por el header "TUS WIDGETS ACTIVOS · GESTIONAR ♡" y borde/padding extra → eliminar ese wrapper.
 
-## 6) Tests e inventarios — recuperar estilo previo
-Archivo: `src/pages/InventariosHub.tsx`.
-- Reemplazar tiles cuadradas grandes con gradiente por el **estilo carrusel/lista horizontal** que usaba `PsychometryCarousel` (cards angostas con nombre + subtítulo corto + fecha "Último: …", diseño limpio sobre fondo claro).
-- Mantener el header sticky y `TestRunner` al tocar.
-- Referencia visual: `src/components/proceso/PsychometryCarousel.tsx` (recuperar su look & feel).
+Cambios:
+- En `Dashboard.tsx` (case `mini_habits`): quitar el `<ActiveWidgetWrapper>` y renderizar solo `<MiniHabitsWidget />` como tile plano.
+- Asegurar que **PendingBento** (donde vive "Pack de activación") use tiles del mismo tamaño que los otros widgets: quitar el `mt-4` extra, usar `aspect-square` y mismo padding/tipografía que `QuickToolWidget`. Si viene solo un pendiente, que ocupe 1 columna cuadrada — no más chico que el resto.
+- Grid final: primer widget rectangular full-width (Zona de descanso), y a continuación una grilla `grid-cols-2 gap-3` donde **cada tile** (Pack de activación, Mini hábitos, y cualquier otro) tiene el **mismo `aspect-square`, mismo radio, mismo padding, ícono + nombre centrado abajo**. Sin headers intermedios, sin bordes de "widgets activos".
 
----
+## 3. Inventarios cargados desde Admin
 
-### Notas
-- Sin cambios de lógica ni de datos — sólo presentación.
-- Se mantienen colores/tokens actuales (Cream, Dark Blue, Teal).
-- Cada card sigue siendo tappable con la misma navegación que hoy.
+Hoy `InventariosHub.tsx` tiene un array **hardcoded** con BDI, BAI, PSWQ, PHQ-9, GAD-7, PSS-10, Rosenberg. El admin (`TestsCrudPanel`) ya lee/escribe `test_definitions` en la base pero el hub no lo usa → por eso ves inventarios que no creaste y los que creás en admin no aparecen.
+
+Fix: reemplazar el array por una carga desde Supabase:
+
+```ts
+supabase.from("test_definitions")
+  .select("code,name,kind,active,sort")
+  .eq("kind","symptom").eq("active",true).order("sort")
+```
+
+- Mapear cada row a un tile con gradiente/arte asignado por índice (rotando entre los 3 estilos actuales `ArtBars`/`ArtSine`/`ArtSpiral` y una paleta de 6 gradientes) para conservar la estética.
+- `label` = `code`, `title` = `name`, `onClick` sigue abriendo `<TestRunner testCode={code} />`.
+- Estado "último completado" sigue basándose en `test_results.test_type` como ahora.
+- Si no hay filas, mostrar empty state: "Aún no hay inventarios cargados. Pedile al admin que agregue."
+
+Con esto, lo que se crea/desactiva en **Admin → Tests** aparece o desaparece automáticamente en Recursos → Tests e inventarios.
+
+## Alcance
+
+Solo presentación + wiring de datos existentes. Sin cambios en schema, sin nuevas rutas, sin lógica de negocio nueva.
