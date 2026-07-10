@@ -52,19 +52,16 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
 
   return (
     <section className="mt-4">
-      <div className="mb-3 flex items-center justify-between px-1">
-        <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Enfoque prioritario
-        </p>
-        {rotated.length > 1 && (
+      {rotated.length > 1 && (
+        <div className="mb-2 flex items-center justify-end px-1">
           <button
             onClick={() => setManualIdx((i) => i + 1)}
             className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-resma-navy shadow-[0_2px_10px_-4px_rgba(16,25,39,0.15)] ring-1 ring-black/5 transition active:scale-95"
           >
             Siguiente prioridad →
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="relative">
         {/* Peek layers behind */}

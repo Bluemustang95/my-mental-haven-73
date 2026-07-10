@@ -30,9 +30,15 @@ import { PullToRefresh } from "@/components/home/PullToRefresh";
 import { HomeSkeleton } from "@/components/home/HomeSkeleton";
 import { PriorityStack, type PriorityCard } from "@/components/home/PriorityStack";
 import ThoughtTaskWidget from "@/components/pensamientos/ThoughtTaskWidget";
-import { WidgetShell } from "@/components/home/WidgetVisual";
 import { EditSlots } from "@/components/home/EditSlots";
-import { QuickToolWidget } from "@/components/home/QuickToolWidget";
+import {
+  PensamientosQuickWidget,
+  PsicoQuickWidget,
+  PackQuickWidget,
+  MindfulnessQuickWidget,
+  DiarioQuickWidget,
+  SleepZoneWidget,
+} from "@/components/home/QuickToolWidget";
 import { TOOL_META, type ToolModule } from "@/lib/onboardingAlgorithm";
 
 const GROUP_ORDER_KEY = "home_groups_order_v2";
