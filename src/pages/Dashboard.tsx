@@ -234,7 +234,7 @@ export default function Dashboard() {
       description: "Cerrá tu día, evalúa emociones y hacé tu balance introspectivo.",
       actionLabel: "Cerrar mi día",
       actionTone: "navy",
-      onAction: () => setCheckinOpen("night"),
+      onAction: () => navigate("/balance-nocturno"),
       done: nightDone,
       doneSummary: nightDone ? "Balance nocturno completado" : undefined,
     },
