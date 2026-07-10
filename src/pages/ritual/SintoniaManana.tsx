@@ -418,17 +418,53 @@ export default function SintoniaManana() {
           </div>
 
           <div className="mt-6">
-            <p className="mb-1 px-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Intención de hoy (opcional)
-            </p>
-            <textarea
-              value={goalText}
-              onChange={(e) => setGoalText(e.target.value)}
-              placeholder="Una frase corta que oriente tu día…"
-              rows={3}
-              className="w-full resize-y rounded-2xl border border-resma-gold/40 bg-white px-3.5 py-3 text-[13.5px] leading-relaxed focus:border-resma-gold focus:outline-none"
-              style={{ minHeight: 96 }}
-            />
+            <div className="mb-2 flex items-center justify-between px-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                Intenciones de hoy (opcional)
+              </p>
+              <span className="text-[10px] font-semibold text-muted-foreground/70">
+                {goals.filter((g) => g.trim()).length}/{MAX_GOALS}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {goals.map((g, i) => (
+                <div key={i} className="relative">
+                  <textarea
+                    value={g}
+                    onChange={(e) =>
+                      setGoals((prev) => prev.map((x, idx) => (idx === i ? e.target.value : x)))
+                    }
+                    placeholder={
+                      i === 0
+                        ? "Una frase corta que oriente tu día…"
+                        : `Otra intención (${i + 1}/${MAX_GOALS})`
+                    }
+                    rows={2}
+                    className="w-full resize-y rounded-2xl border border-resma-gold/40 bg-white px-3.5 py-3 pr-9 text-[13.5px] leading-relaxed focus:border-resma-gold focus:outline-none"
+                    style={{ minHeight: 60 }}
+                  />
+                  {goals.length > 1 && (
+                    <button
+                      onClick={() =>
+                        setGoals((prev) => prev.filter((_, idx) => idx !== i))
+                      }
+                      aria-label="Quitar intención"
+                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-muted-foreground shadow-sm active:scale-90"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              {goals.length < MAX_GOALS && (
+                <button
+                  onClick={() => setGoals((prev) => [...prev, ""])}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-resma-gold/50 bg-white/60 px-3 py-2.5 text-[12px] font-semibold text-resma-gold active:scale-[0.98]"
+                >
+                  <Plus size={13} /> Agregar otra intención
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Picker propio (evita colisión de z-index con RitualShell) */}
