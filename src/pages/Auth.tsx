@@ -25,7 +25,7 @@ export default function Auth() {
   const [bioReady, setBioReady] = useState(false);
   const [bioPromptUser, setBioPromptUser] = useState<{ id: string; name: string } | null>(null);
   const hasPendingOnboarding = useMemo(
-    () => typeof window !== "undefined" && !!sessionStorage.getItem("onboarding_pending"),
+    () => typeof window !== "undefined" && !!sessionStorage.getItem("resma:onboarding_pending"),
     []
   );
 
