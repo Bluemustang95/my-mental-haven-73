@@ -346,7 +346,7 @@ export default function Dashboard() {
           );
         })() : (
           <div className="relative grid grid-cols-2 gap-3">
-            {visibleOrdered.map((w) => (
+            {gridWidgets.map((w) => (
               <WidgetCell
                 key={w.id}
                 id={w.id}
