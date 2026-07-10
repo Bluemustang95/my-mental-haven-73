@@ -335,33 +335,26 @@ export default function Dashboard() {
           <ManageWidgetsButton widgets={widgets.widgets} onToggle={widgets.toggleEnabled} />
         </div>
 
-        {widgets.editMode ? (() => {
-          /* Every visible widget is independently draggable + resizable. */
-          const persistedOrder = loadGroupOrder();
-          const ordered = [...gridWidgets].sort((a, b) => {
-            const ia = persistedOrder.indexOf(a.id);
-            const ib = persistedOrder.indexOf(b.id);
-            return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-          });
-          const groups: GroupItem[] = ordered.map((w) => ({
-            id: w.id,
-            size: w.size,
-            resizable: true,
-            hideable: true,
-            onHide: () => widgets.hide(w.id),
-            onToggleSize: () => widgets.setSize(w.id, w.size === "full" ? "half" : "full"),
-            render: () => renderWidget(w.id),
-          }));
-          return (
-            <ReorderableGroupStack
-              items={groups}
-              onReorder={(ids) => {
-                saveGroupOrder(ids);
-                widgets.reorder(ids as WidgetId[]);
-              }}
-            />
-          );
-        })() : (
+        {widgets.editMode ? (
+          <EditSlots
+            priority={<PriorityStack cards={priorityCards} />}
+            items={gridWidgets.map((w, i) => ({
+              id: w.id as WidgetId,
+              size: (i === 0 ? "full" : "half") as "full" | "half",
+              render: () => renderWidget(w.id as WidgetId),
+            }))}
+            onReorder={(ids) => {
+              saveGroupOrder(ids);
+              widgets.reorder(ids as WidgetId[]);
+            }}
+            onHide={(id) => widgets.hide(id)}
+            onToggleSize={(id) => {
+              const cur = widgets.widgets.find((x) => x.id === id);
+              widgets.setSize(id, cur?.size === "full" ? "half" : "full");
+            }}
+            onAdd={() => window.dispatchEvent(new CustomEvent("resma:open-manage-widgets"))}
+          />
+        ) : (
           <div className="relative grid grid-cols-2 gap-3">
             {gridWidgets.map((w, i) => {
               const forcedSize: "full" | "half" = i === 0 ? "full" : "half";
@@ -384,6 +377,7 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
 
         <div className="mt-3"><ThoughtTaskWidget /></div>
       </div>
