@@ -1,36 +1,50 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Sparkles, Leaf, Plus, ArrowLeft, Moon } from "lucide-react";
+import {
+  Check,
+  Sparkles,
+  Leaf,
+  Plus,
+  Moon,
+  Feather,
+  Zap,
+  Wind,
+  Droplet,
+  Flame,
+  CloudRain,
+  X,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { localDateStr } from "@/lib/utils";
 import { toast } from "sonner";
 import { RitualShell } from "@/components/ritual/RitualShell";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 // ---------- Datos ----------
 const EMOCIONES = [
-  { id: "calma",     label: "Calma",       color: "#7cc2c8", anim: "orb-anim-breathe",  desc: "Serenidad, presencia suave" },
-  { id: "alegria",   label: "Alegría",     color: "#facb60", anim: "orb-anim-radiate",  desc: "Energía luminosa, ganas" },
-  { id: "ansiedad",  label: "Ansiedad",    color: "#c9a6ff", anim: "orb-anim-vibrate",  desc: "Aceleración, anticipación" },
-  { id: "tristeza",  label: "Tristeza",    color: "#8fb3d9", anim: "orb-anim-wave",     desc: "Peso, ternura sin dirección" },
-  { id: "enojo",     label: "Enojo",       color: "#f28b82", anim: "orb-anim-flash",    desc: "Fuego, límite tensionado" },
-  { id: "agotamiento", label: "Agotamiento", color: "#b8b8c4", anim: "orb-anim-sink",    desc: "Escasez, cuerpo pesado" },
+  { id: "calma",       label: "Calma",       color: "#5dbf9a", Icon: Feather,   anim: "orb-anim-breathe", desc: "Serenidad, presencia suave" },
+  { id: "alegria",     label: "Energía",     color: "#facb60", Icon: Zap,       anim: "orb-anim-radiate", desc: "Energía luminosa, ganas" },
+  { id: "ansiedad",    label: "Ansiedad",    color: "#a996ff", Icon: Wind,      anim: "orb-anim-vibrate", desc: "Aceleración, anticipación" },
+  { id: "tristeza",    label: "Tristeza",    color: "#7aa8de", Icon: Droplet,   anim: "orb-anim-wave",    desc: "Peso, ternura sin dirección" },
+  { id: "enojo",       label: "Enojo",       color: "#f28b82", Icon: Flame,     anim: "orb-anim-flash",   desc: "Fuego, límite tensionado" },
+  { id: "agotamiento", label: "Agotamiento", color: "#b8b8c4", Icon: CloudRain, anim: "orb-anim-sink",    desc: "Escasez, cuerpo pesado" },
 ];
 
 const VALORES = [
-  { id: "presencia",    label: "Presencia",     hint: "Estar acá, ahora" },
-  { id: "conexion",     label: "Conexión",      hint: "Cuidar mis vínculos" },
-  { id: "creatividad",  label: "Creatividad",   hint: "Crear algo nuevo" },
-  { id: "salud",        label: "Salud",         hint: "Cuidar mi cuerpo" },
-  { id: "aprendizaje",  label: "Aprendizaje",   hint: "Saber, crecer" },
-  { id: "autenticidad", label: "Autenticidad",  hint: "Ser fiel a mí" },
-  { id: "compasion",    label: "Compasión",     hint: "Trato amable" },
-  { id: "trabajo",      label: "Trabajo",       hint: "Aporte con oficio" },
-  { id: "libertad",     label: "Libertad",      hint: "Espacio propio" },
-  { id: "gratitud",     label: "Gratitud",      hint: "Reconocer lo que hay" },
+  { id: "presencia",    label: "Presencia",    hint: "Estar acá, ahora" },
+  { id: "conexion",     label: "Conexión",     hint: "Cuidar mis vínculos" },
+  { id: "creatividad",  label: "Creatividad",  hint: "Crear algo nuevo" },
+  { id: "salud",        label: "Salud",        hint: "Cuidar mi cuerpo" },
+  { id: "aprendizaje",  label: "Aprendizaje",  hint: "Saber, crecer" },
+  { id: "autenticidad", label: "Autenticidad", hint: "Ser fiel a mí" },
+  { id: "compasion",    label: "Compasión",    hint: "Trato amable" },
+  { id: "trabajo",      label: "Trabajo",      hint: "Aporte con oficio" },
+  { id: "libertad",     label: "Libertad",     hint: "Espacio propio" },
+  { id: "gratitud",     label: "Gratitud",     hint: "Reconocer lo que hay" },
 ];
+
+const MAX_VALUES = 4;
 
 // ---------- Helpers ----------
 function sleepStateFromValue(v: number) {
@@ -47,19 +61,18 @@ export default function SintoniaManana() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  // Paso 1 — Sueño
+  // Paso 1
   const [sleep, setSleep] = useState(60);
   const [dreamYes, setDreamYes] = useState<boolean | null>(null);
   const [dreamText, setDreamText] = useState("");
-  // Paso 2 — Emociones
+  // Paso 2
   const [emotions, setEmotions] = useState<string[]>([]);
-  // Paso 3 — Valores + intención
+  // Paso 3
   const [values, setValues] = useState<string[]>([]);
-  const [valuesSheet, setValuesSheet] = useState(false);
+  const [pickerSlot, setPickerSlot] = useState<number | null>(null);
   const [goalText, setGoalText] = useState("");
   const [improveFromYesterday, setImproveFromYesterday] = useState<string | null>(null);
 
-  // Cargar puente noche→mañana
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -77,12 +90,45 @@ export default function SintoniaManana() {
 
   const sleepState = useMemo(() => sleepStateFromValue(sleep), [sleep]);
 
+  // Tinte de fondo según emociones seleccionadas (paso 2)
+  const emotionTint = useMemo(() => {
+    if (!emotions.length) return null;
+    const colors = emotions
+      .map((id) => EMOCIONES.find((e) => e.id === id)?.color)
+      .filter(Boolean) as string[];
+    if (!colors.length) return null;
+    return `radial-gradient(circle at 20% 15%, ${colors[0]}55, transparent 55%), radial-gradient(circle at 85% 30%, ${
+      colors[1] ?? colors[0]
+    }44, transparent 60%), radial-gradient(circle at 50% 90%, ${
+      colors[2] ?? colors[0]
+    }33, transparent 65%)`;
+  }, [emotions]);
+
   const toggleEmotion = (id: string) =>
     setEmotions((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
-  const toggleValue = (id: string) =>
-    setValues((p) =>
-      p.includes(id) ? p.filter((x) => x !== id) : p.length >= 3 ? p : [...p, id]
-    );
+
+  const pickValueForSlot = (valueId: string) => {
+    setValues((prev) => {
+      if (pickerSlot == null) return prev;
+      // Si ya está en otro slot, no duplicar
+      if (prev.includes(valueId) && prev[pickerSlot] !== valueId) return prev;
+      const next = [...prev];
+      while (next.length <= pickerSlot) next.push("");
+      next[pickerSlot] = valueId;
+      return next;
+    });
+    setPickerSlot(null);
+  };
+
+  const clearSlot = (slotIdx: number) => {
+    setValues((prev) => {
+      const next = [...prev];
+      next[slotIdx] = "";
+      return next;
+    });
+  };
+
+  const filledValues = values.filter(Boolean);
 
   const save = async () => {
     if (!user) return;
@@ -98,8 +144,8 @@ export default function SintoniaManana() {
         sleep_score: Math.round(sleep / 20),
         emotions: emotionLabels.length ? emotionLabels : null,
         dream_note: dreamYes ? dreamText || "Sí, soñé" : null,
-        thought_note: values.length
-          ? `Valores del día: ${values
+        thought_note: filledValues.length
+          ? `Valores del día: ${filledValues
               .map((v) => VALORES.find((x) => x.id === v)?.label ?? v)
               .join(", ")}`
           : null,
@@ -118,25 +164,18 @@ export default function SintoniaManana() {
   const canAdvance = () => {
     if (step === 0) return true;
     if (step === 1) return emotions.length > 0;
-    if (step === 2) return values.length > 0;
+    if (step === 2) return filledValues.length > 0;
     return true;
   };
 
   const handleNext = () => {
-    if (step === 2) {
-      save();
-      return;
-    }
-    if (step === 3) {
-      navigate("/");
-      return;
-    }
+    if (step === 2) return save();
+    if (step === 3) return navigate("/");
     setStep((s) => Math.min(totalSteps - 1, s + 1));
   };
 
   const handleBack = () => {
-    if (step === 0) navigate("/");
-    else if (step === 3) navigate("/");
+    if (step === 0 || step === 3) navigate("/");
     else setStep((s) => s - 1);
   };
 
@@ -154,6 +193,14 @@ export default function SintoniaManana() {
       }
       accent="teal"
     >
+      {/* Tint sutil según emociones */}
+      {step === 1 && emotionTint && (
+        <div
+          className="pointer-events-none fixed inset-0 -z-10 transition-opacity duration-700"
+          style={{ background: emotionTint, opacity: 0.55 }}
+        />
+      )}
+
       {step === 0 && (
         <StepHeader
           kicker="Paso 1 · Cuerpo"
@@ -178,8 +225,11 @@ export default function SintoniaManana() {
               style={{ accentColor: sleepState.color, touchAction: "pan-x" }}
             />
             <div className="flex justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
-              <span>Poco</span>
-              <span>Profundo</span>
+              <span>Poco · 0%</span>
+              <span className="text-resma-navy" style={{ color: sleepState.color }}>
+                {sleep}%
+              </span>
+              <span>Profundo · 100%</span>
             </div>
           </div>
 
@@ -224,13 +274,13 @@ export default function SintoniaManana() {
               {dreamYes && (
                 <motion.textarea
                   initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                  animate={{ height: "auto", opacity: 1, marginTop: 8 }}
+                  animate={{ height: 160, opacity: 1, marginTop: 10 }}
                   exit={{ height: 0, opacity: 0, marginTop: 0 }}
                   value={dreamText}
                   onChange={(e) => setDreamText(e.target.value)}
-                  placeholder="Contame brevemente tu sueño…"
-                  rows={2}
-                  className="w-full resize-none rounded-xl border border-foreground/10 bg-white/80 px-3 py-2 text-[13px] focus:border-resma-teal/60 focus:outline-none"
+                  placeholder="Contame tu sueño con el detalle que quieras…"
+                  className="w-full resize-y rounded-xl border border-foreground/10 bg-white/80 px-3 py-2.5 text-[13.5px] leading-relaxed focus:border-resma-teal/60 focus:outline-none"
+                  style={{ minHeight: 120 }}
                 />
               )}
             </AnimatePresence>
@@ -242,7 +292,7 @@ export default function SintoniaManana() {
         <StepHeader
           kicker="Paso 2 · Emociones"
           title="¿Qué te habita hoy?"
-          sub="Elegí las que sentís al despertar"
+          sub="Tocá para sintonizar. Podés elegir varias."
         >
           <div className="mt-6 -mx-5 overflow-x-auto no-scrollbar">
             <div className="flex snap-x snap-mandatory gap-4 px-5 pb-2">
@@ -252,13 +302,13 @@ export default function SintoniaManana() {
                   <button
                     key={em.id}
                     onClick={() => toggleEmotion(em.id)}
-                    className={`group relative flex w-[150px] shrink-0 snap-center flex-col items-center rounded-3xl border p-4 backdrop-blur transition ${
+                    className={`group relative flex w-[150px] shrink-0 snap-center flex-col items-center rounded-3xl border p-4 transition ${
                       on
-                        ? "border-white/90 bg-white/75 shadow-[0_12px_36px_-16px_rgba(16,25,39,0.25)]"
-                        : "border-white/50 bg-white/40"
+                        ? "border-white/90 bg-white/80 shadow-[0_18px_44px_-18px_rgba(16,25,39,0.28)]"
+                        : "border-white/50 bg-white/45"
                     }`}
                   >
-                    <EmotionOrb color={em.color} anim={em.anim} active={on} />
+                    <EmotionOrb em={em} active={on} />
                     <p className="mt-4 font-serifElegant text-[16px] font-semibold text-resma-navy">
                       {em.label}
                     </p>
@@ -266,7 +316,10 @@ export default function SintoniaManana() {
                       {em.desc}
                     </p>
                     {on && (
-                      <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-resma-teal/15 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.1em] text-resma-teal">
+                      <span
+                        className="mt-3 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.1em]"
+                        style={{ background: `${em.color}22`, color: em.color }}
+                      >
                         <Check size={10} strokeWidth={3} /> Elegida
                       </span>
                     )}
@@ -276,27 +329,43 @@ export default function SintoniaManana() {
             </div>
           </div>
 
-          {emotions.length > 0 && (
-            <div className="mt-6 rounded-2xl border border-white/60 bg-white/60 p-4 backdrop-blur">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Tu nebulosa emocional
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-3">
+          {/* Nebulosa emocional — siempre visible */}
+          <div className="mt-6 rounded-2xl border border-white/60 bg-white/60 p-4 backdrop-blur">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Tu nebulosa emocional
+            </p>
+            <div className="relative mt-3 flex min-h-[64px] flex-wrap items-center gap-3">
+              {emotions.length === 0 && (
+                <p className="text-[12px] italic text-muted-foreground/70">
+                  Elegí una emoción para empezar a formarla…
+                </p>
+              )}
+              <AnimatePresence>
                 {emotions.map((id) => {
                   const em = EMOCIONES.find((x) => x.id === id)!;
                   return (
-                    <div key={id} className="flex items-center gap-1.5">
+                    <motion.div
+                      key={id}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                      className="flex items-center gap-1.5"
+                    >
                       <span
-                        className="inline-block h-4 w-4 rounded-full"
-                        style={{ background: em.color, boxShadow: `0 0 12px ${em.color}` }}
+                        className="inline-block h-5 w-5 rounded-full"
+                        style={{
+                          background: `radial-gradient(circle at 32% 30%, #ffffffcc, ${em.color} 65%)`,
+                          boxShadow: `0 0 14px ${em.color}`,
+                        }}
                       />
-                      <span className="text-[12px] text-resma-navy">{em.label}</span>
-                    </div>
+                      <span className="text-[12px] font-medium text-resma-navy">{em.label}</span>
+                    </motion.div>
                   );
                 })}
-              </div>
+              </AnimatePresence>
             </div>
-          )}
+          </div>
         </StepHeader>
       )}
 
@@ -304,7 +373,7 @@ export default function SintoniaManana() {
         <StepHeader
           kicker="Paso 3 · Intención"
           title="¿Qué valores riegan tu día?"
-          sub="Elegí hasta 3 hojas para tu rama"
+          sub="Tocá una hoja para cultivarla"
         >
           {improveFromYesterday && (
             <motion.div
@@ -326,16 +395,18 @@ export default function SintoniaManana() {
             </motion.div>
           )}
 
-          <div className="mt-6 flex justify-center">
-            <ValueBranch selected={values} />
+          <div className="mt-6">
+            <ValueBranch
+              selected={values}
+              onSlot={(idx) => setPickerSlot(idx)}
+              onClear={clearSlot}
+              valueLabel={(id) => VALORES.find((v) => v.id === id)?.label ?? ""}
+            />
           </div>
 
-          <button
-            onClick={() => setValuesSheet(true)}
-            className="mx-auto mt-6 flex items-center gap-2 rounded-full border border-foreground/10 bg-white/70 px-5 py-2.5 text-[12.5px] font-semibold text-resma-navy backdrop-blur active:scale-95"
-          >
-            <Plus size={14} /> Elegir del herbario
-          </button>
+          <div className="mt-4 rounded-2xl border border-white/60 bg-white/60 p-3 text-center text-[12.5px] leading-relaxed text-muted-foreground backdrop-blur">
+            Presioná una hoja punteada para <b className="text-resma-navy">elegir un valor</b> y cultivar tus intenciones de hoy 🌱
+          </div>
 
           <div className="mt-6">
             <p className="mb-1 px-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
@@ -345,51 +416,21 @@ export default function SintoniaManana() {
               value={goalText}
               onChange={(e) => setGoalText(e.target.value)}
               placeholder="Una frase corta que oriente tu día…"
-              rows={2}
-              className="w-full resize-none rounded-2xl border border-resma-gold/40 bg-white px-3.5 py-3 text-[13px] focus:border-resma-gold focus:outline-none"
+              rows={3}
+              className="w-full resize-y rounded-2xl border border-resma-gold/40 bg-white px-3.5 py-3 text-[13.5px] leading-relaxed focus:border-resma-gold focus:outline-none"
+              style={{ minHeight: 96 }}
             />
           </div>
 
-          <Sheet open={valuesSheet} onOpenChange={setValuesSheet}>
-            <SheetContent side="bottom" className="max-h-[80vh] rounded-t-3xl">
-              <SheetHeader>
-                <SheetTitle className="font-serifElegant text-[20px] text-resma-navy">
-                  Herbario de valores
-                </SheetTitle>
-                <p className="text-[12px] text-muted-foreground">
-                  {values.length}/3 elegidas
-                </p>
-              </SheetHeader>
-              <div className="mt-4 grid grid-cols-2 gap-2.5 overflow-y-auto pb-6">
-                {VALORES.map((v) => {
-                  const on = values.includes(v.id);
-                  const disabled = !on && values.length >= 3;
-                  return (
-                    <button
-                      key={v.id}
-                      disabled={disabled}
-                      onClick={() => toggleValue(v.id)}
-                      className={`rounded-2xl border p-3 text-left transition ${
-                        on
-                          ? "border-resma-teal bg-resma-teal/10"
-                          : disabled
-                            ? "border-foreground/5 bg-white/40 opacity-40"
-                            : "border-foreground/10 bg-white active:scale-[0.98]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Leaf size={12} className="text-resma-teal" />
-                        <p className="font-serifElegant text-[15px] font-semibold text-resma-navy">
-                          {v.label}
-                        </p>
-                      </div>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">{v.hint}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </SheetContent>
-          </Sheet>
+          {/* Picker propio (evita colisión de z-index con RitualShell) */}
+          <ValuePicker
+            open={pickerSlot != null}
+            onClose={() => setPickerSlot(null)}
+            values={VALORES}
+            disabledIds={values.filter((v, i) => v && i !== pickerSlot)}
+            currentId={pickerSlot != null ? values[pickerSlot] : undefined}
+            onPick={pickValueForSlot}
+          />
         </StepHeader>
       )}
 
@@ -419,8 +460,8 @@ export default function SintoniaManana() {
               </p>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {values.length ? (
-                values.map((v) => {
+              {filledValues.length ? (
+                filledValues.map((v) => {
                   const val = VALORES.find((x) => x.id === v);
                   return (
                     <span
@@ -495,7 +536,6 @@ function SleepOrb({
           width: size,
           height: size,
           background: `radial-gradient(circle at 32% 30%, rgba(255,255,255,0.85), ${state.color} 55%, ${state.color}dd 100%)`,
-          color: state.color,
           boxShadow: `0 20px 60px -20px ${state.color}`,
         }}
       />
@@ -503,85 +543,217 @@ function SleepOrb({
   );
 }
 
-function EmotionOrb({ color, anim, active }: { color: string; anim: string; active: boolean }) {
+function EmotionOrb({
+  em,
+  active,
+}: {
+  em: { color: string; anim: string; Icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }> };
+  active: boolean;
+}) {
+  const { color, anim, Icon } = em;
   return (
-    <div className="relative flex h-[90px] w-[90px] items-center justify-center">
+    <div className="relative flex h-[92px] w-[92px] items-center justify-center">
       <div
         className="absolute rounded-full blur-xl transition-opacity"
         style={{
-          width: 90,
-          height: 90,
+          width: 92,
+          height: 92,
           background: color,
-          opacity: active ? 0.55 : 0.28,
+          opacity: active ? 0.55 : 0.18,
         }}
       />
       <div
-        className={`relative h-[76px] w-[76px] rounded-full ${anim}`}
+        className={`relative flex h-[78px] w-[78px] items-center justify-center rounded-full transition-transform ${
+          active ? anim : ""
+        }`}
         style={{
-          background: `radial-gradient(circle at 32% 30%, rgba(255,255,255,0.9), ${color} 60%, ${color}cc 100%)`,
-          color,
-          boxShadow: `0 10px 26px -10px ${color}`,
+          background: active
+            ? `radial-gradient(circle at 32% 30%, rgba(255,255,255,0.92), ${color} 62%, ${color}cc 100%)`
+            : `${color}`,
+          boxShadow: active
+            ? `0 14px 30px -10px ${color}`
+            : `0 6px 16px -8px ${color}88`,
         }}
-      />
+      >
+        <Icon size={30} strokeWidth={2.2} className="text-white drop-shadow" />
+      </div>
     </div>
   );
 }
 
-function ValueBranch({ selected }: { selected: string[] }) {
+// Rama con 4 hojas: 2 izquierda, 2 derecha
+function ValueBranch({
+  selected,
+  onSlot,
+  onClear,
+  valueLabel,
+}: {
+  selected: string[];
+  onSlot: (idx: number) => void;
+  onClear: (idx: number) => void;
+  valueLabel: (id: string) => string;
+}) {
+  // Slots: {side: 'L'|'R', yPct, idx}
+  const slots = [
+    { idx: 0, side: "L" as const, y: 22 },
+    { idx: 1, side: "R" as const, y: 40 },
+    { idx: 2, side: "L" as const, y: 62 },
+    { idx: 3, side: "R" as const, y: 80 },
+  ];
+
   return (
-    <svg viewBox="0 0 260 200" width="260" height="200" className="overflow-visible">
-      <path
-        d="M 30 180 Q 90 140 130 100 T 240 30"
-        stroke="#5a4a3a"
-        strokeWidth="3"
-        fill="none"
-        strokeLinecap="round"
-      />
-      {[
-        { x: 88, y: 145, rot: -30, idx: 0 },
-        { x: 145, y: 92, rot: 20, idx: 1 },
-        { x: 210, y: 55, rot: -10, idx: 2 },
-      ].map((slot) => {
-        const filled = !!selected[slot.idx];
-        const label = filled
-          ? VALORES.find((v) => v.id === selected[slot.idx])?.label
-          : null;
+    <div className="relative mx-auto h-[340px] w-full max-w-[320px]">
+      {/* Trunk */}
+      <svg
+        viewBox="0 0 100 340"
+        preserveAspectRatio="none"
+        className="absolute left-1/2 top-0 h-full -translate-x-1/2"
+        width="60"
+        height="340"
+      >
+        <line x1="50" y1="10" x2="50" y2="330" stroke="#8a7a66" strokeWidth="3" strokeLinecap="round" />
+        {slots.map((s) => (
+          <line
+            key={s.idx}
+            x1="50"
+            y1={s.y * 3.4}
+            x2={s.side === "L" ? 20 : 80}
+            y2={s.y * 3.4 - (s.side === "L" ? 8 : -8)}
+            stroke="#8a7a66"
+            strokeWidth="1.2"
+            strokeDasharray="2 3"
+            opacity="0.6"
+          />
+        ))}
+      </svg>
+
+      {slots.map((s) => {
+        const id = selected[s.idx];
+        const filled = !!id;
+        const style: React.CSSProperties = {
+          top: `${s.y}%`,
+          [s.side === "L" ? "right" : "left"]: "52%",
+          transform: `translateY(-50%) ${s.side === "L" ? "rotate(-14deg)" : "rotate(14deg)"}`,
+        };
         return (
-          <g key={slot.idx} transform={`translate(${slot.x} ${slot.y}) rotate(${slot.rot})`}>
-            {filled ? (
-              <g className="animate-grow-leaf">
-                <path
-                  d="M 0 0 Q 14 -22 28 -8 Q 20 8 0 6 Z"
-                  fill="#7cc2c8"
-                  opacity="0.85"
-                />
-                <path d="M 2 2 Q 14 -10 26 -6" stroke="#3f7a80" strokeWidth="1" fill="none" />
-                <text
-                  x={14}
-                  y={22}
-                  fontSize="9"
-                  fill="#101927"
-                  textAnchor="middle"
-                  fontWeight="600"
-                  transform={`rotate(${-slot.rot} 14 22)`}
-                >
-                  {label}
-                </text>
-              </g>
-            ) : (
-              <circle
-                cx={10}
-                cy={-4}
-                r={9}
-                fill="rgba(255,255,255,0.7)"
-                stroke="#c9b89a"
-                strokeDasharray="3 3"
-                strokeWidth="1.5"
-              />
-            )}
-          </g>
+          <div key={s.idx} className="absolute" style={style}>
+            <button
+              onClick={() => (filled ? onClear(s.idx) : onSlot(s.idx))}
+              className={`group relative flex h-[58px] w-[126px] items-center justify-center px-3 text-[11.5px] font-bold uppercase tracking-[0.12em] transition ${
+                filled
+                  ? "text-resma-navy shadow-[0_10px_24px_-14px_rgba(93,191,154,0.6)]"
+                  : "text-muted-foreground/70"
+              }`}
+              style={{
+                background: filled
+                  ? "linear-gradient(135deg, #a9dcc4 0%, #7cc2c8 100%)"
+                  : "rgba(255,255,255,0.55)",
+                border: filled ? "1.5px solid #5dbf9a" : "1.5px dashed #b8b3a8",
+                borderRadius: s.side === "L" ? "60% 20% 60% 20% / 50% 30% 70% 50%" : "20% 60% 20% 60% / 30% 50% 50% 70%",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              {filled ? (
+                <span className="flex items-center gap-1 text-center leading-tight">
+                  <Leaf size={12} className="shrink-0 text-emerald-700" />
+                  <span className="truncate">{valueLabel(id)}</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <Plus size={13} strokeWidth={2.5} />
+                  Valor {s.idx + 1}
+                </span>
+              )}
+            </button>
+          </div>
         );
       })}
-    </svg>
+    </div>
+  );
+}
+
+function ValuePicker({
+  open,
+  onClose,
+  values,
+  disabledIds,
+  currentId,
+  onPick,
+}: {
+  open: boolean;
+  onClose: () => void;
+  values: { id: string; label: string; hint: string }[];
+  disabledIds: string[];
+  currentId?: string;
+  onPick: (id: string) => void;
+}) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[120] bg-black/40 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            className="fixed inset-x-0 bottom-0 z-[121] max-h-[82vh] overflow-y-auto rounded-t-3xl border-t border-white/60 bg-white/95 px-5 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur-xl"
+          >
+            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-foreground/15" />
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-resma-teal">
+                  Herbario de valores
+                </p>
+                <h3 className="mt-0.5 font-serifElegant text-[20px] text-resma-navy">
+                  Elegir un valor
+                </h3>
+              </div>
+              <button
+                onClick={onClose}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/10 bg-white active:scale-95"
+                aria-label="Cerrar"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5 pb-4">
+              {values.map((v) => {
+                const disabled = disabledIds.includes(v.id) && v.id !== currentId;
+                const active = v.id === currentId;
+                return (
+                  <button
+                    key={v.id}
+                    disabled={disabled}
+                    onClick={() => onPick(v.id)}
+                    className={`rounded-2xl border p-3 text-left transition ${
+                      active
+                        ? "border-resma-teal bg-resma-teal/15"
+                        : disabled
+                          ? "border-foreground/5 bg-white/40 opacity-40"
+                          : "border-foreground/10 bg-white active:scale-[0.98]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Leaf size={12} className="text-resma-teal" />
+                      <p className="font-serifElegant text-[15px] font-semibold text-resma-navy">
+                        {v.label}
+                      </p>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{v.hint}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
