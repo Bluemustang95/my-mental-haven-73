@@ -185,7 +185,7 @@ export default function Dashboard() {
         );
       }
       case "sleep_zone":
-        return <SleepZoneCard onClick={() => navigate("/herramientas/sueno")} />;
+        return <SleepZoneWidget />;
       case "pending":
         return <PendingBento />;
       case "mini_habits":
@@ -199,28 +199,15 @@ export default function Dashboard() {
       case "psy_news":
         return <PsyNewsWidget />;
       case "mindfulness_quick":
+        return <MindfulnessQuickWidget />;
       case "pensamientos_quick":
+        return <PensamientosQuickWidget />;
       case "pack_quick":
+        return <PackQuickWidget />;
       case "diario_quick":
-      case "psico_quick": {
-        const map: Record<string, ToolModule> = {
-          mindfulness_quick: "mindfulness",
-          pensamientos_quick: "pensamientos",
-          pack_quick: "pack_actividades",
-          diario_quick: "diario",
-          psico_quick: "psicoeducacion",
-        };
-        const mod = map[id];
-        const meta = TOOL_META[mod];
-        return (
-          <QuickToolWidget
-            id={id}
-            title={meta.short}
-            subtitle={meta.label}
-            route={meta.route}
-          />
-        );
-      }
+        return <DiarioQuickWidget />;
+      case "psico_quick":
+        return <PsicoQuickWidget />;
       default:
         return null;
     }
