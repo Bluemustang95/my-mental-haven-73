@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Sparkles,
-} from "lucide-react";
-import { usePlan } from "@/hooks/usePlan";
-import { PaywallModal } from "@/components/modals/PaywallModal";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
@@ -13,16 +8,8 @@ import { TherapySyncModal } from "@/components/modals/TherapySyncModal";
 import { TherapyMiniTracker } from "@/components/proceso/TherapyMiniTracker";
 import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
 import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
-import { PremiumLock } from "@/components/PremiumLock";
 import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
 import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
-import { PsychometryCarousel } from "@/components/proceso/PsychometryCarousel";
-import { BigFiveCard } from "@/components/proceso/BigFiveCard";
-import { BigFiveProfileModal } from "@/components/proceso/BigFiveProfileModal";
-
-import { SymptomsTestModal } from "@/components/modals/SymptomsTestModal";
-import { TestRunner } from "@/components/tests/TestRunner";
-import { useLocation } from "react-router-dom";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
