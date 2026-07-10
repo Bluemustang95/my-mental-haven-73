@@ -86,6 +86,7 @@ import PatientDetail from "@/pages/admin/PatientDetail";
 import ResourcesManager from "@/pages/admin/ResourcesManager";
 import ResourceDetail from "@/pages/admin/ResourceDetail";
 import QuestionnaireManager from "@/pages/admin/QuestionnaireManager";
+import OnboardingAlgoAdmin from "@/pages/admin/OnboardingAlgoAdmin";
 import ResourceTools from "@/pages/ResourceTools";
 import ResourceIntro from "@/pages/ResourceIntro";
 import SafetyPlan from "@/pages/SafetyPlan";
@@ -272,6 +273,7 @@ const App = () => (
               <Route path="/admin/lineas-crisis" element={<CrisisHotlinesManager />} />
               <Route path="/admin/vista-pais" element={<CountryViewSwitcher />} />
               <Route path="/admin/cuestionario" element={<QuestionnaireManager />} />
+              <Route path="/admin/onboarding" element={<OnboardingAlgoAdmin />} />
               <Route path="/admin/configuracion" element={<SystemSettings />} />
               <Route path="/admin/estadisticas" element={<AdminStats />} />
               <Route path="/admin/pack" element={<PackOverview />} />
