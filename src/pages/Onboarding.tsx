@@ -17,12 +17,17 @@ import {
 import { SplashIntro, ValueSlides } from "@/components/onboarding/IntroScreens";
 import { CountryPicker } from "@/components/onboarding/CountryPicker";
 import { AlgorithmTransition } from "@/components/onboarding/AlgorithmTransition";
+import { PlanCategoryScreen } from "@/components/onboarding/PlanCategoryScreen";
 import {
-  computePriority,
+  calculatePlan,
   saveLocalProfile,
+  TOOL_META,
+  ALGO_VERSION,
   type SleepQuality,
   type LearningFormat,
-} from "@/lib/clinicalAlgorithm";
+  type PlanCategory,
+  type ToolModule,
+} from "@/lib/onboardingAlgorithm";
 import { enrollBiometric, isBiometricSupported } from "@/lib/biometricAuth";
 
 const TEAL = "#7cc2c8";
