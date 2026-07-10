@@ -366,30 +366,8 @@ export default function Dashboard() {
         <PriorityStack cards={priorityCards} />
 
 
-        {/* Tus herramientas + manage */}
-        <div className="mt-6 mb-2 flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Tus herramientas
-            </p>
-            {(() => {
-              // streak = consecutive days with any checkin
-              let s = 0;
-              const d = new Date();
-              for (let i = 0; i < 60; i++) {
-                const ds = localDateStr(d);
-                if ((weekProgress[ds] ?? 0) > 0) { s++; d.setDate(d.getDate() - 1); }
-                else if (s === 0 && i === 0) { d.setDate(d.getDate() - 1); }
-                else break;
-              }
-              if (s < 2) return null;
-              return (
-                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
-                  🔥 {s} días
-                </span>
-              );
-            })()}
-          </div>
+        {/* Herramientas — sin título, solo botón de gestión discreto */}
+        <div className="mt-5 mb-2 flex items-center justify-end px-1">
           <ManageWidgetsButton widgets={widgets.widgets} onToggle={widgets.toggleEnabled} />
         </div>
 
