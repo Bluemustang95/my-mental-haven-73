@@ -562,15 +562,9 @@ function TimelineCard({
 }
 
 function SleepZoneCard({ onClick }: { onClick: () => void }) {
-  return (
-    <button onClick={onClick} className="block w-full text-left">
-      <WidgetShell id="sleep_zone">
-        <p className="mt-1 font-display text-[15px] font-bold text-white">Santuario del sueño</p>
-        <p className="text-[11px] text-white/75">Ruidos blancos y protocolos nocturnos.</p>
-      </WidgetShell>
-    </button>
-  );
+  return <WidgetShell id="sleep_zone" tile onClick={onClick} />;
 }
+
 
 // PendingForYou removed — now powered by <PendingBento /> with real Supabase data.
 
