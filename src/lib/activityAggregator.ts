@@ -60,7 +60,7 @@ export async function loadActivity(userId: string, r: Range): Promise<ActivityBr
     supabase.from("exercise_sessions").select("duration_seconds").eq("user_id", userId).eq("exercise_type", "mindfulness").gte("created_at", fromIso).lte("created_at", toIso),
     supabase.from("habit_completions").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("completed_date", fromDate).lte("completed_date", toDate),
     supabase.from("ba_day_logs").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", fromIso).lte("created_at", toIso),
-    supabase.from("medication_logs").select("taken").eq("user_id", userId).gte("created_at", fromIso).lte("created_at", toIso),
+    supabase.from("medication_logs").select("taken").eq("user_id", userId).gte("log_date", fromDate).lte("log_date", toDate),
     supabase.from("weekly_reflections").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", fromIso).lte("created_at", toIso),
   ]);
 

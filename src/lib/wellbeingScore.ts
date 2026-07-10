@@ -59,7 +59,7 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
     supabase.from("exercise_sessions").select("created_at, exercise_type").eq("user_id", user.id).gte("created_at", from7iso),
     supabase.from("weekly_reflections").select("created_at").eq("user_id", user.id).gte("created_at", from7iso),
     supabase.from("ba_day_logs").select("created_at").eq("user_id", user.id).gte("created_at", from7iso),
-    supabase.from("medication_logs").select("taken, created_at").eq("user_id", user.id).gte("created_at", from7iso),
+    supabase.from("medication_logs").select("taken").eq("user_id", user.id).gte("log_date", isoDate(from14)),
   ]);
 
   // ── Trend (últimos 7 días, 0-100) ──
