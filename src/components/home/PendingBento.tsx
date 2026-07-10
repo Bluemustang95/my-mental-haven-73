@@ -200,30 +200,24 @@ export function PendingBento() {
 
   if (items.length === 0) return null;
 
+  const it = items[0];
   return (
-    <div className="mt-4">
-      <div className="grid grid-cols-2 gap-2">
-        {items.map((it) => (
-          <motion.button
-            key={it.key}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => navigate(it.to)}
-            className="flex aspect-square flex-col items-start justify-between rounded-2xl p-3 text-left text-white shadow-md"
-            style={{
-              background: `linear-gradient(135deg, ${it.from}, ${it.to2})`,
-              boxShadow: `0 10px 24px -14px ${it.from}`,
-            }}
-          >
-            <div className="h-9 w-9 rounded-lg flex items-center justify-center bg-white/25 backdrop-blur-sm">
-              {it.icon}
-            </div>
-            <p className="font-display text-[13px] font-bold text-white leading-tight">
-              {it.title}
-            </p>
-          </motion.button>
-        ))}
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      onClick={() => navigate(it.to)}
+      className="flex aspect-square w-full flex-col items-center justify-center gap-3 rounded-[22px] p-4 text-center text-white"
+      style={{
+        background: `linear-gradient(135deg, ${it.from}, ${it.to2})`,
+        boxShadow: `0 10px 24px -14px ${it.from}`,
+      }}
+    >
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm">
+        {it.icon}
       </div>
-    </div>
+      <p className="font-display text-[14px] font-bold leading-tight text-white">
+        {it.title}
+      </p>
+    </motion.button>
   );
 }
 
