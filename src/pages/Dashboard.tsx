@@ -304,7 +304,9 @@ export default function Dashboard() {
         )}
 
         {/* Enfoque prioritario — stacked cards */}
-        {!widgets.editMode && <PriorityStack cards={priorityCards} />}
+        {/* Enfoque prioritario — visible siempre, fijo en edit mode */}
+        <PriorityStack cards={priorityCards} />
+
 
         {/* Tus herramientas + manage */}
         <div className="mt-6 mb-2 flex items-center justify-between px-1">
