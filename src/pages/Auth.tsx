@@ -155,13 +155,28 @@ export default function Auth() {
         <h1 className="mb-2 font-display text-[24px] font-bold" style={{ color: INK }}>
           {mode === "login" ? "Bienvenido/a" : mode === "signup" ? "Crear cuenta" : "Recuperar contraseña"}
         </h1>
-        <p className="mb-8 text-center text-[13px] font-light text-[#101927]/55">
+        <p className="mb-6 text-center text-[13px] font-light text-[#101927]/55">
           {mode === "login"
             ? "Ingresá a tu cuenta RESMA"
             : mode === "signup"
               ? "Empezá a cuidar tu salud mental"
               : "Te enviaremos un link por email"}
         </p>
+
+        {(fromOnboarding || hasPendingOnboarding) && mode === "login" && (
+          <div
+            className="mb-6 w-full rounded-2xl border px-4 py-3 text-center text-[12px] font-medium"
+            style={{
+              borderColor: "rgba(124,194,200,0.35)",
+              background: "rgba(124,194,200,0.10)",
+              color: INK,
+            }}
+          >
+            Confirmá tu correo y volvé acá para entrar. <br />
+            <span className="text-[#101927]/70">Tu plan personalizado te está esperando.</span>
+          </div>
+        )}
+
 
         {mode !== "forgot" && (
           <>
