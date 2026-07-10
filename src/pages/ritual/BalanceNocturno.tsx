@@ -49,6 +49,9 @@ export default function BalanceNocturno() {
   const [energy, setEnergy] = useState(55);
   // Paso 2 — emociones que sintió durante el día
   const [emotions, setEmotions] = useState<string[]>([]);
+  // Puente emocional: emociones de la mañana + nota de qué generó el cambio
+  const [morningEmotions, setMorningEmotions] = useState<string[]>([]);
+  const [shiftNote, setShiftNote] = useState("");
   // Paso 3 — valores que honró (chips seleccionables)
   const [morningValues, setMorningValues] = useState<string[]>([]);
   const [morningGoals, setMorningGoals] = useState<string[]>([]);
@@ -62,7 +65,7 @@ export default function BalanceNocturno() {
     (async () => {
       const { data } = await supabase
         .from("daily_checkins")
-        .select("thought_note, day_goal")
+        .select("thought_note, day_goal, emotions")
         .eq("user_id", user.id)
         .eq("checkin_date", localDateStr(new Date()))
         .eq("mode", "morning")
@@ -72,8 +75,25 @@ export default function BalanceNocturno() {
       if (match) setMorningValues(match[1].split(",").map((s) => s.trim()).filter(Boolean));
       const goal = (data as any)?.day_goal ?? "";
       if (goal) setMorningGoals(goal.split(" · ").map((s: string) => s.trim()).filter(Boolean));
+      const ems = (data as any)?.emotions ?? [];
+      if (Array.isArray(ems)) setMorningEmotions(ems as string[]);
     })();
   }, [user]);
+
+  // Comparación mañana ↔ noche (por label)
+  const emotionLabelsNow = useMemo(
+    () => emotions.map((id) => EMOCIONES.find((e) => e.id === id)?.label ?? id),
+    [emotions]
+  );
+  const shiftSummary = useMemo(() => {
+    const morningSet = new Set(morningEmotions);
+    const nightSet = new Set(emotionLabelsNow);
+    const sostenidas = emotionLabelsNow.filter((l) => morningSet.has(l));
+    const sumadas = emotionLabelsNow.filter((l) => !morningSet.has(l));
+    const disueltas = morningEmotions.filter((l) => !nightSet.has(l));
+    return { sostenidas, sumadas, disueltas };
+  }, [morningEmotions, emotionLabelsNow]);
+  const hasShift = shiftSummary.sumadas.length > 0 || shiftSummary.disueltas.length > 0;
 
   const energyState = useMemo(() => energyStateFromValue(energy), [energy]);
 
@@ -97,6 +117,8 @@ export default function BalanceNocturno() {
         thought_note: honored.length ? `Valores honrados: ${honored.join(", ")}` : null,
         balance_improve: improve || null,
         balance_highlight: gratitude || null,
+        emotion_shift_note: shiftNote.trim() || null,
+        emotion_shift_summary: morningEmotions.length ? (shiftSummary as any) : null,
       },
       { onConflict: "user_id,checkin_date,mode" as any }
     );
@@ -265,8 +287,74 @@ export default function BalanceNocturno() {
               </AnimatePresence>
             </div>
           </div>
+
+          {/* Puente emocional mañana ↔ noche */}
+          {morningEmotions.length > 0 && emotions.length > 0 && (
+            <div className="mt-4 rounded-2xl border border-resma-gold/30 bg-white/70 p-4 backdrop-blur">
+              <div className="flex items-center gap-2">
+                <Sun size={13} className="text-resma-gold" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700">
+                  ¿Coincide con cómo despertaste?
+                </p>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-amber-50/80 p-2.5">
+                  <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-amber-700/80">
+                    🌅 Mañana
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] leading-snug text-resma-navy/85">
+                    {morningEmotions.join(", ")}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-indigo-50/80 p-2.5">
+                  <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-indigo-700/80">
+                    🌙 Noche
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] leading-snug text-resma-navy/85">
+                    {emotionLabelsNow.join(", ")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5 text-[10.5px]">
+                {shiftSummary.sostenidas.length > 0 && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">
+                    · Sostenidas: {shiftSummary.sostenidas.join(", ")}
+                  </span>
+                )}
+                {shiftSummary.sumadas.length > 0 && (
+                  <span className="rounded-full bg-rose-100 px-2 py-0.5 font-semibold text-rose-700">
+                    + Sumadas: {shiftSummary.sumadas.join(", ")}
+                  </span>
+                )}
+                {shiftSummary.disueltas.length > 0 && (
+                  <span className="rounded-full bg-sky-100 px-2 py-0.5 font-semibold text-sky-700">
+                    ~ Disueltas: {shiftSummary.disueltas.join(", ")}
+                  </span>
+                )}
+              </div>
+
+              {hasShift && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    ¿Qué generó este cambio a lo largo del día?
+                  </p>
+                  <textarea
+                    value={shiftNote}
+                    onChange={(e) => setShiftNote(e.target.value)}
+                    placeholder="Ej: una llamada, una noticia, un rato al sol…"
+                    rows={2}
+                    className="mt-1.5 w-full resize-y rounded-xl border border-foreground/10 bg-white/80 px-3 py-2 text-[13px] leading-relaxed focus:border-resma-gold/60 focus:outline-none"
+                    style={{ minHeight: 60 }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </StepHeader>
       )}
+
 
       {step === 2 && (
         <StepHeader

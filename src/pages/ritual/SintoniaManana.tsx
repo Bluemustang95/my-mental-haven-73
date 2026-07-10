@@ -81,6 +81,7 @@ export default function SintoniaManana() {
   const [pickerSlot, setPickerSlot] = useState<number | null>(null);
   const [goals, setGoals] = useState<string[]>([""]);
   const [improveFromYesterday, setImproveFromYesterday] = useState<string | null>(null);
+  const [shiftFromYesterday, setShiftFromYesterday] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -88,12 +89,13 @@ export default function SintoniaManana() {
       const yStr = localDateStr(new Date(Date.now() - 86400000));
       const { data } = await supabase
         .from("daily_checkins")
-        .select("balance_improve")
+        .select("balance_improve, emotion_shift_note")
         .eq("user_id", user.id)
         .eq("checkin_date", yStr)
         .eq("mode", "night")
         .maybeSingle();
       if ((data as any)?.balance_improve) setImproveFromYesterday((data as any).balance_improve);
+      if ((data as any)?.emotion_shift_note) setShiftFromYesterday((data as any).emotion_shift_note);
     })();
   }, [user]);
 
@@ -216,6 +218,20 @@ export default function SintoniaManana() {
           title="¿Cómo despertaste?"
           sub="Deslizá para sintonizar tu descanso"
         >
+          {shiftFromYesterday && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-5 rounded-2xl border border-indigo-200/60 bg-indigo-50/70 p-3.5 backdrop-blur"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-700/80">
+                Ayer notaste este cambio
+              </p>
+              <p className="mt-1 text-[13px] italic leading-snug text-resma-navy/85">
+                "{shiftFromYesterday}"
+              </p>
+            </motion.div>
+          )}
           <div className="mt-8 flex items-center justify-center">
             <SleepOrb value={sleep} state={sleepState} />
           </div>

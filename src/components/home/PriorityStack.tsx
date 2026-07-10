@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
+import { WidgetGlyph, WIDGET_IDENTITY } from "@/components/home/WidgetVisual";
+import type { WidgetId } from "@/components/home/WidgetsBoard";
 
 export type PriorityCard = {
   id: string;
@@ -94,44 +96,79 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -32, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 260, damping: 26 }}
-            className="relative z-20 rounded-[26px] bg-white p-5 shadow-[0_14px_40px_-18px_rgba(16,25,39,0.25)] ring-1 ring-black/5"
-            style={{
-              paddingBottom: peeks.length > 0 ? 24 : 20,
-            }}
+            className="relative z-20 overflow-hidden rounded-[26px] p-5 shadow-[0_14px_40px_-18px_rgba(16,25,39,0.28)] ring-1 ring-black/5"
+            style={(() => {
+              const ident = WIDGET_IDENTITY[top.id as WidgetId];
+              if (!ident) return { background: "#ffffff", paddingBottom: peeks.length > 0 ? 24 : 20 } as React.CSSProperties;
+              return {
+                background: `linear-gradient(160deg, ${ident.from} 0%, ${ident.to} 100%)`,
+                color: ident.ink,
+                paddingBottom: peeks.length > 0 ? 24 : 20,
+              };
+            })()}
           >
-            <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${chipTones[top.chipTone]}`}
-            >
-              {top.chip}
-            </span>
-
-            <h3 className="mt-3 font-serifElegant text-[22px] font-medium leading-tight text-resma-navy">
-              {top.title}
-            </h3>
-
-            {top.description && !top.done && (
-              <p className="mt-1.5 text-[13.5px] leading-snug text-muted-foreground">
-                {top.description}
-              </p>
-            )}
-
-            {top.done && top.doneSummary && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-resma-teal">
-                <Check size={13} strokeWidth={3} /> {top.doneSummary}
-              </p>
-            )}
-
-            <div className="mt-5 flex items-end justify-between gap-3">
-              <span className="text-[11.5px] font-medium text-muted-foreground/80">
-                {top.done ? "Completado" : "Paso obligatorio"}
-              </span>
-              <button
-                onClick={top.onAction}
-                className={`group inline-flex items-center gap-1.5 text-[12.5px] font-bold uppercase tracking-[0.08em] ${actionTones[top.actionTone]} transition active:scale-95`}
+            {(() => {
+              const ident = WIDGET_IDENTITY[top.id as WidgetId];
+              if (!ident) return null;
+              return (
+                <div
+                  className="pointer-events-none absolute -right-6 -top-8 opacity-25"
+                  style={{ color: ident.ink }}
+                  aria-hidden
+                >
+                  <WidgetGlyph glyph={ident.glyph} color={ident.ink} size={140} />
+                </div>
+              );
+            })()}
+            <div className="relative">
+              <span
+                className="inline-flex items-center rounded-full bg-white/85 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em]"
+                style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#101927" }}
               >
-                {top.actionLabel}
-                <ArrowRight size={14} className="transition group-hover:translate-x-0.5" />
-              </button>
+                {top.chip}
+              </span>
+
+              <h3
+                className="mt-3 font-serifElegant text-[22px] font-medium leading-tight"
+                style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#101927" }}
+              >
+                {top.title}
+              </h3>
+
+              {top.description && !top.done && (
+                <p
+                  className="mt-1.5 text-[13.5px] leading-snug"
+                  style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#334155", opacity: 0.82 }}
+                >
+                  {top.description}
+                </p>
+              )}
+
+              {top.done && top.doneSummary && (
+                <p
+                  className="mt-1.5 flex items-center gap-1.5 text-[12.5px] font-semibold"
+                  style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#0d5e63" }}
+                >
+                  <Check size={13} strokeWidth={3} /> {top.doneSummary}
+                </p>
+              )}
+
+              <div className="mt-5 flex items-end justify-between gap-3">
+                <span
+                  className="text-[11.5px] font-medium"
+                  style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#64748b", opacity: 0.75 }}
+                >
+                  {top.done ? "Completado" : "Paso obligatorio"}
+                </span>
+                <button
+                  onClick={top.onAction}
+                  className="group inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3.5 py-2 text-[12.5px] font-bold uppercase tracking-[0.08em] shadow-sm transition active:scale-95"
+                  style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#101927" }}
+                >
+                  {top.actionLabel}
+                  <ArrowRight size={14} className="transition group-hover:translate-x-0.5" />
+                </button>
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>
