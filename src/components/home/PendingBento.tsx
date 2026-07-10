@@ -202,16 +202,13 @@ export function PendingBento() {
 
   return (
     <div className="mt-4">
-      <p className="mb-2 px-1 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/70">
-        Pendientes para vos
-      </p>
       <div className="grid grid-cols-2 gap-2">
         {items.map((it) => (
           <motion.button
             key={it.key}
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate(it.to)}
-            className="rounded-2xl p-3 text-left flex flex-col gap-2 text-white shadow-md"
+            className="flex aspect-square flex-col items-start justify-between rounded-2xl p-3 text-left text-white shadow-md"
             style={{
               background: `linear-gradient(135deg, ${it.from}, ${it.to2})`,
               boxShadow: `0 10px 24px -14px ${it.from}`,
@@ -220,17 +217,13 @@ export function PendingBento() {
             <div className="h-9 w-9 rounded-lg flex items-center justify-center bg-white/25 backdrop-blur-sm">
               {it.icon}
             </div>
-            <div>
-              <p className="font-display text-[13px] font-bold text-white leading-tight">
-                {it.title}
-              </p>
-              <p className="text-[11px] text-white/85 line-clamp-2 mt-0.5">
-                {it.subtitle}
-              </p>
-            </div>
+            <p className="font-display text-[13px] font-bold text-white leading-tight">
+              {it.title}
+            </p>
           </motion.button>
         ))}
       </div>
     </div>
   );
 }
+
