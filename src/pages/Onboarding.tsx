@@ -558,7 +558,18 @@ export default function Onboarding() {
 
       {step === 6 && <AlgorithmTransition onDone={() => setStep(7)} />}
 
-      {step === 7 && (
+      {step === 7 && (() => {
+        const plan = collectPending();
+        return (
+          <PlanCategoryScreen
+            category={plan.plan_category}
+            top3={plan.top3_tools}
+            onContinue={() => setStep(8)}
+          />
+        );
+      })()}
+
+      {step === 8 && (
         <div className="flex flex-1 flex-col">
           <h1
             className="text-center font-display text-[28px] font-semibold leading-tight"
