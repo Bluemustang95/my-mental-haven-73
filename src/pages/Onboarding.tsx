@@ -78,7 +78,49 @@ type Pending = {
   format: LearningFormat | "";
   priority: string;
   scores: Record<string, number>;
+  plan_category: PlanCategory;
+  top3_tools: ToolModule[];
+  algo_version: number;
 };
+
+/** Seed home_layouts.widgets with the top-3 tools mapped to home widgets. */
+async function seedHomeLayout(userId: string, top3: ToolModule[]) {
+  const { data: existing } = await supabase
+    .from("patient_app_profiles")
+    .select("home_seeded")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if ((existing as any)?.home_seeded) return;
+
+  const widgetIds = top3.map((m) => TOOL_META[m].widget_id);
+  // Build ordered widgets array: priorities first, then top-3 tools (1 full + 2 half),
+  // then the rest of known tools disabled.
+  const priorities = ["morning", "recommended", "night"];
+  const seedTools = widgetIds.map((id, i) => ({
+    id,
+    enabled: true,
+    hidden: false,
+    size: i === 0 ? "full" : "half",
+  }));
+  const priorityRows = priorities.map((id) => ({
+    id,
+    enabled: true,
+    hidden: false,
+    size: "full",
+  }));
+
+  await supabase.from("home_layouts").upsert(
+    {
+      user_id: userId,
+      widgets: [...priorityRows, ...seedTools] as any,
+    },
+    { onConflict: "user_id" }
+  );
+  await supabase
+    .from("patient_app_profiles")
+    .update({ home_seeded: true } as any)
+    .eq("user_id", userId);
+}
 
 async function persistProfile(userId: string, data: Pending) {
   await supabase.from("patient_app_profiles").upsert(
@@ -93,10 +135,14 @@ async function persistProfile(userId: string, data: Pending) {
       learning_format: data.format || null,
       priority_module: data.priority || null,
       module_scores: data.scores ?? null,
+      plan_category: data.plan_category,
+      top3_tools: data.top3_tools as any,
+      algo_version: data.algo_version,
       onboarding_completed: true,
     } as any,
     { onConflict: "user_id" }
   );
+  await seedHomeLayout(userId, data.top3_tools);
 }
 
 export default function Onboarding() {
