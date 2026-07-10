@@ -62,6 +62,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_feature_configs: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          description: string | null
+          display_name: string
+          edge_function: string | null
+          est_cost_per_call: number | null
+          feature_key: string
+          id: string
+          max_tokens: number | null
+          model: string
+          system_prompt: string | null
+          temperature: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string | null
+          display_name: string
+          edge_function?: string | null
+          est_cost_per_call?: number | null
+          feature_key: string
+          id?: string
+          max_tokens?: number | null
+          model?: string
+          system_prompt?: string | null
+          temperature?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          edge_function?: string | null
+          est_cost_per_call?: number | null
+          feature_key?: string
+          id?: string
+          max_tokens?: number | null
+          model?: string
+          system_prompt?: string | null
+          temperature?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       ai_usage_log: {
         Row: {
           chars: number | null
