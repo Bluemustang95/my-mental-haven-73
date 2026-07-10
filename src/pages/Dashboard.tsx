@@ -288,11 +288,14 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Camino + manage */}
-        <div className="mt-5 mb-2 flex items-center justify-between px-1">
+        {/* Enfoque prioritario — stacked cards */}
+        {!widgets.editMode && <PriorityStack cards={priorityCards} />}
+
+        {/* Tus herramientas + manage */}
+        <div className="mt-6 mb-2 flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <p className="font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-              Tu camino de hoy
+            <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Tus herramientas
             </p>
             {(() => {
               // streak = consecutive days with any checkin
