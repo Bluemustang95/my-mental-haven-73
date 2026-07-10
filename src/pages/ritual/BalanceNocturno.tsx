@@ -287,8 +287,74 @@ export default function BalanceNocturno() {
               </AnimatePresence>
             </div>
           </div>
+
+          {/* Puente emocional mañana ↔ noche */}
+          {morningEmotions.length > 0 && emotions.length > 0 && (
+            <div className="mt-4 rounded-2xl border border-resma-gold/30 bg-white/70 p-4 backdrop-blur">
+              <div className="flex items-center gap-2">
+                <Sun size={13} className="text-resma-gold" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700">
+                  ¿Coincide con cómo despertaste?
+                </p>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-amber-50/80 p-2.5">
+                  <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-amber-700/80">
+                    🌅 Mañana
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] leading-snug text-resma-navy/85">
+                    {morningEmotions.join(", ")}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-indigo-50/80 p-2.5">
+                  <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-indigo-700/80">
+                    🌙 Noche
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] leading-snug text-resma-navy/85">
+                    {emotionLabelsNow.join(", ")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-1.5 text-[10.5px]">
+                {shiftSummary.sostenidas.length > 0 && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">
+                    · Sostenidas: {shiftSummary.sostenidas.join(", ")}
+                  </span>
+                )}
+                {shiftSummary.sumadas.length > 0 && (
+                  <span className="rounded-full bg-rose-100 px-2 py-0.5 font-semibold text-rose-700">
+                    + Sumadas: {shiftSummary.sumadas.join(", ")}
+                  </span>
+                )}
+                {shiftSummary.disueltas.length > 0 && (
+                  <span className="rounded-full bg-sky-100 px-2 py-0.5 font-semibold text-sky-700">
+                    ~ Disueltas: {shiftSummary.disueltas.join(", ")}
+                  </span>
+                )}
+              </div>
+
+              {hasShift && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    ¿Qué generó este cambio a lo largo del día?
+                  </p>
+                  <textarea
+                    value={shiftNote}
+                    onChange={(e) => setShiftNote(e.target.value)}
+                    placeholder="Ej: una llamada, una noticia, un rato al sol…"
+                    rows={2}
+                    className="mt-1.5 w-full resize-y rounded-xl border border-foreground/10 bg-white/80 px-3 py-2 text-[13px] leading-relaxed focus:border-resma-gold/60 focus:outline-none"
+                    style={{ minHeight: 60 }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </StepHeader>
       )}
+
 
       {step === 2 && (
         <StepHeader
