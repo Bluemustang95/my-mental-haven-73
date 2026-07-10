@@ -285,6 +285,7 @@ const App = () => (
               <Route path="/admin/onboarding" element={<OnboardingAlgoAdmin />} />
               <Route path="/admin/configuracion" element={<SystemSettings />} />
               <Route path="/admin/estadisticas" element={<AdminStats />} />
+              <Route path="/admin/estadisticas-bienestar" element={<EstadisticasAdmin />} />
               <Route path="/admin/pack" element={<PackOverview />} />
               <Route path="/admin/pack/ba" element={<BAContentEditor />} />
               <Route path="/admin/legacy" element={<AdminDashboard />} />
