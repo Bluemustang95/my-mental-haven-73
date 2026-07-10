@@ -205,16 +205,16 @@ export function PendingBento() {
     <motion.button
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(it.to)}
-      className="flex aspect-square w-full flex-col items-center justify-center gap-3 rounded-[22px] p-4 text-center text-white"
+      className="flex h-[130px] w-full flex-col items-center justify-center gap-2 rounded-[22px] p-3 text-center text-white"
       style={{
         background: `linear-gradient(135deg, ${it.from}, ${it.to2})`,
         boxShadow: `0 10px 24px -14px ${it.from}`,
       }}
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/25 backdrop-blur-sm">
         {it.icon}
       </div>
-      <p className="font-display text-[14px] font-bold leading-tight text-white">
+      <p className="font-display text-[13px] font-bold leading-tight text-white">
         {it.title}
       </p>
     </motion.button>
