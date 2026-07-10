@@ -214,7 +214,14 @@ export default function Onboarding() {
     setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
 
   const collectPending = (): Pending => {
-    const algo = computePriority({ brujula, maleta, sleep, format });
+    const algo = calculatePlan({
+      brujula,
+      maleta,
+      sleep,
+      format,
+      country,
+      life_stage: age,
+    });
     return {
       name,
       age,
@@ -223,8 +230,11 @@ export default function Onboarding() {
       maleta,
       sleep,
       format,
-      priority: algo.priority,
-      scores: algo.scores,
+      priority: algo.priority_module,
+      scores: algo.module_scores as Record<string, number>,
+      plan_category: algo.plan_category,
+      top3_tools: algo.top3_tools,
+      algo_version: algo.algo_version,
     };
   };
 
