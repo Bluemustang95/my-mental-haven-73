@@ -28,6 +28,20 @@ export type WidgetId =
   | "daily_quote"
   | "psy_news";
 
+// Prioridades: siempre visibles en el PriorityStack, no se gestionan como widgets.
+export const PRIORITY_IDS: WidgetId[] = ["morning", "recommended", "night"];
+// Herramientas: el usuario elige hasta 3 para su Home.
+export const TOOL_IDS: WidgetId[] = [
+  "sleep_zone",
+  "pending",
+  "mini_habits",
+  "gratitude",
+  "contention_notes",
+  "daily_quote",
+  "psy_news",
+];
+export const MAX_TOOLS = 3;
+
 export type WidgetState = {
   id: WidgetId;
   enabled: boolean;
@@ -40,12 +54,12 @@ const DEFAULT_WIDGETS: WidgetState[] = [
   { id: "recommended", enabled: true, hidden: false, size: "full" },
   { id: "night", enabled: true, hidden: false, size: "full" },
   { id: "sleep_zone", enabled: true, hidden: false, size: "full" },
-  { id: "pending", enabled: true, hidden: false, size: "full" },
-  { id: "mini_habits", enabled: true, hidden: false, size: "full" },
-  { id: "daily_quote", enabled: false, hidden: false, size: "full" },
-  { id: "psy_news", enabled: false, hidden: false, size: "full" },
+  { id: "pending", enabled: true, hidden: false, size: "half" },
+  { id: "mini_habits", enabled: true, hidden: false, size: "half" },
+  { id: "daily_quote", enabled: false, hidden: false, size: "half" },
+  { id: "psy_news", enabled: false, hidden: false, size: "half" },
   { id: "gratitude", enabled: false, hidden: false, size: "half" },
-  { id: "contention_notes", enabled: false, hidden: false, size: "full" },
+  { id: "contention_notes", enabled: false, hidden: false, size: "half" },
 ];
 
 const LABELS: Record<WidgetId, string> = {
