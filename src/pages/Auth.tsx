@@ -11,14 +11,23 @@ const INK = "#101927";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
-  const [email, setEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const prefillEmail = searchParams.get("prefill") || "";
+  const fromOnboarding = searchParams.get("fromOnboarding") === "1";
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">(
+    prefillEmail || fromOnboarding ? "login" : "login"
+  );
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [bioReady, setBioReady] = useState(false);
   const [bioPromptUser, setBioPromptUser] = useState<{ id: string; name: string } | null>(null);
+  const hasPendingOnboarding = useMemo(
+    () => typeof window !== "undefined" && !!sessionStorage.getItem("onboarding_pending"),
+    []
+  );
 
   const BIO_PROMPTED_KEY = "resma:bio_prompted";
 
