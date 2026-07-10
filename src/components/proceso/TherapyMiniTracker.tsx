@@ -162,9 +162,13 @@ export function TherapyMiniTracker({
       {/* Acceso a herramientas siempre disponible cuando el toggle está activo */}
       <div className="grid grid-cols-2 gap-2.5 pt-1">
         <NextSessionCard />
-        <MiniBento icon={<FileText size={20} className="text-[#b45309]" />} iconBg="bg-[#facb60]/20" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
-        <MiniBento icon={<NotebookPen size={20} className="text-[#7c3aed]" />} iconBg="bg-[#7c3aed]/12" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
-        <MiniBento icon={<Pill size={20} className="text-[#0e8a92]" />} iconBg="bg-[#7cc2c8]/15" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
+        <MiniBento icon={<FileText size={32} strokeWidth={2} className="text-[#101927]" />} bg="#facb60" textColor="#101927" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
+        <MiniBento icon={<NotebookPen size={32} strokeWidth={2} className="text-white" />} bg="#7c3aed" textColor="#ffffff" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
+        <MiniBento icon={<Pill size={32} strokeWidth={2} className="text-[#7cc2c8]" />} bg="#101927" textColor="#ffffff" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
+      </div>
+
+
+      <ContactConfirmDialog
       </div>
 
 
