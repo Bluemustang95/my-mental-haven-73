@@ -75,6 +75,11 @@ import UnsentLettersHistory from "@/pages/UnsentLettersHistory";
 import MicroAchievementsHistory from "@/pages/MicroAchievementsHistory";
 import WeeklyGoalsHistory from "@/pages/WeeklyGoalsHistory";
 import NotFound from "@/pages/NotFound";
+import InventariosHub from "@/pages/InventariosHub";
+import PersonalidadHome from "@/pages/PersonalidadHome";
+import CorrelacionActividadBienestar from "@/pages/proceso/CorrelacionActividadBienestar";
+import CorrelacionActividadTests from "@/pages/proceso/CorrelacionActividadTests";
+import EstadisticasAdmin from "@/pages/admin/modules/EstadisticasAdmin";
 import { AdminRoute } from "@/components/admin/AdminRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -223,6 +228,10 @@ const App = () => (
               <Route path="/herramientas/alimentacion-consciente" element={<MindfulEating />} />
               <Route path="/herramientas/mis-valores" element={<MyValues />} />
               <Route path="/herramientas/plan-seguridad" element={<SafetyPlan />} />
+              <Route path="/herramientas/inventarios" element={<InventariosHub />} />
+              <Route path="/herramientas/personalidad" element={<PersonalidadHome />} />
+              <Route path="/proceso/conexiones/actividad-bienestar" element={<CorrelacionActividadBienestar />} />
+              <Route path="/proceso/conexiones/actividad-tests" element={<CorrelacionActividadTests />} />
               <Route path="/recursos/:slug" element={<ResourceTools />} />
 
               {/* Mi Proceso (tab 5) */}
