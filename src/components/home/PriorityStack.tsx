@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { WidgetGlyph, WIDGET_IDENTITY } from "@/components/home/WidgetVisual";
 import type { WidgetId } from "@/components/home/WidgetsBoard";
+
 
 export type PriorityCard = {
   id: string;
@@ -89,14 +90,15 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
         })}
 
         <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div
+          <motion.button
             key={top.id}
             layout
+            onClick={top.onAction}
             initial={{ opacity: 0, y: -12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -32, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 260, damping: 26 }}
-            className="relative z-20 overflow-hidden rounded-[26px] p-5 shadow-[0_14px_40px_-18px_rgba(16,25,39,0.28)] ring-1 ring-black/5"
+            className="relative z-20 block w-full overflow-hidden rounded-[26px] p-5 text-left shadow-[0_14px_40px_-18px_rgba(16,25,39,0.28)] ring-1 ring-black/5 active:scale-[0.99]"
             style={(() => {
               const ident = WIDGET_IDENTITY[top.id as WidgetId];
               if (!ident) return { background: "#ffffff", paddingBottom: peeks.length > 0 ? 24 : 20 } as React.CSSProperties;
@@ -135,43 +137,18 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
                 {top.title}
               </h3>
 
-              {top.description && !top.done && (
-                <p
-                  className="mt-1.5 text-[13.5px] leading-snug"
-                  style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#334155", opacity: 0.82 }}
-                >
-                  {top.description}
-                </p>
-              )}
-
               {top.done && top.doneSummary && (
                 <p
-                  className="mt-1.5 flex items-center gap-1.5 text-[12.5px] font-semibold"
+                  className="mt-2 flex items-center gap-1.5 text-[12.5px] font-semibold"
                   style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#0d5e63" }}
                 >
                   <Check size={13} strokeWidth={3} /> {top.doneSummary}
                 </p>
               )}
-
-              <div className="mt-5 flex items-end justify-between gap-3">
-                <span
-                  className="text-[11.5px] font-medium"
-                  style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#64748b", opacity: 0.75 }}
-                >
-                  {top.done ? "Completado" : "Paso obligatorio"}
-                </span>
-                <button
-                  onClick={top.onAction}
-                  className="group inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3.5 py-2 text-[12.5px] font-bold uppercase tracking-[0.08em] shadow-sm transition active:scale-95"
-                  style={{ color: WIDGET_IDENTITY[top.id as WidgetId]?.ink ?? "#101927" }}
-                >
-                  {top.actionLabel}
-                  <ArrowRight size={14} className="transition group-hover:translate-x-0.5" />
-                </button>
-              </div>
             </div>
-          </motion.div>
+          </motion.button>
         </AnimatePresence>
+
       </div>
     </section>
   );
