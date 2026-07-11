@@ -216,14 +216,14 @@ export function ResmitaFAB() {
           exit={{ scale: 0, opacity: 0 }}
           onClick={() => setOpen(true)}
           aria-label="Hablar con Resmita"
-          className="fixed z-40 flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-[#7cc2c8] to-[#5eaeb5] shadow-[0_12px_30px_-8px_rgba(124,194,200,0.7)] active:scale-95"
+          className="fixed z-40 flex h-16 w-16 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-[#7cc2c8] to-[#5eaeb5] shadow-[0_12px_30px_-8px_rgba(124,194,200,0.7)] active:scale-95 overflow-hidden"
           style={{
             left: "max(1rem, env(safe-area-inset-left))",
             bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
           }}
         >
-          <img src={resmitaAvatar} alt="Resmita" className="h-11 w-11 rounded-full object-cover" />
-          <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white" />
+          <img src={resmitaAvatar} alt="Resmita" className="h-[70px] w-[70px] object-contain drop-shadow-sm" />
+          <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white" />
           <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[#7cc2c8]/30 animate-ping" style={{ animationDuration: "3s" }} />
         </motion.button>
       )}
