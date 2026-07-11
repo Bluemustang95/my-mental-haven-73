@@ -39,7 +39,7 @@ export function AiFeatureEditor({
   const [saving, setSaving] = useState(false);
   const [usage, setUsage] = useState<any[]>([]);
   const [testInput, setTestInput] = useState("");
-  const [testOutput, setTestOutput] = useState<{ content: string; usage: any; latency_ms: number } | null>(null);
+  const [testOutput, setTestOutput] = useState<{ content: string; usage: any; latency_ms: number; model?: string } | null>(null);
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
 
