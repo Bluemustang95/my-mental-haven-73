@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { useMindfulScript } from "@/hooks/useMindfulScript";
 import { toast } from "@/hooks/use-toast";
 import { ExerciseTopBar } from "@/components/exercises/ExerciseTopBar";
 
@@ -60,17 +61,16 @@ export function AnatomiaEmocionView({ music, voiceEnabled, onComplete, onAbort }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music]);
 
+  // Intro única al arrancar; después la interfaz habla por sí sola.
+  const intro = useMindfulScript("anatomiaEmocion", { voiceEnabled, loopTimes: 0 });
+  const introRef = useRef(false);
   useEffect(() => {
-    if (!voiceEnabled) return;
-    const lines: Record<Step, string> = {
-      emotion: "Elegí la emoción que estás explorando ahora.",
-      location: "¿Dónde, en tu cuerpo, sentís esa emoción? Tocá las zonas.",
-      intensity: "¿Qué tan intensa es la sensación, del cero al diez?",
-      note: "Si querés, describí la sensación. Punzante, opresiva, cálida.",
-    };
-    audio.speak(lines[step]);
+    if (!voiceEnabled || introRef.current) return;
+    introRef.current = true;
+    intro.start();
+    return () => intro.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, voiceEnabled]);
+  }, [voiceEnabled]);
 
   function togglePart(id: string) {
     setParts((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);

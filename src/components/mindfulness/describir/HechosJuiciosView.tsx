@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
 import { Check, X as XIcon, ArrowRight, Zap } from "lucide-react";
 import { pickDeck, type Statement, type Difficulty } from "@/lib/factJudgmentBank";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { useMindfulScript } from "@/hooks/useMindfulScript";
 import { ExerciseTopBar } from "@/components/exercises/ExerciseTopBar";
 import { GlossaryTerm } from "@/components/mindfulness/GlossaryTerm";
 import { cn } from "@/lib/utils";
@@ -32,11 +33,18 @@ export function HechosJuiciosView({ music, onComplete, onAbort }: Props) {
   const [showFeedback, setShowFeedback] = useState<null | { correct: boolean; card: Statement }>(null);
 
   const audio = useMindfulAudio();
+  const intro = useMindfulScript("hechosJuicios", { loopTimes: 0 });
+  const introRef = useRef(false);
   useEffect(() => {
     audio.playMusic(music);
+    if (!introRef.current) {
+      introRef.current = true;
+      intro.start();
+    }
     return () => {
       audio.stopMusic();
       audio.stopSpeech();
+      intro.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music]);
