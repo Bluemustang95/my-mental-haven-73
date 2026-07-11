@@ -87,7 +87,7 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
   const [phase, setPhase] = useState<Phase>("input");
   const [entries, setEntries] = useState<string[][]>(STEPS.map((s) => Array(s.count).fill("")));
   const [activeInput, setActiveInput] = useState(0);
-  const listeningIdxRef = useRef<number | null>(null);
+  const [listeningIdx, setListeningIdx] = useState<number | null>(null);
   const recognitionRef = useRef<any>(null);
   const speakRef = useRef(audio.speak);
   speakRef.current = audio.speak;
