@@ -213,6 +213,24 @@ export default function Settings() {
 
         {/* Privacidad de Resmita */}
         <Group label="Privacidad de Resmita">
+          <div className="flex items-center justify-between px-4 pt-3">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold ${
+                resmita.contextConsent
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-[#f2f2f5] text-[#101927]/60"
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${resmita.contextConsent ? "bg-emerald-500" : "bg-[#101927]/40"}`} />
+              {resmita.contextConsent ? "Recolección activa" : "Recolección pausada"}
+            </span>
+            <button
+              onClick={() => setSnapshotModalOpen("info")}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#7cc2c8]"
+            >
+              <Info size={12} /> Ver qué se guarda
+            </button>
+          </div>
           <RowToggle
             icon={<MessageCircle size={18} />}
             label="Compartir en qué pantalla estoy"
@@ -223,7 +241,10 @@ export default function Settings() {
             icon={<Sparkles size={18} />}
             label="Compartir resumen de mi actividad"
             checked={resmita.shareSnapshot}
-            onChange={(v) => updateResmita({ shareSnapshot: v, contextConsent: v })}
+            onChange={(v) => {
+              if (v) setSnapshotModalOpen("consent");
+              else updateResmita({ shareSnapshot: false, contextConsent: false });
+            }}
           />
           <RowToggle
             icon={<History size={18} />}
@@ -232,17 +253,19 @@ export default function Settings() {
             onChange={(v) => updateResmita({ storeHistory: v })}
           />
           <button
-            onClick={async () => {
-              if (!user) return;
-              if (!confirm("¿Borrar toda la conversación con Resmita?")) return;
-              await supabase.from("resmita_messages").delete().eq("user_id", user.id);
-              toast.success("Historial borrado");
-            }}
-            className="flex w-full items-center justify-between px-4 py-3.5 active:bg-black/[0.03]"
+            onClick={() => setWipeOpen(true)}
+            disabled={isWiping}
+            className="flex w-full items-center justify-between px-4 py-3.5 active:bg-black/[0.03] disabled:opacity-60"
           >
             <div className="flex items-center gap-3">
-              <Trash2 size={18} className="text-[#101927]/70" />
-              <span className="text-[15px] font-medium text-[#101927]">Borrar historial de Resmita</span>
+              {isWiping ? (
+                <Loader2 size={18} className="animate-spin text-[#FF3B30]" />
+              ) : (
+                <Trash2 size={18} className="text-[#FF3B30]" />
+              )}
+              <span className="text-[15px] font-medium text-[#FF3B30]">
+                Borrar historial y cancelar recolección
+              </span>
             </div>
           </button>
           <div className="px-4 pt-1 pb-3 text-[11px] leading-relaxed text-[#101927]/50">
@@ -250,6 +273,61 @@ export default function Settings() {
             pensamientos completos ni notas privadas. Solo ve metadatos (ánimo promedio, tendencias, actividad).
           </div>
         </Group>
+
+        <ResmitaSnapshotConsentModal
+          open={snapshotModalOpen !== false}
+          onOpenChange={(v) => { if (!v) setSnapshotModalOpen(false); }}
+          mode={snapshotModalOpen === "info" ? "info" : "consent"}
+          shareScreen={resmita.shareScreen}
+          shareSnapshot={resmita.shareSnapshot}
+          onConfirm={() => updateResmita({ shareSnapshot: true, contextConsent: true })}
+          onDecline={() => updateResmita({ shareSnapshot: false })}
+        />
+
+        <AlertDialog open={wipeOpen} onOpenChange={setWipeOpen}>
+          <AlertDialogContent className="rounded-3xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Borrar todo y cancelar recolección</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-2 text-[13px] text-[#101927]/75">
+                  <p>Esta acción hará lo siguiente, y no se puede deshacer:</p>
+                  <ul className="ml-4 list-disc space-y-0.5">
+                    <li>Borra <b>todos tus mensajes</b> con Resmita.</li>
+                    <li>Borra <b>todos los eventos</b> de uso registrados.</li>
+                    <li>Desactiva compartir pantalla, resumen de actividad e historial.</li>
+                  </ul>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-[#FF3B30] hover:bg-[#FF3B30]/90"
+                onClick={async () => {
+                  if (!user) return;
+                  setIsWiping(true);
+                  try {
+                    const [msgs, evts] = await Promise.all([
+                      supabase.from("resmita_messages").delete().eq("user_id", user.id).select("id"),
+                      supabase.from("resmita_context_events").delete().eq("user_id", user.id).select("id"),
+                    ]);
+                    await updateResmita({ contextConsent: false, shareSnapshot: false, storeHistory: false });
+                    const nMsg = msgs.data?.length ?? 0;
+                    const nEvt = evts.data?.length ?? 0;
+                    toast.success(`Borré ${nMsg} mensajes y ${nEvt} eventos. Recolección pausada.`);
+                  } catch (e) {
+                    toast.error("No pude borrar todo. Intentá de nuevo.");
+                  } finally {
+                    setIsWiping(false);
+                  }
+                }}
+              >
+                Sí, borrar todo
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
 
 
 
