@@ -107,11 +107,11 @@ export function ValueSlides({ onContinue }: { onContinue: () => void }) {
           <motion.div
             key={title}
             variants={{
-              hidden: { opacity: 0, y: 14 },
+              hidden: { opacity: 0, y: 18 },
               show: {
                 opacity: 1,
                 y: 0,
-                transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+                transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
               },
             }}
             className="flex items-start gap-3 rounded-[22px] border border-[#101927]/5 bg-white/85 p-3.5 shadow-glass backdrop-blur-xl"
