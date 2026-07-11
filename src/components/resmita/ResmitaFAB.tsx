@@ -247,14 +247,14 @@ export function ResmitaFAB() {
             >
               <div className="flex items-center justify-between border-b border-[#101927]/5 px-5 py-3.5">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#7cc2c8]/20">
-                    <img src={resmitaAvatar} alt="Resmita" className="h-9 w-9 rounded-full object-cover" />
+                  <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-[#7cc2c8]/20 overflow-hidden">
+                    <img src={resmitaAvatar} alt="Resmita" className="h-11 w-11 object-contain" />
                     <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-white" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-display text-[14px] font-bold text-[#101927]">Resmita</p>
                     <p className="truncate text-[10px] text-[#101927]/55">
-                      {prefs.shareScreen ? `Estoy con vos en ${ctx.screenTitle}` : "Modo privado"} · No reemplaza terapia
+                      No reemplaza terapia profesional
                     </p>
                   </div>
                 </div>
@@ -277,6 +277,34 @@ export function ResmitaFAB() {
                   </button>
                 </div>
               </div>
+
+              {/* In-chat context chip */}
+              {!showConsent && (() => {
+                const bothOn = prefs.shareScreen && prefs.shareSnapshot && prefs.contextConsent;
+                const onlyScreen = prefs.shareScreen && !bothOn;
+                const label = bothOn
+                  ? `Ve: ${ctx.screenTitle} + resumen`
+                  : onlyScreen
+                    ? `Ve: ${ctx.screenTitle}`
+                    : "Modo privado";
+                const Icon = prefs.shareScreen ? Eye : Lock;
+                return (
+                  <button
+                    onClick={() => setShowInfoModal(true)}
+                    className={cn(
+                      "mx-4 mt-2 flex items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-[10.5px] font-semibold transition",
+                      prefs.shareScreen
+                        ? "bg-[#7cc2c8]/15 text-[#101927]/80"
+                        : "bg-[#f2f2f5] text-[#101927]/55",
+                    )}
+                    aria-label="Ver qué está viendo Resmita"
+                  >
+                    <Icon size={11} />
+                    <span className="truncate max-w-[220px]">{label}</span>
+                  </button>
+                );
+              })()}
+
 
               <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                 {showConsent && (
