@@ -307,35 +307,6 @@ export function ResmitaFAB() {
 
 
               <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-                {showConsent && (
-                  <div className="rounded-2xl border border-[#7cc2c8]/30 bg-gradient-to-br from-[#7cc2c8]/10 to-white p-4 shadow-sm">
-                    <div className="flex items-start gap-2.5">
-                      <Shield size={18} className="mt-0.5 shrink-0 text-[#7cc2c8]" />
-                      <div className="min-w-0">
-                        <p className="font-display text-[13px] font-bold text-[#101927]">Privacidad de Resmita</p>
-                        <p className="mt-1 text-[12px] leading-relaxed text-[#101927]/75">
-                          Para ayudarte mejor, Resmita puede ver <b>en qué pantalla estás</b> y un
-                          <b> resumen anónimo</b> de tu actividad (ánimo, tendencias). <b>No lee</b> tus entradas
-                          de diario ni tus pensamientos completos. Podés cambiarlo en Ajustes.
-                        </p>
-                        <div className="mt-3 flex gap-2">
-                          <button
-                            onClick={() => handleConsent(true)}
-                            className="rounded-full bg-[#101927] px-3 py-1.5 text-[11px] font-semibold text-white"
-                          >
-                            Sí, activar
-                          </button>
-                          <button
-                            onClick={() => handleConsent(false)}
-                            className="rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-[#101927] shadow-sm"
-                          >
-                            No, chatear en privado
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
                 {messages.length === 0 && !showConsent && (
                   <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm">
                     <p className="text-[13px] leading-relaxed text-[#101927]">{ctx.welcome}</p>
