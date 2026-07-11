@@ -183,6 +183,7 @@ export async function evaluateNextNotification(): Promise<EvaluatedNotif | null>
 
   for (const c of candidates) {
     if (!c.rule || !c.ok) continue;
+    if (!isCategoryEnabled(c.rule.category, c.rule.trigger_key)) continue;
     const id = `${c.rule.category}.${c.rule.trigger_key}`;
     if (alreadyShownToday(id)) continue;
     // Interpolate variables like {{dias}} in copy_text.

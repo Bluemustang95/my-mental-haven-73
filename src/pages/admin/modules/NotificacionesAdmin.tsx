@@ -170,6 +170,7 @@ function ManualPushSection() {
   const [target, setTarget] = useState<"all" | "country" | "plan">("all");
   const [country, setCountry] = useState("AR");
   const [plan, setPlan] = useState<"free" | "premium">("premium");
+  const [kind, setKind] = useState<string>("admin");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [url, setUrl] = useState("/");
@@ -196,7 +197,7 @@ function ManualPushSection() {
     const segment =
       target === "all" ? { all: true } : target === "country" ? { country } : { plan };
     const { data, error } = await supabase.functions.invoke("send-push", {
-      body: { segment, title: title.trim(), body: body.trim(), url, kind: "admin" },
+      body: { segment, title: title.trim(), body: body.trim(), url, kind },
     });
     setSending(false);
     if (error) {
