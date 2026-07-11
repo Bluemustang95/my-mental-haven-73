@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X, Send, Loader2, Trash2, BookmarkPlus, Check, Shield } from "lucide-react";
+import { X, Send, Loader2, Trash2, BookmarkPlus, Check, Eye, Lock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { useHideBottomNav, useUiChrome } from "@/hooks/useUiChrome";
 import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
 import { useResmitaSnapshot, buildSnapshotSummary } from "@/hooks/useResmitaSnapshot";
 import { logResmitaEvent, newSessionId } from "@/lib/resmitaTelemetry";
+import { ResmitaSnapshotConsentModal } from "@/components/resmita/ResmitaSnapshotConsentModal";
 import { cn } from "@/lib/utils";
 import resmitaAssetJson from "@/assets/resmita-bot.png.asset.json";
 const resmitaAvatar = resmitaAssetJson.url;
