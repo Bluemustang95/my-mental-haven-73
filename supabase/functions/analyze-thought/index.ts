@@ -104,10 +104,13 @@ Pensamiento automático: "${thought}"`;
     }
 
     const cfg = await loadFeatureConfig("analyze_thought", {
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3-flash-preview",
       temperature: 0.5,
     });
-    const res = await callGateway(key, cfg.model, cfg.temperature, systemPrompt, userPrompt);
+    const finalSystem = cfg.system_prompt
+      ? `${cfg.system_prompt}\n\n---\n${systemPrompt}`
+      : systemPrompt;
+    const res = await callGateway(key, cfg.model, cfg.temperature, finalSystem, userPrompt);
 
     if (res.status === 429) {
       return new Response(JSON.stringify({ error: "Demasiadas consultas. Probá en unos minutos." }), {

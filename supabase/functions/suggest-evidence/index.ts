@@ -63,9 +63,12 @@ Ya cargó:
 ${Array.isArray(existing) && existing.length ? existing.map((e: string) => `- ${e}`).join("\n") : "(ninguna)"}`;
 
     const cfg = await loadFeatureConfig("suggest_evidence", {
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3-flash-preview",
       temperature: 0.5,
     });
+    const finalSystem = cfg.system_prompt
+      ? `${cfg.system_prompt}\n\n---\n${systemPrompt}`
+      : systemPrompt;
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
@@ -73,7 +76,7 @@ ${Array.isArray(existing) && existing.length ? existing.map((e: string) => `- ${
         model: cfg.model,
         temperature: cfg.temperature,
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: finalSystem },
           { role: "user", content: userPrompt },
         ],
       }),

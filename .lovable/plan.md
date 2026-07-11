@@ -1,57 +1,77 @@
-# Consentimiento claro + borrar todo + avatar cuerpo completo + indicador in-chat
+# Prompts editables para cada feature de IA + rewrite de Resmita
 
-## 1. Modal de consentimiento explícito (`ResmitaSnapshotConsentModal`)
+## Estado actual
 
-Nuevo componente `src/components/resmita/ResmitaSnapshotConsentModal.tsx` basado en el `Dialog` de shadcn.
+Consulté `ai_feature_configs`. De 10 features, **6 tienen `system_prompt` vacío** y una necesita reescritura:
 
-Contenido:
-- **Qué guardamos**: último check-in (ánimo/sueño), tendencia de ánimo 7d, racha, cantidad de medicaciones activas (no los nombres), si hay un registro CBT abierto, último resultado numérico de test.
-- **Qué NO guardamos**: texto del diario, pensamientos completos, cartas, notas de sesión, plan de seguridad, nombres de medicaciones.
-- **Retención**: 90 días para eventos de uso; el resumen se recalcula en vivo (no se persiste como copia).
-- **Control**: se puede desactivar o borrar todo cuando el usuario quiera.
-- **Cifrado + agregación**: los datos viajan cifrados y el equipo clínico solo ve métricas agregadas/anónimas.
-- Botones: **Cancelar** / **Activar** (icon buttons, alto contraste).
+| Feature | Prompt actual | Acción |
+|---|---|---|
+| `resmita_chat` | Terapéutico (1114 chars) | **Reescribir** — no terapéutico, solo dudas |
+| `analyze_thought` | Vacío | Crear (persona base + guardrails) |
+| `describe_neutral` | Vacío | Crear |
+| `suggest_behavior_plan` | Vacío | Crear |
+| `suggest_evidence` | Vacío | Crear |
+| `mindfulness_tts` | Vacío | N/A — ElevenLabs TTS, no usa system prompt |
+| `transcribe_voice` | Vacío | N/A — Whisper, no usa system prompt |
+| `onboarding_algo` | Vacío | N/A — motor determinista, no LLM |
 
-Se dispara desde dos lugares:
-- Primera apertura del FAB (reemplaza el `showConsent` inline actual).
-- Al intentar activar el toggle "Compartir resumen de mi actividad" en Ajustes.
+## 1. Reescribir `resmita_chat` (rol reducido)
 
-Log de `consent_granted` / `consent_declined` en `resmita_context_events` se mantiene.
+Nueva persona: **asistente de dudas de la app RESMA, no terapéutica**. Reglas:
+- Solo responde dudas sobre **cómo usar la app** (navegación, funciones, ajustes, notificaciones, plan/premium, privacidad, backup).
+- **No** da consejo terapéutico, no interpreta emociones, no valida "cómo te sentís", no sugiere ejercicios propios.
+- **No** habla de RESMA como institución (equipo, sedes, precios, terapeutas humanos, política).
+- **No** diagnostica ni recomienda tratamientos.
+- Si el usuario pide ayuda emocional o clínica → mensaje breve derivando: "Para eso, dentro de la app tenés [Diario / Herramientas / Mi proceso]. Si necesitás hablar con alguien ya, tocá el botón rojo de crisis."
+- Si pregunta sobre RESMA institucional → "No puedo darte info institucional. Escribinos a contacto@resma.com.ar."
+- Tono argentino (voseo), breve, directo, sin emojis excesivos, sin markdown pesado.
+- Máx 4 oraciones por respuesta salvo tutoriales paso a paso.
 
-## 2. Ajustes: borrar historial + cancelar recolección
+## 2. Prompts nuevos para features con LLM
 
-Editar `src/pages/Settings.tsx` (grupo "Privacidad de Resmita"):
+**`analyze_thought`** — Persona base + guardrails compartidos por los 4 modos (holistic/identify/alternatives/refine). El código seguirá agregando instrucciones específicas por modo.
 
-- El toggle `shareSnapshot` no aplica directo: abre el modal y solo persiste al confirmar (si cancela, vuelve a false).
-- Reemplazar el botón actual "Borrar historial de Resmita" por **"Borrar historial y cancelar recolección"** (rojo, icono `Trash2`):
-  1. `AlertDialog` de confirmación explicando exactamente qué se borra (mensajes + eventos) y qué se apaga (`contextConsent`, `shareSnapshot`, `storeHistory`).
-  2. Estado `isDeleting` con `Loader2` en el botón mientras corre.
-  3. Ejecuta: `delete from resmita_messages`, `delete from resmita_context_events`, y `updatePrefs({ contextConsent:false, shareSnapshot:false, storeHistory:false })` — todos scoped al `user_id`.
-  4. Toast de éxito ("Historial y datos borrados") o error específico.
-- Badge de estado arriba de los toggles: "Recolección activa" (verde) / "Recolección pausada" (gris) según `contextConsent`.
-- Enlace/botón secundario "Ver qué se guarda" que abre el mismo modal en modo informativo.
+**`describe_neutral`** — Ya existe en código como `SYSTEM`. Migrar ese texto tal cual al DB para que sea editable desde admin.
 
-## 3. Avatar Resmita cuerpo completo (no cortado)
+**`suggest_behavior_plan`** — Persona CBT + activación conductual, salida JSON estructurada.
 
-Editar `src/components/resmita/ResmitaFAB.tsx`:
+**`suggest_evidence`** — Persona CBT + reglas para evidencias a favor/en contra.
 
-- **FAB flotante**: subir el círculo a `h-16 w-16`; el `<img>` pasa a `h-14 w-14 object-contain` (sin recorte). Se mantiene el borde/glow teal, el punto de estado verde y el `ping`.
-- **Header del sheet**: contenedor `h-11 w-11 rounded-2xl bg-[#7cc2c8]/15`; `<img>` `h-10 w-10 object-contain`.
-- Verificar con Playwright (viewport 390×844) que se ve el bot entero, no la cara recortada. Si el PNG viene sin margen suficiente, regenerar con `imagegen` (transparente, con aire arriba/abajo) y reemplazar el asset JSON.
+Cada prompt: 300–800 chars, en español rioplatense, con guardrails de no-diagnóstico y no reemplazo de terapia.
 
-## 4. Indicador in-chat de contexto (transparencia continua)
+## 3. Cambio de código: usar `cfg.system_prompt` como persona layer
 
-Nuevo chip debajo del header del sheet en `ResmitaFAB.tsx`:
+Hoy `analyze-thought`, `suggest-behavior-plan` y `suggest-evidence` **ignoran** `cfg.system_prompt` (solo leen `model` + `temperature`). Editar cada edge function para que el system message enviado al modelo sea:
 
-- Muestra en tiempo real qué está viendo Resmita:
-  - Si `shareScreen` off → "Modo privado" (candado gris).
-  - Si `shareScreen` on y `shareSnapshot` off → "Ve: pantalla actual" (icono ojo, teal).
-  - Si ambos on → "Ve: pantalla + resumen".
-- Es táctil: al tocar abre el modal de consentimiento en **modo informativo** (mismo componente, muestra el detalle de qué se está compartiendo con los toggles actuales y un enlace "Cambiar en Ajustes").
-- Se oculta cuando `showConsent` inicial está abierto para evitar redundancia.
+```
+{cfg.system_prompt || fallback_persona}
+
+{instrucciones_específicas_del_modo}
+```
+
+Así los cambios en admin toman efecto sin redeploy.
+
+`describe_neutral` ya usa `cfg.system_prompt ?? SYSTEM` → no requiere cambio de código, solo seed.
+
+`resmita_chat` ya usa el prompt del DB → solo update.
+
+## 4. Admin UI: marcar features sin prompt como N/A
+
+En `src/pages/admin/AiFeaturesManager.tsx` / `AiFeatureEditor.tsx`:
+- Agregar flag `promptEditable` deducido del `feature_key`. Para `mindfulness_tts`, `transcribe_voice`, `onboarding_algo` → mostrar badge "Sin prompt (motor no-LLM)" y ocultar el textarea (o dejarlo como campo de notas internas).
+- Así el admin ve claro por qué esos 3 están vacíos.
+
+## 5. ¿Falta algo? (recomendaciones opcionales)
+
+- **Botón "Probar prompt"** en el editor de admin: envía un input de prueba al modelo con el prompt actual y muestra la respuesta. Útil para iterar sin salir de admin.
+- **Historial de versiones** de cada prompt (`ai_prompt_versions` con user_id del editor, timestamp, diff) para rollback y auditoría clínica.
+- **Alinear modelos**: `analyze_thought`, `suggest_behavior_plan`, `suggest_evidence` usan `gemini-2.5-flash`; el resto `gemini-3-flash-preview`. Unificar a `gemini-3-flash-preview` (más nuevo, mismo costo) salvo que haya razón clínica para lo contrario.
+- **Placeholder de variables**: documentar en cada prompt qué placeholders acepta (ej: `{screenTitle}`, `{userSummary}`) para que quien edita sepa qué no romper.
+
+Estos 3 no los ejecuto salvo que los pidas.
 
 ## Archivos afectados
 
-- **Nuevo**: `src/components/resmita/ResmitaSnapshotConsentModal.tsx`
-- **Editar**: `src/pages/Settings.tsx`, `src/components/resmita/ResmitaFAB.tsx`
-- **Posible**: regenerar `src/assets/resmita-bot.png` + `.asset.json` si el crop actual no deja ver el cuerpo con `object-contain`.
+- **Migración**: `supabase/migrations/[timestamp]_seed_ai_prompts.sql` — UPDATE de `ai_feature_configs` con los prompts nuevos.
+- **Editar**: `supabase/functions/analyze-thought/index.ts`, `supabase/functions/suggest-behavior-plan/index.ts`, `supabase/functions/suggest-evidence/index.ts` — usar `cfg.system_prompt` como preamble.
+- **Editar**: `src/pages/admin/AiFeaturesManager.tsx` y/o `src/components/admin/AiFeatureEditor.tsx` — badge N/A para los 3 no-LLM.

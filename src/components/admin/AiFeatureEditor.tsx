@@ -24,6 +24,8 @@ const CHAT_MODELS = [
 ];
 const AUDIO_MODELS = ["eleven_v3", "eleven_multilingual_v2", "whisper-1"];
 
+const NON_LLM_FEATURES = new Set(["mindfulness_tts", "transcribe_voice", "onboarding_algo"]);
+
 export function AiFeatureEditor({
   feature,
   onClose,
@@ -162,14 +164,22 @@ export function AiFeatureEditor({
 
           <div>
             <Label>System prompt</Label>
+            {NON_LLM_FEATURES.has(form.feature_key) && (
+              <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11.5px] text-amber-900">
+                <b>Sin prompt (motor no-LLM).</b> Esta feature no envía system prompt al modelo.
+                El texto de abajo es solo una nota interna para el equipo.
+              </div>
+            )}
             <Textarea
               className="min-h-[280px] font-mono text-[12px] leading-relaxed"
               value={form.system_prompt ?? ""}
               onChange={(e) => setForm({ ...form, system_prompt: e.target.value })}
-              placeholder="Instrucciones para el modelo…"
+              placeholder={NON_LLM_FEATURES.has(form.feature_key) ? "Nota interna…" : "Instrucciones para el modelo…"}
             />
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Este prompt se usa como <code>role: "system"</code> en la llamada al modelo.
+              {NON_LLM_FEATURES.has(form.feature_key)
+                ? "Este texto NO se envía al modelo. Guardalo como documentación."
+                : <>Este prompt se usa como <code>role: "system"</code> en la llamada al modelo.</>}
             </p>
           </div>
 
