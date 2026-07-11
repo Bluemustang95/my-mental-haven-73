@@ -59,13 +59,41 @@ export async function evaluateNextNotification(): Promise<EvaluatedNotif | null>
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: rulesData } = await supabase
-    .from("notification_rules")
-    .select("category, trigger_key, enabled, copy_text")
-    .eq("enabled", true);
+  const [{ data: rulesData }, { data: prefsData }] = await Promise.all([
+    supabase
+      .from("notification_rules")
+      .select("category, trigger_key, enabled, copy_text")
+      .eq("enabled", true),
+    supabase
+      .from("notification_preferences")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
 
   const rules = (rulesData ?? []) as Rule[];
   if (!rules.length) return null;
+
+  const prefs = (prefsData ?? {}) as any;
+  // Master switch: if push is off, never surface soft in-app engine toasts either.
+  if (prefs.push_enabled === false) return null;
+
+  // Map category+trigger to the granular pref column. Missing → treat as enabled.
+  const prefKey = (cat: string, key: string): string | null => {
+    if (cat === "circadiana" && key === "amanecer") return "morning_enabled";
+    if (cat === "circadiana" && key === "anochecer") return "night_enabled";
+    if (cat === "habitos" && key === "recaida") return "habits_relapse_enabled";
+    if (cat === "psicometria" && key === "test_vencido") return "tests_due_enabled";
+    if (cat === "hibernacion" && key === "re_engagement") return "reengagement_enabled";
+    if (cat === "vinculo") return "therapist_enabled";
+    return null;
+  };
+  const isCategoryEnabled = (cat: string, key: string): boolean => {
+    const col = prefKey(cat, key);
+    if (!col) return true;
+    return prefs[col] !== false;
+  };
+
 
   const today = localDateStr(new Date());
   const ago = (d: number) => new Date(Date.now() - d * 86400000).toISOString();
