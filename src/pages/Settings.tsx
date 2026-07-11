@@ -34,6 +34,9 @@ export default function Settings() {
   const [manageOpen, setManageOpen] = useState<null | "manage" | "restore">(null);
   const [bioOn, setBioOn] = useState(false);
   const bioSupported = isBiometricSupported();
+  const [snapshotModalOpen, setSnapshotModalOpen] = useState<false | "consent" | "info">(false);
+  const [wipeOpen, setWipeOpen] = useState(false);
+  const [isWiping, setIsWiping] = useState(false);
 
   const adminFlag = isAdmin || isAdminPlan;
 
