@@ -1836,6 +1836,11 @@ export type Database = {
           prefers_dark: boolean | null
           priority_module: string | null
           recent_feelings: string[] | null
+          resmita_context_consent: boolean
+          resmita_context_consent_at: string | null
+          resmita_share_screen: boolean
+          resmita_share_snapshot: boolean
+          resmita_store_history: boolean
           satisfaction_survey_completed_at: string | null
           satisfaction_survey_dismissed_at: string | null
           session_reminder_dismissed_at: string | null
@@ -1878,6 +1883,11 @@ export type Database = {
           prefers_dark?: boolean | null
           priority_module?: string | null
           recent_feelings?: string[] | null
+          resmita_context_consent?: boolean
+          resmita_context_consent_at?: string | null
+          resmita_share_screen?: boolean
+          resmita_share_snapshot?: boolean
+          resmita_store_history?: boolean
           satisfaction_survey_completed_at?: string | null
           satisfaction_survey_dismissed_at?: string | null
           session_reminder_dismissed_at?: string | null
@@ -1920,6 +1930,11 @@ export type Database = {
           prefers_dark?: boolean | null
           priority_module?: string | null
           recent_feelings?: string[] | null
+          resmita_context_consent?: boolean
+          resmita_context_consent_at?: string | null
+          resmita_share_screen?: boolean
+          resmita_share_snapshot?: boolean
+          resmita_store_history?: boolean
           satisfaction_survey_completed_at?: string | null
           satisfaction_survey_dismissed_at?: string | null
           session_reminder_dismissed_at?: string | null
@@ -2208,6 +2223,60 @@ export type Database = {
           user_id?: string
           what_happened?: string | null
           what_i_wished?: string | null
+        }
+        Relationships: []
+      }
+      resmita_context_events: {
+        Row: {
+          completion_tokens: number | null
+          cost_usd: number | null
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          latency_ms: number | null
+          model: string | null
+          prompt_tokens: number | null
+          route: string | null
+          screen_purpose: string | null
+          screen_title: string | null
+          session_id: string | null
+          snapshot: Json | null
+          user_id: string
+        }
+        Insert: {
+          completion_tokens?: number | null
+          cost_usd?: number | null
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          prompt_tokens?: number | null
+          route?: string | null
+          screen_purpose?: string | null
+          screen_title?: string | null
+          session_id?: string | null
+          snapshot?: Json | null
+          user_id: string
+        }
+        Update: {
+          completion_tokens?: number | null
+          cost_usd?: number | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          latency_ms?: number | null
+          model?: string | null
+          prompt_tokens?: number | null
+          route?: string | null
+          screen_purpose?: string | null
+          screen_title?: string | null
+          session_id?: string | null
+          snapshot?: Json | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -3149,6 +3218,11 @@ export type Database = {
           prefers_dark: boolean | null
           priority_module: string | null
           recent_feelings: string[] | null
+          resmita_context_consent: boolean
+          resmita_context_consent_at: string | null
+          resmita_share_screen: boolean
+          resmita_share_snapshot: boolean
+          resmita_store_history: boolean
           satisfaction_survey_completed_at: string | null
           satisfaction_survey_dismissed_at: string | null
           session_reminder_dismissed_at: string | null
