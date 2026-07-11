@@ -115,6 +115,7 @@ export function ResmitaFAB() {
         body: JSON.stringify({
           messages: nextMessages,
           context: outboundCtx,
+          userSummary: prefs.shareSnapshot && prefs.contextConsent ? buildSnapshotSummary(snapshot) : null,
           sessionId,
         }),
       });
