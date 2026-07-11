@@ -163,13 +163,11 @@ export default function Settings() {
             checked={dark}
             onChange={toggleDark}
           />
-          <RowToggle
+          <Row
             icon={<Bell size={18} />}
             label="Notificaciones"
-            checked={notifications}
-            onChange={toggleNotifs}
+            onClick={() => navigate("/configuracion/notificaciones")}
           />
-          <div className="ml-12 h-px bg-black/[0.06]" />
           <div className="flex items-center justify-between px-4 py-3.5">
             <div className="flex items-center gap-3">
               <Mic size={18} />
