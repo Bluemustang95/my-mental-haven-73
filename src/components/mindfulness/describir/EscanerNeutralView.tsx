@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Loader2, RotateCcw, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { useMindfulScript } from "@/hooks/useMindfulScript";
 import { ExerciseTopBar } from "@/components/exercises/ExerciseTopBar";
 
 interface Props {
@@ -23,9 +24,15 @@ export function EscanerNeutralView({ music, onComplete, onAbort }: Props) {
   const [highlight, setHighlight] = useState(true);
 
   const audio = useMindfulAudio();
+  const intro = useMindfulScript("escanerNeutral", { loopTimes: 0 });
+  const introRef = useRef(false);
   useEffect(() => {
     audio.playMusic(music);
-    return () => { audio.stopMusic(); };
+    if (!introRef.current) {
+      introRef.current = true;
+      intro.start();
+    }
+    return () => { audio.stopMusic(); intro.stop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music]);
 

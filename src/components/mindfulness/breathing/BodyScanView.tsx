@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pause, Play } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { useMindfulScript } from "@/hooks/useMindfulScript";
 import { SessionToolbar, nextMusic } from "@/components/mindfulness/breathing/SessionToolbar";
 import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
 
@@ -65,23 +66,21 @@ export function BodyScanView({ totalSeconds, initialVoice, initialMusic, narrati
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft]);
 
-  // Narration: prefer the full DB script (spoken once). Fallback to zone cues.
-  const narratedRef = useRef(false);
-  useEffect(() => {
-    if (!voice || !running || narratedRef.current) return;
-    if (narrationText && narrationText.trim().length > 0) {
-      narratedRef.current = true;
-      audio.speak(narrationText);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voice, running, narrationText]);
-
+  // Narración por guion (una sola voz). El scroll visual sigue por su cuenta.
+  const script = useMindfulScript("bodyScan", { voiceEnabled: voice && running });
+  const startedRef = useRef(false);
   useEffect(() => {
     if (!voice || !running) return;
-    if (narrationText && narrationText.trim().length > 0) return;
-    audio.speak(ZONES[zoneIdx].speech);
+    if (startedRef.current) return;
+    startedRef.current = true;
+    script.start();
+    return () => script.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoneIdx]);
+  }, [voice, running]);
+  useEffect(() => {
+    if (!voice) script.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice]);
 
   useEffect(() => {
     if (running) {

@@ -1,7 +1,8 @@
 /**
  * ElevenLabs TTS client with IndexedDB cache.
- * Calls the `mindfulness-tts` edge function via direct fetch so the
- * binary audio/mpeg body is always returned as a Blob.
+ * - Monotonic token: last-call-wins; obsolete synth results are discarded.
+ * - AbortController: stopSpeak() cancels the in-flight fetch too.
+ * - Single audio path (no browser fallback here to avoid double voices).
  */
 import { getGlobalVoice } from "@/lib/globalVoice";
 
@@ -13,14 +14,12 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 const TTS_URL = `${SUPABASE_URL}/functions/v1/mindfulness-tts`;
 
-// Best-effort wipe of legacy caches that may contain corrupted/error blobs.
 try { indexedDB.deleteDatabase("resma_tts_cache"); } catch { /* noop */ }
 try { indexedDB.deleteDatabase("resma_tts_cache_v2"); } catch { /* noop */ }
 
 function isAudioBlob(b: Blob | null): b is Blob {
   if (!b || b.size < 1000) return false;
   const t = (b.type || "").toLowerCase();
-  // Reject anything that looks like JSON/text (likely an error envelope).
   if (t.includes("json") || t.includes("text/")) return false;
   return t.includes("audio") || t.includes("mpeg") || t === "" || t === "application/octet-stream";
 }
@@ -64,16 +63,22 @@ async function cachePut(key: string, blob: Blob) {
     const db = await openDb();
     const tx = db.transaction(STORE, "readwrite");
     tx.objectStore(STORE).put(blob, key);
-  } catch {
-    /* noop */
-  }
+  } catch { /* noop */ }
 }
 
 function makeKey(text: string, voiceId: string) {
   return `${voiceId}::${text}`;
 }
 
-export async function synthesize(text: string, voiceId?: string): Promise<Blob | null> {
+// ── Concurrency control ────────────────────────────────────────────────
+let playToken = 0;              // increments on every stop/speak
+let inflightAbort: AbortController | null = null;
+let currentAudio: HTMLAudioElement | null = null;
+let currentUrl: string | null = null;
+let currentVolume = 1;
+let primedAudio: HTMLAudioElement | null = null;
+
+export async function synthesize(text: string, voiceId?: string, signal?: AbortSignal): Promise<Blob | null> {
   const vid = voiceId ?? getGlobalVoice().voiceId;
   const key = makeKey(text, vid);
   const cached = await cacheGet(key);
@@ -88,34 +93,23 @@ export async function synthesize(text: string, voiceId?: string): Promise<Blob |
         Authorization: `Bearer ${SUPABASE_ANON}`,
       },
       body: JSON.stringify({ text, voiceId: vid }),
+      signal,
     });
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
       console.error("[TTS] edge function error", res.status, errText);
       return null;
     }
-    const ct = res.headers.get("Content-Type") || "audio/mpeg";
     const buf = await res.arrayBuffer();
-    if (buf.byteLength < 200) {
-      console.error("[TTS] response too small", buf.byteLength);
-      return null;
-    }
-    // Force a known good audio MIME so HTMLAudioElement can decode reliably.
+    if (buf.byteLength < 200) return null;
     const blob = new Blob([buf], { type: "audio/mpeg" });
-    void ct;
     cachePut(key, blob);
     return blob;
   } catch (e) {
-    console.error("[TTS] fetch failed", e);
+    if ((e as any)?.name !== "AbortError") console.error("[TTS] fetch failed", e);
     return null;
   }
 }
-
-// Singleton audio element for playback so we don't overlap takes.
-let currentAudio: HTMLAudioElement | null = null;
-let currentUrl: string | null = null;
-let currentVolume = 1;
-let primedAudio: HTMLAudioElement | null = null;
 
 export function setSpeechVolume(v: number) {
   currentVolume = Math.min(1, Math.max(0, v));
@@ -137,44 +131,35 @@ export function primeAudio() {
       primedAudio.src =
         "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
     }
-    primedAudio.play().catch((e) => console.warn("[TTS] primeAudio play failed", e));
-  } catch (e) {
-    console.warn("[TTS] primeAudio failed", e);
-  }
-}
-
-export async function speak(text: string, voiceId?: string): Promise<void> {
-  stopSpeak();
-  const vid = voiceId ?? getGlobalVoice().voiceId;
-  const blob = await synthesize(text, vid);
-  if (!blob) {
-    fallbackBrowserSpeak(text);
-    return;
-  }
-  const ok = await tryPlayBlob(blob);
-  if (ok) return;
-
-  // Cached blob is probably corrupted: invalidate and retry once with a fresh fetch.
-  console.warn("[TTS] playback failed, invalidating cache and retrying");
-  await cacheDelete(makeKey(text, vid));
-  const fresh = await synthesize(text, vid);
-  if (fresh && (await tryPlayBlob(fresh))) return;
-
-  fallbackBrowserSpeak(text);
-}
-
-function fallbackBrowserSpeak(text: string) {
-  try {
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "es-AR";
-    u.rate = 0.92;
-    u.volume = currentVolume;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
+    primedAudio.play().catch(() => {});
   } catch { /* noop */ }
 }
 
-async function tryPlayBlob(blob: Blob): Promise<boolean> {
+export async function speak(text: string, voiceId?: string): Promise<void> {
+  // New utterance supersedes any previous one.
+  stopSpeak();
+  const myToken = ++playToken;
+  const vid = voiceId ?? getGlobalVoice().voiceId;
+
+  const controller = new AbortController();
+  inflightAbort = controller;
+
+  const blob = await synthesize(text, vid, controller.signal);
+  if (myToken !== playToken) return;            // superseded, drop
+  if (!blob) return;
+
+  const ok = await tryPlayBlob(blob, myToken);
+  if (ok) return;
+
+  console.warn("[TTS] playback failed, invalidating cache and retrying");
+  await cacheDelete(makeKey(text, vid));
+  if (myToken !== playToken) return;
+  const fresh = await synthesize(text, vid, controller.signal);
+  if (myToken !== playToken || !fresh) return;
+  await tryPlayBlob(fresh, myToken);
+}
+
+async function tryPlayBlob(blob: Blob, myToken: number): Promise<boolean> {
   const url = URL.createObjectURL(blob);
   const audio = new Audio();
   audio.preload = "auto";
@@ -189,6 +174,12 @@ async function tryPlayBlob(blob: Blob): Promise<boolean> {
     audio.addEventListener("error", done, { once: true });
     setTimeout(done, 1500);
   });
+  if (myToken !== playToken) {
+    try { audio.pause(); audio.src = ""; } catch { /* noop */ }
+    URL.revokeObjectURL(url);
+    if (currentUrl === url) { currentUrl = null; currentAudio = null; }
+    return true; // treat as handled (superseded)
+  }
   try {
     await audio.play();
     audio.onended = () => {
@@ -209,26 +200,18 @@ async function tryPlayBlob(blob: Blob): Promise<boolean> {
 }
 
 export function stopSpeak() {
-  try {
-    window.speechSynthesis?.cancel();
-  } catch {
-    /* noop */
+  playToken++; // invalidate anything in flight
+  if (inflightAbort) {
+    try { inflightAbort.abort(); } catch { /* noop */ }
+    inflightAbort = null;
   }
+  try { window.speechSynthesis?.cancel(); } catch { /* noop */ }
   if (currentAudio) {
-    try {
-      currentAudio.pause();
-      currentAudio.src = "";
-    } catch {
-      /* noop */
-    }
+    try { currentAudio.pause(); currentAudio.src = ""; } catch { /* noop */ }
     currentAudio = null;
   }
   if (currentUrl) {
-    try {
-      URL.revokeObjectURL(currentUrl);
-    } catch {
-      /* noop */
-    }
+    try { URL.revokeObjectURL(currentUrl); } catch { /* noop */ }
     currentUrl = null;
   }
 }
