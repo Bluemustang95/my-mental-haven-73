@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History, Crown, RefreshCw, Sparkles, Fingerprint, Mic, Shield, MessageCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History, Crown, RefreshCw, Sparkles, Fingerprint, Mic, Shield, MessageCircle, Loader2, Info } from "lucide-react";
 import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,11 @@ import { usePlan } from "@/hooks/usePlan";
 import { IOSToggle } from "@/components/ui/IOSToggle";
 import { PaywallModal } from "@/components/modals/PaywallModal";
 import { ManageSubscriptionModal } from "@/components/modals/ManageSubscriptionModal";
+import { ResmitaSnapshotConsentModal } from "@/components/resmita/ResmitaSnapshotConsentModal";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { isBiometricSupported, isBiometricEnabled, enrollBiometric, disableBiometric } from "@/lib/biometricAuth";
 import { isPushSupported, currentPermission, requestPermissionAndRegister, disablePush } from "@/lib/pushNotifications";
