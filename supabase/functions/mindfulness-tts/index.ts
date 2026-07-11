@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { loadFeatureConfig } from "../_shared/ai-feature-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,6 +46,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    const cfg = await loadFeatureConfig("mindfulness_tts", {
+      model: "eleven_multilingual_v2",
+      temperature: 0,
+    });
+
     const res = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
@@ -55,7 +61,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           text,
-          model_id: "eleven_multilingual_v2",
+          model_id: cfg.model || "eleven_multilingual_v2",
           voice_settings: {
             stability,
             similarity_boost: similarity,
@@ -97,7 +103,7 @@ Deno.serve(async (req) => {
         const cost = (text.length / 1000) * 0.30; // ~$0.30/1K chars ElevenLabs multilingual
         void admin.from("ai_usage_log").insert({
           provider: "elevenlabs",
-          model: "eleven_multilingual_v2",
+          model: cfg.model,
           feature,
           user_id: userId,
           chars: text.length,

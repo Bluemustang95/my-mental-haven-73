@@ -1,4 +1,5 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { loadFeatureConfig } from "../_shared/ai-feature-config.ts";
 
 function tryParseJSON(raw: string): unknown {
   try { return JSON.parse(raw); } catch { /* try block */ }
@@ -7,13 +8,13 @@ function tryParseJSON(raw: string): unknown {
   return null;
 }
 
-async function callGateway(key: string, system: string, user: string) {
+async function callGateway(key: string, model: string, temperature: number, system: string, user: string) {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      temperature: 0.5,
+      model,
+      temperature,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -102,7 +103,11 @@ Sin markdown ni texto fuera del JSON.`;
 Pensamiento automático: "${thought}"`;
     }
 
-    const res = await callGateway(key, systemPrompt, userPrompt);
+    const cfg = await loadFeatureConfig("analyze_thought", {
+      model: "google/gemini-2.5-flash",
+      temperature: 0.5,
+    });
+    const res = await callGateway(key, cfg.model, cfg.temperature, systemPrompt, userPrompt);
 
     if (res.status === 429) {
       return new Response(JSON.stringify({ error: "Demasiadas consultas. Probá en unos minutos." }), {

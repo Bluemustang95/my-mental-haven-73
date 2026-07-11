@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { loadFeatureConfig } from "../_shared/ai-feature-config.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +32,12 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurada");
 
+    const cfg = await loadFeatureConfig("describe_neutral", {
+      model: "google/gemini-3-flash-preview",
+      temperature: 0.3,
+      system_prompt: SYSTEM,
+    });
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -37,9 +45,10 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: cfg.model,
+        temperature: cfg.temperature,
         messages: [
-          { role: "system", content: SYSTEM },
+          { role: "system", content: cfg.system_prompt ?? SYSTEM },
           { role: "user", content: text.slice(0, 2000) },
         ],
         response_format: { type: "json_object" },
