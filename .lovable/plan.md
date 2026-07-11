@@ -1,62 +1,57 @@
-# Plan — implementación
+# Consentimiento claro + borrar todo + avatar cuerpo completo + indicador in-chat
 
-## 1. Notificaciones granulares por usuario
+## 1. Modal de consentimiento explícito (`ResmitaSnapshotConsentModal`)
 
-**Backend** ✅ ya aplicado: se agregaron a `notification_preferences` las columnas `morning_enabled`, `night_enabled`, `habits_relapse_enabled`, `tests_due_enabled`, `reengagement_enabled`, `resmita_enabled`, `content_enabled`, `therapist_enabled` (todas `true` por defecto para no cambiar el comportamiento actual).
+Nuevo componente `src/components/resmita/ResmitaSnapshotConsentModal.tsx` basado en el `Dialog` de shadcn.
 
-**Nueva pantalla `src/pages/NotificationPreferences.tsx`** (`/configuracion/notificaciones`):
-- Interruptor maestro (`push_enabled`) arriba.
-- Sección **Rutinas diarias**: Buenos días, Cierre del día, Check-in, Medicación, Hábitos.
-- Sección **Clínicas y bienestar**: Prevención de recaída, Tests vencidos, Te extrañamos, Notas del terapeuta.
-- Sección **Comunicación y contenido**: Resmita, Novedades RESMA, Nuevo contenido.
-- Persistencia inmediata con `upsert` en `notification_preferences`.
+Contenido:
+- **Qué guardamos**: último check-in (ánimo/sueño), tendencia de ánimo 7d, racha, cantidad de medicaciones activas (no los nombres), si hay un registro CBT abierto, último resultado numérico de test.
+- **Qué NO guardamos**: texto del diario, pensamientos completos, cartas, notas de sesión, plan de seguridad, nombres de medicaciones.
+- **Retención**: 90 días para eventos de uso; el resumen se recalcula en vivo (no se persiste como copia).
+- **Control**: se puede desactivar o borrar todo cuando el usuario quiera.
+- **Cifrado + agregación**: los datos viajan cifrados y el equipo clínico solo ve métricas agregadas/anónimas.
+- Botones: **Cancelar** / **Activar** (icon buttons, alto contraste).
 
-**Ajustes en `src/pages/Settings.tsx`:** reemplazar el toggle único "Notificaciones" por un `RowLink` que navega a la nueva pantalla, manteniendo el pedido de permiso del navegador cuando el maestro se enciende por primera vez.
+Se dispara desde dos lugares:
+- Primera apertura del FAB (reemplaza el `showConsent` inline actual).
+- Al intentar activar el toggle "Compartir resumen de mi actividad" en Ajustes.
 
-**Router `src/App.tsx`:** agregar la ruta `/configuracion/notificaciones`.
+Log de `consent_granted` / `consent_declined` en `resmita_context_events` se mantiene.
 
-**Engine `src/lib/notificationEngine.ts`:** antes de devolver un candidato, leer las prefs del usuario y descartar si el toggle correspondiente está en false. Mapa:
-- `circadiana.amanecer → morning_enabled`
-- `circadiana.anochecer → night_enabled`
-- `habitos.recaida → habits_relapse_enabled`
-- `psicometria.test_vencido → tests_due_enabled`
-- `hibernacion.re_engagement → reengagement_enabled`
+## 2. Ajustes: borrar historial + cancelar recolección
 
-**Edge function `send-push`:** reemplazar el filtro `if (kind === "admin")` por un mapa `kind → columna` (`admin → admin_enabled`, `resmita → resmita_enabled`, `content → content_enabled`, `therapist → therapist_enabled`, `checkin → checkin_enabled`, `medication → medication_enabled`, `habits → habits_enabled`, `morning`/`night`/…). Siempre respetar `push_enabled` como maestro.
+Editar `src/pages/Settings.tsx` (grupo "Privacidad de Resmita"):
 
-**Admin › Notificaciones (`ManualPushSection`):** agregar selector de categoría (`kind`) que se envía a `send-push`, para que la campaña respete el toggle correspondiente y no sólo `admin_enabled`. Mantener segmentación (all/país/plan) actual.
+- El toggle `shareSnapshot` no aplica directo: abre el modal y solo persiste al confirmar (si cancela, vuelve a false).
+- Reemplazar el botón actual "Borrar historial de Resmita" por **"Borrar historial y cancelar recolección"** (rojo, icono `Trash2`):
+  1. `AlertDialog` de confirmación explicando exactamente qué se borra (mensajes + eventos) y qué se apaga (`contextConsent`, `shareSnapshot`, `storeHistory`).
+  2. Estado `isDeleting` con `Loader2` en el botón mientras corre.
+  3. Ejecuta: `delete from resmita_messages`, `delete from resmita_context_events`, y `updatePrefs({ contextConsent:false, shareSnapshot:false, storeHistory:false })` — todos scoped al `user_id`.
+  4. Toast de éxito ("Historial y datos borrados") o error específico.
+- Badge de estado arriba de los toggles: "Recolección activa" (verde) / "Recolección pausada" (gris) según `contextConsent`.
+- Enlace/botón secundario "Ver qué se guarda" que abre el mismo modal en modo informativo.
 
-## 2. Onboarding — ajustes
+## 3. Avatar Resmita cuerpo completo (no cortado)
 
-**`SplashIntro`**
-- Eliminar la tarjeta glass blanca detrás de Resmita: dejar sólo el aura teal + `<img>` de Resmita flotando con `animate-float-weightless` (fondo transparente del PNG).
-- Reemplazar las comillas rectas por `\u201c … \u201d` (tipográficas) en la frase para evitar el warning de React y que quede editorial.
+Editar `src/components/resmita/ResmitaFAB.tsx`:
 
-**`ValueSlides`**
-- Bloque centrado verticalmente: `flex-1 justify-center` en el contenedor.
-- Animación más lenta: `staggerChildren` 0.12 → 0.22, `duration` 0.6 → 0.85, `delayChildren` 0.1.
+- **FAB flotante**: subir el círculo a `h-16 w-16`; el `<img>` pasa a `h-14 w-14 object-contain` (sin recorte). Se mantiene el borde/glow teal, el punto de estado verde y el `ping`.
+- **Header del sheet**: contenedor `h-11 w-11 rounded-2xl bg-[#7cc2c8]/15`; `<img>` `h-10 w-10 object-contain`.
+- Verificar con Playwright (viewport 390×844) que se ve el bot entero, no la cara recortada. Si el PNG viene sin margen suficiente, regenerar con `imagegen` (transparente, con aire arriba/abajo) y reemplazar el asset JSON.
 
-## 3. IA — mapa actual y qué queda pendiente
+## 4. Indicador in-chat de contexto (transparencia continua)
 
-Edge functions con IA activa:
-| Feature | Función | Editable en Admin › IA |
-|---|---|---|
-| resmita_chat | `resmita-chat` | ✅ |
-| pensamientos_companion | `pensamientos-companion` | ✅ |
-| dbt_ai | `dbt-ai` | ✅ |
-| analyze_thought | `analyze-thought` | ⏳ (pendiente) |
-| suggest_evidence | `suggest-evidence` | ⏳ |
-| suggest_behavior_plan | `suggest-behavior-plan` | ⏳ |
-| describe_neutral | `describe-neutral` | ⏳ |
-| mindfulness_tts | `mindfulness-tts` | ⏳ |
-| transcribe_voice | `transcribe-voice` | ⏳ |
-| onboarding_algo | (cliente) | ⏳ |
+Nuevo chip debajo del header del sheet en `ResmitaFAB.tsx`:
 
-**Fuera de alcance ahora** (según tu pedido): cablear esas 7 funciones al helper `_shared/ai-feature-config.ts` para que se editen desde el panel. Queda para un paso siguiente.
+- Muestra en tiempo real qué está viendo Resmita:
+  - Si `shareScreen` off → "Modo privado" (candado gris).
+  - Si `shareScreen` on y `shareSnapshot` off → "Ve: pantalla actual" (icono ojo, teal).
+  - Si ambos on → "Ve: pantalla + resumen".
+- Es táctil: al tocar abre el modal de consentimiento en **modo informativo** (mismo componente, muestra el detalle de qué se está compartiendo con los toggles actuales y un enlace "Cambiar en Ajustes").
+- Se oculta cuando `showConsent` inicial está abierto para evitar redundancia.
 
-**Candidatos futuros que hoy no usan IA:** resumen del proceso, reflexión semanal, correlaciones actividad/bienestar, cierre reflexivo del Diario Inteligente, bienvenida personalizada tras onboarding.
+## Archivos afectados
 
-## Fuera de alcance
-- Cablear las 7 funciones IA restantes al panel (siguiente paso).
-- Sumar nuevas features de IA.
-- Rediseñar toda la vista Admin › Notificaciones más allá del selector de categoría.
+- **Nuevo**: `src/components/resmita/ResmitaSnapshotConsentModal.tsx`
+- **Editar**: `src/pages/Settings.tsx`, `src/components/resmita/ResmitaFAB.tsx`
+- **Posible**: regenerar `src/assets/resmita-bot.png` + `.asset.json` si el crop actual no deja ver el cuerpo con `object-contain`.
