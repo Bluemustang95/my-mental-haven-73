@@ -24,6 +24,8 @@ const CHAT_MODELS = [
 ];
 const AUDIO_MODELS = ["eleven_v3", "eleven_multilingual_v2", "whisper-1"];
 
+const NON_LLM_FEATURES = new Set(["mindfulness_tts", "transcribe_voice", "onboarding_algo"]);
+
 export function AiFeatureEditor({
   feature,
   onClose,
