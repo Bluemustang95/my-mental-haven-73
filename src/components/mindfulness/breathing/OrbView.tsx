@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { BreathingPattern } from "@/lib/breathingPatterns";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { useMindfulScript } from "@/hooks/useMindfulScript";
 import { SessionToolbar, nextMusic } from "@/components/mindfulness/breathing/SessionToolbar";
 import { VisualizerBox } from "@/components/mindfulness/breathing/visuals/VisualizerBox";
 import { VisualizerSleep } from "@/components/mindfulness/breathing/visuals/VisualizerSleep";
@@ -94,24 +95,24 @@ export function OrbView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phaseIdx, running]);
 
-  // Narration: speak the full DB script once. Fallback to phase cues if no script.
-  const narratedRef = useRef(false);
-  useEffect(() => {
-    if (!running || !voice || narratedRef.current) return;
-    if (narrationText && narrationText.trim().length > 0) {
-      narratedRef.current = true;
-      audio.speak(narrationText);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, voice, narrationText]);
-
-  // Phase cues only when there's no long-form narration available
+  // Narración por guion (intro + loop). Un solo camino de voz.
+  const scriptId = pattern.id === "478" || pattern.id === "sigh" || pattern.id === "box" || pattern.id === "coherence"
+    ? pattern.id
+    : "478";
+  const script = useMindfulScript(scriptId, { voiceEnabled: voice && running });
+  const startedRef = useRef(false);
   useEffect(() => {
     if (!running || !voice) return;
-    if (narrationText && narrationText.trim().length > 0) return;
-    audio.speak(phase.speech);
+    if (startedRef.current) return;
+    startedRef.current = true;
+    script.start();
+    return () => script.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phaseIdx, running, voice]);
+  }, [running, voice]);
+  useEffect(() => {
+    if (!voice) script.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice]);
 
   const handleFinish = () => {
     audio.stopSpeech();

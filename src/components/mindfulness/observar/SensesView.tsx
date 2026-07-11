@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Eye, Hand, Ear, Wind, Coffee, ArrowRight, Mic, MicOff } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { useMindfulScript } from "@/hooks/useMindfulScript";
 import { cn } from "@/lib/utils";
 import { useGroundingScripts, type GroundingScripts } from "@/lib/groundingScripts";
 import { toast } from "@/hooks/use-toast";
@@ -86,7 +87,7 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
   const [phase, setPhase] = useState<Phase>("input");
   const [entries, setEntries] = useState<string[][]>(STEPS.map((s) => Array(s.count).fill("")));
   const [activeInput, setActiveInput] = useState(0);
-  const [listeningIdx, setListeningIdx] = useState<number | null>(null);
+  const listeningIdxRef = useRef<number | null>(null);
   const recognitionRef = useRef<any>(null);
   const speakRef = useRef(audio.speak);
   speakRef.current = audio.speak;
@@ -96,6 +97,17 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
     return () => { audio.stopSpeech(); audio.stopMusic(); stopListening(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [music]);
+
+  // Intro única al montar (encuadra el ejercicio).
+  const introScript = useMindfulScript("senses", { voiceEnabled, loopTimes: 0 });
+  const introRef = useRef(false);
+  useEffect(() => {
+    if (!voiceEnabled || introRef.current) return;
+    introRef.current = true;
+    introScript.start();
+    return () => introScript.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceEnabled]);
 
   // Voice prompt for the input phase of each sense
   useEffect(() => {
@@ -110,7 +122,6 @@ export function SensesView({ voiceEnabled, music, onComplete, onAbort }: Props) 
     if (phase !== "script") return;
     const text = scripts[STEPS[stepIdx].scriptKey];
     if (voiceEnabled) {
-      // Small delay so the screen transition is perceived first
       const t = setTimeout(() => speakRef.current(text), 250);
       return () => clearTimeout(t);
     }

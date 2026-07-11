@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Pause, Play } from "lucide-react";
 import { useMindfulAudio, type MusicTrack } from "@/hooks/useMindfulAudio";
+import { useMindfulScript } from "@/hooks/useMindfulScript";
 import { useHojasMessages } from "@/lib/hojasMessages";
 import { OrganicStage } from "@/components/mindfulness/stage/OrganicStage";
 import { LeafPile } from "@/components/mindfulness/observar/LeafPile";
@@ -72,24 +73,17 @@ export function CloudsView({ totalSeconds, voiceEnabled, music, onComplete, onAb
     settleThought(thought);
   }
 
-  const speakRef = useRef(audio.speak);
-  speakRef.current = audio.speak;
-
-  // Music + voice intro/outro
+  // Guion único de la práctica; se corta al desmontar o al salir de "playing".
+  const cloudsScript = useMindfulScript("clouds", { voiceEnabled });
   useEffect(() => {
     if (phase === "playing") {
       audio.playMusic(music);
-      if (voiceEnabled) {
-        const t = setTimeout(() => speakRef.current(messages.pre), 400);
-        return () => clearTimeout(t);
-      }
-    } else if (phase === "outro") {
-      if (voiceEnabled) {
-        const t = setTimeout(() => speakRef.current(messages.post), 300);
-        return () => clearTimeout(t);
-      }
-    } else if (phase === "intro") {
-      // No sound yet — wait for user
+      if (voiceEnabled) cloudsScript.start();
+      return () => { cloudsScript.stop(); };
+    }
+    if (phase === "outro" && voiceEnabled) {
+      const t = setTimeout(() => audio.speak(messages.post), 300);
+      return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, music, voiceEnabled]);
