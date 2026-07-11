@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X, Send, Loader2, Trash2, BookmarkPlus, Check, Shield } from "lucide-react";
+import { X, Send, Loader2, Trash2, BookmarkPlus, Check, Eye, Lock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { useHideBottomNav, useUiChrome } from "@/hooks/useUiChrome";
 import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
 import { useResmitaSnapshot, buildSnapshotSummary } from "@/hooks/useResmitaSnapshot";
 import { logResmitaEvent, newSessionId } from "@/lib/resmitaTelemetry";
+import { ResmitaSnapshotConsentModal } from "@/components/resmita/ResmitaSnapshotConsentModal";
 import { cn } from "@/lib/utils";
 import resmitaAssetJson from "@/assets/resmita-bot.png.asset.json";
 const resmitaAvatar = resmitaAssetJson.url;
@@ -33,6 +34,7 @@ export function ResmitaFAB() {
   const [savedIdxs, setSavedIdxs] = useState<Set<number>>(new Set());
   const [sessionId, setSessionId] = useState<string>(() => newSessionId());
   const [showConsent, setShowConsent] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -214,14 +216,14 @@ export function ResmitaFAB() {
           exit={{ scale: 0, opacity: 0 }}
           onClick={() => setOpen(true)}
           aria-label="Hablar con Resmita"
-          className="fixed z-40 flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-[#7cc2c8] to-[#5eaeb5] shadow-[0_12px_30px_-8px_rgba(124,194,200,0.7)] active:scale-95"
+          className="fixed z-40 flex h-16 w-16 items-center justify-center rounded-full border border-white/40 bg-gradient-to-br from-[#7cc2c8] to-[#5eaeb5] shadow-[0_12px_30px_-8px_rgba(124,194,200,0.7)] active:scale-95 overflow-hidden"
           style={{
             left: "max(1rem, env(safe-area-inset-left))",
             bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
           }}
         >
-          <img src={resmitaAvatar} alt="Resmita" className="h-11 w-11 rounded-full object-cover" />
-          <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white" />
+          <img src={resmitaAvatar} alt="Resmita" className="h-[70px] w-[70px] object-contain drop-shadow-sm" />
+          <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white" />
           <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[#7cc2c8]/30 animate-ping" style={{ animationDuration: "3s" }} />
         </motion.button>
       )}
@@ -245,14 +247,14 @@ export function ResmitaFAB() {
             >
               <div className="flex items-center justify-between border-b border-[#101927]/5 px-5 py-3.5">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#7cc2c8]/20">
-                    <img src={resmitaAvatar} alt="Resmita" className="h-9 w-9 rounded-full object-cover" />
+                  <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-[#7cc2c8]/20 overflow-hidden">
+                    <img src={resmitaAvatar} alt="Resmita" className="h-11 w-11 object-contain" />
                     <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-white" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-display text-[14px] font-bold text-[#101927]">Resmita</p>
                     <p className="truncate text-[10px] text-[#101927]/55">
-                      {prefs.shareScreen ? `Estoy con vos en ${ctx.screenTitle}` : "Modo privado"} · No reemplaza terapia
+                      No reemplaza terapia profesional
                     </p>
                   </div>
                 </div>
@@ -276,36 +278,35 @@ export function ResmitaFAB() {
                 </div>
               </div>
 
+              {/* In-chat context chip */}
+              {!showConsent && (() => {
+                const bothOn = prefs.shareScreen && prefs.shareSnapshot && prefs.contextConsent;
+                const onlyScreen = prefs.shareScreen && !bothOn;
+                const label = bothOn
+                  ? `Ve: ${ctx.screenTitle} + resumen`
+                  : onlyScreen
+                    ? `Ve: ${ctx.screenTitle}`
+                    : "Modo privado";
+                const Icon = prefs.shareScreen ? Eye : Lock;
+                return (
+                  <button
+                    onClick={() => setShowInfoModal(true)}
+                    className={cn(
+                      "mx-4 mt-2 flex items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-[10.5px] font-semibold transition",
+                      prefs.shareScreen
+                        ? "bg-[#7cc2c8]/15 text-[#101927]/80"
+                        : "bg-[#f2f2f5] text-[#101927]/55",
+                    )}
+                    aria-label="Ver qué está viendo Resmita"
+                  >
+                    <Icon size={11} />
+                    <span className="truncate max-w-[220px]">{label}</span>
+                  </button>
+                );
+              })()}
+
+
               <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-                {showConsent && (
-                  <div className="rounded-2xl border border-[#7cc2c8]/30 bg-gradient-to-br from-[#7cc2c8]/10 to-white p-4 shadow-sm">
-                    <div className="flex items-start gap-2.5">
-                      <Shield size={18} className="mt-0.5 shrink-0 text-[#7cc2c8]" />
-                      <div className="min-w-0">
-                        <p className="font-display text-[13px] font-bold text-[#101927]">Privacidad de Resmita</p>
-                        <p className="mt-1 text-[12px] leading-relaxed text-[#101927]/75">
-                          Para ayudarte mejor, Resmita puede ver <b>en qué pantalla estás</b> y un
-                          <b> resumen anónimo</b> de tu actividad (ánimo, tendencias). <b>No lee</b> tus entradas
-                          de diario ni tus pensamientos completos. Podés cambiarlo en Ajustes.
-                        </p>
-                        <div className="mt-3 flex gap-2">
-                          <button
-                            onClick={() => handleConsent(true)}
-                            className="rounded-full bg-[#101927] px-3 py-1.5 text-[11px] font-semibold text-white"
-                          >
-                            Sí, activar
-                          </button>
-                          <button
-                            onClick={() => handleConsent(false)}
-                            className="rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-[#101927] shadow-sm"
-                          >
-                            No, chatear en privado
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
                 {messages.length === 0 && !showConsent && (
                   <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm">
                     <p className="text-[13px] leading-relaxed text-[#101927]">{ctx.welcome}</p>
@@ -423,6 +424,22 @@ export function ResmitaFAB() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ResmitaSnapshotConsentModal
+        open={showConsent}
+        onOpenChange={(v) => { if (!v) setShowConsent(false); }}
+        mode="consent"
+        onConfirm={() => handleConsent(true)}
+        onDecline={() => handleConsent(false)}
+      />
+
+      <ResmitaSnapshotConsentModal
+        open={showInfoModal}
+        onOpenChange={setShowInfoModal}
+        mode="info"
+        shareScreen={prefs.shareScreen}
+        shareSnapshot={prefs.shareSnapshot && prefs.contextConsent}
+      />
     </>
   );
 }
