@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useResmitaContext } from "@/hooks/useResmitaContext";
 import { useHideBottomNav, useUiChrome } from "@/hooks/useUiChrome";
 import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
+import { useResmitaSnapshot, buildSnapshotSummary } from "@/hooks/useResmitaSnapshot";
 import { logResmitaEvent, newSessionId } from "@/lib/resmitaTelemetry";
 import { cn } from "@/lib/utils";
 import resmitaAssetJson from "@/assets/resmita-bot.png.asset.json";
@@ -23,6 +24,7 @@ export function ResmitaFAB() {
   const { hidden, ctx, route } = useResmitaContext();
   const { bottomNavHidden } = useUiChrome();
   const { prefs, update: updatePrefs } = useResmitaPrivacy();
+  const snapshot = useResmitaSnapshot(prefs.shareSnapshot && prefs.contextConsent);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
