@@ -34,6 +34,7 @@ export function ResmitaFAB() {
   const [savedIdxs, setSavedIdxs] = useState<Set<number>>(new Set());
   const [sessionId, setSessionId] = useState<string>(() => newSessionId());
   const [showConsent, setShowConsent] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
