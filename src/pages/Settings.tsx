@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History, Crown, RefreshCw, Sparkles, Fingerprint, Mic } from "lucide-react";
+import { ChevronLeft, ChevronRight, Moon, Bell, LogOut, Trash2, User as UserIcon, BarChart3, Wrench, History, Crown, RefreshCw, Sparkles, Fingerprint, Mic, Shield, MessageCircle } from "lucide-react";
+import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -17,6 +18,7 @@ export default function Settings() {
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdminRole();
   const { plan, planStartedAt, isAdmin: isAdminPlan } = usePlan();
+  const { prefs: resmita, update: updateResmita } = useResmitaPrivacy();
 
   const [name, setName] = useState("");
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
@@ -200,6 +202,47 @@ export default function Settings() {
             />
           )}
         </Group>
+
+        {/* Privacidad de Resmita */}
+        <Group label="Privacidad de Resmita">
+          <RowToggle
+            icon={<MessageCircle size={18} />}
+            label="Compartir en qué pantalla estoy"
+            checked={resmita.shareScreen}
+            onChange={(v) => updateResmita({ shareScreen: v })}
+          />
+          <RowToggle
+            icon={<Sparkles size={18} />}
+            label="Compartir resumen de mi actividad"
+            checked={resmita.shareSnapshot}
+            onChange={(v) => updateResmita({ shareSnapshot: v, contextConsent: v })}
+          />
+          <RowToggle
+            icon={<History size={18} />}
+            label="Guardar historial de conversaciones"
+            checked={resmita.storeHistory}
+            onChange={(v) => updateResmita({ storeHistory: v })}
+          />
+          <button
+            onClick={async () => {
+              if (!user) return;
+              if (!confirm("¿Borrar toda la conversación con Resmita?")) return;
+              await supabase.from("resmita_messages").delete().eq("user_id", user.id);
+              toast.success("Historial borrado");
+            }}
+            className="flex w-full items-center justify-between px-4 py-3.5 active:bg-black/[0.03]"
+          >
+            <div className="flex items-center gap-3">
+              <Trash2 size={18} className="text-[#101927]/70" />
+              <span className="text-[15px] font-medium text-[#101927]">Borrar historial de Resmita</span>
+            </div>
+          </button>
+          <div className="px-4 pt-1 pb-3 text-[11px] leading-relaxed text-[#101927]/50">
+            <Shield size={11} className="mb-0.5 inline" /> Resmita nunca lee tus entradas de diario,
+            pensamientos completos ni notas privadas. Solo ve metadatos (ánimo promedio, tendencias, actividad).
+          </div>
+        </Group>
+
 
 
         {/* Seguridad */}

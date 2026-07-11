@@ -1,13 +1,15 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X, Send, Loader2, Trash2, BookmarkPlus, Check } from "lucide-react";
+import { X, Send, Loader2, Trash2, BookmarkPlus, Check, Shield } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useResmitaContext } from "@/hooks/useResmitaContext";
 import { useHideBottomNav, useUiChrome } from "@/hooks/useUiChrome";
+import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
+import { logResmitaEvent, newSessionId } from "@/lib/resmitaTelemetry";
 import { cn } from "@/lib/utils";
 import resmitaAvatar from "@/assets/resmita-bot.png";
 
@@ -19,16 +21,25 @@ export function ResmitaFAB() {
   const navigate = useNavigate();
   const { hidden, ctx, route } = useResmitaContext();
   const { bottomNavHidden } = useUiChrome();
+  const { prefs, update: updatePrefs } = useResmitaPrivacy();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loadedHistory, setLoadedHistory] = useState(false);
   const [savedIdxs, setSavedIdxs] = useState<Set<number>>(new Set());
+  const [sessionId, setSessionId] = useState<string>(() => newSessionId());
+  const [showConsent, setShowConsent] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useHideBottomNav(open);
+
+  // Only send screen context if user allowed it
+  const outboundCtx = useMemo(() => {
+    if (!prefs.shareScreen) return { route, screenTitle: undefined, screenPurpose: undefined };
+    return { route, screenTitle: ctx.screenTitle, screenPurpose: ctx.screenPurpose };
+  }, [prefs.shareScreen, route, ctx.screenTitle, ctx.screenPurpose]);
 
   useEffect(() => {
     if (!open || loadedHistory || !user) return;
@@ -54,6 +65,24 @@ export function ResmitaFAB() {
     if (open) setTimeout(() => inputRef.current?.focus(), 250);
   }, [open]);
 
+  // Log open + check first-run consent
+  useEffect(() => {
+    if (!open || !user || !prefs.loaded) return;
+    const sid = newSessionId();
+    setSessionId(sid);
+    logResmitaEvent({
+      userId: user.id,
+      sessionId: sid,
+      eventType: "open_sheet",
+      route,
+      screenTitle: prefs.shareScreen ? ctx.screenTitle : undefined,
+      screenPurpose: prefs.shareScreen ? ctx.screenPurpose : undefined,
+    });
+    // First-run: never asked for consent
+    if (!prefs.contextConsentAt) setShowConsent(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, prefs.loaded]);
+
   if (hidden) return null;
 
   const send = async (textOverride?: string) => {
@@ -66,21 +95,24 @@ export function ResmitaFAB() {
     setInput("");
     setIsLoading(true);
 
-    if (user) {
+    if (user && prefs.storeHistory) {
       supabase.from("resmita_messages").insert({ user_id: user.id, role: "user", content: text });
     }
 
     let assistantSoFar = "";
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({
           messages: nextMessages,
-          context: { route, screenTitle: ctx.screenTitle, screenPurpose: ctx.screenPurpose },
+          context: outboundCtx,
+          sessionId,
         }),
       });
 
@@ -88,6 +120,12 @@ export function ResmitaFAB() {
         if (resp.status === 429) toast.error("Muchas consultas. Esperá un momento.");
         else if (resp.status === 402) toast.error("Créditos de IA agotados.");
         else toast.error("No pude responder ahora.");
+        if (user) {
+          logResmitaEvent({
+            userId: user.id, sessionId, eventType: "error",
+            route, errorMessage: `http_${resp.status}`,
+          });
+        }
         setIsLoading(false);
         return;
       }
@@ -126,11 +164,17 @@ export function ResmitaFAB() {
           } catch { buf = line + "\n" + buf; break; }
         }
       }
-    } catch {
+    } catch (e) {
       toast.error("Error de conexión.");
+      if (user) {
+        logResmitaEvent({
+          userId: user.id, sessionId, eventType: "error",
+          route, errorMessage: e instanceof Error ? e.message : "network",
+        });
+      }
     } finally {
       setIsLoading(false);
-      if (user && assistantSoFar.trim()) {
+      if (user && prefs.storeHistory && assistantSoFar.trim()) {
         supabase.from("resmita_messages").insert({ user_id: user.id, role: "assistant", content: assistantSoFar });
       }
     }
@@ -142,6 +186,19 @@ export function ResmitaFAB() {
     setMessages([]);
     setSavedIdxs(new Set());
     toast.success("Conversación borrada");
+  };
+
+  const handleConsent = async (granted: boolean) => {
+    await updatePrefs({ contextConsent: granted, shareSnapshot: granted });
+    if (user) {
+      logResmitaEvent({
+        userId: user.id, sessionId,
+        eventType: granted ? "consent_granted" : "consent_declined",
+        route,
+      });
+    }
+    setShowConsent(false);
+    toast.success(granted ? "Contexto activado" : "Chateando sin contexto");
   };
 
   return (
@@ -191,7 +248,7 @@ export function ResmitaFAB() {
                   <div className="min-w-0">
                     <p className="font-display text-[14px] font-bold text-[#101927]">Resmita</p>
                     <p className="truncate text-[10px] text-[#101927]/55">
-                      Estoy con vos en {ctx.screenTitle} · No reemplaza terapia
+                      {prefs.shareScreen ? `Estoy con vos en ${ctx.screenTitle}` : "Modo privado"} · No reemplaza terapia
                     </p>
                   </div>
                 </div>
@@ -216,7 +273,36 @@ export function ResmitaFAB() {
               </div>
 
               <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-                {messages.length === 0 && (
+                {showConsent && (
+                  <div className="rounded-2xl border border-[#7cc2c8]/30 bg-gradient-to-br from-[#7cc2c8]/10 to-white p-4 shadow-sm">
+                    <div className="flex items-start gap-2.5">
+                      <Shield size={18} className="mt-0.5 shrink-0 text-[#7cc2c8]" />
+                      <div className="min-w-0">
+                        <p className="font-display text-[13px] font-bold text-[#101927]">Privacidad de Resmita</p>
+                        <p className="mt-1 text-[12px] leading-relaxed text-[#101927]/75">
+                          Para ayudarte mejor, Resmita puede ver <b>en qué pantalla estás</b> y un
+                          <b> resumen anónimo</b> de tu actividad (ánimo, tendencias). <b>No lee</b> tus entradas
+                          de diario ni tus pensamientos completos. Podés cambiarlo en Ajustes.
+                        </p>
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            onClick={() => handleConsent(true)}
+                            className="rounded-full bg-[#101927] px-3 py-1.5 text-[11px] font-semibold text-white"
+                          >
+                            Sí, activar
+                          </button>
+                          <button
+                            onClick={() => handleConsent(false)}
+                            className="rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-[#101927] shadow-sm"
+                          >
+                            No, chatear en privado
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {messages.length === 0 && !showConsent && (
                   <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm">
                     <p className="text-[13px] leading-relaxed text-[#101927]">{ctx.welcome}</p>
                   </div>
@@ -278,12 +364,19 @@ export function ResmitaFAB() {
                 className="border-t border-[#101927]/5 bg-white px-4 pt-2.5"
                 style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
               >
-                {ctx.actions.length > 0 && messages.length < 4 && (
+                {ctx.actions.length > 0 && messages.length < 4 && !showConsent && (
                   <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
                     {ctx.actions.map((a, i) => (
                       <button
                         key={i}
                         onClick={() => {
+                          if (user) {
+                            logResmitaEvent({
+                              userId: user.id, sessionId, eventType: "action_click",
+                              route, screenTitle: prefs.shareScreen ? ctx.screenTitle : undefined,
+                              snapshot: { label: a.label, kind: a.kind, target: a.target },
+                            });
+                          }
                           if (a.kind === "prefill") send(a.target);
                           else { setOpen(false); navigate(a.target); }
                         }}
@@ -318,6 +411,9 @@ export function ResmitaFAB() {
                     {isLoading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                   </button>
                 </div>
+                <p className="mt-1.5 text-center text-[9.5px] text-[#101927]/40">
+                  Resmita usa IA. No reemplaza terapia profesional.
+                </p>
               </div>
             </motion.div>
           </motion.div>
