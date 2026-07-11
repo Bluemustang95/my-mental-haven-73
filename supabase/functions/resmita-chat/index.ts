@@ -49,10 +49,8 @@ serve(async (req) => {
   const sbUrl = Deno.env.get("SUPABASE_URL")!;
   const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const sb = createClient(sbUrl, svcKey);
-
-  try {
-    const { messages, context, sessionId: sid } = await req.json();
   let userSummary: string | null = null;
+
   try {
     const { messages, context, sessionId: sid, userSummary: us } = await req.json();
     sessionId = sid ?? null;
