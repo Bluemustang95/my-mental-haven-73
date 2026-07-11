@@ -54,6 +54,7 @@ const SECTIONS: NavSection[] = [
       { title: "Progreso y Psicometría", url: "/admin/progreso", icon: TrendingUp },
       { title: "Algoritmo onboarding", url: "/admin/onboarding", icon: ShieldCheck },
       { title: "Inteligencia Artificial", url: "/admin/ia", icon: Sparkles },
+      { title: "Uso de Resmita", url: "/admin/resmita", icon: Sparkles },
     ],
   },
   {
