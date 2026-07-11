@@ -424,6 +424,22 @@ export function ResmitaFAB() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ResmitaSnapshotConsentModal
+        open={showConsent}
+        onOpenChange={(v) => { if (!v) setShowConsent(false); }}
+        mode="consent"
+        onConfirm={() => handleConsent(true)}
+        onDecline={() => handleConsent(false)}
+      />
+
+      <ResmitaSnapshotConsentModal
+        open={showInfoModal}
+        onOpenChange={setShowInfoModal}
+        mode="info"
+        shareScreen={prefs.shareScreen}
+        shareSnapshot={prefs.shareSnapshot && prefs.contextConsent}
+      />
     </>
   );
 }
