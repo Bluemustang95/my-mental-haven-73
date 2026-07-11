@@ -52,10 +52,14 @@ serve(async (req) => {
 
   try {
     const { messages, context, sessionId: sid } = await req.json();
+  let userSummary: string | null = null;
+  try {
+    const { messages, context, sessionId: sid, userSummary: us } = await req.json();
     sessionId = sid ?? null;
     route = context?.route ?? null;
     screenTitle = context?.screenTitle ?? null;
     screenPurpose = context?.screenPurpose ?? null;
+    userSummary = typeof us === "string" ? us : null;
 
     // Extract user from JWT
     const authHeader = req.headers.get("Authorization");
