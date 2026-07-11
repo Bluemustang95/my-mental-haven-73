@@ -100,6 +100,12 @@ serve(async (req) => {
                 content: `Contexto de pantalla: el usuario está actualmente en "${screenTitle}". ${screenPurpose ?? ""} Priorizá respuestas relevantes a este contexto y sugerí acciones concretas dentro de esa pantalla cuando aplique.`,
               }]
             : []),
+          ...(userSummary
+            ? [{
+                role: "system",
+                content: `Datos recientes del usuario (usalos para adaptar tu respuesta con empatía, no los repitas textualmente): ${userSummary}.`,
+              }]
+            : []),
           ...messages,
         ],
         stream: true,
