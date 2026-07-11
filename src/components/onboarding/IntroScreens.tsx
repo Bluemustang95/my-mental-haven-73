@@ -12,34 +12,28 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="relative flex flex-1 flex-col items-center pt-6">
       {/* Aura respiración vagal */}
-      <div className="pointer-events-none absolute left-1/2 top-[38%] -z-0 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7cc2c8] animate-breath-vagal" />
+      <div className="pointer-events-none absolute left-1/2 top-[42%] -z-0 h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7cc2c8] animate-breath-vagal" />
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
-        {/* Tarjeta glass con Resmita */}
+        {/* Resmita sin tarjeta: PNG con fondo transparente flotando sobre el aura */}
         <div className="animate-float-weightless">
-          <div
-            className="flex h-[180px] w-[180px] items-center justify-center rounded-[38px] border border-white/60 bg-white/70 p-6 backdrop-blur-xl"
-            style={{ boxShadow: "0 30px 60px -20px rgba(16,25,39,0.18), inset 0 1px 0 rgba(255,255,255,0.9)" }}
-          >
-            {imgOk ? (
-              <img
-                src={resmitaAsset.url}
-                alt="Resmita"
-                onError={() => setImgOk(false)}
-                className="h-full w-full object-contain"
-              />
-            ) : (
-              <ResmaIsotipo size={104} />
-            )}
-          </div>
+          {imgOk ? (
+            <img
+              src={resmitaAsset.url}
+              alt="Resmita"
+              onError={() => setImgOk(false)}
+              className="h-[220px] w-[220px] object-contain drop-shadow-[0_18px_28px_rgba(16,25,39,0.15)]"
+            />
+          ) : (
+            <ResmaIsotipo size={140} />
+          )}
         </div>
 
         <p
           className="mt-8 max-w-[300px] font-serifElegant text-[16px] italic leading-relaxed opacity-0 animate-cascade-up"
           style={{ color: "rgba(16,25,39,0.72)", animationDelay: "300ms" }}
         >
-          "Tu mente, a tu propio ritmo. Un rincón seguro impulsado por herramientas
-          clínicas basadas en evidencia."
+          {"\u201CTu mente, a tu propio ritmo. Un rincón seguro impulsado por herramientas clínicas basadas en evidencia.\u201D"}
         </p>
       </div>
 
