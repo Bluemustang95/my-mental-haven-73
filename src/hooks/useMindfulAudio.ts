@@ -44,20 +44,15 @@ export function useMindfulAudio() {
   }, []);
   const getVoiceVolume = useCallback(() => readVoiceVolume(), []);
 
+  /**
+   * Speak a single utterance. Any previous speech (in-flight fetch or playback)
+   * is superseded — no browser fallback here to avoid overlapping voices.
+   */
   const speak = useCallback((text: string) => {
     import("@/lib/elevenLabsTTS").then((m) => {
       m.setSpeechVolume(readVoiceVolume());
       return m.speak(text);
-    }).catch(() => {
-      try {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = "es-AR";
-        u.rate = 0.92;
-        u.volume = readVoiceVolume();
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(u);
-      } catch { /* noop */ }
-    });
+    }).catch(() => {});
   }, []);
 
   const stopSpeech = useCallback(() => {
