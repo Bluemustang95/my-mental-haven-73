@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
 import { AmbientGlows } from "./AmbientGlows";
 import { NotificationRunner } from "@/components/system/NotificationRunner";
+import { ResmitaFAB } from "@/components/resmita/ResmitaFAB";
 
 export function AppLayout() {
   const { pathname } = useLocation();
@@ -14,7 +15,7 @@ export function AppLayout() {
         <Outlet />
       </div>
       <BottomNav />
+      <ResmitaFAB />
     </div>
   );
 }
-

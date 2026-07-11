@@ -20,10 +20,10 @@ export default function MenteEmocion() {
       to2: "#facb60",
     },
     {
-      to: "/herramientas/regulacion-dbt",
+      to: "/herramientas/regulacion-emocional",
       icon: HeartPulse,
       title: "Regulá tus emociones",
-      desc: "5–8 min · Ficha DBT guiada",
+      desc: "5–8 min · STOP, TIP y técnicas DBT",
       from: "#F472B6",
       to2: "#A78BFA",
     },
