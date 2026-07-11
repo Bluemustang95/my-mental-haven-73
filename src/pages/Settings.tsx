@@ -17,6 +17,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdminRole();
+  const { plan, planStartedAt, isAdmin: isAdminPlan } = usePlan();
   const { prefs: resmita, update: updateResmita } = useResmitaPrivacy();
 
   const [name, setName] = useState("");
