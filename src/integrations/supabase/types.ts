@@ -1714,11 +1714,19 @@ export type Database = {
           admin_enabled: boolean
           checkin_enabled: boolean
           checkin_time: string
+          content_enabled: boolean
           habits_enabled: boolean
+          habits_relapse_enabled: boolean
           medication_enabled: boolean
+          morning_enabled: boolean
+          night_enabled: boolean
           push_enabled: boolean
           quiet_hours_end: string
           quiet_hours_start: string
+          reengagement_enabled: boolean
+          resmita_enabled: boolean
+          tests_due_enabled: boolean
+          therapist_enabled: boolean
           timezone: string
           updated_at: string
           user_id: string
@@ -1727,11 +1735,19 @@ export type Database = {
           admin_enabled?: boolean
           checkin_enabled?: boolean
           checkin_time?: string
+          content_enabled?: boolean
           habits_enabled?: boolean
+          habits_relapse_enabled?: boolean
           medication_enabled?: boolean
+          morning_enabled?: boolean
+          night_enabled?: boolean
           push_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
+          reengagement_enabled?: boolean
+          resmita_enabled?: boolean
+          tests_due_enabled?: boolean
+          therapist_enabled?: boolean
           timezone?: string
           updated_at?: string
           user_id: string
@@ -1740,11 +1756,19 @@ export type Database = {
           admin_enabled?: boolean
           checkin_enabled?: boolean
           checkin_time?: string
+          content_enabled?: boolean
           habits_enabled?: boolean
+          habits_relapse_enabled?: boolean
           medication_enabled?: boolean
+          morning_enabled?: boolean
+          night_enabled?: boolean
           push_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
+          reengagement_enabled?: boolean
+          resmita_enabled?: boolean
+          tests_due_enabled?: boolean
+          therapist_enabled?: boolean
           timezone?: string
           updated_at?: string
           user_id?: string
