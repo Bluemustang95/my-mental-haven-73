@@ -38,8 +38,16 @@ export function AiFeatureEditor({
   const [form, setForm] = useState<AiFeatureConfig>(feature);
   const [saving, setSaving] = useState(false);
   const [usage, setUsage] = useState<any[]>([]);
+  const [testInput, setTestInput] = useState("");
+  const [testOutput, setTestOutput] = useState<{ content: string; usage: any; latency_ms: number } | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testError, setTestError] = useState<string | null>(null);
 
-  useEffect(() => setForm(feature), [feature]);
+  useEffect(() => {
+    setForm(feature);
+    setTestOutput(null);
+    setTestError(null);
+  }, [feature]);
 
   useEffect(() => {
     supabase
@@ -182,6 +190,73 @@ export function AiFeatureEditor({
                 : <>Este prompt se usa como <code>role: "system"</code> en la llamada al modelo.</>}
             </p>
           </div>
+
+          {!NON_LLM_FEATURES.has(form.feature_key) && (
+            <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Probar prompt</Label>
+                <span className="text-[10.5px] text-muted-foreground">Usa la config actual (sin guardar)</span>
+              </div>
+              <Textarea
+                rows={3}
+                className="mt-2 bg-white text-[12.5px]"
+                placeholder="Escribí un input de prueba…"
+                value={testInput}
+                onChange={(e) => setTestInput(e.target.value)}
+              />
+              <div className="mt-2 flex justify-end">
+                <Button
+                  size="sm"
+                  disabled={testing || !testInput.trim()}
+                  onClick={async () => {
+                    setTesting(true);
+                    setTestError(null);
+                    setTestOutput(null);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("test-ai-prompt", {
+                        body: {
+                          model: form.model,
+                          system_prompt: form.system_prompt ?? "",
+                          temperature: Number(form.temperature),
+                          max_tokens: form.max_tokens ?? undefined,
+                          user_input: testInput,
+                        },
+                      });
+                      if (error) {
+                        const details = (error as any).context ? await (error as any).context.text() : error.message;
+                        throw new Error(details);
+                      }
+                      if ((data as any)?.error) throw new Error((data as any).details || (data as any).error);
+                      setTestOutput(data as any);
+                    } catch (e) {
+                      setTestError(e instanceof Error ? e.message : "Error desconocido");
+                    } finally {
+                      setTesting(false);
+                    }
+                  }}
+                >
+                  {testing ? "Probando…" : "Ejecutar prueba"}
+                </Button>
+              </div>
+              {testError && (
+                <div className="mt-2 rounded border border-red-200 bg-red-50 p-2 text-[11.5px] text-red-800 whitespace-pre-wrap">
+                  {testError}
+                </div>
+              )}
+              {testOutput && (
+                <div className="mt-2 space-y-1">
+                  <div className="text-[10.5px] text-muted-foreground">
+                    {testOutput.model ? `${(testOutput as any).model} · ` : ""}
+                    {testOutput.latency_ms} ms
+                    {testOutput.usage && ` · in ${testOutput.usage.prompt_tokens ?? "?"} / out ${testOutput.usage.completion_tokens ?? "?"}`}
+                  </div>
+                  <div className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded border border-slate-200 bg-white p-2 text-[12.5px] leading-relaxed">
+                    {testOutput.content}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {usage.length > 0 && (
             <div>
