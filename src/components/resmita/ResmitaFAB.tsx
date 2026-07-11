@@ -11,7 +11,8 @@ import { useHideBottomNav, useUiChrome } from "@/hooks/useUiChrome";
 import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
 import { logResmitaEvent, newSessionId } from "@/lib/resmitaTelemetry";
 import { cn } from "@/lib/utils";
-import resmitaAvatar from "@/assets/resmita-bot.png";
+import resmitaAssetJson from "@/assets/resmita-bot.png.asset.json";
+const resmitaAvatar = resmitaAssetJson.url;
 
 type Message = { role: "user" | "assistant"; content: string };
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resmita-chat`;
