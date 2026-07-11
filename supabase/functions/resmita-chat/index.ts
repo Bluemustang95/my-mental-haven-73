@@ -49,13 +49,15 @@ serve(async (req) => {
   const sbUrl = Deno.env.get("SUPABASE_URL")!;
   const svcKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const sb = createClient(sbUrl, svcKey);
+  let userSummary: string | null = null;
 
   try {
-    const { messages, context, sessionId: sid } = await req.json();
+    const { messages, context, sessionId: sid, userSummary: us } = await req.json();
     sessionId = sid ?? null;
     route = context?.route ?? null;
     screenTitle = context?.screenTitle ?? null;
     screenPurpose = context?.screenPurpose ?? null;
+    userSummary = typeof us === "string" ? us : null;
 
     // Extract user from JWT
     const authHeader = req.headers.get("Authorization");
@@ -96,6 +98,12 @@ serve(async (req) => {
             ? [{
                 role: "system",
                 content: `Contexto de pantalla: el usuario está actualmente en "${screenTitle}". ${screenPurpose ?? ""} Priorizá respuestas relevantes a este contexto y sugerí acciones concretas dentro de esa pantalla cuando aplique.`,
+              }]
+            : []),
+          ...(userSummary
+            ? [{
+                role: "system",
+                content: `Datos recientes del usuario (usalos para adaptar tu respuesta con empatía, no los repitas textualmente): ${userSummary}.`,
               }]
             : []),
           ...messages,

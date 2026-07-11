@@ -9,9 +9,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useResmitaContext } from "@/hooks/useResmitaContext";
 import { useHideBottomNav, useUiChrome } from "@/hooks/useUiChrome";
 import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
+import { useResmitaSnapshot, buildSnapshotSummary } from "@/hooks/useResmitaSnapshot";
 import { logResmitaEvent, newSessionId } from "@/lib/resmitaTelemetry";
 import { cn } from "@/lib/utils";
-import resmitaAvatar from "@/assets/resmita-bot.png";
+import resmitaAssetJson from "@/assets/resmita-bot.png.asset.json";
+const resmitaAvatar = resmitaAssetJson.url;
 
 type Message = { role: "user" | "assistant"; content: string };
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resmita-chat`;
@@ -22,6 +24,7 @@ export function ResmitaFAB() {
   const { hidden, ctx, route } = useResmitaContext();
   const { bottomNavHidden } = useUiChrome();
   const { prefs, update: updatePrefs } = useResmitaPrivacy();
+  const snapshot = useResmitaSnapshot(prefs.shareSnapshot && prefs.contextConsent);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -112,6 +115,7 @@ export function ResmitaFAB() {
         body: JSON.stringify({
           messages: nextMessages,
           context: outboundCtx,
+          userSummary: prefs.shareSnapshot && prefs.contextConsent ? buildSnapshotSummary(snapshot) : null,
           sessionId,
         }),
       });

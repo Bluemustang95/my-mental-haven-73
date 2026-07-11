@@ -22,6 +22,20 @@ const DEFAULT: ResmitaScreenContext = {
 };
 
 const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
+  // ---------- Home / dashboard ----------
+  {
+    prefix: "/dashboard",
+    ctx: {
+      screenTitle: "Dashboard",
+      screenPurpose: "El usuario está en su panel principal viendo widgets.",
+      welcome: "¿Querés que te ayude a leer tu día?",
+      actions: [
+        { label: "Resumime mi día", kind: "prefill", target: "Resumime cómo vengo hoy según mis widgets." },
+      ],
+    },
+  },
+
+  // ---------- Diario ----------
   {
     prefix: "/diario/checkin",
     ctx: {
@@ -43,6 +57,72 @@ const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
       actions: [
         { label: "Detectar distorsiones", kind: "prefill", target: "¿Qué distorsiones cognitivas ves en mi pensamiento?" },
         { label: "Evidencia en contra", kind: "prefill", target: "Ayudame a encontrar evidencia en contra de este pensamiento." },
+      ],
+    },
+  },
+  {
+    prefix: "/diario/huellas",
+    ctx: {
+      screenTitle: "Tus huellas",
+      screenPurpose: "El usuario está viendo el historial visual de su diario.",
+      welcome: "¿Querés que te ayude a ver patrones en tus huellas?",
+      actions: [
+        { label: "Patrones en mi diario", kind: "prefill", target: "¿Qué patrones ves en mis últimas entradas de diario?" },
+      ],
+    },
+  },
+  {
+    prefix: "/diario/cartas",
+    ctx: {
+      screenTitle: "Cartas no enviadas",
+      screenPurpose: "El usuario está escribiendo cartas que no va a enviar (herramienta terapéutica).",
+      welcome: "Escribir sin enviar libera. ¿Te ayudo a arrancar?",
+      actions: [
+        { label: "Ayudame a empezar", kind: "prefill", target: "Ayudame a empezar una carta no enviada para descargar lo que siento." },
+      ],
+    },
+  },
+  {
+    prefix: "/diario/sueños",
+    ctx: {
+      screenTitle: "Registro de sueños",
+      screenPurpose: "El usuario está registrando un sueño.",
+      welcome: "¿Querés hablar de lo que soñaste?",
+      actions: [
+        { label: "¿Qué me puede decir?", kind: "prefill", target: "¿Qué me puede estar diciendo mi sueño reciente?" },
+      ],
+    },
+  },
+  {
+    prefix: "/diario/dialogo-interno",
+    ctx: {
+      screenTitle: "Diálogo interno",
+      screenPurpose: "El usuario está trabajando su voz interna crítica.",
+      welcome: "¿Te ayudo a suavizar la voz crítica?",
+      actions: [
+        { label: "Voz compasiva", kind: "prefill", target: "Ayudame a responderle a mi voz crítica desde la autocompasión." },
+      ],
+    },
+  },
+  {
+    prefix: "/diario/relaciones",
+    ctx: {
+      screenTitle: "Relaciones",
+      screenPurpose: "El usuario está registrando una interacción con otra persona.",
+      welcome: "¿Querés desarmar esta interacción?",
+      actions: [
+        { label: "Ayudame a entender", kind: "prefill", target: "Ayudame a entender qué pasó en esta interacción." },
+      ],
+    },
+  },
+  {
+    prefix: "/diario/alimentacion-consciente",
+    ctx: {
+      screenTitle: "Alimentación consciente",
+      screenPurpose: "El usuario está en mindful eating.",
+      welcome: "¿Cómo venís con tu relación con la comida hoy?",
+      actions: [
+        { label: "Guía de mindful eating", kind: "prefill", target: "Guiame en una comida consciente ahora." },
       ],
     },
   },
@@ -70,6 +150,8 @@ const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
       ],
     },
   },
+
+  // ---------- Herramientas ----------
   {
     prefix: "/herramientas/regulacion-emocional",
     ctx: {
@@ -130,6 +212,72 @@ const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
     },
   },
   {
+    prefix: "/herramientas/grounding",
+    ctx: {
+      screenTitle: "Grounding",
+      screenPurpose: "El usuario está en técnicas de grounding (5-4-3-2-1) para ansiedad/disociación.",
+      welcome: "Vamos a anclar en el presente. ¿Te guío el 5-4-3-2-1?",
+      actions: [
+        { label: "Guiame el 5-4-3-2-1", kind: "prefill", target: "Guiame paso a paso el ejercicio 5-4-3-2-1 ahora." },
+      ],
+    },
+  },
+  {
+    prefix: "/herramientas/rumiacion",
+    ctx: {
+      screenTitle: "Rumiación",
+      screenPurpose: "El usuario está trabajando pensamientos rumiantes.",
+      welcome: "¿Te ayudo a cortar la rumiación?",
+      actions: [
+        { label: "Técnica para frenar", kind: "prefill", target: "Dame una técnica corta para frenar la rumiación ahora." },
+      ],
+    },
+  },
+  {
+    prefix: "/herramientas/autocuidado",
+    ctx: {
+      screenTitle: "Autocuidado",
+      screenPurpose: "El usuario está en su lista de autocuidado.",
+      welcome: "¿Qué necesitás hoy?",
+      actions: [
+        { label: "Sugerime autocuidado", kind: "prefill", target: "Sugerime una actividad de autocuidado según cómo me siento." },
+      ],
+    },
+  },
+  {
+    prefix: "/herramientas/valores",
+    ctx: {
+      screenTitle: "Mis valores",
+      screenPurpose: "El usuario está explorando/reflexionando sus valores (ACT).",
+      welcome: "¿Querés que te ayude a conectar con tus valores?",
+      actions: [
+        { label: "¿Cómo vivo mis valores?", kind: "prefill", target: "¿Cómo puedo vivir más alineado a mis valores esta semana?" },
+      ],
+    },
+  },
+  {
+    prefix: "/herramientas/reflexion-semanal",
+    ctx: {
+      screenTitle: "Reflexión semanal",
+      screenPurpose: "El usuario está cerrando su semana.",
+      welcome: "Vamos a cerrar la semana. ¿Por dónde arrancamos?",
+      actions: [
+        { label: "Ayudame a reflexionar", kind: "prefill", target: "Guiame con preguntas para reflexionar mi semana." },
+      ],
+    },
+  },
+  {
+    prefix: "/herramientas/metas-semanales",
+    ctx: {
+      screenTitle: "Metas semanales",
+      screenPurpose: "El usuario está planificando metas de la semana.",
+      welcome: "¿Te ayudo a armar metas realistas?",
+      actions: [
+        { label: "Meta pequeña y realista", kind: "prefill", target: "Ayudame a definir una meta pequeña y realista para esta semana." },
+      ],
+    },
+  },
+  {
     prefix: "/herramientas",
     ctx: {
       screenTitle: "Recursos",
@@ -140,6 +288,43 @@ const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
       ],
     },
   },
+
+  // ---------- Mindfulness sub ----------
+  {
+    prefix: "/mindfulness/respirar",
+    ctx: {
+      screenTitle: "Respiración",
+      screenPurpose: "El usuario está en ejercicios de respiración.",
+      welcome: "¿Qué patrón te sirve ahora?",
+      actions: [
+        { label: "Recomendame un patrón", kind: "prefill", target: "Recomendame un patrón de respiración según cómo me siento." },
+      ],
+    },
+  },
+  {
+    prefix: "/mindfulness/observar",
+    ctx: {
+      screenTitle: "Observar",
+      screenPurpose: "El usuario está en prácticas de observación mindful.",
+      welcome: "¿Te guío una observación corta?",
+      actions: [
+        { label: "Práctica de 3 minutos", kind: "prefill", target: "Guiame una observación mindful de 3 minutos." },
+      ],
+    },
+  },
+  {
+    prefix: "/mindfulness/describir",
+    ctx: {
+      screenTitle: "Describir",
+      screenPurpose: "El usuario está describiendo sensaciones/emociones sin juzgar.",
+      welcome: "¿Empezamos por el cuerpo o por la emoción?",
+      actions: [
+        { label: "Describir sin juzgar", kind: "prefill", target: "Ayudame a describir sin juzgar lo que estoy sintiendo." },
+      ],
+    },
+  },
+
+  // ---------- Mi Proceso ----------
   {
     prefix: "/mi-proceso/medicacion",
     ctx: {
@@ -163,6 +348,50 @@ const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
     },
   },
   {
+    prefix: "/mi-proceso/inventarios",
+    ctx: {
+      screenTitle: "Inventarios",
+      screenPurpose: "El usuario está en inventarios de personalidad/sintomatología.",
+      welcome: "¿Querés que te explique algún inventario?",
+      actions: [
+        { label: "Explicame los inventarios", kind: "prefill", target: "Explicame para qué sirven los inventarios que puedo hacer." },
+      ],
+    },
+  },
+  {
+    prefix: "/mi-proceso/notas-sesion",
+    ctx: {
+      screenTitle: "Notas de sesión",
+      screenPurpose: "El usuario está viendo/anotando notas post-sesión terapéutica.",
+      welcome: "¿Te ayudo a organizar lo que trabajaste en sesión?",
+      actions: [
+        { label: "Organizame la nota", kind: "prefill", target: "Ayudame a organizar mis notas de la última sesión." },
+      ],
+    },
+  },
+  {
+    prefix: "/mi-proceso/preparacion-sesion",
+    ctx: {
+      screenTitle: "Preparación de sesión",
+      screenPurpose: "El usuario está preparando temas para llevar a terapia.",
+      welcome: "¿Qué querés llevar a tu próxima sesión?",
+      actions: [
+        { label: "Sugerime temas", kind: "prefill", target: "Sugerime temas que podría llevar a mi próxima sesión de terapia." },
+      ],
+    },
+  },
+  {
+    prefix: "/mi-proceso/correlaciones",
+    ctx: {
+      screenTitle: "Correlaciones",
+      screenPurpose: "El usuario está viendo correlaciones entre su actividad y su bienestar.",
+      welcome: "¿Querés que te ayude a leer las correlaciones?",
+      actions: [
+        { label: "Interpretá mis datos", kind: "prefill", target: "Ayudame a interpretar las correlaciones de mi actividad y bienestar." },
+      ],
+    },
+  },
+  {
     prefix: "/mi-proceso",
     ctx: {
       screenTitle: "Mi Proceso",
@@ -173,6 +402,8 @@ const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
       ],
     },
   },
+
+  // ---------- Psicoeducación ----------
   {
     prefix: "/psicoeducacion",
     ctx: {
@@ -185,6 +416,8 @@ const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
       ],
     },
   },
+
+  // ---------- Rituales ----------
   {
     prefix: "/sintonia-manana",
     ctx: {
@@ -207,6 +440,39 @@ const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
       ],
     },
   },
+
+  // ---------- Otros ----------
+  {
+    prefix: "/perfil",
+    ctx: {
+      screenTitle: "Perfil",
+      screenPurpose: "El usuario está en su perfil personal.",
+      welcome: "¿Buscás algo en particular en tu perfil?",
+      actions: [],
+    },
+  },
+  {
+    prefix: "/favoritos",
+    ctx: {
+      screenTitle: "Favoritos",
+      screenPurpose: "El usuario está viendo su contenido guardado.",
+      welcome: "¿Retomamos algo de lo que guardaste?",
+      actions: [
+        { label: "¿Por dónde sigo?", kind: "prefill", target: "Según lo que tengo guardado, ¿por dónde me sugerís seguir?" },
+      ],
+    },
+  },
+  {
+    prefix: "/biblioteca",
+    ctx: {
+      screenTitle: "Biblioteca",
+      screenPurpose: "El usuario está explorando contenido psicoeducativo.",
+      welcome: "¿Buscás algún tema puntual?",
+      actions: [
+        { label: "Recomendame contenido", kind: "prefill", target: "Recomendame contenido según cómo me siento hoy." },
+      ],
+    },
+  },
 ];
 
 const HIDDEN_PREFIXES = [
@@ -214,8 +480,10 @@ const HIDDEN_PREFIXES = [
   "/auth",
   "/reset-password",
   "/admin",
+  "/ajustes",
   "/herramientas/plan-seguridad",
   "/cuestionario",
+  "/pack/ba/day",
 ];
 
 export function isResmitaHidden(pathname: string): boolean {
