@@ -239,6 +239,19 @@ function ManualPushSection() {
         <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="URL destino /" className="h-10 rounded-xl border border-slate-200 px-3 text-sm" />
       </div>
 
+      <div className="mb-3">
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Categoría (respeta el toggle del usuario)</label>
+        <select value={kind} onChange={(e) => setKind(e.target.value)} className="mt-1 h-10 w-full rounded-xl border border-slate-200 px-3 text-sm">
+          <option value="admin">Novedades del equipo RESMA (admin)</option>
+          <option value="content">Nuevo contenido</option>
+          <option value="resmita">Resmita / IA</option>
+          <option value="therapist">Notas del terapeuta</option>
+          <option value="reengagement">Rescate / Te extrañamos</option>
+          <option value="tests_due">Tests vencidos</option>
+          <option value="habits_relapse">Recaída de hábitos</option>
+        </select>
+      </div>
+
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título" className="w-full h-10 rounded-xl border border-slate-200 px-3 text-sm mb-2" />
       <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Mensaje" rows={3} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" />
 
