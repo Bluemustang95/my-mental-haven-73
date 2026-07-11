@@ -93,14 +93,14 @@ const PILLARS: Pillar[] = [
 
 export function ValueSlides({ onContinue }: { onContinue: () => void }) {
   return (
-    <div className="flex flex-1 flex-col pt-6">
+    <div className="flex flex-1 flex-col justify-center pt-4">
       <motion.div
-        className="space-y-3"
+        className="space-y-3.5"
         initial="hidden"
         animate="show"
         variants={{
           hidden: {},
-          show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
+          show: { transition: { staggerChildren: 0.22, delayChildren: 0.1 } },
         }}
       >
         {PILLARS.map(({ Icon, image, title, body, tint }) => (
