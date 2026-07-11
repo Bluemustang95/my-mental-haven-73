@@ -3267,6 +3267,7 @@ export type Database = {
         Args: { _reason?: string; _user_id: string }
         Returns: undefined
       }
+      admin_resmita_analytics: { Args: { _days?: number }; Returns: Json }
       admin_save_algo_config: {
         Args: { _category_content: Json; _weights: Json }
         Returns: undefined
@@ -3310,6 +3311,7 @@ export type Database = {
           total_score: number
         }[]
       }
+      get_resmita_user_snapshot: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
