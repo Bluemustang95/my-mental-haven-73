@@ -170,6 +170,7 @@ function ManualPushSection() {
   const [target, setTarget] = useState<"all" | "country" | "plan">("all");
   const [country, setCountry] = useState("AR");
   const [plan, setPlan] = useState<"free" | "premium">("premium");
+  const [kind, setKind] = useState<string>("admin");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [url, setUrl] = useState("/");
@@ -196,7 +197,7 @@ function ManualPushSection() {
     const segment =
       target === "all" ? { all: true } : target === "country" ? { country } : { plan };
     const { data, error } = await supabase.functions.invoke("send-push", {
-      body: { segment, title: title.trim(), body: body.trim(), url, kind: "admin" },
+      body: { segment, title: title.trim(), body: body.trim(), url, kind },
     });
     setSending(false);
     if (error) {
@@ -236,6 +237,19 @@ function ManualPushSection() {
           </select>
         )}
         <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="URL destino /" className="h-10 rounded-xl border border-slate-200 px-3 text-sm" />
+      </div>
+
+      <div className="mb-3">
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Categoría (respeta el toggle del usuario)</label>
+        <select value={kind} onChange={(e) => setKind(e.target.value)} className="mt-1 h-10 w-full rounded-xl border border-slate-200 px-3 text-sm">
+          <option value="admin">Novedades del equipo RESMA (admin)</option>
+          <option value="content">Nuevo contenido</option>
+          <option value="resmita">Resmita / IA</option>
+          <option value="therapist">Notas del terapeuta</option>
+          <option value="reengagement">Rescate / Te extrañamos</option>
+          <option value="tests_due">Tests vencidos</option>
+          <option value="habits_relapse">Recaída de hábitos</option>
+        </select>
       </div>
 
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título" className="w-full h-10 rounded-xl border border-slate-200 px-3 text-sm mb-2" />

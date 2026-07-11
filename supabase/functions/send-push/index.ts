@@ -68,16 +68,31 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, sent: 0, note: "no targets" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Filter by admin_enabled preference when kind === 'admin'.
+    // Filter by category-specific preference. Always respect the master `push_enabled`.
     const kind = payload.kind || "admin";
-    if (kind === "admin") {
+    const KIND_TO_COL: Record<string, string> = {
+      admin: "admin_enabled",
+      resmita: "resmita_enabled",
+      content: "content_enabled",
+      therapist: "therapist_enabled",
+      checkin: "checkin_enabled",
+      medication: "medication_enabled",
+      habits: "habits_enabled",
+      morning: "morning_enabled",
+      night: "night_enabled",
+      habits_relapse: "habits_relapse_enabled",
+      tests_due: "tests_due_enabled",
+      reengagement: "reengagement_enabled",
+    };
+    const kindCol = KIND_TO_COL[kind];
+    {
       const { data: prefs } = await admin
         .from("notification_preferences")
-        .select("user_id, admin_enabled, push_enabled")
+        .select(`user_id, push_enabled${kindCol ? ", " + kindCol : ""}`)
         .in("user_id", targetUserIds);
       const allowed = new Set(
         (prefs ?? [])
-          .filter((p: any) => p.push_enabled !== false && p.admin_enabled !== false)
+          .filter((p: any) => p.push_enabled !== false && (kindCol ? p[kindCol] !== false : true))
           .map((p: any) => p.user_id)
       );
       // Users without a prefs row still receive (defaults are true).

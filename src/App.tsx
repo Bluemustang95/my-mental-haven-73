@@ -98,6 +98,7 @@ import SafetyPlan from "@/pages/SafetyPlan";
 import Questionnaire from "@/pages/Questionnaire";
 import Settings from "@/pages/Settings";
 import SettingsHistory from "@/pages/SettingsHistory";
+import NotificationPreferences from "@/pages/NotificationPreferences";
 import DiarioInteligente from "@/pages/DiarioInteligente";
 import Psicoeducacion from "@/pages/Psicoeducacion";
 import SystemSettings from "@/pages/admin/SystemSettings";
@@ -174,6 +175,7 @@ const App = () => (
               <Route path="/cuestionario" element={<Questionnaire />} />
               <Route path="/configuracion" element={<Settings />} />
               <Route path="/configuracion/historial" element={<SettingsHistory />} />
+              <Route path="/configuracion/notificaciones" element={<NotificationPreferences />} />
               
               <Route path="/diario-inteligente/gestion-pensamientos/pensamientos-automaticos" element={<PensamientosAutomaticos />} />
               <Route path="/diario-inteligente/gestion-pensamientos/habitos" element={<HabitosHome />} />
