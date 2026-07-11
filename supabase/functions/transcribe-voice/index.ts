@@ -1,4 +1,5 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { loadFeatureConfig } from "../_shared/ai-feature-config.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -23,8 +24,13 @@ Deno.serve(async (req) => {
 
     const language = (inbound.get("language") as string) || "es";
 
+    const cfg = await loadFeatureConfig("transcribe_voice", {
+      model: "openai/gpt-4o-mini-transcribe",
+      temperature: 0,
+    });
+
     const upstream = new FormData();
-    upstream.append("model", "openai/gpt-4o-mini-transcribe");
+    upstream.append("model", cfg.model);
     upstream.append("file", file, file.name || "recording.webm");
     if (language) upstream.append("language", language);
 

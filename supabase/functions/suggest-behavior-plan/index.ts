@@ -1,4 +1,5 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { loadFeatureConfig } from "../_shared/ai-feature-config.ts";
 
 function tryParseJSON(raw: string): unknown {
   try { return JSON.parse(raw); } catch {}
@@ -40,12 +41,16 @@ ${(evidenceFor ?? []).map((e: string, i: number) => `${i + 1}. ${e}`).join("\n")
 Lluvia de ideas previa:
 ${brainstorm || "(vacío)"}`;
 
+    const cfg = await loadFeatureConfig("suggest_behavior_plan", {
+      model: "google/gemini-2.5-flash",
+      temperature: 0.5,
+    });
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        temperature: 0.5,
+        model: cfg.model,
+        temperature: cfg.temperature,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
