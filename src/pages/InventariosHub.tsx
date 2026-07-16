@@ -113,12 +113,21 @@ export default function InventariosHub() {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {items.map((it) => {
-              const { status, recency } = statusFromDays(lastByCode[it.code] ?? null);
+              const days = lastByCode[it.code] ?? null;
+              const { status, recency } = statusFromDays(days);
+              const handleClick = () => {
+                const interval = it.recommended_interval_days ?? 0;
+                if (interval > 0 && days !== null && days < interval) {
+                  setTooSoon({ code: it.code, days, interval });
+                } else {
+                  setActiveCode(it.code);
+                }
+              };
               return (
                 <motion.button
                   key={it.code}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => setActiveCode(it.code)}
+                  onClick={handleClick}
                   className="relative h-44 shrink-0 overflow-hidden rounded-[20px] p-3 text-left text-white shadow-[0_10px_24px_-14px_rgba(16,25,39,0.4)]"
                   style={{ background: it.gradient }}
                 >
@@ -145,6 +154,34 @@ export default function InventariosHub() {
       </div>
 
       {activeCode && <TestRunner testCode={activeCode} onClose={() => setActiveCode(null)} />}
+
+      {tooSoon && (
+        <div className="fixed inset-0 z-[9998] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
+          <div className="w-full max-w-sm rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#7cc2c8]">Sugerencia</p>
+            <h3 className="mt-1 font-serif text-[18px] font-semibold text-[#0f172a]">Todavía es pronto para repetirlo</h3>
+            <p className="mt-2 text-sm leading-relaxed text-[#475569]">
+              Este inventario se recomienda cada <b>{tooSoon.interval} días</b> para que los resultados sean comparables.
+              Lo hiciste hace <b>{tooSoon.days === 0 ? "hoy" : `${tooSoon.days} día${tooSoon.days > 1 ? "s" : ""}`}</b>.
+              Podés esperar unos días más, o hacerlo igual si querés.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setTooSoon(null)}
+                className="flex-1 rounded-2xl border border-[#e2e8f0] bg-white py-3 text-sm font-semibold text-[#0f172a]"
+              >
+                Esperar
+              </button>
+              <button
+                onClick={() => { const c = tooSoon.code; setTooSoon(null); setActiveCode(c); }}
+                className="flex-1 rounded-2xl bg-[#7cc2c8] py-3 text-sm font-semibold text-white"
+              >
+                Hacerlo igual
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
