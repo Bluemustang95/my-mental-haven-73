@@ -58,6 +58,16 @@ export default function PensamientosAutomaticos() {
     return getResolutionMode(draft) === "abordaje" ? "Abordaje del Problema" : "Reestructuración";
   }, [step, draft]);
 
+  // Publica el paso actual para que Resmita adapte su contexto al paso del wizard.
+  const help = STEP_HELP[step];
+  usePublishResmitaStep({
+    stepTitle: `Pensamientos · ${stepTitle}`,
+    purpose: help?.body?.[0] ?? `El usuario está en el paso "${stepTitle}" del wizard CBT de pensamientos automáticos.`,
+    welcome: help?.llave
+      ? `Estamos en "${stepTitle}". Guía: ${help.llave}`
+      : `Estamos en "${stepTitle}". ¿Te ayudo con este paso?`,
+  });
+
   const goNext = () => {
     if (step === TOTAL) return finish();
     patch({ step: step + 1 });
