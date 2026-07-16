@@ -16,8 +16,9 @@ import PsicoeducacionModal from "@/components/pensamientos/shell/PsicoeducacionM
 import PasosDrawer from "@/components/pensamientos/shell/PasosDrawer";
 // AiCompanionDrawer eliminado: ahora se usa Resmita global (FAB amarillo)
 import FollowupPromptModal from "@/components/pensamientos/FollowupPromptModal";
-import { STEP_TITLES } from "@/lib/pensamientos/stepHelp";
+import { STEP_TITLES, STEP_HELP } from "@/lib/pensamientos/stepHelp";
 import { getResolutionMode, useThoughtDraft, type ThoughtDraft } from "@/lib/pensamientos/state";
+import { usePublishResmitaStep } from "@/hooks/useResmitaStep";
 
 const TOTAL = 8;
 const HUB = "/herramientas/mente-emocion";
