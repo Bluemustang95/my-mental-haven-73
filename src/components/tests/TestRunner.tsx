@@ -157,39 +157,11 @@ export function TestRunner({
         )}
 
         <AnimatePresence mode="wait">
-          {stage === "intro" && def && (
-            <motion.div
-              key="intro"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <h1 className="font-serif text-2xl font-semibold text-[#0f172a]">{def.name}</h1>
-              <p className="mt-3 text-sm leading-relaxed text-[#64748b]">{def.instructions}</p>
-
-              {isBigFive && (
-                <div className="my-8 rounded-3xl border border-[#e2e8f0] bg-white p-6 shadow-sm">
-                  <p className="text-center text-[11px] font-semibold uppercase tracking-widest text-[#94a3b8]">
-                    Tu hexágono — vista previa
-                  </p>
-                  <BigFiveHexagon preview />
-                  <p className="mt-2 text-center text-xs text-[#64748b]">
-                    Cuando termines, este hexágono se llenará con tu perfil OCEAN.
-                  </p>
-                </div>
-              )}
-
-              <p className="mt-6 text-xs text-[#94a3b8]">
-                {items.length} preguntas · ~{Math.max(2, Math.round(items.length / 6))} min
-              </p>
-              <button
-                onClick={() => setStage("items")}
-                className="mt-6 w-full rounded-2xl bg-[#7cc2c8] py-4 font-semibold text-white shadow-[0_10px_30px_-10px_rgba(124,194,200,0.6)]"
-              >
-                Comenzar
-              </button>
-            </motion.div>
+          {stage === "items" && !current && (
+            <div className="py-16 text-center text-sm text-[#64748b]">Cargando…</div>
           )}
+
+
 
           {stage === "items" && current && def && (
             <motion.div

@@ -21,7 +21,7 @@ const GRADIENTS = [
   "linear-gradient(135deg,#10b981 0%,#047857 100%)",
 ];
 
-type Item = { code: string; label: string; title: string; gradient: string; art: React.ReactNode };
+type Item = { code: string; label: string; title: string; gradient: string; art: React.ReactNode; recommended_interval_days: number | null };
 
 function statusFromDays(days: number | null): { status: Status; recency: string } {
   if (days === null) return { status: "never", recency: "Nunca" };
@@ -36,11 +36,12 @@ export default function InventariosHub() {
   const [lastByCode, setLastByCode] = useState<Record<string, number | null>>({});
   const [activeCode, setActiveCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tooSoon, setTooSoon] = useState<{ code: string; days: number; interval: number } | null>(null);
 
   useEffect(() => {
     supabase
       .from("test_definitions" as any)
-      .select("code,name,kind,active,sort")
+      .select("code,name,kind,active,sort,recommended_interval_days")
       .eq("kind", "symptom")
       .eq("active", true)
       .order("sort")
@@ -54,6 +55,7 @@ export default function InventariosHub() {
             title: r.name,
             gradient: GRADIENTS[i % GRADIENTS.length],
             art: arts[i % arts.length],
+            recommended_interval_days: r.recommended_interval_days ?? null,
           })),
         );
         setLoading(false);
