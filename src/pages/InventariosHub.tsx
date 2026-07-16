@@ -156,7 +156,7 @@ export default function InventariosHub() {
       {activeCode && <TestRunner testCode={activeCode} onClose={() => setActiveCode(null)} />}
 
       {tooSoon && (
-        <div className="fixed inset-0 z-[9998] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
+        <div className="fixed inset-0 z-[10050] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-sm rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[#7cc2c8]">Sugerencia</p>
             <h3 className="mt-1 font-serif text-[18px] font-semibold text-[#0f172a]">Todavía es pronto para repetirlo</h3>
