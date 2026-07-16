@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { BigFiveProfileModal } from "@/components/proceso/BigFiveProfileModal";
 
+const BACK_TO = "/herramientas/inventarios";
+
 export default function PersonalidadHome() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(true);
@@ -9,7 +11,7 @@ export default function PersonalidadHome() {
   // Si por algún motivo el modal se cierra sin acción, volvemos a inventarios.
   useEffect(() => {
     if (!open) {
-      const t = setTimeout(() => navigate("/mi-proceso/inventarios", { replace: true }), 50);
+      const t = setTimeout(() => navigate(BACK_TO, { replace: true }), 50);
       return () => clearTimeout(t);
     }
   }, [open, navigate]);
@@ -24,7 +26,7 @@ export default function PersonalidadHome() {
             Cargando tu inventario Big Five…
           </p>
           <button
-            onClick={() => navigate("/mi-proceso/inventarios")}
+            onClick={() => navigate(BACK_TO)}
             className="mt-6 rounded-full bg-[#101927] px-5 py-2.5 text-sm font-semibold text-white"
           >
             Volver a inventarios
@@ -36,7 +38,7 @@ export default function PersonalidadHome() {
         open={open}
         onClose={() => {
           setOpen(false);
-          navigate("/mi-proceso/inventarios", { replace: true });
+          navigate(BACK_TO, { replace: true });
         }}
       />
     </div>
