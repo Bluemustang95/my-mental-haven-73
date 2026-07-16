@@ -248,7 +248,7 @@ export function ResmitaFAB() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-[115] bg-black/45 backdrop-blur-sm"
+            className="fixed inset-0 z-[10001] bg-black/45 backdrop-blur-sm"
           >
             <motion.div
               initial={{ y: "100%" }}
