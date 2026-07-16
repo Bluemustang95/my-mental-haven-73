@@ -21,7 +21,7 @@ const GRADIENTS = [
   "linear-gradient(135deg,#10b981 0%,#047857 100%)",
 ];
 
-type Item = { code: string; label: string; title: string; gradient: string; art: React.ReactNode };
+type Item = { code: string; label: string; title: string; gradient: string; art: React.ReactNode; recommended_interval_days: number | null };
 
 function statusFromDays(days: number | null): { status: Status; recency: string } {
   if (days === null) return { status: "never", recency: "Nunca" };
@@ -36,11 +36,12 @@ export default function InventariosHub() {
   const [lastByCode, setLastByCode] = useState<Record<string, number | null>>({});
   const [activeCode, setActiveCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tooSoon, setTooSoon] = useState<{ code: string; days: number; interval: number } | null>(null);
 
   useEffect(() => {
     supabase
       .from("test_definitions" as any)
-      .select("code,name,kind,active,sort")
+      .select("code,name,kind,active,sort,recommended_interval_days")
       .eq("kind", "symptom")
       .eq("active", true)
       .order("sort")
@@ -54,6 +55,7 @@ export default function InventariosHub() {
             title: r.name,
             gradient: GRADIENTS[i % GRADIENTS.length],
             art: arts[i % arts.length],
+            recommended_interval_days: r.recommended_interval_days ?? null,
           })),
         );
         setLoading(false);
@@ -111,12 +113,21 @@ export default function InventariosHub() {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {items.map((it) => {
-              const { status, recency } = statusFromDays(lastByCode[it.code] ?? null);
+              const days = lastByCode[it.code] ?? null;
+              const { status, recency } = statusFromDays(days);
+              const handleClick = () => {
+                const interval = it.recommended_interval_days ?? 0;
+                if (interval > 0 && days !== null && days < interval) {
+                  setTooSoon({ code: it.code, days, interval });
+                } else {
+                  setActiveCode(it.code);
+                }
+              };
               return (
                 <motion.button
                   key={it.code}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => setActiveCode(it.code)}
+                  onClick={handleClick}
                   className="relative h-44 shrink-0 overflow-hidden rounded-[20px] p-3 text-left text-white shadow-[0_10px_24px_-14px_rgba(16,25,39,0.4)]"
                   style={{ background: it.gradient }}
                 >
@@ -143,6 +154,34 @@ export default function InventariosHub() {
       </div>
 
       {activeCode && <TestRunner testCode={activeCode} onClose={() => setActiveCode(null)} />}
+
+      {tooSoon && (
+        <div className="fixed inset-0 z-[9998] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
+          <div className="w-full max-w-sm rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[#7cc2c8]">Sugerencia</p>
+            <h3 className="mt-1 font-serif text-[18px] font-semibold text-[#0f172a]">Todavía es pronto para repetirlo</h3>
+            <p className="mt-2 text-sm leading-relaxed text-[#475569]">
+              Este inventario se recomienda cada <b>{tooSoon.interval} días</b> para que los resultados sean comparables.
+              Lo hiciste hace <b>{tooSoon.days === 0 ? "hoy" : `${tooSoon.days} día${tooSoon.days > 1 ? "s" : ""}`}</b>.
+              Podés esperar unos días más, o hacerlo igual si querés.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setTooSoon(null)}
+                className="flex-1 rounded-2xl border border-[#e2e8f0] bg-white py-3 text-sm font-semibold text-[#0f172a]"
+              >
+                Esperar
+              </button>
+              <button
+                onClick={() => { const c = tooSoon.code; setTooSoon(null); setActiveCode(c); }}
+                className="flex-1 rounded-2xl bg-[#7cc2c8] py-3 text-sm font-semibold text-white"
+              >
+                Hacerlo igual
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

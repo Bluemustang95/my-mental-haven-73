@@ -2556,6 +2556,7 @@ export type Database = {
           instructions: string | null
           kind: string
           name: string
+          recommended_interval_days: number | null
           result_message: string | null
           scale_labels: Json | null
           scale_max: number
@@ -2572,6 +2573,7 @@ export type Database = {
           instructions?: string | null
           kind: string
           name: string
+          recommended_interval_days?: number | null
           result_message?: string | null
           scale_labels?: Json | null
           scale_max?: number
@@ -2588,6 +2590,7 @@ export type Database = {
           instructions?: string | null
           kind?: string
           name?: string
+          recommended_interval_days?: number | null
           result_message?: string | null
           scale_labels?: Json | null
           scale_max?: number

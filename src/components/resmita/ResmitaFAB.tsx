@@ -219,12 +219,12 @@ export function ResmitaFAB() {
           ? {
               right: "max(1rem, env(safe-area-inset-right))",
               bottom: "max(5.25rem, calc(env(safe-area-inset-bottom) + 4.5rem))",
-              zIndex: 51,
+              zIndex: 10000,
             }
           : {
               left: "max(1rem, env(safe-area-inset-left))",
               bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
-              zIndex: 51,
+              zIndex: 10000,
             };
         return (
           <motion.button
@@ -248,7 +248,7 @@ export function ResmitaFAB() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-[115] bg-black/45 backdrop-blur-sm"
+            className="fixed inset-0 z-[10001] bg-black/45 backdrop-blur-sm"
           >
             <motion.div
               initial={{ y: "100%" }}

@@ -22,6 +22,7 @@ export type TestDef = {
   baremos: Baremo[] | null;
   result_message: string | null;
   trait_descriptions: Record<string, TraitDesc> | null;
+  recommended_interval_days: number | null;
 };
 
 export type TestItem = {
@@ -39,6 +40,7 @@ const emptyDef = (kind: "symptom" | "personality"): TestDef => ({
   scale_labels: ["Nunca", "A veces", "Frecuente", "Siempre"],
   instructions: "", active: true, sort: 0,
   baremos: [], result_message: "", trait_descriptions: {},
+  recommended_interval_days: null,
 });
 
 export function TestsCrudPanel({ kind }: { kind: "symptom" | "personality" }) {
@@ -139,6 +141,7 @@ function TestEditor({ def, onClose, onSaved }: { def: TestDef; onClose: () => vo
       instructions: d.instructions, active: d.active, sort: d.sort,
       baremos: d.baremos, result_message: d.result_message,
       trait_descriptions: d.kind === "personality" ? d.trait_descriptions : null,
+      recommended_interval_days: d.recommended_interval_days,
     };
     let testId = d.id;
     if (isNew) {
@@ -188,6 +191,15 @@ function TestEditor({ def, onClose, onSaved }: { def: TestDef; onClose: () => vo
             <Field label="Escala máx"><NumInput value={d.scale_max} onChange={(v) => setD({ ...d, scale_max: v })} /></Field>
             <Field label="Orden"><NumInput value={d.sort} onChange={(v) => setD({ ...d, sort: v })} /></Field>
           </Row>
+          <Field label="Tiempo recomendado entre tests (días)">
+            <NumInput
+              value={d.recommended_interval_days ?? 0}
+              onChange={(v) => setD({ ...d, recommended_interval_days: v > 0 ? v : null })}
+            />
+            <p className="mt-1 text-[10px] text-slate-400">
+              Si el paciente intenta repetir el test antes de este intervalo, se le mostrará una sugerencia blanda (podrá hacerlo igual). 0 = sin sugerencia.
+            </p>
+          </Field>
           <Field label="Etiquetas de escala (una por opción, separadas por coma)">
             <Input
               value={(d.scale_labels ?? []).join(", ")}
