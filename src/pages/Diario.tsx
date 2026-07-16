@@ -18,6 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 import { useAmbientCatalog } from "@/hooks/useAmbientCatalog";
 import { useAmbientPlayer } from "@/hooks/useAmbientPlayer";
 import { Music } from "lucide-react";
@@ -93,10 +94,14 @@ export default function Diario() {
   const [view, setView] = useState<"write" | "history">("write");
   const [zen, setZen] = useState(false);
 
+  // En modo zen ocultamos BottomNav (que a su vez oculta Resmita FAB y el botón SOS rojo)
+  useHideBottomNav(zen);
+
   useEffect(() => {
     document.body.classList.toggle("zen-mode", zen);
     return () => document.body.classList.remove("zen-mode");
   }, [zen]);
+
 
   useEffect(() => () => audio.stopAll(), []);
 
