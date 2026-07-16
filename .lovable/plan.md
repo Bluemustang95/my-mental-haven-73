@@ -1,148 +1,70 @@
-## Objetivo
 
-1. Que aparezca **un solo Resmita** por pantalla en Mindfulness, Pensamientos, Grounding, Rumination y demás pantallas que ya tienen un Resmita "de escena".
-2. Reescribir el **guion de audio de cada ejercicio de mindfulness** para que sea una narración acompañante (no un "inhalá / exhalá") con pausas reales, útil de escuchar mientras se sigue la pantalla.
-3. Arreglar el bug de **voz duplicada** al entrar a algunos ejercicios.
-4. Dejar todo **desplegado** (edge functions + config de AI features).
+# Plan por fases
+
+Vamos a dividir todo en **6 fases**. Aprob\u00e1s esta fase, la implemento, la revis\u00e1s, y pasamos a la siguiente. Abajo est\u00e1 el mapa completo para que veas hacia d\u00f3nde vamos, pero **solo se implementa la Fase 1 al aprobar**.
 
 ---
 
-## 1) Un solo Resmita por pantalla
+## Mapa de fases
 
-Hoy conviven dos Resmitas en algunas pantallas: el Resmita "de escena" incrustado en la página (ej. Mindfulness, Grounding, Rumination, Emotional Regulation, ResourceIntro, Pensamientos con AiCompanion) **más** el FAB global.
-
-**Cambio:** ampliar `HIDDEN_PREFIXES` en `src/lib/resmitaContextMap.ts` para ocultar el FAB en las rutas donde ya hay Resmita en la pantalla:
-
-- `/mindfulness` (hub y todos los `/mindfulness/*`)
-- `/grounding`
-- `/rumination`
-- `/emotional-regulation`
-- `/recovery`
-- `/resource-intro`
-- `/diario/pensamientos` (usa `AiCompanionDrawer`)
-
-En esas rutas queda visible el Resmita/companion de escena. En el resto (Inicio, Mi Proceso, Diario, Recursos, etc.) sigue apareciendo el FAB nuevo (chiquito, `#facb60`, izquierda).
-
-No se toca ninguna página: solo la lista de prefijos ocultos.
+- **Fase 1 \u2014 Bugs cr\u00edticos + unificaci\u00f3n Resmita amarilla** (este plan)
+- **Fase 2 \u2014 Inventarios (tests)**: saltar pr\u00f3logo, tiempo recomendado con sugerencia blanda, Resmita visible, admin de tiempo recomendado, edici\u00f3n de mensaje interpretativo en Baremos, explicaci\u00f3n de Big Five.
+- **Fase 3 \u2014 Mente & Emoci\u00f3n**: rename \u201cModifica tus pensamientos\u201d, ejemplo en RTA adaptativa, paso \u201cTarea\u201d post-m\u00f3dulo, historial \u201cya lo hice\u201d, sacar subt\u00edtulo 5\u201310 min, admin: quitar Instrucciones IA, agregar distorsiones nuevas, actualizar emociones/somatizaci\u00f3n en Pensamientos y Regulaci\u00f3n.
+- **Fase 4 \u2014 H\u00e1bitos, Mindfulness, Diario**: sacar psicoeducaci\u00f3n de h\u00e1bitos, Resmita registra ruta h\u00e1bitos, quitar icono rojo mindfulness, bot\u00f3n Insp\u00edrame reubicado + una frase por d\u00eda, modo zen sin Resmita/soporte. Admin H\u00e1bitos: renombrar \u201cCategor\u00edas DBT\u201d \u2192 \u201cCategor\u00edas\u201d, sincronizar con front, eliminar \u201cCoach IA\u201d y \u201cPlantillas cl\u00ednicas\u201d. Admin Diario: fix scroll subpesta\u00f1as, logos de Causas m\u00e1s est\u00e9ticos, 600 frases Insp\u00edrame.
+- **Fase 5 \u2014 Noticias psicolog\u00eda (Resma Research \u201cMente Activa\u201d)**: como no hay RSS, agrego feed manual en el sitio + scraping semanal con Firecrawl + reescritura IA + CRUD admin + visibilidad opt-in en Home.
+- **Fase 6 \u2014 Admin IA + Notificaciones**: sumar pantallas nuevas (Mindfulness scripts, Pensamientos etapas) al panel de Inteligencia Artificial con su prompt, subpesta\u00f1a de estad\u00edsticas de notificaciones y nuevas reglas de notificaci\u00f3n sugeridas.
 
 ---
 
-## 2) Nuevos guiones de mindfulness (por ejercicio)
+## Fase 1 \u2014 Detalle a implementar ahora
 
-Hoy los textos que se pasan a `audio.speak(...)` son frases sueltas dentro de cada vista (`OrbView`, `BodyScanView`, `CloudsView`, etc.), estilo "inhalá 4, mantené 7". Reemplazo por scripts curados por ejercicio, con narración continua, pausas y foco sensorial (no instructivo).
+### 1.1 Personalidad se ve en blanco
+`src/pages/PersonalidadHome.tsx` renderiza `BigFiveProfileModal` como \u00fanica ruta. Si el modal falla o cierra, la p\u00e1gina queda blanca. Fix: envolver en una shell con fondo + fallback, y al `onClose` navegar a `/inventarios` (no `-1`, que puede volver a s\u00ed misma).
 
-### Ejercicios cubiertos
+### 1.2 Segundo Resmita celeste sigue apareciendo en Mente y Mindfulness
+Ya extendimos `HIDDEN_PREFIXES` para el FAB global, pero queda un **Resmita \u201cde escena\u201d celeste viejo** dentro de:
+- `AiCompanionDrawer` en `PensamientosAutomaticos.tsx` (bot\u00f3n flotante celeste propio del wizard).
+- Componente Resmita-escena en Mindfulness (revisar `MindfulnessHub`, `BreathingHome`, `ObservarHome`, `DescribirHome`).
+- Regulaci\u00f3n emocional / cambio de pensamientos (mismo drawer viejo).
 
-- **Respiración**
-  - `478` — respiración 4-7-8
-  - `sigh` — suspiro fisiológico
-  - `box` — respiración caja
-  - `coherence` — coherencia cardíaca 5-5
-  - `bodyScan` — escaneo corporal guiado
-- **Observar**
-  - `clouds` — hojas en el arroyo / nubes
-  - `senses` — 5-4-3-2-1
-  - `leafPile` — pila de hojas
-- **Describir**
-  - `anatomiaEmocion` — anatomía de la emoción
-  - `escanerNeutral` — escáner neutral
-  - `hechosJuicios` — hechos vs juicios
+Acci\u00f3n: dejar **un solo Resmita amarillo (#facb60)** \u2014 el FAB actual chico estilo emergencia\u2014 y **eliminar** los launchers/burbujas celestes internos. El chat sigue siendo el mismo (`ResmitaSheet`), solo cambia qui\u00e9n lo abre. Hacer que el FAB amarillo aparezca en estas rutas (quitarlas de `HIDDEN_PREFIXES` que agregamos la vuelta anterior) para que quede visible y \u00fanico.
 
-### Formato del script
+### 1.3 Icono rojo en Mindfulness
+Localizar el bot\u00f3n rojo (probablemente CrisisButton o un launcher secundario en `MindfulnessHub`) y ocultarlo en rutas `/mindfulness/*` y en modo zen.
 
-Nuevo módulo `src/lib/mindfulness/scripts.ts`:
+### 1.4 Insp\u00edrame tapa el input del Diario
+En `Diario.tsx`, el bot\u00f3n \u201cInspirarme\u201d flota sobre el textarea. Moverlo a la barra de herramientas superior del editor (junto a los otros iconos) para que no cubra la escritura.
 
-```ts
-export type NarrationSegment = { text: string; pauseMs: number };
-export type MindfulScript = {
-  id: string;
-  intro: NarrationSegment[];      // se reproduce una vez al arrancar
-  loop?: NarrationSegment[];      // opcional: se cicla mientras dura la práctica
-  outro?: NarrationSegment[];     // al cerrar
-};
-export const SCRIPTS: Record<string, MindfulScript> = { /* uno por ejercicio */ };
-```
+### 1.5 Modo Zen del Diario sin Resmita ni soporte
+En zen mode, ocultar FAB Resmita, bot\u00f3n soporte/crisis e Insp\u00edrame. Se hace v\u00eda `useUiChrome` + `HIDDEN_PREFIXES` din\u00e1mico (bandera `zenMode`).
 
-Reglas de escritura de los guiones:
-- Rioplatense, tuteo argentino, voz suave.
-- **No es una guía "hacé X"**: es un acompañamiento que se escucha mientras la pantalla hace su trabajo (orb que crece, hoja que flota, escáner que baja). Frases sensoriales, ancladas al cuerpo o al entorno.
-- Cada segmento corto (≤ 20 palabras) para que ElevenLabs cierre la entonación limpio.
-- Pausas explícitas con `pauseMs` (silencio real entre segmentos) y `<break time="Xms"/>` embebido para pausas cortas dentro de una misma frase (ElevenLabs lo respeta con `eleven_multilingual_v2`).
-- Los guiones se sincronizan con las fases visuales: en `OrbView` los tiempos coinciden con la animación de inhalar/exhalar; en `BodyScanView` con las zonas.
+### 1.6 Scroll roto en Admin \u2192 Diario (subpesta\u00f1as)
+Las subpesta\u00f1as de `AdminDiario` usan `overflow-hidden` en el contenedor padre; cambiar a `admin-scroll overflow-y-auto` con `pb-32` como en otros paneles admin.
 
-### Nuevo helper `useMindfulScript`
-
-`src/hooks/useMindfulScript.ts` reproduce segmento tras segmento con `await speak(seg.text)` + `await wait(seg.pauseMs)`, cancelable con `stop()`. Reemplaza los `audio.speak(...)` sueltos dentro de las vistas.
-
-Cada vista de ejercicio pasa a:
-```ts
-const { start, stop } = useMindfulScript("478");
-useEffect(() => { start(); return stop; }, []);
-```
-
-Las líneas hardcodeadas actuales en las vistas se borran; la sincronización con la animación se hace por segmentos, no por frase única por ciclo.
+### 1.7 Baremos no editable
+En Admin \u2192 Progreso y Psicometr\u00eda \u2192 Baremos, el textarea del mensaje interpretativo est\u00e1 en `readOnly`/sin `onChange` conectado a `saveSetting`. Conectarlo al `update` correspondiente en `test_definitions` (columna `interpretation_message` o similar en `bands` JSON).
 
 ---
 
-## 3) Arreglar audio duplicado
+## Detalles t\u00e9cnicos (Fase 1)
 
-Causas actuales en `src/lib/elevenLabsTTS.ts` + `useMindfulAudio.ts`:
+Archivos a editar:
+- `src/pages/PersonalidadHome.tsx` \u2014 envolver modal en shell + fallback + navigate `/inventarios`.
+- `src/components/pensamientos/ai/AiCompanionDrawer.tsx` \u2014 eliminar launcher visual celeste; conservar solo la l\u00f3gica que abre `ResmitaSheet` v\u00eda evento global, o borrar componente si es solo UI.
+- `src/pages/PensamientosAutomaticos.tsx` \u2014 quitar `<AiCompanionDrawer />` visible.
+- `src/pages/Rumination.tsx`, `EmotionalRegulation.tsx`, `RegulacionDbt.tsx`, `Recovery.tsx`, `Grounding.tsx`, `MindfulnessHub.tsx`, `BreathingHome.tsx`, `ObservarHome.tsx`, `DescribirHome.tsx` \u2014 revisar y quitar launchers Resmita celestes internos.
+- `src/lib/resmitaContextMap.ts` \u2014 sacar rutas de `HIDDEN_PREFIXES` que agregamos para que el FAB amarillo global vuelva a mostrarse en esas pantallas.
+- `src/components/resmita/ResmitaFAB.tsx` \u2014 confirmar color `#facb60`, tama\u00f1o chico, izquierda; ocultar cuando `document.body.dataset.zen === '1'`.
+- `src/pages/Diario.tsx` \u2014 reubicar bot\u00f3n Insp\u00edrame a la toolbar del editor; en zen agregar `document.body.dataset.zen = '1'` (y limpiar al salir).
+- `src/pages/admin/modules/DiarioAdmin.tsx` (o similar) \u2014 fix scroll: `flex-1 admin-scroll overflow-y-auto`.
+- Admin Baremos (archivo dentro de `src/pages/admin/modules/Psicometria*` / `Tests*`) \u2014 conectar `onChange` y guardar.
+- Localizar y ocultar bot\u00f3n rojo en Mindfulness (probable `CrisisButton` renderizado dentro de la Hub; envolver con `useResmitaContext().ctx.hideCrisis` o filtrar por ruta).
 
-- `speak()` hace `stopSpeak()` y **después** `await synthesize(...)`. Si dos llamadas casi simultáneas (StrictMode, cambio de fase, re-render) entran en paralelo, ambos `fetch` resuelven y ambos `.play()` corren → dos voces encimadas.
-- El `.catch()` del dynamic import en `useMindfulAudio.speak` cae al `SpeechSynthesisUtterance` del browser. Si la promesa del import se rechaza tarde (raro, pero pasa en Safari), termina hablando el browser encima de ElevenLabs.
-- `stopSpeech()` no aborta el `fetch` en vuelo: solo pausa el `<audio>` actual. Un segundo `speak()` mata al primero pero **no cancela** su fetch, y cuando ese fetch termina se ejecuta `play()` fuera de orden.
-
-Cambios:
-
-1. **Token monotónico** en `elevenLabsTTS.ts`. Cada `speak()` incrementa `playToken`; después de `await synthesize`, si `playToken` cambió, se descarta el resultado y no se reproduce.
-2. **AbortController** en `synthesize()`; `stopSpeak()` aborta el fetch en curso además de cortar el `<audio>`.
-3. Quitar el fallback `SpeechSynthesisUtterance` del `.catch` en `useMindfulAudio.speak` (redundante con el fallback interno de `elevenLabsTTS.speak`). Deja un único camino de voz.
-4. `useMindfulScript` serializa segmentos con `await`, así se elimina por diseño la posibilidad de solapamiento entre segmentos del mismo ejercicio.
-5. Cleanup fuerte en cada vista: al desmontar o cambiar de ejercicio → `stop()` (aborta fetch + corta audio + limpia cola de segmentos pendientes).
-
----
-
-## 4) Config del prompt en la DB
-
-`ai_feature_configs.mindfulness_tts` sigue siendo "no-LLM" (ElevenLabs directo). No hay system prompt, pero sí actualizo la **descripción** para que documente:
-- Que los textos vivos ahora se cargan desde `src/lib/mindfulness/scripts.ts`.
-- Voz global y volumen configurables desde Ajustes.
-- Formato aceptado por la edge function (`text` puede incluir `<break time="Xms"/>`).
-
-Si más adelante querés editar los guiones desde el admin, hace falta migrarlos a una tabla (`mindfulness_scripts`); no lo incluyo en este plan salvo que lo pidas.
+Sin cambios de base de datos en esta fase.
 
 ---
 
-## 5) Publicación
+## Qu\u00e9 NO se toca en Fase 1
+Todo lo dem\u00e1s de tu lista (inventarios, tarea post-m\u00f3dulo, 600 frases, noticias Resma Research, admin IA, notificaciones, Big Five explicaci\u00f3n) \u2014 se aborda en Fase 2\u20136.
 
-- Edge function `mindfulness-tts`: sin cambios de lógica, se redeploya solo si toco headers/CORS. Si no la toco, no la redeployo.
-- Nada de DB migrations obligatorias (los guiones son código). Solo un `UPDATE` a `ai_feature_configs.mindfulness_tts.description`.
-
----
-
-## Archivos a crear / editar
-
-**Crear**
-- `src/lib/mindfulness/scripts.ts` — guiones por ejercicio.
-- `src/hooks/useMindfulScript.ts` — reproductor secuencial cancelable.
-
-**Editar**
-- `src/lib/resmitaContextMap.ts` — extender `HIDDEN_PREFIXES`.
-- `src/lib/elevenLabsTTS.ts` — token monotónico + AbortController.
-- `src/hooks/useMindfulAudio.ts` — quitar fallback duplicado del browser.
-- `src/components/mindfulness/breathing/OrbView.tsx`
-- `src/components/mindfulness/breathing/BodyScanView.tsx`
-- `src/components/mindfulness/observar/CloudsView.tsx`
-- `src/components/mindfulness/observar/SensesView.tsx`
-- `src/components/mindfulness/observar/LeafPile.tsx`
-- `src/components/mindfulness/describir/AnatomiaEmocionView.tsx`
-- `src/components/mindfulness/describir/EscanerNeutralView.tsx`
-- `src/components/mindfulness/describir/HechosJuiciosView.tsx`
-
-**DB**
-- `UPDATE ai_feature_configs SET description = ... WHERE feature_key = 'mindfulness_tts'`.
-
-## Fuera de alcance (para confirmar)
-
-- Editor de guiones desde el admin (tabla `mindfulness_scripts`) — sumar sólo si lo pedís.
-- Cambio de voz por ejercicio — hoy la voz es global; puedo permitir override por ejercicio si querés.
+\u00bfArrancamos con Fase 1?

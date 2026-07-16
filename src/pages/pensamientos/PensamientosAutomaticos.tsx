@@ -14,7 +14,7 @@ import Step7Distorsiones from "@/components/pensamientos/steps/Step7Distorsiones
 import Step8Resolucion from "@/components/pensamientos/steps/Step8Resolucion";
 import PsicoeducacionModal from "@/components/pensamientos/shell/PsicoeducacionModal";
 import PasosDrawer from "@/components/pensamientos/shell/PasosDrawer";
-import AiCompanionDrawer from "@/components/pensamientos/ai/AiCompanionDrawer";
+// AiCompanionDrawer eliminado: ahora se usa Resmita global (FAB amarillo)
 import FollowupPromptModal from "@/components/pensamientos/FollowupPromptModal";
 import { STEP_TITLES } from "@/lib/pensamientos/stepHelp";
 import { getResolutionMode, useThoughtDraft, type ThoughtDraft } from "@/lib/pensamientos/state";
@@ -138,7 +138,7 @@ export default function PensamientosAutomaticos() {
         {step === 8 && <Step8Resolucion draft={draft} patch={patch} />}
       </WizardShell>
 
-      <AiCompanionDrawer draft={{ ...draft, step }} />
+      {/* Resmita global (FAB amarillo) reemplaza al AiCompanionDrawer celeste */}
 
       <PsicoeducacionModal open={helpOpen} step={step} onClose={() => setHelpOpen(false)} />
 

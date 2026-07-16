@@ -14,24 +14,28 @@ type TabKey = "inspire" | "causes" | "tags";
 export default function DiarioAdmin() {
   const [tab, setTab] = useState<TabKey>("inspire");
   return (
-    <div className="p-6 space-y-4">
+    <>
       <AdminPageHeader
         title="Diario"
         subtitle="Contenido, prompts, causas y etiquetas del módulo Diario."
       />
-      <AdminTabs
-        tabs={[
-          { id: "inspire", label: "Inspirarme" },
-          { id: "causes", label: "Causas" },
-          { id: "tags", label: "Etiquetas" },
-        ]}
-        value={tab}
-        onChange={(v) => setTab(v as TabKey)}
-      />
-      {tab === "inspire" && <InspirePanel />}
-      {tab === "causes" && <ChipsPanel kind="cause" title="Causas" />}
-      {tab === "tags" && <ChipsPanel kind="emotion" title="Etiquetas (Siento…)" />}
-    </div>
+      <div className="px-8 pt-2">
+        <AdminTabs
+          tabs={[
+            { id: "inspire", label: "Inspirarme" },
+            { id: "causes", label: "Causas" },
+            { id: "tags", label: "Etiquetas" },
+          ]}
+          value={tab}
+          onChange={(v) => setTab(v as TabKey)}
+        />
+      </div>
+      <div className="admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32 space-y-4">
+        {tab === "inspire" && <InspirePanel />}
+        {tab === "causes" && <ChipsPanel kind="cause" title="Causas" />}
+        {tab === "tags" && <ChipsPanel kind="emotion" title="Etiquetas (Siento…)" />}
+      </div>
+    </>
   );
 }
 

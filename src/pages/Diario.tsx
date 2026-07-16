@@ -18,6 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import * as audio from "@/lib/diarioAudio";
+import { useHideBottomNav } from "@/hooks/useUiChrome";
 import { useAmbientCatalog } from "@/hooks/useAmbientCatalog";
 import { useAmbientPlayer } from "@/hooks/useAmbientPlayer";
 import { Music } from "lucide-react";
@@ -93,10 +94,14 @@ export default function Diario() {
   const [view, setView] = useState<"write" | "history">("write");
   const [zen, setZen] = useState(false);
 
+  // En modo zen ocultamos BottomNav (que a su vez oculta Resmita FAB y el botón SOS rojo)
+  useHideBottomNav(zen);
+
   useEffect(() => {
     document.body.classList.toggle("zen-mode", zen);
     return () => document.body.classList.remove("zen-mode");
   }, [zen]);
+
 
   useEffect(() => () => audio.stopAll(), []);
 
@@ -435,9 +440,19 @@ function WriteView({
           {zen && <Flower size={20} className="text-[#7cc2c8]" />}
           <SaveIndicator state={saveState} zen={zen} />
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 items-center">
           {!zen && (
             <>
+              <button
+                onClick={inspire}
+                className={cn(
+                  "inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold border border-[#7cc2c8]/40 bg-white/70 text-[#7cc2c8]"
+                )}
+                aria-label="Inspirame"
+                title="Inspirame"
+              >
+                Inspirame <Sparkles size={11} className="text-[#facb60]" />
+              </button>
               <button
                 onClick={() => { if (hasContent) setConfirmNew(true); }}
                 disabled={!hasContent}
@@ -459,6 +474,7 @@ function WriteView({
           )}
         </div>
       </div>
+
 
 
       {/* Prompt banner */}
@@ -497,22 +513,13 @@ function WriteView({
           onInput={onEditorInput}
           data-placeholder="¿Qué tenés hoy en la cabeza? Soltalo acá…"
           className={cn(
-            "diary-editor h-full min-h-[300px] w-full flex-1 resize-none bg-transparent px-1 pt-1 pr-20 text-[15px] leading-relaxed focus:outline-none whitespace-pre-wrap break-words",
+            "diary-editor h-full min-h-[300px] w-full flex-1 resize-none bg-transparent px-1 pt-1 text-[15px] leading-relaxed focus:outline-none whitespace-pre-wrap break-words",
             zen ? "text-slate-100" : "text-[#101927]",
           )}
           style={{ fontFamily: "Lora, serif" }}
         />
-        <button
-          onClick={inspire}
-          className={cn(
-            "absolute right-1 top-1 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-            "border border-[#7cc2c8]/40 text-[#7cc2c8]",
-            zen ? "bg-[#7cc2c8]/10" : "bg-white/70",
-          )}
-        >
-          Inspirame <Sparkles size={11} className="text-[#facb60]" />
-        </button>
       </div>
+
 
       {/* Floating selection toolbar (Bold / Italic) */}
       {fmtBar && (
