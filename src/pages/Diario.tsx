@@ -446,7 +446,7 @@ function WriteView({
               <button
                 onClick={inspire}
                 className={cn(
-                  "inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold border border-[#7cc2c8]/40 bg-white/70 text-[#7cc2c8]"
+                  "inline-flex h-8 items-center gap-1 rounded-full px-2.5 font-display text-[11px] font-semibold border border-[#7cc2c8]/40 bg-white/70 text-[#7cc2c8]"
                 )}
                 aria-label="Inspirame"
                 title="Inspirame"
