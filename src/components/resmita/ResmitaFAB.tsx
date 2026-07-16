@@ -209,23 +209,37 @@ export function ResmitaFAB() {
 
   return (
     <>
-      {!bottomNavHidden && !open && (
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          onClick={() => setOpen(true)}
-          aria-label="Hablar con Resmita"
-          className="fixed z-40 flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-[#facb60] shadow-[0_10px_24px_-8px_rgba(250,203,96,0.6)] active:scale-95 overflow-hidden"
-          style={{
-            left: "max(1rem, env(safe-area-inset-left))",
-            bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
-            zIndex: 51,
-          }}
-        >
-          <img src={resmitaAvatar} alt="Resmita" className="h-11 w-11 object-contain" />
-        </motion.button>
-      )}
+      {!bottomNavHidden && !open && (() => {
+        // En módulos "zen" (Mindfulness, Regulación DBT) el BottomNav global se
+        // oculta con la clase `zen-mode` en body; ahí la posición por defecto
+        // (bottom-left) se pisa con la mini-navbar interna. Reubicamos a
+        // bottom-right, por encima de esa mini-navbar, donde vivía el bot azul.
+        const isZen = /^\/herramientas\/mindfulness|^\/herramientas\/regulacion-dbt/.test(route);
+        const posStyle: React.CSSProperties = isZen
+          ? {
+              right: "max(1rem, env(safe-area-inset-right))",
+              bottom: "max(5.25rem, calc(env(safe-area-inset-bottom) + 4.5rem))",
+              zIndex: 51,
+            }
+          : {
+              left: "max(1rem, env(safe-area-inset-left))",
+              bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
+              zIndex: 51,
+            };
+        return (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            onClick={() => setOpen(true)}
+            aria-label="Hablar con Resmita"
+            className="fixed z-40 flex h-12 w-12 items-center justify-center rounded-full border border-white/30 bg-[#facb60] shadow-[0_10px_24px_-8px_rgba(250,203,96,0.6)] active:scale-95 overflow-hidden"
+            style={posStyle}
+          >
+            <img src={resmitaAvatar} alt="Resmita" className="h-11 w-11 object-contain" />
+          </motion.button>
+        );
+      })()}
 
       <AnimatePresence>
         {open && (
