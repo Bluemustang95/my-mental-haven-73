@@ -503,8 +503,13 @@ export function isResmitaHidden(pathname: string): boolean {
 }
 
 export function getResmitaContext(pathname: string): ResmitaScreenContext {
-  const found = MAP.find(
-    (m) => pathname === m.prefix || pathname.startsWith(m.prefix + "/") || pathname.startsWith(m.prefix),
-  );
-  return found?.ctx ?? DEFAULT;
+  // Longest-prefix match para evitar que rutas cortas (ej. /herramientas) pisen
+  // a rutas más específicas (ej. /herramientas/inventarios).
+  let best: { prefix: string; ctx: ResmitaScreenContext } | null = null;
+  for (const m of MAP) {
+    if (pathname === m.prefix || pathname.startsWith(m.prefix + "/")) {
+      if (!best || m.prefix.length > best.prefix.length) best = m;
+    }
+  }
+  return best?.ctx ?? DEFAULT;
 }
