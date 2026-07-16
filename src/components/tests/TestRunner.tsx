@@ -45,8 +45,12 @@ export function TestRunner({
   const [result, setResult] = useState<{ total: number; subs: Record<string, number>; interpretation: string } | null>(
     null
   );
-  // Ocultamos el BottomNav (SOS/hogar) pero mantenemos Resmita visible para consulta.
-  useHideBottomNav(true);
+  // Ocultamos el BottomNav (SOS/hogar) vía CSS `zen-mode` sin usar el flag global,
+  // así el FAB de Resmita sigue visible durante el test.
+  useEffect(() => {
+    document.body.classList.add("zen-mode");
+    return () => document.body.classList.remove("zen-mode");
+  }, []);
 
   useEffect(() => {
     (async () => {
