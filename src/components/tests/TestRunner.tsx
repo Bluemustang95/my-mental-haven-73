@@ -41,10 +41,11 @@ export function TestRunner({
   const [items, setItems] = useState<Item[]>([]);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [idx, setIdx] = useState(0);
-  const [stage, setStage] = useState<"intro" | "items" | "result">("intro");
+  const [stage, setStage] = useState<"items" | "result">("items");
   const [result, setResult] = useState<{ total: number; subs: Record<string, number>; interpretation: string } | null>(
     null
   );
+  // Ocultamos el BottomNav (SOS/hogar) pero mantenemos Resmita visible para consulta.
   useHideBottomNav(true);
 
   useEffect(() => {
