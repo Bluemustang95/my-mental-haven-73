@@ -484,14 +484,6 @@ const HIDDEN_PREFIXES = [
   "/herramientas/plan-seguridad",
   "/cuestionario",
   "/pack/ba/day",
-  // Pantallas con Resmita/companion "de escena" — evitamos duplicar el FAB
-  "/mindfulness",
-  "/grounding",
-  "/rumination",
-  "/emotional-regulation",
-  "/recovery",
-  "/resource-intro",
-  "/diario/pensamientos",
 ];
 
 export function isResmitaHidden(pathname: string): boolean {

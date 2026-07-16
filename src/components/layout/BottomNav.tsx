@@ -53,6 +53,10 @@ export function BottomNav() {
 
   const psicoActive = location.pathname.startsWith("/psicoeducacion");
   const sosActive = location.pathname.startsWith("/herramientas/plan-seguridad");
+  // Ocultar botón rojo SOS en mindfulness (pedido del usuario)
+  const hideSos =
+    location.pathname.startsWith("/mindfulness") ||
+    location.pathname.startsWith("/herramientas/mindfulness");
 
   return (
     <>
@@ -98,23 +102,25 @@ export function BottomNav() {
       </nav>
 
       {/* Floating SOS button — own fixed layer so it never shifts */}
-      <motion.button
-        onClick={() => navigate("/herramientas/plan-seguridad")}
-        whileTap={{ scale: 0.85 }}
-        aria-label="Plan de seguridad"
-        className={cn(
-          "flex h-12 w-12 items-center justify-center rounded-full border border-white/30 backdrop-blur-xl shadow-[0_10px_24px_-8px_rgba(220,38,38,0.55)] transition-colors",
-          sosActive ? "bg-red-600 text-white" : "bg-red-500/95 text-white"
-        )}
-        style={{
-          position: "fixed",
-          right: "max(1rem, env(safe-area-inset-right))",
-          bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
-          zIndex: 51,
-        }}
-      >
-        <Lifebuoy size={22} weight={sosActive ? "fill" : "bold"} />
-      </motion.button>
+      {!hideSos && (
+        <motion.button
+          onClick={() => navigate("/herramientas/plan-seguridad")}
+          whileTap={{ scale: 0.85 }}
+          aria-label="Plan de seguridad"
+          className={cn(
+            "flex h-12 w-12 items-center justify-center rounded-full border border-white/30 backdrop-blur-xl shadow-[0_10px_24px_-8px_rgba(220,38,38,0.55)] transition-colors",
+            sosActive ? "bg-red-600 text-white" : "bg-red-500/95 text-white"
+          )}
+          style={{
+            position: "fixed",
+            right: "max(1rem, env(safe-area-inset-right))",
+            bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
+            zIndex: 51,
+          }}
+        >
+          <Lifebuoy size={22} weight={sosActive ? "fill" : "bold"} />
+        </motion.button>
+      )}
     </>
   );
 }
