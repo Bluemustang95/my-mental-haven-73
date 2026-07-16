@@ -1,0 +1,1 @@
+ALTER TABLE public.test_definitions ADD COLUMN IF NOT EXISTS recommended_interval_days integer;
