@@ -88,7 +88,7 @@ export default function InventariosHub() {
   return (
     <div className="min-h-screen bg-[#f9f9fb] pb-24">
       <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-black/5 bg-white/85 px-4 py-3 backdrop-blur-lg">
-        <button onClick={() => navigate("/mi-proceso")} aria-label="Volver" className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5">
+        <button onClick={() => navigate("/herramientas")} aria-label="Volver" className="flex h-9 w-9 items-center justify-center rounded-full bg-black/5">
           <ChevronLeft size={18} />
         </button>
         <div>

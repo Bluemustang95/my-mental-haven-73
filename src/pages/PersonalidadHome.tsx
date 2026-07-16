@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { BigFiveProfileModal } from "@/components/proceso/BigFiveProfileModal";
 
-const BACK_TO = "/herramientas/inventarios";
+const BACK_TO = "/herramientas";
 
 export default function PersonalidadHome() {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export default function PersonalidadHome() {
             onClick={() => navigate(BACK_TO)}
             className="mt-6 rounded-full bg-[#101927] px-5 py-2.5 text-sm font-semibold text-white"
           >
-            Volver a inventarios
+            Volver a Recursos
           </button>
         </div>
       </div>
