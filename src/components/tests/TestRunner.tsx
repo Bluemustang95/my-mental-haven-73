@@ -4,7 +4,7 @@ import { ArrowLeft, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { BigFiveHexagon } from "./BigFiveHexagon";
-import { useHideBottomNav } from "@/hooks/useUiChrome";
+
 
 type Baremo = { label: string; min: number; max: number; color: string; message: string };
 type Def = {
