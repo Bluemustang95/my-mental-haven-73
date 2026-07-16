@@ -236,16 +236,7 @@ export default function RegulacionDbt() {
           </AnimatePresence>
         </div>
 
-        {/* Floating AI bot */}
-        <button
-          onClick={() => setAiOpen(true)}
-          aria-label="Guía DBT IA"
-          className="absolute bottom-28 right-5 h-14 w-14 rounded-full bg-[#7cc2c8] text-white shadow-lg flex items-center justify-center active:scale-95 transition"
-          style={{ boxShadow: "0 10px 30px rgba(124,194,200,0.45)" }}
-        >
-          <Bot size={22} />
-          <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-[#a7d8a3] ring-2 ring-white" />
-        </button>
+        {/* Bot celeste interno reemplazado por Resmita global (FAB amarillo) */}
 
         {/* Bottom nav */}
         <BottomNav

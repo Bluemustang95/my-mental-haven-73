@@ -418,10 +418,10 @@ function WriteView({
 
   /* tone classes */
   const surfaceCls = zen
-    ? "border border-white/10 bg-white/[0.03] backdrop-blur-xl"
+    ? "border border-[#7cc2c8]/40 bg-[#7cc2c8]/25 backdrop-blur-xl"
     : "border border-white/60 bg-white/55 backdrop-blur-2xl shadow-[0_8px_32px_rgba(16,25,39,0.05)]";
   const iconBtnCls = zen
-    ? "text-slate-300 hover:text-slate-100"
+    ? "text-[#e6f7f8] hover:text-white"
     : "text-[#101927]/70 hover:text-[#101927]";
   const mm = String(Math.floor(recSec / 60)).padStart(2, "0");
   const ss = String(recSec % 60).padStart(2, "0");
@@ -611,8 +611,8 @@ function WriteView({
 
       {/* Slim icon toolbar */}
       <div
-        className={cn("mt-3 flex items-center justify-between gap-1 rounded-full px-2 py-1.5", surfaceCls, zen && "mb-[env(safe-area-inset-bottom)]")}
-        style={zen ? { marginBottom: "calc(env(safe-area-inset-bottom) + 1rem)" } : undefined}
+        className={cn("mt-3 flex items-center justify-between gap-1 rounded-full px-2 py-1.5", surfaceCls)}
+        style={zen ? { marginBottom: "calc(env(safe-area-inset-bottom) + 2.25rem)" } : undefined}
       >
         <IconBtn label="Cámara" onClick={() => camRef.current?.click()} zen={zen}>
           <Camera size={17} />
