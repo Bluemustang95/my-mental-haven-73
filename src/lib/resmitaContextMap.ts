@@ -359,6 +359,18 @@ const MAP: Array<{ prefix: string; ctx: ResmitaScreenContext }> = [
     },
   },
   {
+    prefix: "/herramientas/inventarios",
+    ctx: {
+      screenTitle: "Inventarios",
+      screenPurpose: "El usuario está haciendo o eligiendo un inventario (BDI, BAI, PSWQ, Big Five, etc.).",
+      welcome: "¿Querés que te explique qué mide este inventario o cómo interpretar tus respuestas?",
+      actions: [
+        { label: "¿Qué mide este test?", kind: "prefill", target: "¿Qué mide este inventario y cómo se interpreta?" },
+        { label: "Explicame los inventarios", kind: "prefill", target: "Explicame para qué sirven los inventarios que puedo hacer." },
+      ],
+    },
+  },
+  {
     prefix: "/mi-proceso/notas-sesion",
     ctx: {
       screenTitle: "Notas de sesión",
