@@ -446,7 +446,7 @@ function WriteView({
               <button
                 onClick={inspire}
                 className={cn(
-                  "inline-flex h-8 items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold border border-[#7cc2c8]/40 bg-white/70 text-[#7cc2c8]"
+                  "inline-flex h-8 items-center gap-1 rounded-full px-2.5 font-display text-[11px] font-semibold border border-[#7cc2c8]/40 bg-white/70 text-[#7cc2c8]"
                 )}
                 aria-label="Inspirame"
                 title="Inspirame"
@@ -488,7 +488,7 @@ function WriteView({
           >
             <div className={cn("relative mb-3 rounded-3xl p-4 pr-10", surfaceCls,
               !zen && "bg-[#7cc2c8]/10 border-[#7cc2c8]/30")}>
-              <p className="font-mindful text-base leading-snug">{prompt.text}</p>
+              <p className="font-display text-[15px] leading-snug">{prompt.text}</p>
               {promptReuseDate && (
                 <p className="mt-2 rounded-xl bg-[#facb60]/15 border border-[#facb60]/40 px-3 py-2 text-[11.5px] text-[#101927]/80">
                   ✨ Ya escribiste con este mismo Inspirame el{" "}
@@ -610,7 +610,10 @@ function WriteView({
       </AnimatePresence>
 
       {/* Slim icon toolbar */}
-      <div className={cn("mt-3 flex items-center justify-between gap-1 rounded-full px-2 py-1.5", surfaceCls)}>
+      <div
+        className={cn("mt-3 flex items-center justify-between gap-1 rounded-full px-2 py-1.5", surfaceCls, zen && "mb-[env(safe-area-inset-bottom)]")}
+        style={zen ? { marginBottom: "calc(env(safe-area-inset-bottom) + 1rem)" } : undefined}
+      >
         <IconBtn label="Cámara" onClick={() => camRef.current?.click()} zen={zen}>
           <Camera size={17} />
         </IconBtn>

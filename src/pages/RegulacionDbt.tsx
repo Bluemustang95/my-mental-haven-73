@@ -153,7 +153,7 @@ export default function RegulacionDbt() {
   };
   const goBack = () => {
     if (step > 1) setStep((s) => (s - 1) as Step);
-    else navigate(-1);
+    else navigate("/herramientas/mente-emocion");
   };
 
   const finish = async () => {

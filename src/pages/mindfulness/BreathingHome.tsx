@@ -365,22 +365,13 @@ export default function BreathingHome() {
           </AnimatePresence>
         </div>
 
-        {/* Floating AI bot */}
-        <button
-          onClick={() => setAiOpen(true)}
-          aria-label="Guía de respiración IA"
-          className="absolute bottom-24 right-4 h-12 w-12 rounded-full bg-[#7cc2c8] text-white shadow-lg flex items-center justify-center active:scale-95 transition z-30"
-          style={{ boxShadow: "0 10px 30px rgba(124,194,200,0.45)" }}
-        >
-          <Bot size={20} />
-        </button>
+        {/* Resmita global (FAB amarillo) reemplaza al bot celeste interno */}
 
         {/* Mini-navbar 3 botones */}
         <ModuleNav step={step} setStep={setStep} hasSelection />
 
         <AnimatePresence>
           {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
-          {aiOpen && <AiDrawer onClose={() => setAiOpen(false)} pattern={pattern} step={step} />}
         </AnimatePresence>
       </div>
     </div>

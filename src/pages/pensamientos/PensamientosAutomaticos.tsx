@@ -16,8 +16,9 @@ import PsicoeducacionModal from "@/components/pensamientos/shell/PsicoeducacionM
 import PasosDrawer from "@/components/pensamientos/shell/PasosDrawer";
 // AiCompanionDrawer eliminado: ahora se usa Resmita global (FAB amarillo)
 import FollowupPromptModal from "@/components/pensamientos/FollowupPromptModal";
-import { STEP_TITLES } from "@/lib/pensamientos/stepHelp";
+import { STEP_TITLES, STEP_HELP } from "@/lib/pensamientos/stepHelp";
 import { getResolutionMode, useThoughtDraft, type ThoughtDraft } from "@/lib/pensamientos/state";
+import { usePublishResmitaStep } from "@/hooks/useResmitaStep";
 
 const TOTAL = 8;
 const HUB = "/herramientas/mente-emocion";
@@ -56,6 +57,16 @@ export default function PensamientosAutomaticos() {
     if (step !== 8) return STEP_TITLES[step - 1];
     return getResolutionMode(draft) === "abordaje" ? "Abordaje del Problema" : "Reestructuración";
   }, [step, draft]);
+
+  // Publica el paso actual para que Resmita adapte su contexto al paso del wizard.
+  const help = STEP_HELP[step];
+  usePublishResmitaStep({
+    stepTitle: `Pensamientos · ${stepTitle}`,
+    purpose: help?.body?.[0] ?? `El usuario está en el paso "${stepTitle}" del wizard CBT de pensamientos automáticos.`,
+    welcome: help?.llave
+      ? `Estamos en "${stepTitle}". Guía: ${help.llave}`
+      : `Estamos en "${stepTitle}". ¿Te ayudo con este paso?`,
+  });
 
   const goNext = () => {
     if (step === TOTAL) return finish();
