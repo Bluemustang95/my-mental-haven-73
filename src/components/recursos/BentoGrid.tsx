@@ -30,20 +30,28 @@ type Tile = {
 // (`ATOMIC_COLORS`) para que un mismo recurso se lea igual en ambas pantallas.
 const tiles: Tile[] = [
   {
+    slug: "inventarios",
+    name: "Test e inventarios",
+    desc: "BDI, BAI, PHQ-9, GAD-7 y más.",
+    Icon: ClipboardList,
+    color: ATOMIC_COLORS.psico_quick,
+    target: "/herramientas/inventarios",
+  },
+  {
     slug: "mente-emocion",
-    name: "Mente & Emoción",
+    name: "Pensamientos",
     desc: "CBT + Regulación DBT.",
     Icon: Brain,
     color: ATOMIC_COLORS.pensamientos_quick,
     target: "/herramientas/mente-emocion",
   },
   {
-    slug: "inventarios",
-    name: "Tests e inventarios",
-    desc: "BDI, BAI, PHQ-9, GAD-7 y más.",
-    Icon: ClipboardList,
-    color: ATOMIC_COLORS.psico_quick,
-    target: "/herramientas/inventarios",
+    slug: "personalidad",
+    name: "Personalidad",
+    desc: "Tu perfil Big Five.",
+    Icon: User,
+    color: "#9b72cf",
+    target: "/herramientas/personalidad",
   },
   {
     slug: "habitos",
@@ -61,7 +69,23 @@ const tiles: Tile[] = [
     color: ATOMIC_COLORS.sleep_zone,
     target: "/herramientas/sueno",
   },
-  // Diario y Psicoeducación se acceden desde Home / BottomNav — no aparecen en Recursos.
+  {
+    slug: "diario",
+    name: "Diario",
+    desc: "Escritura íntima y notas.",
+    Icon: BookOpen,
+    color: "#c98a5e",
+    target: "/diario",
+  },
+  {
+    slug: "psicoeducacion",
+    name: "Psicoeducación",
+    desc: "Biblioteca clínica.",
+    Icon: GraduationCap,
+    color: ATOMIC_COLORS.psico_quick,
+    target: "/herramientas/psicoeducacion",
+  },
+  // Off por default (visibles solo si admin los publica)
   {
     slug: "plan-seguridad",
     name: "Plan de Seguridad",
@@ -70,7 +94,6 @@ const tiles: Tile[] = [
     color: "#e24b4a",
     target: "/herramientas/plan-seguridad",
   },
-  // Off por default (visibles solo si admin los publica de nuevo)
   {
     slug: "mindfulness",
     name: "Mindfulness",
@@ -86,14 +109,6 @@ const tiles: Tile[] = [
     Icon: Sparkles,
     color: ATOMIC_COLORS.pack_quick,
     target: "/herramientas/pack",
-  },
-  {
-    slug: "personalidad",
-    name: "Personalidad",
-    desc: "Tu perfil Big Five.",
-    Icon: User,
-    color: "#9b72cf",
-    target: "/herramientas/personalidad",
   },
   {
     slug: "noticias",
