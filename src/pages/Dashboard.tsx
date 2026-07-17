@@ -80,6 +80,14 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const widgets = useHomeWidgets();
+  const hiddenCats = useHiddenCategories();
+  const isWidgetAvailable = useCallback(
+    (id: WidgetId) => {
+      const cat = WIDGET_TO_CATEGORY[id];
+      return !cat || !hiddenCats.has(cat);
+    },
+    [hiddenCats],
+  );
 
   useEffect(() => {
     if (!user) return;
