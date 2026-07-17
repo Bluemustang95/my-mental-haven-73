@@ -1,11 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { addMonths, endOfMonth, format, isSameDay, isSameMonth, startOfMonth, startOfWeek, endOfWeek, addDays, isFuture } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchActivityDateKeys } from "@/lib/recentActivity";
 import { localDateStr, cn } from "@/lib/utils";
+import { useTodayCompletion } from "@/hooks/useTodayCompletion";
+import { ATOMIC_COLORS } from "@/components/home/QuickToolWidget";
+
+const ACTIVITIES: { id: keyof ReturnType<typeof useTodayCompletion>; label: string }[] = [
+  { id: "diario_quick", label: "Diario" },
+  { id: "mini_habits", label: "Hábitos" },
+  { id: "mindfulness_quick", label: "Mindfulness" },
+  { id: "pensamientos_quick", label: "Pensamientos" },
+  { id: "sleep_zone", label: "Sueño" },
+  { id: "pack_quick", label: "Pack" },
+];
 
 export function MonthCalendarSheet({
   open,
