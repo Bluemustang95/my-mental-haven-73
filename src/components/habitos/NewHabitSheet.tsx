@@ -32,6 +32,8 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
   const [categoryKey, setCategoryKey] = useState("salud");
   const [cadence, setCadence] = useState("every_day");
   const [reminders, setReminders] = useState(false);
+  const [reminderTime, setReminderTime] = useState("09:00");
+  const [reminderDays, setReminderDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
   const [stackAfter, setStackAfter] = useState<string>("");
   const [newCatInput, setNewCatInput] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -71,6 +73,8 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
         frequency, frequency_count: frequencyCount,
         time_slot: timeSlot, cadence,
         reminders_enabled: reminders,
+        reminder_time: reminders ? reminderTime : null,
+        reminder_days: reminders ? reminderDays : [0, 1, 2, 3, 4, 5, 6],
         stack_after_habit_id: stackAfter || null,
       });
       toast.success("Hábito registrado ✓");
