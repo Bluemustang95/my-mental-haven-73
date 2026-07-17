@@ -1889,6 +1889,7 @@ export type Database = {
           home_seeded: boolean
           id: string
           in_therapy: boolean | null
+          last_session_notification_at: string | null
           learning_format: string | null
           life_stage: string | null
           linked_last_name: string | null
@@ -1912,7 +1913,10 @@ export type Database = {
           resmita_store_history: boolean
           satisfaction_survey_completed_at: string | null
           satisfaction_survey_dismissed_at: string | null
+          session_day_of_week: number | null
           session_reminder_dismissed_at: string | null
+          session_time: string | null
+          session_weekly_recurring: boolean
           sleep_quality: string | null
           therapist_email: string | null
           therapist_license: string | null
@@ -1936,6 +1940,7 @@ export type Database = {
           home_seeded?: boolean
           id?: string
           in_therapy?: boolean | null
+          last_session_notification_at?: string | null
           learning_format?: string | null
           life_stage?: string | null
           linked_last_name?: string | null
@@ -1959,7 +1964,10 @@ export type Database = {
           resmita_store_history?: boolean
           satisfaction_survey_completed_at?: string | null
           satisfaction_survey_dismissed_at?: string | null
+          session_day_of_week?: number | null
           session_reminder_dismissed_at?: string | null
+          session_time?: string | null
+          session_weekly_recurring?: boolean
           sleep_quality?: string | null
           therapist_email?: string | null
           therapist_license?: string | null
@@ -1983,6 +1991,7 @@ export type Database = {
           home_seeded?: boolean
           id?: string
           in_therapy?: boolean | null
+          last_session_notification_at?: string | null
           learning_format?: string | null
           life_stage?: string | null
           linked_last_name?: string | null
@@ -2006,7 +2015,10 @@ export type Database = {
           resmita_store_history?: boolean
           satisfaction_survey_completed_at?: string | null
           satisfaction_survey_dismissed_at?: string | null
+          session_day_of_week?: number | null
           session_reminder_dismissed_at?: string | null
+          session_time?: string | null
+          session_weekly_recurring?: boolean
           sleep_quality?: string | null
           therapist_email?: string | null
           therapist_license?: string | null
@@ -3334,6 +3346,7 @@ export type Database = {
           home_seeded: boolean
           id: string
           in_therapy: boolean | null
+          last_session_notification_at: string | null
           learning_format: string | null
           life_stage: string | null
           linked_last_name: string | null
@@ -3357,7 +3370,10 @@ export type Database = {
           resmita_store_history: boolean
           satisfaction_survey_completed_at: string | null
           satisfaction_survey_dismissed_at: string | null
+          session_day_of_week: number | null
           session_reminder_dismissed_at: string | null
+          session_time: string | null
+          session_weekly_recurring: boolean
           sleep_quality: string | null
           therapist_email: string | null
           therapist_license: string | null
@@ -3451,6 +3467,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      roll_next_session_forward: { Args: never; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"
