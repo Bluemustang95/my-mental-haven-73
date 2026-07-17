@@ -36,7 +36,7 @@ export function AtomicWidget({
     navigate(to);
   };
 
-  const tint8 = `${color}14`; // ~8% alpha
+  const tint = `${color}26`; // ~15% alpha — asegura que la caja se lea como contenedor
 
   return (
     <button
@@ -47,16 +47,16 @@ export function AtomicWidget({
     >
       {/* Cápsula cuadrada glass */}
       <div
-        className="relative flex w-full items-center justify-center overflow-hidden rounded-[26px] transition-transform duration-300 group-active:scale-[0.92]"
+        className="relative flex w-full items-center justify-center overflow-hidden rounded-2xl transition-transform duration-300 group-active:scale-[0.92]"
         style={{
           aspectRatio: "1 / 1",
-          background: completed ? color : tint8,
+          background: completed ? color : tint,
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          border: `1px solid ${completed ? color : "rgba(255,255,255,0.55)"}`,
+          border: `1px solid ${completed ? color : "rgba(255,255,255,0.75)"}`,
           boxShadow: completed
             ? `0 12px 28px -12px ${color}80, inset 0 1px 0 rgba(255,255,255,0.35)`
-            : "0 6px 18px -12px rgba(16,25,39,0.15), inset 0 1px 0 rgba(255,255,255,0.55)",
+            : `inset 0 0 0 1px ${color}22, 0 6px 18px -12px rgba(16,25,39,0.15), inset 0 1px 0 rgba(255,255,255,0.55)`,
           transitionTimingFunction: "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         }}
       >
