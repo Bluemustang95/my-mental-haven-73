@@ -994,6 +994,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          invalid: boolean
+          last_error: string | null
+          last_error_at: string | null
           last_seen_at: string
           platform: string | null
           token: string
@@ -1003,6 +1006,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          invalid?: boolean
+          last_error?: string | null
+          last_error_at?: string | null
           last_seen_at?: string
           platform?: string | null
           token: string
@@ -1012,6 +1018,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          invalid?: boolean
+          last_error?: string | null
+          last_error_at?: string | null
           last_seen_at?: string
           platform?: string | null
           token?: string
@@ -1289,6 +1298,7 @@ export type Database = {
           icon_type: string
           id: string
           name: string
+          reminder_days: number[]
           reminders_enabled: boolean
           stack_after_habit_id: string | null
           text_color: string
@@ -1311,6 +1321,7 @@ export type Database = {
           icon_type?: string
           id?: string
           name: string
+          reminder_days?: number[]
           reminders_enabled?: boolean
           stack_after_habit_id?: string | null
           text_color?: string
@@ -1333,6 +1344,7 @@ export type Database = {
           icon_type?: string
           id?: string
           name?: string
+          reminder_days?: number[]
           reminders_enabled?: boolean
           stack_after_habit_id?: string | null
           text_color?: string
@@ -1719,33 +1731,45 @@ export type Database = {
         Row: {
           body: string
           data: Json | null
+          delivery_status: string | null
           error: string | null
           id: string
           kind: string
+          log_date: string | null
+          reason: string | null
           sent_at: string
           status: string
+          target_key: string | null
           title: string
           user_id: string | null
         }
         Insert: {
           body: string
           data?: Json | null
+          delivery_status?: string | null
           error?: string | null
           id?: string
           kind: string
+          log_date?: string | null
+          reason?: string | null
           sent_at?: string
           status?: string
+          target_key?: string | null
           title: string
           user_id?: string | null
         }
         Update: {
           body?: string
           data?: Json | null
+          delivery_status?: string | null
           error?: string | null
           id?: string
           kind?: string
+          log_date?: string | null
+          reason?: string | null
           sent_at?: string
           status?: string
+          target_key?: string | null
           title?: string
           user_id?: string | null
         }
@@ -1762,6 +1786,7 @@ export type Database = {
           medication_enabled: boolean
           morning_enabled: boolean
           night_enabled: boolean
+          paused_until: string | null
           push_enabled: boolean
           quiet_hours_end: string
           quiet_hours_start: string
@@ -1783,6 +1808,7 @@ export type Database = {
           medication_enabled?: boolean
           morning_enabled?: boolean
           night_enabled?: boolean
+          paused_until?: string | null
           push_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
@@ -1804,6 +1830,7 @@ export type Database = {
           medication_enabled?: boolean
           morning_enabled?: boolean
           night_enabled?: boolean
+          paused_until?: string | null
           push_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
