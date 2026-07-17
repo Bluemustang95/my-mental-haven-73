@@ -15,6 +15,7 @@ import {
   SortableContext, useSortable, verticalListSortingStrategy, rectSortingStrategy, arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useHiddenCategories } from "@/hooks/useHiddenCategories";
 
 export type WidgetId =
   | "morning"
@@ -51,7 +52,20 @@ export const TOOL_IDS: WidgetId[] = [
   "diario_quick",
   "psico_quick",
 ];
-export const MAX_TOOLS = 3;
+export const MAX_TOOLS = 4;
+
+// Mapea cada widget a la categoría de recurso que lo respalda. Cuando el admin
+// oculta una categoría, los widgets del mapa desaparecen de home y del picker.
+export const WIDGET_TO_CATEGORY: Partial<Record<WidgetId, string>> = {
+  sleep_zone: "sueno",
+  mini_habits: "habitos",
+  mindfulness_quick: "mindfulness",
+  pensamientos_quick: "mente-emocion",
+  pack_quick: "pack",
+  diario_quick: "diario",
+  psico_quick: "psicoeducacion",
+  psy_news: "noticias",
+};
 
 export type WidgetState = {
   id: WidgetId;
@@ -531,6 +545,7 @@ export function ManageWidgetsButton({
   onToggle: (id: WidgetId) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const hiddenCats = useHiddenCategories();
   useEffect(() => {
     const listener = () => setOpen(true);
     window.addEventListener("resma:open-manage-widgets", listener);
@@ -559,6 +574,10 @@ export function ManageWidgetsButton({
         <div className="mt-4 space-y-2 pb-6">
           {widgets
             .filter((w) => TOOL_IDS.includes(w.id))
+            .filter((w) => {
+              const cat = WIDGET_TO_CATEGORY[w.id];
+              return !cat || !hiddenCats.has(cat);
+            })
             .map((w) => {
               const activeCount = widgets.filter(
                 (x) => TOOL_IDS.includes(x.id) && x.enabled && !x.hidden

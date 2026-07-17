@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useResmitaContext } from "@/hooks/useResmitaContext";
 import { useHideBottomNav, useUiChrome } from "@/hooks/useUiChrome";
+import { useHiddenCategories } from "@/hooks/useHiddenCategories";
 import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
 import { useResmitaSnapshot, buildSnapshotSummary } from "@/hooks/useResmitaSnapshot";
 import { logResmitaEvent, newSessionId } from "@/lib/resmitaTelemetry";
@@ -26,6 +27,14 @@ export function ResmitaFAB() {
   const { bottomNavHidden } = useUiChrome();
   const { prefs, update: updatePrefs } = useResmitaPrivacy();
   const snapshot = useResmitaSnapshot(prefs.shareSnapshot && prefs.contextConsent);
+  const hiddenCats = useHiddenCategories();
+  const enabledResources = useMemo(() => {
+    const ALL = [
+      "mente-emocion","inventarios","habitos","sueno","diario","psicoeducacion",
+      "plan-seguridad","mindfulness","pack","personalidad","noticias",
+    ];
+    return ALL.filter((s) => !hiddenCats.has(s));
+  }, [hiddenCats]);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -116,7 +125,7 @@ export function ResmitaFAB() {
         },
         body: JSON.stringify({
           messages: nextMessages,
-          context: outboundCtx,
+          context: { ...outboundCtx, enabledResources },
           userSummary: prefs.shareSnapshot && prefs.contextConsent ? buildSnapshotSummary(snapshot) : null,
           sessionId,
         }),

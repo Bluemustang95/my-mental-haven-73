@@ -22,7 +22,9 @@ import {
   type GroupItem,
   PRIORITY_IDS,
   TOOL_IDS,
+  WIDGET_TO_CATEGORY,
 } from "@/components/home/WidgetsBoard";
+import { useHiddenCategories } from "@/hooks/useHiddenCategories";
 import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
 import { DailyQuoteWidget } from "@/components/home/DailyQuoteWidget";
 import { PsyNewsWidget } from "@/components/home/PsyNewsWidget";
@@ -78,6 +80,14 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const widgets = useHomeWidgets();
+  const hiddenCats = useHiddenCategories();
+  const isWidgetAvailable = useCallback(
+    (id: WidgetId) => {
+      const cat = WIDGET_TO_CATEGORY[id];
+      return !cat || !hiddenCats.has(cat);
+    },
+    [hiddenCats],
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -215,12 +225,12 @@ export default function Dashboard() {
   };
 
   const PRIORITY_ID_SET = new Set<WidgetId>(PRIORITY_IDS);
-  // Herramientas: prioridades siempre fuera. Máximo 3 activas.
+  // Herramientas: prioridades siempre fuera. Máximo 4 activas (bento 2x2).
   const toolWidgets = widgets.widgets
-    .filter((w) => TOOL_IDS.includes(w.id as WidgetId) && w.enabled && !w.hidden)
-    .slice(0, 3);
+    .filter((w) => TOOL_IDS.includes(w.id as WidgetId) && w.enabled && !w.hidden && isWidgetAvailable(w.id as WidgetId))
+    .slice(0, 4);
   const gridWidgets = widgets.editMode
-    ? widgets.widgets.filter((w) => !PRIORITY_ID_SET.has(w.id as WidgetId) && w.enabled && !w.hidden)
+    ? widgets.widgets.filter((w) => !PRIORITY_ID_SET.has(w.id as WidgetId) && w.enabled && !w.hidden && isWidgetAvailable(w.id as WidgetId))
     : toolWidgets;
 
   const RECOMMENDED_BY_MODULE: Record<ToolModule, { title: string; description: string; label: string }> = {
@@ -364,8 +374,7 @@ export default function Dashboard() {
           />
         ) : (
           <div
-            className="relative grid gap-4"
-            style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+            className="relative grid grid-cols-2 gap-4"
             onContextMenu={(e) => {
               e.preventDefault();
               widgets.activateEdit();
@@ -375,8 +384,8 @@ export default function Dashboard() {
               <div key={w.id}>{renderWidget(w.id as WidgetId)}</div>
             ))}
             {gridWidgets.length === 0 && (
-              <div className="col-span-3 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
-                Aún no elegiste herramientas. Tocá <b>+</b> arriba para sumar hasta 3.
+              <div className="col-span-2 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
+                Aún no elegiste herramientas. Tocá <b>+</b> arriba para sumar hasta 4.
               </div>
             )}
           </div>

@@ -58,6 +58,7 @@ serve(async (req) => {
     screenTitle = context?.screenTitle ?? null;
     screenPurpose = context?.screenPurpose ?? null;
     userSummary = typeof us === "string" ? us : null;
+    const enabledResources: string[] = Array.isArray(context?.enabledResources) ? context.enabledResources : [];
 
     // Extract user from JWT
     const authHeader = req.headers.get("Authorization");
@@ -104,6 +105,12 @@ serve(async (req) => {
             ? [{
                 role: "system",
                 content: `Datos recientes del usuario (usalos para adaptar tu respuesta con empatía, no los repitas textualmente): ${userSummary}.`,
+              }]
+            : []),
+          ...(enabledResources.length
+            ? [{
+                role: "system",
+                content: `Recursos disponibles en esta app para el usuario: ${enabledResources.join(", ")}. Solo sugerí o mencioná recursos incluidos en esta lista; nunca recomiendes otros ni asumas que existen.`,
               }]
             : []),
           ...messages,
