@@ -1913,6 +1913,8 @@ export type Database = {
           resmita_store_history: boolean
           satisfaction_survey_completed_at: string | null
           satisfaction_survey_dismissed_at: string | null
+          session_day_notification_at: string | null
+          session_day_notification_hour: number
           session_day_of_week: number | null
           session_reminder_dismissed_at: string | null
           session_time: string | null
@@ -1964,6 +1966,8 @@ export type Database = {
           resmita_store_history?: boolean
           satisfaction_survey_completed_at?: string | null
           satisfaction_survey_dismissed_at?: string | null
+          session_day_notification_at?: string | null
+          session_day_notification_hour?: number
           session_day_of_week?: number | null
           session_reminder_dismissed_at?: string | null
           session_time?: string | null
@@ -2015,6 +2019,8 @@ export type Database = {
           resmita_store_history?: boolean
           satisfaction_survey_completed_at?: string | null
           satisfaction_survey_dismissed_at?: string | null
+          session_day_notification_at?: string | null
+          session_day_notification_hour?: number
           session_day_of_week?: number | null
           session_reminder_dismissed_at?: string | null
           session_time?: string | null
@@ -3370,6 +3376,8 @@ export type Database = {
           resmita_store_history: boolean
           satisfaction_survey_completed_at: string | null
           satisfaction_survey_dismissed_at: string | null
+          session_day_notification_at: string | null
+          session_day_notification_hour: number
           session_day_of_week: number | null
           session_reminder_dismissed_at: string | null
           session_time: string | null
