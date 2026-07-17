@@ -47,10 +47,20 @@ export function MonthCalendarSheet({
     return days;
   }, [cursor]);
 
+  const completion = useTodayCompletion(open ? 1 : 0);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-[28px] border-none bg-[#FDFCFB] p-0">
-        <div className="mx-auto max-w-md px-5 pt-4 pb-8">
+      <SheetContent
+        side="bottom"
+        className="h-[82vh] overflow-y-auto rounded-t-[28px] border-none p-0"
+        style={{
+          background: "rgba(253,252,251,0.78)",
+          backdropFilter: "blur(32px) saturate(140%)",
+          WebkitBackdropFilter: "blur(32px) saturate(140%)",
+        }}
+      >
+        <div className="mx-auto max-w-md px-5 pt-4 pb-10">
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-foreground/15" />
           <div className="mb-4 flex items-center justify-between">
             <button
