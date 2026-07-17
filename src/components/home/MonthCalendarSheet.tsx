@@ -1,11 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { addMonths, endOfMonth, format, isSameDay, isSameMonth, startOfMonth, startOfWeek, endOfWeek, addDays, isFuture } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchActivityDateKeys } from "@/lib/recentActivity";
 import { localDateStr, cn } from "@/lib/utils";
+import { useTodayCompletion } from "@/hooks/useTodayCompletion";
+import { ATOMIC_COLORS } from "@/components/home/QuickToolWidget";
+
+const ACTIVITIES: { id: keyof ReturnType<typeof useTodayCompletion>; label: string }[] = [
+  { id: "diario_quick", label: "Diario" },
+  { id: "mini_habits", label: "Hábitos" },
+  { id: "mindfulness_quick", label: "Mindfulness" },
+  { id: "pensamientos_quick", label: "Pensamientos" },
+  { id: "sleep_zone", label: "Sueño" },
+  { id: "pack_quick", label: "Pack" },
+];
 
 export function MonthCalendarSheet({
   open,
@@ -36,10 +47,20 @@ export function MonthCalendarSheet({
     return days;
   }, [cursor]);
 
+  const completion = useTodayCompletion(open ? 1 : 0);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-[28px] border-none bg-[#FDFCFB] p-0">
-        <div className="mx-auto max-w-md px-5 pt-4 pb-8">
+      <SheetContent
+        side="bottom"
+        className="h-[82vh] overflow-y-auto rounded-t-[28px] border-none p-0"
+        style={{
+          background: "rgba(253,252,251,0.78)",
+          backdropFilter: "blur(32px) saturate(140%)",
+          WebkitBackdropFilter: "blur(32px) saturate(140%)",
+        }}
+      >
+        <div className="mx-auto max-w-md px-5 pt-4 pb-10">
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-foreground/15" />
           <div className="mb-4 flex items-center justify-between">
             <button
@@ -115,6 +136,39 @@ export function MonthCalendarSheet({
           <p className="mt-4 text-center text-[11px] text-muted-foreground">
             Tocá un día para ver toda tu actividad de esa fecha.
           </p>
+
+          <div className="mt-6">
+            <p className="mb-2 font-[Montserrat] text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Actividades de hoy
+            </p>
+            <div className="space-y-2">
+              {ACTIVITIES.map((a) => {
+                const done = completion[a.id];
+                const color = (ATOMIC_COLORS as any)[a.id] ?? "#7cc2c8";
+                return (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-md"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ background: color, opacity: done ? 1 : 0.3 }}
+                      />
+                      <span className={cn("text-[13px]", done ? "font-semibold text-slate-900" : "text-slate-500")}>
+                        {a.label}
+                      </span>
+                    </div>
+                    {done && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: color }}>
+                        <Check size={12} strokeWidth={3} color="#fff" />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
