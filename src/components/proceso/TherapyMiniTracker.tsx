@@ -26,25 +26,26 @@ export function TherapyMiniTracker({
   const { user } = useAuth();
   const { data: status, refetch } = useTherapyStatus(phone, { enabled: true });
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [optimisticConfirmed, setOptimisticConfirmed] = useState(false);
   const [assignedAt, setAssignedAt] = useState<Date | null>(null);
   const [storedProName, setStoredProName] = useState<string | null>(null);
   const [storedPro, setStoredPro] = useState<{ phone?: string | null; email?: string | null; license?: string | null } | null>(null);
 
-  const rawState: BridgeState = status?.state ?? initialState ?? "searching";
-  const state: BridgeState = optimisticConfirmed && rawState === "assigned" ? "coordinating" : rawState;
+  // La app es SOLO LECTORA del estado de la derivación. Nunca modifica RESMA+.
+  const state: BridgeState = status?.state ?? initialState ?? "searching";
   const pro = status?.professional;
   const proName = pro?.name ?? initialProName ?? storedProName ?? null;
   const proPhone = pro?.phone ?? storedPro?.phone ?? null;
   const specialty = (pro as any)?.specialty ?? null;
+  // "coordinating" (si el bridge lo emite) se trata visualmente igual que "assigned".
   const assigned = state === "assigned" || state === "coordinating" || state === "concretized";
-  const contactConfirmed = state === "coordinating" || state === "concretized";
   const concretized = state === "concretized";
   const failed = state === "failed";
 
-  // 24h gate para "¿Ya te contactó?"
+  // 24h gate para mostrar el diálogo informativo "¿Ya te contactó?"
   const hoursSinceAssigned = assignedAt ? (Date.now() - assignedAt.getTime()) / 3600000 : 0;
-  const canConfirmContact = state === "assigned" && !!assignedAt && hoursSinceAssigned >= 24;
+  const dismissKey = user ? `contactConfirmDialogDismissed:${user.id}` : null;
+  const alreadyDismissed = dismissKey ? typeof window !== "undefined" && !!window.localStorage.getItem(dismissKey) : false;
+  const canOfferContactCheck = (state === "assigned" || state === "coordinating") && !!assignedAt && hoursSinceAssigned >= 24 && !alreadyDismissed;
   const hoursRemaining = assignedAt ? Math.max(0, Math.ceil(24 - hoursSinceAssigned)) : 24;
 
   useEffect(() => {
