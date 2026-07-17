@@ -384,23 +384,19 @@ export default function Dashboard() {
             onAdd={() => window.dispatchEvent(new CustomEvent("resma:open-manage-widgets"))}
           />
         ) : (
-          <div className="relative grid grid-cols-2 gap-3">
-            {gridWidgets.map((w, i) => {
-              const forcedSize: "full" | "half" = i === 0 ? "full" : "half";
-              return (
-                <WidgetCell
-                  key={w.id}
-                  id={w.id}
-                  editMode={false}
-                  size={forcedSize}
-                  onLongPress={widgets.activateEdit}
-                >
-                  {renderWidget(w.id)}
-                </WidgetCell>
-              );
-            })}
+          <div
+            className="relative grid gap-4"
+            style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              widgets.activateEdit();
+            }}
+          >
+            {gridWidgets.map((w) => (
+              <div key={w.id}>{renderWidget(w.id as WidgetId)}</div>
+            ))}
             {gridWidgets.length === 0 && (
-              <div className="col-span-2 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
+              <div className="col-span-3 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
                 Aún no elegiste herramientas. Tocá <b>+</b> arriba para sumar hasta 3.
               </div>
             )}
