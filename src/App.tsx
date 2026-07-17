@@ -93,6 +93,7 @@ import ResourceDetail from "@/pages/admin/ResourceDetail";
 import QuestionnaireManager from "@/pages/admin/QuestionnaireManager";
 import OnboardingAlgoAdmin from "@/pages/admin/OnboardingAlgoAdmin";
 import ResourceTools from "@/pages/ResourceTools";
+import ResmaResearch from "@/pages/ResmaResearch";
 import ResourceIntro from "@/pages/ResourceIntro";
 import SafetyPlan from "@/pages/SafetyPlan";
 import Questionnaire from "@/pages/Questionnaire";
@@ -233,6 +234,7 @@ const App = () => (
               <Route path="/herramientas/mis-valores" element={<MyValues />} />
               <Route path="/herramientas/plan-seguridad" element={<SafetyPlan />} />
               <Route path="/herramientas/inventarios" element={<InventariosHub />} />
+              <Route path="/herramientas/noticias" element={<ResmaResearch />} />
               <Route path="/herramientas/personalidad" element={<PersonalidadHome />} />
               <Route path="/proceso/conexiones/actividad-bienestar" element={<CorrelacionActividadBienestar />} />
               <Route path="/proceso/conexiones/actividad-tests" element={<CorrelacionActividadTests />} />
