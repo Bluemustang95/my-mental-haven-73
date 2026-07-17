@@ -9,6 +9,7 @@ import { WeekStrip } from "@/components/home/WeekStrip";
 import { CheckinModal } from "@/components/modals/CheckinModal";
 import { DayHistorySheet } from "@/components/mindfulness/DayHistorySheet";
 import { MonthCalendarSheet } from "@/components/home/MonthCalendarSheet";
+import { NotificationStack } from "@/components/home/NotificationStack";
 import { RecommendedResourceCard } from "@/components/home/RecommendedResourceCard";
 import { MorningCallback } from "@/components/home/MorningCallback";
 import {
