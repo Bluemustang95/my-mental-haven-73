@@ -215,10 +215,10 @@ export default function Dashboard() {
   };
 
   const PRIORITY_ID_SET = new Set<WidgetId>(PRIORITY_IDS);
-  // Herramientas: prioridades siempre fuera. Máximo 3 activas.
+  // Herramientas: prioridades siempre fuera. Máximo 4 activas (bento 2x2).
   const toolWidgets = widgets.widgets
     .filter((w) => TOOL_IDS.includes(w.id as WidgetId) && w.enabled && !w.hidden)
-    .slice(0, 3);
+    .slice(0, 4);
   const gridWidgets = widgets.editMode
     ? widgets.widgets.filter((w) => !PRIORITY_ID_SET.has(w.id as WidgetId) && w.enabled && !w.hidden)
     : toolWidgets;
