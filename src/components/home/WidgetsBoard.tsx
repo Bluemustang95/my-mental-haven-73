@@ -51,7 +51,20 @@ export const TOOL_IDS: WidgetId[] = [
   "diario_quick",
   "psico_quick",
 ];
-export const MAX_TOOLS = 3;
+export const MAX_TOOLS = 4;
+
+// Mapea cada widget a la categoría de recurso que lo respalda. Cuando el admin
+// oculta una categoría, los widgets del mapa desaparecen de home y del picker.
+export const WIDGET_TO_CATEGORY: Partial<Record<WidgetId, string>> = {
+  sleep_zone: "sueno",
+  mini_habits: "habitos",
+  mindfulness_quick: "mindfulness",
+  pensamientos_quick: "mente-emocion",
+  pack_quick: "pack",
+  diario_quick: "diario",
+  psico_quick: "psicoeducacion",
+  psy_news: "noticias",
+};
 
 export type WidgetState = {
   id: WidgetId;
