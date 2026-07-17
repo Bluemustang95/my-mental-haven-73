@@ -22,7 +22,9 @@ import {
   type GroupItem,
   PRIORITY_IDS,
   TOOL_IDS,
+  WIDGET_TO_CATEGORY,
 } from "@/components/home/WidgetsBoard";
+import { useHiddenCategories } from "@/hooks/useHiddenCategories";
 import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
 import { DailyQuoteWidget } from "@/components/home/DailyQuoteWidget";
 import { PsyNewsWidget } from "@/components/home/PsyNewsWidget";
