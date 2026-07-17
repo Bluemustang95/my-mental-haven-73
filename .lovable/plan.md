@@ -1,61 +1,82 @@
-# Refinamientos previos a Fase 2
+# Fase 3 · Hábitos, Noticias Resma Research y Notificaciones
 
-Antes de pasar a Fase 2 (Inventarios) resolvemos 3 bloques que quedaron colgando de Fase 1.
-
----
-
-## 1. Navegación: "volver" siempre lleva a un lugar válido
-
-**Personalidad (Big Five) → volver da 404**
-- `PersonalidadHome.tsx` cierra el modal con `navigate(-1)` implícito en algún flujo interno del `BigFiveProfileModal`. Forzamos que cualquier cierre (X, backdrop, ESC, botón "volver a inventarios") vaya siempre a `/mi-proceso/inventarios` con `replace: true`.
-- Revisamos `BigFiveProfileModal` para que el botón de retroceso interno también llame a `onClose()` en lugar de `history.back()`.
-
-**Regulación emocional no abre la pantalla correcta**
-- En `MenteEmocion.tsx` el link "Regulá tus emociones" apunta a `/herramientas/regulacion-emocional` (pantalla vieja `EmotionalRegulation`). Lo cambiamos a `/herramientas/regulacion-dbt` que es la pantalla activa (`RegulacionDbt`).
-- Verificamos que el botón "volver" de `RegulacionDbt` vuelva a `/herramientas/mente-emocion` (o a `/herramientas`) y no a `-1`.
-
-**Auditoría rápida de "volver"**
-- Recorrida por las pantallas hijas de los hubs (Pensamientos, Mindfulness sub-módulos, Regulación DBT, Personalidad, Inventarios) para asegurar que cada `ArrowLeft` navega a una ruta absoluta razonable en vez de `navigate(-1)`, que rompe cuando se entra por deep link.
+Retomamos los 3 bloques que quedaron pendientes del alcance original. Al terminar cada bloque paramos y revisamos, como venís pidiendo.
 
 ---
 
-## 2. Resmita: contexto real por pantalla + eliminar drawer azul en Mindfulness
+## Bloque A · Hábitos
 
-**Contexto sensible al paso, no solo a la ruta**
-- Hoy `resmitaContextMap.ts` solo mira la URL, entonces en Pensamientos Automáticos siempre "cree" que estamos en el paso del pensamiento.
-- Agregamos un contexto dinámico: el wizard de `PensamientosAutomaticos.tsx` publica el paso actual (evento / pensamiento / emoción / distorsión / evidencia / reencuadre / plan) vía `useResmitaContext` (o un `setResmitaStep` en un store liviano). Resmita usa ese paso para elegir el prompt/ayuda correcta ("Evento o situación" ≠ "Pensamiento automático").
-- Mismo patrón se deja preparado para reutilizar en otros wizards (Mindfulness, DBT) sin implementarlo aún.
+**Objetivo:** que el módulo de hábitos sea usable sin fricción y que el admin pueda sugerir hábitos por categoría.
 
-**Ícono azul en `/mindfulness` y `/mindfulness/respiracion`**
-- Localizamos el `<AiCompanionDrawer>` o botón flotante celeste que sigue montado en `MindfulnessHub.tsx`, `BreathingHome.tsx` y `src/pages/Mindfulness.tsx` (o en `mindfulness/*View.tsx`) y lo removemos.
-- Confirmamos que `HIDDEN_PREFIXES` de `resmitaContextMap.ts` **no** oculta el FAB amarillo global en esas rutas, para que Resmita amarilla quede como único ayudante visible (como pide la captura).
-
----
-
-## 3. Inspírame + Modo Zen del Diario
-
-**Tipografía de Inspírame**
-- El banner del prompt usa `font-mindful` (serif especial) mientras el resto de la app usa `font-display` / `font-sans`. Unificamos el banner y el botón "Inspirame" a la misma familia que el resto del Diario (`font-display` para el texto del prompt, `font-sans` para el botón).
-
-**Modo Zen: barra inferior blanca y mal posicionada**
-- La toolbar inferior del editor (cámara, imagen, adjunto, mic, emoji, tag, mute) hoy queda con fondo claro sobre el fondo negro del Zen. La rehacemos con `surfaceCls` (translúcido oscuro con `backdrop-blur`) cuando `zen === true`.
-- La bajamos usando `safe-area-inset-bottom` + `pb-[env(safe-area-inset-bottom)]` y le sumamos un margen extra en Zen para que no quede pegada al notch/home indicator.
-- Volvemos a chequear que `useHideBottomNav(zen)` esté realmente ocultando el `BottomNav` global (si no, forzamos el hide con un `data-zen` en `<body>` que el `BottomNav` ya respeta o agregamos la regla).
+1. **Sugerencias de hábitos desde admin**
+   - Agregar tabla `habit_suggestions` (id, category_id, title, icon, description, sort, active).
+   - En `HabitosAdmin.tsx`: CRUD de sugerencias por categoría.
+   - En `NewHabitSheet.tsx`: chips de "Sugeridos" arriba del formulario libre.
+2. **Racha y consistencia visibles**
+   - En `HabitCard.tsx`: mostrar racha actual con ícono de llama y % de consistencia últimos 7 días.
+   - En `StatsDashboard.tsx`: gráfico de barras semanal + "mejor día de la semana".
+3. **Recordatorios por hábito**
+   - Campo `reminder_time` (ya existe en `habits`) enganchado al motor de notificaciones (bloque C).
+   - Nuevo campo `reminder_days` (int[] 0-6) para elegir días de la semana.
+4. **Contexto Resmita**
+   - Publicar step Resmita en `HabitDetailSheet` con el título del hábito para consejos concretos.
 
 ---
 
-## Detalles técnicos (archivos afectados)
+## Bloque B · Noticias Resma Research
 
-- `src/pages/PersonalidadHome.tsx`, `src/components/proceso/BigFiveProfileModal.tsx`
-- `src/pages/MenteEmocion.tsx`
-- `src/pages/RegulacionDbt.tsx`, `src/pages/EmotionalRegulation.tsx` (solo revisar back)
-- `src/lib/resmitaContextMap.ts`, `src/hooks/useResmitaContext.ts`, `src/pages/pensamientos/PensamientosAutomaticos.tsx`
-- `src/pages/Mindfulness.tsx`, `src/pages/mindfulness/MindfulnessHub.tsx`, `src/pages/mindfulness/BreathingHome.tsx` (quitar drawer azul si queda)
-- `src/pages/Diario.tsx` (tipografía Inspírame + toolbar Zen)
-- `src/components/layout/BottomNav.tsx` (verificar hide en Zen)
+**Objetivo:** feed curado de investigación en psicología, editable desde admin, sin depender de RSS externo.
 
-Sin cambios de base de datos ni de edge functions.
+1. **Modelo**
+   - Tabla `psychology_news` ya existe; verificamos columnas (title, summary, url, source, published_at, image_url, tags[], active, sort).
+   - Si falta algo, migración corta para agregar `tags text[]` y `featured boolean`.
+2. **Admin**
+   - Nuevo módulo `NoticiasAdmin.tsx` con CRUD (título, resumen, link externo, fuente, imagen, tags, destacada).
+   - Reordenamiento con drag & drop.
+3. **UI usuario**
+   - Nueva pantalla `/noticias` (Resma Research) accesible desde Recursos y desde el widget Home.
+   - Cards con imagen + fuente + tag; tap abre link externo (`target=_blank`).
+   - Filtros por tag y sección "Destacadas" arriba.
+4. **Home**
+   - Widget "Resma Research" con últimas 3 noticias destacadas.
 
 ---
 
-Después de esto pasamos a **Fase 2 · Inventarios** (tiempo recomendado entre tests con sugerencia blanda, Resmita visible en la evaluación, ir directo sin prólogo, etc.).
+## Bloque C · Notificaciones
+
+**Objetivo:** que las notificaciones lleguen bien, sean editables por el usuario y aprovechables por el admin.
+
+1. **Preferencias del usuario (`NotificationPreferences.tsx`)**
+   - Reagrupar en secciones: Diarias · Ritual · Hábitos · Recordatorios clínicos · Push del admin.
+   - Toggle maestro + hora preferida por sección.
+   - Vista previa: "Así se verá tu próximo recordatorio".
+2. **Motor (`notificationEngine.ts` + `cron-push-dispatcher`)**
+   - Enganchar `habits.reminder_time` + `reminder_days` al cron.
+   - Respetar la zona horaria del usuario (AR / UTC-3) ya usada por `localDateStr()`.
+   - Log ampliado en `notification_log`: motivo (habit / ritual / admin / clinical) y `delivery_status`.
+3. **Admin (`NotificacionesAdmin.tsx`)**
+   - Editor de reglas con visor de "próximos disparos" (dry-run del cron sin enviar).
+   - Push manual: filtro por país + segmento (activos 7d, con hábito X, sin check-in hoy).
+   - Historial: tabla con status de entrega FCM (delivered / failed / no token).
+4. **Runner cliente (`NotificationRunner.tsx`)**
+   - Manejar el caso "token expirado" → re-registrar transparente.
+   - Foreground listener: mostrar toast + deep-link a la pantalla relevante.
+
+---
+
+## Orden sugerido de ejecución
+
+1. Bloque A (hábitos) — sin dependencia con los otros.
+2. Bloque B (noticias) — habilita el contenido para el widget Home y notificaciones opcionales de "nueva noticia".
+3. Bloque C (notificaciones) — usa hábitos + noticias como fuentes de recordatorio.
+
+## Detalles técnicos
+
+- Migraciones nuevas: `habit_suggestions`, columnas extra en `habits` (`reminder_days`), `psychology_news` (`tags`, `featured`) si no están, `notification_log` (`reason`, `delivery_status`).
+- Todas con `GRANT` + RLS por `auth.uid()`.
+- Sin cambios en `client.ts` ni `types.ts` (los regenera el sistema).
+- Reuso de `useResmitaStep` para hábitos y noticias.
+
+## Confirmación
+
+¿Arrancamos por **Bloque A (Hábitos)** completo o querés que dentro de A prioricemos algo puntual (ej. solo sugerencias del admin, o solo racha + estadísticas)?
