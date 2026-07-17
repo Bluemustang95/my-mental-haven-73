@@ -25,8 +25,7 @@ import {
   WIDGET_TO_CATEGORY,
 } from "@/components/home/WidgetsBoard";
 import { useHiddenCategories } from "@/hooks/useHiddenCategories";
-import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
-import { DailyQuoteWidget } from "@/components/home/DailyQuoteWidget";
+import { MiniHabitsWidget } from "@/components/home/OptionalWidgets";
 import { PsyNewsWidget } from "@/components/home/PsyNewsWidget";
 import { PendingBento } from "@/components/home/PendingBento";
 import { PullToRefresh } from "@/components/home/PullToRefresh";
@@ -39,7 +38,6 @@ import {
   PsicoQuickWidget,
   PackQuickWidget,
   MindfulnessQuickWidget,
-  DiarioQuickWidget,
   SleepZoneWidget,
 } from "@/components/home/QuickToolWidget";
 import { TOOL_META, type ToolModule } from "@/lib/onboardingAlgorithm";
@@ -201,12 +199,6 @@ export default function Dashboard() {
         return <PendingBento />;
       case "mini_habits":
         return <MiniHabitsWidget />;
-      case "gratitude":
-        return <GratitudeWidget />;
-      case "contention_notes":
-        return <ContentionNotesWidget />;
-      case "daily_quote":
-        return <DailyQuoteWidget />;
       case "psy_news":
         return <PsyNewsWidget />;
       case "mindfulness_quick":
@@ -215,8 +207,6 @@ export default function Dashboard() {
         return <PensamientosQuickWidget />;
       case "pack_quick":
         return <PackQuickWidget />;
-      case "diario_quick":
-        return <DiarioQuickWidget />;
       case "psico_quick":
         return <PsicoQuickWidget />;
       default:
@@ -374,7 +364,7 @@ export default function Dashboard() {
           />
         ) : (
           <div
-            className="relative grid grid-cols-2 gap-4"
+            className="relative mx-auto grid max-w-[300px] grid-cols-2 gap-3"
             onContextMenu={(e) => {
               e.preventDefault();
               widgets.activateEdit();
