@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getHiddenToolSlugs, filterOutHidden } from "./hiddenTools";
+import { getHiddenToolSlugs } from "./hiddenTools";
 
 export type ActivityBreakdown = {
   checkins: number;
@@ -58,14 +58,19 @@ export async function loadActivity(userId: string, r: Range): Promise<ActivityBr
     supabase.from("thought_records").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", fromIso).lte("created_at", toIso),
     supabase.from("dbt_emotion_sessions").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", fromIso).lte("created_at", toIso),
     supabase.from("journal_entries").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", fromIso).lte("created_at", toIso),
-    supabase.from("exercise_sessions").select("duration_seconds").eq("user_id", userId).eq("exercise_type", "mindfulness").gte("created_at", fromIso).lte("created_at", toIso),
+    supabase.from("exercise_sessions").select("duration_seconds, exercise_type").eq("user_id", userId).eq("exercise_type", "mindfulness").gte("created_at", fromIso).lte("created_at", toIso),
     supabase.from("habit_completions").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("completed_date", fromDate).lte("completed_date", toDate),
     supabase.from("ba_day_logs").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", fromIso).lte("created_at", toIso),
     supabase.from("medication_logs").select("taken").eq("user_id", userId).gte("log_date", fromDate).lte("log_date", toDate),
     supabase.from("weekly_reflections").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("created_at", fromIso).lte("created_at", toIso),
   ]);
 
-  const mindMin = Math.round(((ex.data ?? []) as any[]).reduce((s, r: any) => s + (r.duration_seconds ?? 0), 0) / 60);
+  const hidden = await getHiddenToolSlugs();
+  const exRows = ((ex.data ?? []) as any[]).filter((r) => {
+    const t = String(r.exercise_type ?? "").toLowerCase();
+    return !t || !hidden.has(t);
+  });
+  const mindMin = Math.round(exRows.reduce((s, r: any) => s + (r.duration_seconds ?? 0), 0) / 60);
   const medRows = (ml.data ?? []) as { taken: boolean | null }[];
   const medsTaken = medRows.filter((r) => r.taken === true).length;
 
