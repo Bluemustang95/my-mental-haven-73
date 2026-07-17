@@ -58,6 +58,7 @@ serve(async (req) => {
     screenTitle = context?.screenTitle ?? null;
     screenPurpose = context?.screenPurpose ?? null;
     userSummary = typeof us === "string" ? us : null;
+    const enabledResources: string[] = Array.isArray(context?.enabledResources) ? context.enabledResources : [];
 
     // Extract user from JWT
     const authHeader = req.headers.get("Authorization");
