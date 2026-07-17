@@ -43,7 +43,7 @@ export function AtomicWidget({
       type="button"
       onClick={handle}
       aria-label={ariaLabel ?? label}
-      className="group flex select-none flex-col items-center outline-none"
+      className="group flex w-full select-none flex-col items-center outline-none"
     >
       {/* Cápsula cuadrada glass */}
       <div
