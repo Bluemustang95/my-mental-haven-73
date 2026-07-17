@@ -24,7 +24,7 @@ export function TherapyMiniTracker({
 }: Props) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { data: status, refetch } = useTherapyStatus(phone, { enabled: true });
+  const { data: status } = useTherapyStatus(phone, { enabled: true });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [assignedAt, setAssignedAt] = useState<Date | null>(null);
   const [storedProName, setStoredProName] = useState<string | null>(null);
