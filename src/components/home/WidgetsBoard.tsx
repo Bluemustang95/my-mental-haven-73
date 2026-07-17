@@ -544,6 +544,7 @@ export function ManageWidgetsButton({
   onToggle: (id: WidgetId) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const hiddenCats = useHiddenCategories();
   useEffect(() => {
     const listener = () => setOpen(true);
     window.addEventListener("resma:open-manage-widgets", listener);
