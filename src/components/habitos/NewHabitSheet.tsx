@@ -124,6 +124,25 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 pt-4 pb-[calc(env(safe-area-inset-bottom)+7rem)]">
+              {suggestions.length > 0 && (
+                <div className="mb-5">
+                  <p className="flex items-center gap-1.5 font-[Montserrat] text-[10px] font-bold uppercase tracking-[0.18em] text-[#101927]/50">
+                    <Lightbulb size={12} /> Sugeridos por Resma
+                  </p>
+                  <div className="mt-2 -mx-6 flex gap-2 overflow-x-auto px-6 pb-1">
+                    {suggestions.slice(0, 12).map(s => (
+                      <button
+                        key={s.id}
+                        onClick={() => applySuggestion(s)}
+                        className="flex shrink-0 items-center gap-1.5 rounded-full border border-[#101927]/10 bg-white px-3 py-2 text-[12px] font-semibold text-[#101927] hover:border-[#7cc2c8] hover:bg-[#7cc2c8]/10"
+                      >
+                        <span>{s.icon}</span>
+                        <span className="whitespace-nowrap">{s.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {/* Icon tabs */}
               <p className="font-[Montserrat] text-[10px] font-bold uppercase tracking-[0.18em] text-[#101927]/50">Iconografía del hábito</p>
               <div className="mt-2 grid grid-cols-2 rounded-full bg-[#101927]/5 p-1">
