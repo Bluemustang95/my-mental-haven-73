@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Wind, Sparkles, Brain, ShieldCheck, ClipboardList, User, type LucideIcon } from "lucide-react";
+import { Zap, Wind, Sparkles, Brain, ShieldCheck, ClipboardList, User, BookOpen, type LucideIcon } from "lucide-react";
 import { readLocalProfile } from "@/lib/clinicalAlgorithm";
 
 type Tile = {
@@ -19,6 +19,7 @@ const tiles: Tile[] = [
   { slug: "pack", name: "Pack Actividades", desc: "Programas guiados.", Icon: Sparkles, tint: "accent", target: "/herramientas/pack" },
   { slug: "inventarios", name: "Tests e inventarios", desc: "BDI, BAI, PHQ-9, GAD-7 y más.", Icon: ClipboardList, tint: "primary", target: "/herramientas/inventarios" },
   { slug: "personalidad", name: "Personalidad", desc: "Tu perfil Big Five.", Icon: User, tint: "accent", target: "/herramientas/personalidad" },
+  { slug: "noticias", name: "Resma Research", desc: "Investigación en psicología.", Icon: BookOpen, tint: "primary", target: "/herramientas/noticias" },
 ];
 
 const tintBg: Record<Tile["tint"], string> = {
