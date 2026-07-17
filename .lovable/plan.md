@@ -1,82 +1,107 @@
-# Fase 3 · Hábitos, Noticias Resma Research y Notificaciones
+# Bloque C · Notificaciones
 
-Retomamos los 3 bloques que quedaron pendientes del alcance original. Al terminar cada bloque paramos y revisamos, como venís pidiendo.
+**Objetivo:** que las notificaciones lleguen bien, sean configurables por el usuario, gestionables desde el admin y trazables punta a punta.
 
----
-
-## Bloque A · Hábitos
-
-**Objetivo:** que el módulo de hábitos sea usable sin fricción y que el admin pueda sugerir hábitos por categoría.
-
-1. **Sugerencias de hábitos desde admin**
-   - Agregar tabla `habit_suggestions` (id, category_id, title, icon, description, sort, active).
-   - En `HabitosAdmin.tsx`: CRUD de sugerencias por categoría.
-   - En `NewHabitSheet.tsx`: chips de "Sugeridos" arriba del formulario libre.
-2. **Racha y consistencia visibles**
-   - En `HabitCard.tsx`: mostrar racha actual con ícono de llama y % de consistencia últimos 7 días.
-   - En `StatsDashboard.tsx`: gráfico de barras semanal + "mejor día de la semana".
-3. **Recordatorios por hábito**
-   - Campo `reminder_time` (ya existe en `habits`) enganchado al motor de notificaciones (bloque C).
-   - Nuevo campo `reminder_days` (int[] 0-6) para elegir días de la semana.
-4. **Contexto Resmita**
-   - Publicar step Resmita en `HabitDetailSheet` con el título del hábito para consejos concretos.
+> Nota: el **cron automático de Resma Research (Bloque B) queda pendiente** — se dispara solo con "Ejecutar ahora" hasta que definamos frecuencia.
 
 ---
 
-## Bloque B · Noticias Resma Research
+## 1. Preferencias del usuario · `NotificationPreferences.tsx`
 
-**Objetivo:** feed curado de investigación en psicología, editable desde admin, sin depender de RSS externo.
+Reagrupar los toggles hoy sueltos en secciones claras:
 
-1. **Modelo**
-   - Tabla `psychology_news` ya existe; verificamos columnas (title, summary, url, source, published_at, image_url, tags[], active, sort).
-   - Si falta algo, migración corta para agregar `tags text[]` y `featured boolean`.
-2. **Admin**
-   - Nuevo módulo `NoticiasAdmin.tsx` con CRUD (título, resumen, link externo, fuente, imagen, tags, destacada).
-   - Reordenamiento con drag & drop.
-3. **UI usuario**
-   - Nueva pantalla `/noticias` (Resma Research) accesible desde Recursos y desde el widget Home.
-   - Cards con imagen + fuente + tag; tap abre link externo (`target=_blank`).
-   - Filtros por tag y sección "Destacadas" arriba.
-4. **Home**
-   - Widget "Resma Research" con últimas 3 noticias destacadas.
+- **Diarias** — sintonía mañana, balance nocturno (hora preferida por sección).
+- **Ritual** — check-in, frase del día.
+- **Hábitos** — toggle maestro + resumen "X hábitos con recordatorio".
+- **Recordatorios clínicos** — medicación, sesión de terapia, tests pendientes.
+- **Novedades y admin** — noticias nuevas destacadas y push manual del admin.
+
+Agregar:
+- Toggle maestro "Pausar todo por 24 h / 7 d".
+- Preview: "Así se verá tu próximo recordatorio" (título + cuerpo).
+- Detección de permiso del navegador/PWA + CTA de repermisar si está denegado.
 
 ---
 
-## Bloque C · Notificaciones
+## 2. Recordatorios por hábito
 
-**Objetivo:** que las notificaciones lleguen bien, sean editables por el usuario y aprovechables por el admin.
-
-1. **Preferencias del usuario (`NotificationPreferences.tsx`)**
-   - Reagrupar en secciones: Diarias · Ritual · Hábitos · Recordatorios clínicos · Push del admin.
-   - Toggle maestro + hora preferida por sección.
-   - Vista previa: "Así se verá tu próximo recordatorio".
-2. **Motor (`notificationEngine.ts` + `cron-push-dispatcher`)**
-   - Enganchar `habits.reminder_time` + `reminder_days` al cron.
-   - Respetar la zona horaria del usuario (AR / UTC-3) ya usada por `localDateStr()`.
-   - Log ampliado en `notification_log`: motivo (habit / ritual / admin / clinical) y `delivery_status`.
-3. **Admin (`NotificacionesAdmin.tsx`)**
-   - Editor de reglas con visor de "próximos disparos" (dry-run del cron sin enviar).
-   - Push manual: filtro por país + segmento (activos 7d, con hábito X, sin check-in hoy).
-   - Historial: tabla con status de entrega FCM (delivered / failed / no token).
-4. **Runner cliente (`NotificationRunner.tsx`)**
-   - Manejar el caso "token expirado" → re-registrar transparente.
-   - Foreground listener: mostrar toast + deep-link a la pantalla relevante.
+- Nueva columna `habits.reminder_days int[]` (0-6, domingo-sábado). Default `{1,2,3,4,5,6,0}` = todos los días.
+- En `HabitDetailSheet` / `NewHabitSheet`: selector de días (chips L·M·M·J·V·S·D) + hora ya existente.
+- Enganche en `cron-push-dispatcher`: filtra hábitos activos cuyo `reminder_time` cae en la ventana actual y `reminder_days` incluye el día de hoy en `America/Argentina/Buenos_Aires`.
 
 ---
 
-## Orden sugerido de ejecución
+## 3. Motor · `notificationEngine.ts` + `cron-push-dispatcher`
 
-1. Bloque A (hábitos) — sin dependencia con los otros.
-2. Bloque B (noticias) — habilita el contenido para el widget Home y notificaciones opcionales de "nueva noticia".
-3. Bloque C (notificaciones) — usa hábitos + noticias como fuentes de recordatorio.
+- Zona horaria: normalizar todos los cálculos a `America/Argentina/Buenos_Aires` con `localDateStr()`; hoy hay mezcla UTC / local.
+- Ampliar `notification_log` con `reason text` (habit / ritual / admin / clinical / news) y `delivery_status text` (delivered / failed / no_token / skipped_prefs).
+- Registrar cada intento (incluidos los skipped) para poder auditarlos.
+- Idempotencia: chequear que no se envíe el mismo `(user_id, reason, target_key, day)` dos veces.
 
-## Detalles técnicos
+---
 
-- Migraciones nuevas: `habit_suggestions`, columnas extra en `habits` (`reminder_days`), `psychology_news` (`tags`, `featured`) si no están, `notification_log` (`reason`, `delivery_status`).
-- Todas con `GRANT` + RLS por `auth.uid()`.
-- Sin cambios en `client.ts` ni `types.ts` (los regenera el sistema).
-- Reuso de `useResmitaStep` para hábitos y noticias.
+## 4. Admin · `NotificacionesAdmin.tsx`
+
+Ya existe (311 líneas); lo extendemos:
+
+- **Editor de reglas** (`notification_rules`) con visor "próximos 24 h" en **dry-run** (lista de qué usuarios recibirían qué, sin enviar).
+- **Push manual con filtros**:
+  - País (AR/otros).
+  - Segmento: activos 7 d · con hábito X · sin check-in hoy · plan premium · onboarding incompleto.
+  - Preview del payload + confirmación con conteo estimado.
+- **Historial** (`notification_log`) con status FCM (delivered / failed / no_token) y filtros por motivo y fecha.
+
+---
+
+## 5. Runner cliente · `NotificationRunner.tsx` + `NotificationForegroundListener.tsx`
+
+- Manejo de **token expirado**: si `getToken` devuelve error o cambio de token, re-registrar en `device_tokens` de forma transparente.
+- Foreground listener: mostrar toast con acción "Abrir" que hace deep-link a la ruta del payload (`data.route`).
+- Marcar en `device_tokens` los tokens no válidos (last_error, last_error_at) para que el dispatcher los ignore.
+
+---
+
+## Migraciones necesarias
+
+```sql
+ALTER TABLE public.habits
+  ADD COLUMN IF NOT EXISTS reminder_days int[] NOT NULL DEFAULT '{0,1,2,3,4,5,6}'::int[];
+
+ALTER TABLE public.notification_log
+  ADD COLUMN IF NOT EXISTS reason text,
+  ADD COLUMN IF NOT EXISTS delivery_status text,
+  ADD COLUMN IF NOT EXISTS target_key text,
+  ADD COLUMN IF NOT EXISTS log_date date;
+
+CREATE UNIQUE INDEX IF NOT EXISTS notification_log_idempotency
+  ON public.notification_log (user_id, reason, target_key, log_date)
+  WHERE reason IS NOT NULL AND target_key IS NOT NULL AND log_date IS NOT NULL;
+
+ALTER TABLE public.device_tokens
+  ADD COLUMN IF NOT EXISTS last_error text,
+  ADD COLUMN IF NOT EXISTS last_error_at timestamptz,
+  ADD COLUMN IF NOT EXISTS invalid boolean NOT NULL DEFAULT false;
+```
+
+Todas con RLS por `auth.uid()` ya vigente (`notification_log`, `device_tokens`, `habits`).
+
+---
+
+## Pendientes anotados (fuera de este bloque)
+
+- **Cron feed Resma Research** (Bloque B) — definir frecuencia (diaria / cada 12 h) y engancharlo con `pg_cron + pg_net` al edge function `resma-research-fetch`.
+
+---
+
+## Orden de ejecución sugerido
+
+1. Migración (columnas + índice de idempotencia).
+2. `reminder_days` en UI de hábitos + engancharlo al dispatcher.
+3. Reagrupar `NotificationPreferences.tsx` + pausa 24 h/7 d.
+4. Motor: zona horaria + `notification_log` ampliado + idempotencia.
+5. Admin: dry-run del cron, push manual segmentado, historial FCM.
+6. Runner: refresh de token + deep-links en foreground.
 
 ## Confirmación
 
-¿Arrancamos por **Bloque A (Hábitos)** completo o querés que dentro de A prioricemos algo puntual (ej. solo sugerencias del admin, o solo racha + estadísticas)?
+¿Arrancamos con el orden completo o preferís priorizar algo concreto (ej. solo hábitos + preferencias, o solo admin push manual segmentado)?
