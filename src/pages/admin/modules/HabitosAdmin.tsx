@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader, AdminTabs } from "@/components/admin/ui/AdminPrimitives";
 import { loadSetting, saveSetting } from "@/lib/admin/settings";
 import { toast } from "sonner";
-import { X, Plus, Bot, Tag, Layout } from "lucide-react";
+import { X, Plus, Bot, Tag, Layout, Lightbulb, Save } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useHabitSuggestions, type HabitSuggestion } from "@/hooks/useHabitSuggestions";
 
 type Template = { id: string; name: string; icon: string; color: string };
 const DEFAULT_TEMPLATES: Template[] = [
@@ -13,12 +15,17 @@ const DEFAULT_TEMPLATES: Template[] = [
 const DEFAULT_CATEGORIES = ["Acumular Positivo", "Construir Maestría", "Cuidar el Cuerpo", "Vínculos"];
 const DEFAULT_COACH = "Eres el Coach DBT de RESMA. Cuando el paciente falle un hábito, valida sin juzgar y proponé un 1% accionable.";
 
+type TabId = "sug" | "tpl" | "cat" | "coach";
+
 export default function HabitosAdmin() {
-  const [tab, setTab] = useState<"tpl" | "cat" | "coach">("tpl");
+  const [tab, setTab] = useState<TabId>("sug");
   const [templates, setTemplates] = useState<Template[]>(DEFAULT_TEMPLATES);
   const [cats, setCats] = useState<string[]>(DEFAULT_CATEGORIES);
   const [coach, setCoach] = useState(DEFAULT_COACH);
   const [newCat, setNewCat] = useState("");
+
+  const { suggestions, refresh } = useHabitSuggestions({ includeInactive: true });
+  const [draft, setDraft] = useState<Record<string, Partial<HabitSuggestion>>>({});
 
   useEffect(() => {
     loadSetting<Template[]>("habits_templates", DEFAULT_TEMPLATES).then(setTemplates);
@@ -26,12 +33,50 @@ export default function HabitosAdmin() {
     loadSetting<{ text: string }>("habits_coach_prompt", { text: DEFAULT_COACH }).then((v) => setCoach(v.text));
   }, []);
 
+  const patch = (id: string, p: Partial<HabitSuggestion>) => setDraft(d => ({ ...d, [id]: { ...d[id], ...p } }));
+  const merged = (s: HabitSuggestion): HabitSuggestion => ({ ...s, ...(draft[s.id] ?? {}) });
+
+  const saveSuggestion = async (s: HabitSuggestion) => {
+    const m = merged(s);
+    const { error } = await supabase
+      .from("habit_suggestions" as never)
+      .update({
+        category_key: m.category_key, title: m.title, description: m.description,
+        icon: m.icon, color: m.color, sort_order: m.sort_order, active: m.active,
+      } as never)
+      .eq("id", s.id);
+    if (error) { toast.error("No se pudo guardar"); return; }
+    toast.success("Sugerencia guardada");
+    setDraft(d => { const n = { ...d }; delete n[s.id]; return n; });
+    refresh();
+  };
+
+  const addSuggestion = async () => {
+    const { error } = await supabase
+      .from("habit_suggestions" as never)
+      .insert({ category_key: "salud", title: "Nueva sugerencia", icon: "✨", color: "#7cc2c8" } as never);
+    if (error) { toast.error("No se pudo crear"); return; }
+    refresh();
+  };
+
+  const deleteSuggestion = async (id: string) => {
+    if (!confirm("¿Eliminar esta sugerencia?")) return;
+    await supabase.from("habit_suggestions" as never).delete().eq("id", id);
+    refresh();
+  };
+
+  const byCategory = suggestions.reduce<Record<string, HabitSuggestion[]>>((acc, s) => {
+    (acc[s.category_key] ||= []).push(s);
+    return acc;
+  }, {});
+
   return (
     <>
       <AdminPageHeader title="Gestión de Hábitos" subtitle="DBT · Acumular Afecto Positivo" />
       <div className="px-8 pt-4">
-        <AdminTabs<"tpl" | "cat" | "coach">
+        <AdminTabs<TabId>
           tabs={[
+            { id: "sug", label: "Sugerencias", icon: <Lightbulb size={14} /> },
             { id: "tpl", label: "Plantillas Clínicas", icon: <Layout size={14} /> },
             { id: "cat", label: "Categorías DBT", icon: <Tag size={14} /> },
             { id: "coach", label: "Coach IA", icon: <Bot size={14} /> },
@@ -40,6 +85,56 @@ export default function HabitosAdmin() {
         />
       </div>
       <div className="admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32">
+        {tab === "sug" && (
+          <div className="space-y-6">
+            <AdminCard className="p-4 flex items-center justify-between">
+              <p className="text-sm text-slate-600">
+                Sugerencias que verán los usuarios al crear un hábito, agrupadas por categoría.
+              </p>
+              <AdminButton onClick={addSuggestion}><Plus size={14}/> Nueva sugerencia</AdminButton>
+            </AdminCard>
+            {Object.keys(byCategory).length === 0 && (
+              <AdminCard className="p-6 text-center text-slate-400 text-sm">Sin sugerencias todavía.</AdminCard>
+            )}
+            {Object.entries(byCategory).map(([cat, items]) => (
+              <AdminCard key={cat} className="p-4">
+                <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-resma-navy">{cat}</h3>
+                <div className="space-y-2">
+                  {items.map(raw => {
+                    const s = merged(raw);
+                    const dirty = !!draft[raw.id];
+                    return (
+                      <div key={raw.id} className={`flex items-center gap-2 rounded-xl border p-2 ${dirty ? "border-resma-teal bg-resma-teal/5" : "border-slate-200 bg-slate-50"}`}>
+                        <input value={s.icon} onChange={(e)=>patch(raw.id,{icon:e.target.value})} maxLength={2}
+                          className="h-10 w-10 rounded-lg border border-slate-200 bg-white text-center text-lg"/>
+                        <input value={s.title} onChange={(e)=>patch(raw.id,{title:e.target.value})}
+                          className="flex-1 h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold"/>
+                        <input value={s.category_key} onChange={(e)=>patch(raw.id,{category_key:e.target.value})}
+                          className="h-10 w-28 rounded-lg border border-slate-200 bg-white px-2 text-xs"/>
+                        <input type="color" value={s.color} onChange={(e)=>patch(raw.id,{color:e.target.value})}
+                          className="h-10 w-10 rounded-lg cursor-pointer"/>
+                        <input type="number" value={s.sort_order} onChange={(e)=>patch(raw.id,{sort_order:Number(e.target.value)||0})}
+                          className="h-10 w-14 rounded-lg border border-slate-200 bg-white px-2 text-xs" title="Orden"/>
+                        <label className="flex items-center gap-1 text-xs text-slate-500">
+                          <input type="checkbox" checked={s.active} onChange={(e)=>patch(raw.id,{active:e.target.checked})}/>
+                          Activa
+                        </label>
+                        {dirty && (
+                          <button onClick={()=>saveSuggestion(raw)} className="rounded-lg bg-resma-teal p-2 text-white hover:opacity-90" title="Guardar">
+                            <Save size={14}/>
+                          </button>
+                        )}
+                        <button onClick={()=>deleteSuggestion(raw.id)} className="text-rose-400 hover:text-rose-600" title="Eliminar">
+                          <X size={14}/>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </AdminCard>
+            ))}
+          </div>
+        )}
         {tab === "tpl" && (
           <div className="grid grid-cols-3 gap-3">
             {templates.map((t, i) => (
