@@ -61,22 +61,7 @@ const tiles: Tile[] = [
     color: ATOMIC_COLORS.sleep_zone,
     target: "/herramientas/sueno",
   },
-  {
-    slug: "diario",
-    name: "Diario",
-    desc: "Escribí tu día.",
-    Icon: BookOpen,
-    color: ATOMIC_COLORS.diario_quick,
-    target: "/diario",
-  },
-  {
-    slug: "psicoeducacion",
-    name: "Psicoeducación",
-    desc: "Aprendé de tu mente.",
-    Icon: GraduationCap,
-    color: ATOMIC_COLORS.psico_quick,
-    target: "/psicoeducacion",
-  },
+  // Diario y Psicoeducación se acceden desde Home / BottomNav — no aparecen en Recursos.
   {
     slug: "plan-seguridad",
     name: "Plan de Seguridad",
