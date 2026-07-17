@@ -67,8 +67,8 @@ export function NotificationStack() {
     const out: StackNotif[] = [];
 
     // Sesión de terapia en <24h.
-    if (prefs.therapist_enabled !== false && next?.date) {
-      const diffH = (new Date(next.date).getTime() - Date.now()) / 3_600_000;
+    if (prefs.therapist_enabled !== false && next?.nextSessionAt) {
+      const diffH = (next.nextSessionAt.getTime() - Date.now()) / 3_600_000;
       if (diffH > 0 && diffH < 24) {
         out.push({
           id: "session",
