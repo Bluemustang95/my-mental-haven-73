@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
 
@@ -152,10 +152,40 @@ const GRAPHIC: Record<PhaseKey, () => JSX.Element> = {
   night: MoonSvg,
 };
 
+const VISITED_KEY_PREFIX = "home_priority_phases_visited:";
+
+function todayStrForPriority(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function loadVisited(): number[] {
+  try {
+    return JSON.parse(localStorage.getItem(VISITED_KEY_PREFIX + todayStrForPriority()) || "[0]");
+  } catch {
+    return [0];
+  }
+}
+
+function persistVisited(ids: number[]) {
+  try {
+    localStorage.setItem(VISITED_KEY_PREFIX + todayStrForPriority(), JSON.stringify(ids));
+  } catch {}
+}
+
 export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
   const [phaseIdx, setPhaseIdx] = useState(0);
 
   const trio = useMemo(() => cards.slice(0, 3), [cards]);
+
+  // Persistir fases visitadas para que el calendario clínico las liste.
+  useEffect(() => {
+    const visited = loadVisited();
+    if (!visited.includes(phaseIdx)) {
+      persistVisited([...visited, phaseIdx]);
+    }
+  }, [phaseIdx]);
+
   if (trio.length === 0) return null;
 
   const idx = phaseIdx % Math.max(trio.length, 1);
