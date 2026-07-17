@@ -107,6 +107,12 @@ serve(async (req) => {
                 content: `Datos recientes del usuario (usalos para adaptar tu respuesta con empatía, no los repitas textualmente): ${userSummary}.`,
               }]
             : []),
+          ...(enabledResources.length
+            ? [{
+                role: "system",
+                content: `Recursos disponibles en esta app para el usuario: ${enabledResources.join(", ")}. Solo sugerí o mencioná recursos incluidos en esta lista; nunca recomiendes otros ni asumas que existen.`,
+              }]
+            : []),
           ...messages,
         ],
         stream: true,
