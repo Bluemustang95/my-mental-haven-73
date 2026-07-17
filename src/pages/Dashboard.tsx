@@ -352,16 +352,9 @@ export default function Dashboard() {
             <CalendarDays size={18} />
           </button>
         </div>
+        {/* Notification stack (iOS-style) — reemplaza MorningCallback y pending */}
+        {!widgets.editMode && <NotificationStack />}
 
-
-        {/* Yesterday's improvement callback */}
-        {improveFromYesterday && !morningDone && !widgets.editMode && (
-          <div className="mt-3">
-            <MorningCallback text={improveFromYesterday} onOpen={() => setCheckinOpen("morning")} />
-          </div>
-        )}
-
-        {/* Enfoque prioritario — stacked cards */}
         {/* Enfoque prioritario — visible siempre, fijo en edit mode */}
         <PriorityStack cards={priorityCards} />
 
