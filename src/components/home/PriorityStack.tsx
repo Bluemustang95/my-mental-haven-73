@@ -199,7 +199,7 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
       <button
         onClick={handleTap}
         aria-label={`${phase.tag}: ${card.title}. Tocá para ${card.done ? "cambiar de fase" : "abrir"}`}
-        className="group relative block aspect-square w-full overflow-hidden rounded-[32px] text-left"
+        className="group relative block aspect-[1/0.88] w-full overflow-hidden rounded-[32px] text-left"
         style={{
           background: "rgba(255,255,255,0.45)",
           backdropFilter: "blur(25px)",
