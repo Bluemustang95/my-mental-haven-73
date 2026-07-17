@@ -38,14 +38,10 @@ export const TOOL_IDS: WidgetId[] = [
   "sleep_zone",
   "pending",
   "mini_habits",
-  "gratitude",
-  "contention_notes",
-  "daily_quote",
   "psy_news",
   "mindfulness_quick",
   "pensamientos_quick",
   "pack_quick",
-  "diario_quick",
   "psico_quick",
 ];
 export const MAX_TOOLS = 4;
@@ -58,7 +54,6 @@ export const WIDGET_TO_CATEGORY: Partial<Record<WidgetId, string>> = {
   mindfulness_quick: "mindfulness",
   pensamientos_quick: "mente-emocion",
   pack_quick: "pack",
-  diario_quick: "diario",
   psico_quick: "psicoeducacion",
   psy_news: "noticias",
 };
@@ -77,15 +72,11 @@ const DEFAULT_WIDGETS: WidgetState[] = [
   { id: "sleep_zone", enabled: true, hidden: false, size: "full" },
   { id: "pending", enabled: true, hidden: false, size: "half" },
   { id: "mini_habits", enabled: true, hidden: false, size: "half" },
-  { id: "daily_quote", enabled: false, hidden: false, size: "half" },
   { id: "psy_news", enabled: false, hidden: false, size: "half" },
-  { id: "gratitude", enabled: false, hidden: false, size: "half" },
-  { id: "contention_notes", enabled: false, hidden: false, size: "half" },
   // Quick launchers — disabled by default; onboarding seeds enable them.
   { id: "mindfulness_quick", enabled: false, hidden: false, size: "half" },
   { id: "pensamientos_quick", enabled: false, hidden: false, size: "half" },
   { id: "pack_quick", enabled: false, hidden: false, size: "half" },
-  { id: "diario_quick", enabled: false, hidden: false, size: "half" },
   { id: "psico_quick", enabled: false, hidden: false, size: "half" },
 ];
 
@@ -96,9 +87,6 @@ const LABELS: Record<WidgetId, string> = {
   sleep_zone: "Zona de descanso",
   pending: "Pendientes para vos",
   mini_habits: "Mini Hábitos",
-  gratitude: "Agradecimiento",
-  contention_notes: "Notas de contención",
-  daily_quote: "Frase del día",
   psy_news: "Noticias de psicología",
   mindfulness_quick: "Mindfulness y respiración",
   pensamientos_quick: "Gestión de pensamientos",
