@@ -27,6 +27,14 @@ export function ResmitaFAB() {
   const { bottomNavHidden } = useUiChrome();
   const { prefs, update: updatePrefs } = useResmitaPrivacy();
   const snapshot = useResmitaSnapshot(prefs.shareSnapshot && prefs.contextConsent);
+  const hiddenCats = useHiddenCategories();
+  const enabledResources = useMemo(() => {
+    const ALL = [
+      "mente-emocion","inventarios","habitos","sueno","diario","psicoeducacion",
+      "plan-seguridad","mindfulness","pack","personalidad","noticias",
+    ];
+    return ALL.filter((s) => !hiddenCats.has(s));
+  }, [hiddenCats]);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
