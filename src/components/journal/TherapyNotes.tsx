@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Check, Lock, Notebook } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Notebook } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -9,8 +9,6 @@ import { motion, AnimatePresence } from "framer-motion";
 interface TherapyNote {
   id: string;
   note: string;
-  resolved: boolean;
-  shared_at: string | null;
   created_at: string;
 }
 
@@ -21,13 +19,12 @@ export default function TherapyNotes() {
   const [draft, setDraft] = useState("");
   const [composing, setComposing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("therapy_prep_notes")
-      .select("*")
+      .select("id, note, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
@@ -36,16 +33,13 @@ export default function TherapyNotes() {
       });
   }, [user]);
 
-  const pending = notes.filter((n) => !n.shared_at);
-  const shared = notes.filter((n) => !!n.shared_at);
-
   const saveNote = async () => {
     if (!user || !draft.trim()) return;
     const trimmed = draft.trim().slice(0, 2000);
     const { data, error } = await supabase
       .from("therapy_prep_notes")
       .insert({ user_id: user.id, note: trimmed })
-      .select()
+      .select("id, note, created_at")
       .single();
     if (!error && data) {
       setNotes([data as TherapyNote, ...notes]);
@@ -58,18 +52,6 @@ export default function TherapyNotes() {
     await supabase.from("therapy_prep_notes").delete().eq("id", id);
     setNotes(notes.filter((n) => n.id !== id));
     toast.success("Nota eliminada");
-  };
-
-  const shareAll = async () => {
-    if (!user || pending.length === 0) return;
-    setSending(true);
-    const now = new Date().toISOString();
-    await new Promise((r) => setTimeout(r, 1500));
-    const ids = pending.map((p) => p.id);
-    await supabase.from("therapy_prep_notes").update({ shared_at: now, resolved: true }).in("id", ids);
-    setNotes((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, shared_at: now, resolved: true } : n)));
-    setSending(false);
-    toast.success("Notas compartidas con tu terapeuta");
   };
 
   return (
@@ -87,7 +69,7 @@ export default function TherapyNotes() {
         </div>
       </div>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-36">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-24">
         {/* Compose */}
         <AnimatePresence mode="wait" initial={false}>
           {!composing ? (
@@ -148,83 +130,38 @@ export default function TherapyNotes() {
             <p className="text-sm">Todavía no tenés notas.</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {pending.length > 0 && (
-              <section>
-                <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-                  Pendientes ({pending.length})
-                </h3>
-                <div className="space-y-2.5">
-                  <AnimatePresence>
-                    {pending.map((n) => (
-                      <motion.div
-                        key={n.id}
-                        layout
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="relative rounded-2xl border border-amber-200/60 bg-white p-4 shadow-sm"
-                      >
-                        <p className="pr-6 text-sm leading-relaxed text-[#101927] whitespace-pre-wrap">
-                          {n.note}
-                        </p>
-                        <button
-                          onClick={() => deleteNote(n.id)}
-                          aria-label="Eliminar nota"
-                          className="absolute right-2 top-2 rounded-full p-1.5 text-slate-300 active:text-red-500"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </section>
-            )}
-
-            {shared.length > 0 && (
-              <section>
-                <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-                  Historial compartido
-                </h3>
-                <div className="space-y-2.5">
-                  {shared.map((n) => (
-                    <div
-                      key={n.id}
-                      className="rounded-2xl border border-slate-100 bg-slate-50 p-4 opacity-75"
+          <section>
+            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+              Tus notas ({notes.length})
+            </h3>
+            <div className="space-y-2.5">
+              <AnimatePresence>
+                {notes.map((n) => (
+                  <motion.div
+                    key={n.id}
+                    layout
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="relative rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+                  >
+                    <p className="pr-6 text-sm leading-relaxed text-[#101927] whitespace-pre-wrap">
+                      {n.note}
+                    </p>
+                    <button
+                      onClick={() => deleteNote(n.id)}
+                      aria-label="Eliminar nota"
+                      className="absolute right-2 top-2 rounded-full p-1.5 text-slate-300 active:text-red-500"
                     >
-                      <p className="text-sm leading-relaxed text-[#101927] whitespace-pre-wrap">
-                        {n.note}
-                      </p>
-                      <div className="mt-3 flex items-center gap-1.5 border-t border-slate-200/70 pt-2 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
-                        <Check size={12} /> Leído por terapeuta
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
+                      <Trash2 size={14} />
+                    </button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </section>
         )}
       </div>
-
-      {/* Share emoji FAB */}
-      {pending.length > 0 && (
-        <button
-          onClick={shareAll}
-          disabled={sending}
-          aria-label={`Compartir ${pending.length} nota${pending.length === 1 ? "" : "s"} con tu terapeuta (cifrado extremo a extremo)`}
-          title="Compartir con tu terapeuta · Cifrado extremo a extremo"
-          className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-white/90 backdrop-blur-md text-3xl shadow-lg shadow-black/20 ring-1 ring-slate-200 active:scale-95 transition-transform disabled:opacity-70"
-        >
-          <span aria-hidden>{sending ? "⏳" : "💌"}</span>
-          {!sending && (
-            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7cc2c8] px-1 text-[10px] font-bold text-white ring-2 ring-white">
-              {pending.length}
-            </span>
-          )}
-        </button>
-      )}
     </div>
   );
 }
