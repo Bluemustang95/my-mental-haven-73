@@ -91,7 +91,7 @@ const LABELS: Record<WidgetId, string> = {
   mindfulness_quick: "Mindfulness y respiración",
   pensamientos_quick: "Gestión de pensamientos",
   pack_quick: "Pack de activación",
-  diario_quick: "Diario íntimo",
+  
   psico_quick: "Biblioteca psicoeducativa",
 };
 
