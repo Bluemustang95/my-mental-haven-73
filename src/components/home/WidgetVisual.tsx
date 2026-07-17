@@ -121,16 +121,6 @@ export const WIDGET_IDENTITY: Record<WidgetId, WidgetIdentity> = {
     border: "rgba(122,51,18,0.28)",
     glyph: "signal",
   },
-  diario_quick: {
-    id: "diario_quick",
-    label: "Diario íntimo",
-    tagline: "Interior",
-    from: "#f6e3cf",
-    to: "#c47a55",
-    ink: "#5a281a",
-    border: "rgba(90,40,26,0.28)",
-    glyph: "notepad",
-  },
   psico_quick: {
     id: "psico_quick",
     label: "Psicoeducación",
