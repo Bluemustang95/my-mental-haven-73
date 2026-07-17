@@ -181,9 +181,9 @@ function ManualPushSection() {
     (async () => {
       const { data } = await supabase
         .from("notification_log")
-        .select("kind, title, body, sent_at, status, user_id")
+        .select("kind, title, body, sent_at, status, delivery_status, reason, user_id")
         .order("sent_at", { ascending: false })
-        .limit(20);
+        .limit(30);
       setRecent(data ?? []);
     })();
   }, [sending]);
@@ -265,15 +265,28 @@ function ManualPushSection() {
         <div className="mt-6">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Envíos recientes</div>
           <div className="space-y-1.5 max-h-72 overflow-y-auto">
-            {recent.map((r, i) => (
-              <div key={i} className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2 text-xs">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-resma-navy truncate">{r.title} <span className="text-slate-400 font-normal">· {r.kind}</span></div>
-                  <div className="text-slate-500 truncate">{r.body}</div>
+            {recent.map((r, i) => {
+              const st = (r.delivery_status ?? r.status) as string;
+              const badge =
+                st === "sent" ? "bg-emerald-100 text-emerald-700"
+                : st === "no_token" ? "bg-amber-100 text-amber-700"
+                : st === "failed" ? "bg-rose-100 text-rose-700"
+                : "bg-slate-100 text-slate-600";
+              return (
+                <div key={i} className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-resma-navy truncate">
+                      {r.title} <span className="text-slate-400 font-normal">· {r.reason ?? r.kind}</span>
+                    </div>
+                    <div className="text-slate-500 truncate">{r.body}</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 whitespace-nowrap">
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${badge}`}>{st ?? "—"}</span>
+                    <span className="text-[10px] text-slate-400">{new Date(r.sent_at).toLocaleString("es-AR")}</span>
+                  </div>
                 </div>
-                <div className="text-[10px] text-slate-400 whitespace-nowrap">{new Date(r.sent_at).toLocaleString("es-AR")}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
