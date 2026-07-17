@@ -15,6 +15,7 @@ import {
   SortableContext, useSortable, verticalListSortingStrategy, rectSortingStrategy, arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useHiddenCategories } from "@/hooks/useHiddenCategories";
 
 export type WidgetId =
   | "morning"
