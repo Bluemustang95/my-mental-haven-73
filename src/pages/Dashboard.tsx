@@ -364,7 +364,7 @@ export default function Dashboard() {
           />
         ) : (
           <div
-            className="relative mx-auto grid max-w-[300px] grid-cols-2 gap-3"
+            className="relative mx-auto grid max-w-[340px] grid-cols-3 gap-3"
             onContextMenu={(e) => {
               e.preventDefault();
               widgets.activateEdit();
@@ -374,8 +374,8 @@ export default function Dashboard() {
               <div key={w.id}>{renderWidget(w.id as WidgetId)}</div>
             ))}
             {gridWidgets.length === 0 && (
-              <div className="col-span-2 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
-                Aún no elegiste herramientas. Tocá <b>+</b> arriba para sumar hasta 4.
+              <div className="col-span-3 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
+                Aún no elegiste herramientas. Tocá <b>+</b> arriba para sumar hasta 3.
               </div>
             )}
           </div>
