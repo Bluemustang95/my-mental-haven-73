@@ -35,6 +35,17 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
   const [stackAfter, setStackAfter] = useState<string>("");
   const [newCatInput, setNewCatInput] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { suggestions } = useHabitSuggestions();
+
+  const applySuggestion = (s: typeof suggestions[number]) => {
+    setName(s.title);
+    if (s.description) setDescription(s.description);
+    setIcon(s.icon);
+    setIconTab(s.icon_type === "line" ? "line" : "emoji");
+    const idx = STREAK_COLORS.findIndex(c => c.color.toLowerCase() === s.color.toLowerCase());
+    if (idx >= 0) setColorIdx(idx);
+    if (DBT_CATEGORIES.some(c => c.key === s.category_key)) setCategoryKey(s.category_key);
+  };
 
   const allCategories = [
     ...DBT_CATEGORIES,
