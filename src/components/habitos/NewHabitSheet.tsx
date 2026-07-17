@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, ChevronDown, ChevronUp, Plus, Settings } from "lucide-react";
+import { X, ChevronDown, ChevronUp, Plus, Settings, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -7,6 +7,7 @@ import {
   TIME_SLOTS, FREQUENCY_OPTIONS, CADENCE_OPTIONS,
 } from "@/lib/habitsIcons";
 import type { HabitInput, HabitCategory, Habit } from "@/hooks/useHabits";
+import { useHabitSuggestions } from "@/hooks/useHabitSuggestions";
 
 interface Props {
   open: boolean;
