@@ -170,9 +170,6 @@ export function BentoGrid() {
     }
     return tiles.filter((t) => publishedSlugs.has(t.slug.toLowerCase()));
   }, [publishedSlugs]);
-    }
-    return tiles.filter((t) => publishedSlugs.has(t.slug.toLowerCase()));
-  }, [publishedSlugs]);
 
   const orderedTiles = useMemo(() => {
     if (!priority) return visibleTiles;
