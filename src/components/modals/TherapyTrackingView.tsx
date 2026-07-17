@@ -144,9 +144,7 @@ export function TherapyTrackingView({ phone, status, loading, onRefetch }: Props
 
       <ContactConfirmDialog
         open={confirmOpen}
-        phone={phone}
         onClose={() => setConfirmOpen(false)}
-        onConfirmed={onRefetch}
       />
     </div>
   );
