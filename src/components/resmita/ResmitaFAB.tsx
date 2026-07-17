@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useResmitaContext } from "@/hooks/useResmitaContext";
 import { useHideBottomNav, useUiChrome } from "@/hooks/useUiChrome";
+import { useHiddenCategories } from "@/hooks/useHiddenCategories";
 import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
 import { useResmitaSnapshot, buildSnapshotSummary } from "@/hooks/useResmitaSnapshot";
 import { logResmitaEvent, newSessionId } from "@/lib/resmitaTelemetry";
