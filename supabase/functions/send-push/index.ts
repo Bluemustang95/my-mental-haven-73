@@ -100,16 +100,18 @@ Deno.serve(async (req) => {
       targetUserIds = targetUserIds.filter((u) => allowed.has(u) || !knownUsers.has(u));
     }
 
-    // Fetch tokens
+    // Fetch valid tokens only
     const { data: tokens, error: tokensErr } = await admin
       .from("device_tokens")
       .select("token, user_id")
+      .eq("invalid", false)
       .in("user_id", targetUserIds);
     if (tokensErr) throw tokensErr;
 
     let sentOk = 0;
     let failed = 0;
-    const staleTokens: string[] = [];
+    const sentUserIds = new Set<string>();
+    const failedUserIds = new Set<string>();
 
     for (const t of tokens ?? []) {
       const r = await sendFcm({
@@ -118,26 +120,44 @@ Deno.serve(async (req) => {
         body: payload.body,
         data: { url: payload.url || "/", kind },
       });
-      if (r.ok) sentOk++;
-      else {
+      if (r.ok) {
+        sentOk++;
+        sentUserIds.add(t.user_id);
+      } else {
         failed++;
-        if (r.status === 404 || r.status === 400) staleTokens.push(t.token);
+        failedUserIds.add(t.user_id);
+        if (r.status === 404 || r.status === 400) {
+          await admin.from("device_tokens").update({
+            invalid: true, last_error: `fcm_${r.status}`, last_error_at: new Date().toISOString(),
+          }).eq("token", t.token);
+        } else {
+          await admin.from("device_tokens").update({
+            last_error: `fcm_${r.status}`, last_error_at: new Date().toISOString(),
+          }).eq("token", t.token);
+        }
       }
     }
 
-    if (staleTokens.length) {
-      await admin.from("device_tokens").delete().in("token", staleTokens);
-    }
-
-    // Log per user
-    const logRows = targetUserIds.map((uid) => ({
-      user_id: uid,
-      kind,
-      title: payload.title,
-      body: payload.body,
-      data: { url: payload.url || null },
-      status: "sent",
-    }));
+    // Log per user with delivery status.
+    const tokenUserIds = new Set((tokens ?? []).map((t: { user_id: string }) => t.user_id));
+    const today = new Date().toISOString().slice(0, 10);
+    const logRows = targetUserIds.map((uid) => {
+      const hasToken = tokenUserIds.has(uid);
+      const delivered = sentUserIds.has(uid);
+      const status = !hasToken ? "no_token" : delivered ? "sent" : "failed";
+      return {
+        user_id: uid,
+        kind,
+        reason: "admin",
+        target_key: `manual:${today}:${payload.title.slice(0, 40)}`,
+        log_date: today,
+        title: payload.title,
+        body: payload.body,
+        data: { url: payload.url || null },
+        status,
+        delivery_status: status,
+      };
+    });
     if (logRows.length) await admin.from("notification_log").insert(logRows);
 
     return new Response(JSON.stringify({ ok: true, targets: targetUserIds.length, tokens: tokens?.length ?? 0, sent: sentOk, failed }), {

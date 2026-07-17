@@ -21,6 +21,7 @@ type Prefs = {
   resmita_enabled: boolean;
   content_enabled: boolean;
   therapist_enabled: boolean;
+  paused_until: string | null;
 };
 
 const DEFAULTS: Prefs = {
@@ -37,6 +38,7 @@ const DEFAULTS: Prefs = {
   resmita_enabled: true,
   content_enabled: true,
   therapist_enabled: true,
+  paused_until: null,
 };
 
 type ItemDef = { key: keyof Prefs; label: string; desc: string; icon: any };
@@ -108,6 +110,18 @@ export default function NotificationPreferences() {
   };
 
   const master = prefs.push_enabled;
+  const pausedUntilMs = prefs.paused_until ? new Date(prefs.paused_until).getTime() : 0;
+  const isPaused = pausedUntilMs > Date.now();
+
+  const pauseFor = (hours: number) => {
+    const until = new Date(Date.now() + hours * 3600_000).toISOString();
+    persist({ paused_until: until });
+    toast.success(hours >= 24 ? `Pausado por ${Math.round(hours/24)} día${hours>=48?"s":""}` : "Pausado");
+  };
+  const resumeNow = () => {
+    persist({ paused_until: null });
+    toast.success("Notificaciones reactivadas");
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFCFB] pb-24">
@@ -129,6 +143,32 @@ export default function NotificationPreferences() {
             </div>
             <IOSToggle checked={master} onChange={toggleMaster} label="Notificaciones push" />
           </div>
+
+          {/* Pause controls */}
+          {master && (
+            <div className="mt-3 rounded-2xl bg-[#f7f8fa] px-3 py-3">
+              {isPaused ? (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-[12.5px] text-[#101927]/75">
+                    Pausadas hasta{" "}
+                    <span className="font-semibold">
+                      {new Date(prefs.paused_until!).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </p>
+                  <button onClick={resumeNow} className="rounded-full bg-[#101927] px-3 py-1.5 text-[11px] font-bold text-white">
+                    Reactivar ahora
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[12px] font-semibold text-[#101927]/70">Pausar todo por:</span>
+                  <button onClick={() => pauseFor(1)} className="rounded-full bg-white border border-[#101927]/10 px-3 py-1 text-[11px] font-bold text-[#101927]">1 h</button>
+                  <button onClick={() => pauseFor(24)} className="rounded-full bg-white border border-[#101927]/10 px-3 py-1 text-[11px] font-bold text-[#101927]">24 h</button>
+                  <button onClick={() => pauseFor(24*7)} className="rounded-full bg-white border border-[#101927]/10 px-3 py-1 text-[11px] font-bold text-[#101927]">7 días</button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={`mt-5 space-y-6 transition ${master ? "" : "pointer-events-none opacity-40"}`}>

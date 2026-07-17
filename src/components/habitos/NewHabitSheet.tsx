@@ -32,6 +32,8 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
   const [categoryKey, setCategoryKey] = useState("salud");
   const [cadence, setCadence] = useState("every_day");
   const [reminders, setReminders] = useState(false);
+  const [reminderTime, setReminderTime] = useState("09:00");
+  const [reminderDays, setReminderDays] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
   const [stackAfter, setStackAfter] = useState<string>("");
   const [newCatInput, setNewCatInput] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -71,6 +73,8 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
         frequency, frequency_count: frequencyCount,
         time_slot: timeSlot, cadence,
         reminders_enabled: reminders,
+        reminder_time: reminders ? reminderTime : null,
+        reminder_days: reminders ? reminderDays : [0, 1, 2, 3, 4, 5, 6],
         stack_after_habit_id: stackAfter || null,
       });
       toast.success("Hábito registrado ✓");
@@ -347,21 +351,61 @@ export function NewHabitSheet({ open, onClose, onCreate, customCategories, onAdd
                         </div>
                       )}
 
-                      {/* Reminders toggle */}
-                      <div className="flex items-center justify-between rounded-xl bg-[#f7f8fa] p-3">
-                        <div>
-                          <p className="text-[13px] font-bold text-[#101927]">Recordatorios diarios</p>
-                          <p className="text-[11px] text-[#101927]/55">Notificaciones suaves para no olvidarlo</p>
+                      {/* Reminders toggle + config */}
+                      <div className="rounded-xl bg-[#f7f8fa] p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-[13px] font-bold text-[#101927]">Recordatorios diarios</p>
+                            <p className="text-[11px] text-[#101927]/55">Notificaciones suaves para no olvidarlo</p>
+                          </div>
+                          <button
+                            onClick={toggleReminders}
+                            className={`relative h-7 w-12 rounded-full transition ${reminders ? "bg-[#7cc2c8]" : "bg-[#101927]/15"}`}
+                          >
+                            <span
+                              className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all"
+                              style={{ left: reminders ? "22px" : "2px" }}
+                            />
+                          </button>
                         </div>
-                        <button
-                          onClick={toggleReminders}
-                          className={`relative h-7 w-12 rounded-full transition ${reminders ? "bg-[#7cc2c8]" : "bg-[#101927]/15"}`}
-                        >
-                          <span
-                            className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all"
-                            style={{ left: reminders ? "22px" : "2px" }}
-                          />
-                        </button>
+
+                        {reminders && (
+                          <div className="mt-3 space-y-3 border-t border-[#101927]/8 pt-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-[12px] font-semibold text-[#101927]/70">Horario</p>
+                              <input
+                                type="time"
+                                value={reminderTime}
+                                onChange={(e) => setReminderTime(e.target.value)}
+                                className="rounded-xl border border-[#101927]/10 bg-white px-3 py-1.5 text-sm font-semibold text-[#101927]"
+                              />
+                            </div>
+                            <div>
+                              <p className="mb-1.5 text-[12px] font-semibold text-[#101927]/70">Días de la semana</p>
+                              <div className="flex gap-1.5">
+                                {[
+                                  { i: 1, l: "L" }, { i: 2, l: "M" }, { i: 3, l: "M" }, { i: 4, l: "J" },
+                                  { i: 5, l: "V" }, { i: 6, l: "S" }, { i: 0, l: "D" },
+                                ].map(({ i, l }) => {
+                                  const active = reminderDays.includes(i);
+                                  return (
+                                    <button
+                                      key={i}
+                                      onClick={() =>
+                                        setReminderDays(prev =>
+                                          prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i].sort()
+                                        )
+                                      }
+                                      className={`h-9 w-9 rounded-full text-[12px] font-bold transition ${
+                                        active ? "bg-[#101927] text-white" : "bg-white text-[#101927]/55 border border-[#101927]/10"
+                                      }`}
+                                    >{l}</button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.div>
