@@ -136,6 +136,39 @@ export function MonthCalendarSheet({
           <p className="mt-4 text-center text-[11px] text-muted-foreground">
             Tocá un día para ver toda tu actividad de esa fecha.
           </p>
+
+          <div className="mt-6">
+            <p className="mb-2 font-[Montserrat] text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Actividades de hoy
+            </p>
+            <div className="space-y-2">
+              {ACTIVITIES.map((a) => {
+                const done = completion[a.id];
+                const color = (ATOMIC_COLORS as any)[a.id] ?? "#7cc2c8";
+                return (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-md"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ background: color, opacity: done ? 1 : 0.3 }}
+                      />
+                      <span className={cn("text-[13px]", done ? "font-semibold text-slate-900" : "text-slate-500")}>
+                        {a.label}
+                      </span>
+                    </div>
+                    {done && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: color }}>
+                        <Check size={12} strokeWidth={3} color="#fff" />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
