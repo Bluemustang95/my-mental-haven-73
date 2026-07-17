@@ -24,27 +24,28 @@ export function TherapyMiniTracker({
 }: Props) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { data: status, refetch } = useTherapyStatus(phone, { enabled: true });
+  const { data: status } = useTherapyStatus(phone, { enabled: true });
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [optimisticConfirmed, setOptimisticConfirmed] = useState(false);
   const [assignedAt, setAssignedAt] = useState<Date | null>(null);
   const [storedProName, setStoredProName] = useState<string | null>(null);
   const [storedPro, setStoredPro] = useState<{ phone?: string | null; email?: string | null; license?: string | null } | null>(null);
 
-  const rawState: BridgeState = status?.state ?? initialState ?? "searching";
-  const state: BridgeState = optimisticConfirmed && rawState === "assigned" ? "coordinating" : rawState;
+  // La app es SOLO LECTORA del estado de la derivación. Nunca modifica RESMA+.
+  const state: BridgeState = status?.state ?? initialState ?? "searching";
   const pro = status?.professional;
   const proName = pro?.name ?? initialProName ?? storedProName ?? null;
   const proPhone = pro?.phone ?? storedPro?.phone ?? null;
   const specialty = (pro as any)?.specialty ?? null;
+  // "coordinating" (si el bridge lo emite) se trata visualmente igual que "assigned".
   const assigned = state === "assigned" || state === "coordinating" || state === "concretized";
-  const contactConfirmed = state === "coordinating" || state === "concretized";
   const concretized = state === "concretized";
   const failed = state === "failed";
 
-  // 24h gate para "¿Ya te contactó?"
+  // 24h gate para mostrar el diálogo informativo "¿Ya te contactó?"
   const hoursSinceAssigned = assignedAt ? (Date.now() - assignedAt.getTime()) / 3600000 : 0;
-  const canConfirmContact = state === "assigned" && !!assignedAt && hoursSinceAssigned >= 24;
+  const dismissKey = user ? `contactConfirmDialogDismissed:${user.id}` : null;
+  const alreadyDismissed = dismissKey ? typeof window !== "undefined" && !!window.localStorage.getItem(dismissKey) : false;
+  const canOfferContactCheck = (state === "assigned" || state === "coordinating") && !!assignedAt && hoursSinceAssigned >= 24 && !alreadyDismissed;
   const hoursRemaining = assignedAt ? Math.max(0, Math.ceil(24 - hoursSinceAssigned)) : 24;
 
   useEffect(() => {
@@ -65,7 +66,7 @@ export function TherapyMiniTracker({
             .from("patient_app_profiles")
             .update({
               bridge_assigned_at: nowIso,
-              bridge_last_state: rawState,
+              bridge_last_state: state,
               therapist_name: proName,
               therapist_phone: pro?.phone ?? null,
               therapist_email: pro?.email ?? null,
@@ -74,11 +75,11 @@ export function TherapyMiniTracker({
             .eq("user_id", user.id);
         }
       });
-  }, [assigned, user, proName, pro?.phone, pro?.email, pro?.license, rawState]);
+  }, [assigned, user, proName, pro?.phone, pro?.email, pro?.license, state]);
 
-  // Barra de progreso: 0 → assigned → coordinating → concretized
+  // Barra de progreso: 0 → assigned → concretized
   const progress1 = assigned ? 100 : 0;
-  const progress2 = concretized ? 100 : contactConfirmed ? 50 : 0;
+  const progress2 = concretized ? 100 : 0;
 
   return (
     <div className="space-y-2.5">
@@ -95,9 +96,9 @@ export function TherapyMiniTracker({
           <Bar progress={progress1} />
           <Sphere
             label="Asignado"
-            sub={contactConfirmed ? "Confirmado" : assigned ? "En espera" : "—"}
+            sub={concretized ? "Listo" : assigned ? "En espera" : "—"}
             Icon={UserCheck}
-            active={state === "assigned" || state === "coordinating"}
+            active={assigned && !concretized}
             done={concretized}
           />
           <Bar progress={progress2} />
@@ -123,7 +124,7 @@ export function TherapyMiniTracker({
       )}
 
       {/* Aviso azul: asignado, esperando 24 hs */}
-      {state === "assigned" && !canConfirmContact && (
+      {assigned && !concretized && !canOfferContactCheck && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -133,9 +134,9 @@ export function TherapyMiniTracker({
             <Clock size={15} className="mt-0.5 shrink-0 text-[#0369a1]" />
             <p className="text-[12px] leading-snug text-[#0c4a6e]">
               <span className="font-bold">{proName ?? "Tu profesional"}</span> aceptó tu caso y se contactará en las próximas <span className="font-bold">24 hs hábiles</span>.
-              {assignedAt && (
+              {assignedAt && !alreadyDismissed && (
                 <span className="mt-1 block text-[11px] font-medium text-[#0369a1]">
-                  Podrás confirmar el contacto en ~{hoursRemaining} h.
+                  Te preguntaremos si te contactó en ~{hoursRemaining} h.
                 </span>
               )}
             </p>
@@ -143,8 +144,8 @@ export function TherapyMiniTracker({
         </motion.div>
       )}
 
-      {/* Aviso amarillo: pasaron 24 hs */}
-      {canConfirmContact && (
+      {/* Aviso amarillo: pasaron 24 hs — pregunta informativa (no altera RESMA+) */}
+      {canOfferContactCheck && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -165,8 +166,8 @@ export function TherapyMiniTracker({
         </motion.div>
       )}
 
-      {/* Tarjeta del profesional (coordinating y concretized) */}
-      {contactConfirmed && (
+      {/* Tarjeta del profesional — solo en concretized */}
+      {concretized && (
         <ProfessionalCard
           proName={proName ?? "Tu profesional"}
           license={pro?.license ?? storedPro?.license ?? null}
@@ -192,11 +193,11 @@ export function TherapyMiniTracker({
 
       <ContactConfirmDialog
         open={confirmOpen}
-        phone={phone}
         onClose={() => setConfirmOpen(false)}
-        onConfirmed={() => {
-          setOptimisticConfirmed(true);
-          refetch();
+        onAcknowledged={() => {
+          if (dismissKey && typeof window !== "undefined") {
+            window.localStorage.setItem(dismissKey, "1");
+          }
         }}
       />
     </div>
