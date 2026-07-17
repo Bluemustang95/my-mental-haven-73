@@ -29,19 +29,21 @@ export type WidgetId =
   | "mindfulness_quick"
   | "pensamientos_quick"
   | "pack_quick"
-  | "psico_quick";
+  | "psico_quick"
+  | "inventarios_quick"
+  | "personalidad_quick"
+  | "diario_quick";
 
 // Prioridades: siempre visibles en el PriorityStack, no se gestionan como widgets.
 export const PRIORITY_IDS: WidgetId[] = ["morning", "recommended", "night"];
-// Herramientas: el usuario elige hasta 3 para su Home.
+// Herramientas: el usuario elige hasta 3 para su Home. Reflejan los 7 recursos.
 export const TOOL_IDS: WidgetId[] = [
-  "sleep_zone",
-  "pending",
-  "mini_habits",
-  "psy_news",
-  "mindfulness_quick",
+  "inventarios_quick",
   "pensamientos_quick",
-  "pack_quick",
+  "personalidad_quick",
+  "mini_habits",
+  "sleep_zone",
+  "diario_quick",
   "psico_quick",
 ];
 export const MAX_TOOLS = 3;
@@ -51,10 +53,14 @@ export const MAX_TOOLS = 3;
 export const WIDGET_TO_CATEGORY: Partial<Record<WidgetId, string>> = {
   sleep_zone: "sueno",
   mini_habits: "habitos",
-  mindfulness_quick: "mindfulness",
   pensamientos_quick: "mente-emocion",
-  pack_quick: "pack",
   psico_quick: "psicoeducacion",
+  inventarios_quick: "inventarios",
+  personalidad_quick: "personalidad",
+  diario_quick: "diario",
+  // Widgets legacy (mantener para no perder estado guardado):
+  mindfulness_quick: "mindfulness",
+  pack_quick: "pack",
   psy_news: "noticias",
 };
 
@@ -69,30 +75,35 @@ const DEFAULT_WIDGETS: WidgetState[] = [
   { id: "morning", enabled: true, hidden: false, size: "full" },
   { id: "recommended", enabled: true, hidden: false, size: "full" },
   { id: "night", enabled: true, hidden: false, size: "full" },
-  { id: "sleep_zone", enabled: true, hidden: false, size: "full" },
-  { id: "pending", enabled: true, hidden: false, size: "half" },
+  { id: "inventarios_quick", enabled: false, hidden: false, size: "half" },
+  { id: "pensamientos_quick", enabled: true, hidden: false, size: "half" },
+  { id: "personalidad_quick", enabled: false, hidden: false, size: "half" },
   { id: "mini_habits", enabled: true, hidden: false, size: "half" },
-  { id: "psy_news", enabled: false, hidden: false, size: "half" },
-  // Quick launchers — disabled by default; onboarding seeds enable them.
-  { id: "mindfulness_quick", enabled: false, hidden: false, size: "half" },
-  { id: "pensamientos_quick", enabled: false, hidden: false, size: "half" },
-  { id: "pack_quick", enabled: false, hidden: false, size: "half" },
+  { id: "sleep_zone", enabled: true, hidden: false, size: "half" },
+  { id: "diario_quick", enabled: false, hidden: false, size: "half" },
   { id: "psico_quick", enabled: false, hidden: false, size: "half" },
+  // Legacy widgets, off por default (no aparecen en TOOL_IDS pero se preservan)
+  { id: "pending", enabled: false, hidden: true, size: "half" },
+  { id: "psy_news", enabled: false, hidden: true, size: "half" },
+  { id: "mindfulness_quick", enabled: false, hidden: true, size: "half" },
+  { id: "pack_quick", enabled: false, hidden: true, size: "half" },
 ];
 
 const LABELS: Record<WidgetId, string> = {
   morning: "Sintonía de la mañana",
   recommended: "Práctica recomendada",
   night: "Balance nocturno",
-  sleep_zone: "Zona de descanso",
+  sleep_zone: "Sueño",
   pending: "Pendientes para vos",
-  mini_habits: "Mini Hábitos",
+  mini_habits: "Hábitos",
   psy_news: "Noticias de psicología",
   mindfulness_quick: "Mindfulness y respiración",
-  pensamientos_quick: "Gestión de pensamientos",
+  pensamientos_quick: "Pensamientos",
   pack_quick: "Pack de activación",
-  
-  psico_quick: "Biblioteca psicoeducativa",
+  psico_quick: "Psicoeducación",
+  inventarios_quick: "Test e inventarios",
+  personalidad_quick: "Personalidad",
+  diario_quick: "Diario",
 };
 
 
