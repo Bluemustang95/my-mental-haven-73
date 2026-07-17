@@ -1,53 +1,175 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Wind, Sparkles, Brain, ShieldCheck, ClipboardList, User, BookOpen, type LucideIcon } from "lucide-react";
+import {
+  Zap,
+  Wind,
+  Sparkles,
+  Brain,
+  ShieldCheck,
+  ClipboardList,
+  User,
+  BookOpen,
+  Moon,
+  GraduationCap,
+  type LucideIcon,
+} from "lucide-react";
 import { readLocalProfile } from "@/lib/clinicalAlgorithm";
 import { supabase } from "@/integrations/supabase/client";
+import { ATOMIC_COLORS } from "@/components/home/QuickToolWidget";
 
 type Tile = {
   slug: string;
   name: string;
   desc: string;
   Icon: LucideIcon;
-  tint: "primary" | "accent";
+  color: string;
   target: string;
 };
 
+// Fuente de verdad de los tiles del Bento. Los colores replican los de home
+// (`ATOMIC_COLORS`) para que un mismo recurso se lea igual en ambas pantallas.
 const tiles: Tile[] = [
-  { slug: "mindfulness", name: "Mindfulness", desc: "Respiración consciente.", Icon: Wind, tint: "primary", target: "/herramientas/mindfulness" },
-  { slug: "mente-emocion", name: "Mente & Emoción", desc: "CBT + Regulación DBT.", Icon: Brain, tint: "accent", target: "/herramientas/mente-emocion" },
-  { slug: "habitos", name: "Hábitos", desc: "Habit Tracker.", Icon: Zap, tint: "primary", target: "/diario-inteligente/gestion-pensamientos/habitos" },
-  { slug: "pack", name: "Pack Actividades", desc: "Programas guiados.", Icon: Sparkles, tint: "accent", target: "/herramientas/pack" },
-  { slug: "inventarios", name: "Tests e inventarios", desc: "BDI, BAI, PHQ-9, GAD-7 y más.", Icon: ClipboardList, tint: "primary", target: "/herramientas/inventarios" },
-  { slug: "personalidad", name: "Personalidad", desc: "Tu perfil Big Five.", Icon: User, tint: "accent", target: "/herramientas/personalidad" },
-  { slug: "noticias", name: "Resma Research", desc: "Investigación en psicología.", Icon: BookOpen, tint: "primary", target: "/herramientas/noticias" },
+  {
+    slug: "mente-emocion",
+    name: "Mente & Emoción",
+    desc: "CBT + Regulación DBT.",
+    Icon: Brain,
+    color: ATOMIC_COLORS.pensamientos_quick,
+    target: "/herramientas/mente-emocion",
+  },
+  {
+    slug: "inventarios",
+    name: "Tests e inventarios",
+    desc: "BDI, BAI, PHQ-9, GAD-7 y más.",
+    Icon: ClipboardList,
+    color: ATOMIC_COLORS.psico_quick,
+    target: "/herramientas/inventarios",
+  },
+  {
+    slug: "habitos",
+    name: "Hábitos",
+    desc: "Habit Tracker.",
+    Icon: Zap,
+    color: ATOMIC_COLORS.mini_habits,
+    target: "/diario-inteligente/gestion-pensamientos/habitos",
+  },
+  {
+    slug: "sueno",
+    name: "Sueño",
+    desc: "Higiene y descanso.",
+    Icon: Moon,
+    color: ATOMIC_COLORS.sleep_zone,
+    target: "/herramientas/sueno",
+  },
+  {
+    slug: "diario",
+    name: "Diario",
+    desc: "Escribí tu día.",
+    Icon: BookOpen,
+    color: ATOMIC_COLORS.diario_quick,
+    target: "/diario",
+  },
+  {
+    slug: "psicoeducacion",
+    name: "Psicoeducación",
+    desc: "Aprendé de tu mente.",
+    Icon: GraduationCap,
+    color: ATOMIC_COLORS.psico_quick,
+    target: "/psicoeducacion",
+  },
+  {
+    slug: "plan-seguridad",
+    name: "Plan de Seguridad",
+    desc: "Señales, apoyos y contactos.",
+    Icon: ShieldCheck,
+    color: "#e24b4a",
+    target: "/herramientas/plan-seguridad",
+  },
+  // Off por default (visibles solo si admin los publica de nuevo)
+  {
+    slug: "mindfulness",
+    name: "Mindfulness",
+    desc: "Respiración consciente.",
+    Icon: Wind,
+    color: ATOMIC_COLORS.mindfulness_quick,
+    target: "/herramientas/mindfulness",
+  },
+  {
+    slug: "pack",
+    name: "Pack Actividades",
+    desc: "Programas guiados.",
+    Icon: Sparkles,
+    color: ATOMIC_COLORS.pack_quick,
+    target: "/herramientas/pack",
+  },
+  {
+    slug: "personalidad",
+    name: "Personalidad",
+    desc: "Tu perfil Big Five.",
+    Icon: User,
+    color: "#9b72cf",
+    target: "/herramientas/personalidad",
+  },
+  {
+    slug: "noticias",
+    name: "Resma Research",
+    desc: "Investigación en psicología.",
+    Icon: BookOpen,
+    color: ATOMIC_COLORS.mindfulness_quick,
+    target: "/herramientas/noticias",
+  },
 ];
 
-const tintBg: Record<Tile["tint"], string> = {
-  primary: "bg-primary/15 text-primary",
-  accent: "bg-accent/25 text-foreground",
-};
+function hexToRgba(hex: string, alpha: number) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export function BentoGrid() {
   const navigate = useNavigate();
   const profile = useMemo(() => readLocalProfile(), []);
   const priority = profile?.priority;
-  const [hiddenCategorySlugs, setHiddenCategorySlugs] = useState<Set<string>>(new Set());
+  const [publishedSlugs, setPublishedSlugs] = useState<Set<string> | null>(null);
 
   useEffect(() => {
+    let alive = true;
     supabase
       .from("resource_categories")
       .select("slug, is_published")
-      .eq("is_published", false)
       .then(({ data }) => {
-        setHiddenCategorySlugs(new Set((data ?? []).map((r: any) => String(r.slug ?? "").toLowerCase()).filter(Boolean)));
+        if (!alive) return;
+        const published = new Set(
+          (data ?? [])
+            .filter((r: any) => r.is_published !== false)
+            .map((r: any) => String(r.slug ?? "").toLowerCase())
+            .filter(Boolean),
+        );
+        setPublishedSlugs(published);
       });
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  const visibleTiles = useMemo(
-    () => tiles.filter((t) => !hiddenCategorySlugs.has(t.slug.toLowerCase())),
-    [hiddenCategorySlugs],
-  );
+  const visibleTiles = useMemo(() => {
+    // Antes de que llegue la respuesta usamos el default (7 recursos ON).
+    if (!publishedSlugs) {
+      const DEFAULT_ON = new Set([
+        "mente-emocion",
+        "inventarios",
+        "habitos",
+        "sueno",
+        "diario",
+        "psicoeducacion",
+        "plan-seguridad",
+      ]);
+      return tiles.filter((t) => DEFAULT_ON.has(t.slug));
+    }
+    return tiles.filter((t) => publishedSlugs.has(t.slug.toLowerCase()));
+  }, [publishedSlugs]);
 
   const orderedTiles = useMemo(() => {
     if (!priority) return visibleTiles;
@@ -57,50 +179,53 @@ export function BentoGrid() {
   }, [priority, visibleTiles]);
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        {orderedTiles.map((t) => {
-          const isPriority = t.slug === priority;
-          return (
-            <button
-              key={t.slug}
-              onClick={() => navigate(t.target)}
-              className="pressable glass-premium relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl p-4 text-left transition"
-              style={isPriority ? { borderColor: "rgba(124,194,200,0.55)", boxShadow: "0 18px 36px -14px rgba(124,194,200,0.45), inset 0 1px 0 rgba(255,255,255,0.7)" } : undefined}
+    <div className="grid grid-cols-2 gap-3">
+      {orderedTiles.map((t) => {
+        const isPriority = t.slug === priority;
+        const halo = hexToRgba(t.color, 0.35);
+        const iconBg = hexToRgba(t.color, 0.15);
+        return (
+          <button
+            key={t.slug}
+            onClick={() => navigate(t.target)}
+            className="pressable glass-premium relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl p-4 text-left transition"
+            style={
+              isPriority
+                ? {
+                    borderColor: hexToRgba(t.color, 0.55),
+                    boxShadow: `0 18px 36px -14px ${hexToRgba(t.color, 0.45)}, inset 0 1px 0 rgba(255,255,255,0.7)`,
+                  }
+                : undefined
+            }
+          >
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-60 blur-2xl"
+              style={{ background: halo }}
+            />
+            {isPriority && (
+              <span
+                className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm"
+                style={{ background: t.color }}
+              >
+                <Sparkles size={9} /> Tu foco
+              </span>
+            )}
+            <div
+              className="relative flex h-11 w-11 items-center justify-center rounded-2xl"
+              style={{ background: iconBg, color: t.color }}
             >
-              <span aria-hidden className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full opacity-50 blur-2xl" style={{ background: t.tint === "primary" ? "rgba(124,194,200,0.35)" : "rgba(250,203,96,0.35)" }} />
-              {isPriority && (
-                <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[#7cc2c8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm">
-                  <Sparkles size={9} /> Tu foco
-                </span>
-              )}
-              <div className={`relative flex h-11 w-11 items-center justify-center rounded-2xl ${tintBg[t.tint]}`}>
-                <t.Icon size={20} strokeWidth={2} />
-              </div>
-              <div className="relative">
-                <h3 className="font-display text-base font-bold leading-tight text-foreground">{t.name}</h3>
-                <p className="mt-1 text-xs text-muted-foreground">{t.desc}</p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      <button
-        onClick={() => navigate("/herramientas/plan-seguridad")}
-        className="pressable relative flex w-full items-center justify-between overflow-hidden rounded-3xl border border-[#f5c8c1]/70 bg-[#fef2f0] p-4 text-left transition"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e24b4a]/15 text-[#c0392b]">
-            <ShieldCheck size={20} strokeWidth={2} />
-          </div>
-          <div>
-            <h3 className="font-display text-base font-bold leading-tight text-[#0f172a]">Plan de Seguridad</h3>
-            <p className="mt-0.5 text-xs text-[#64748b]">Tus señales, apoyos y contactos.</p>
-          </div>
-        </div>
-        <span className="text-[18px] text-[#c0392b]">→</span>
-      </button>
+              <t.Icon size={20} strokeWidth={2} />
+            </div>
+            <div className="relative">
+              <h3 className="font-display text-base font-bold leading-tight text-foreground">
+                {t.name}
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">{t.desc}</p>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
