@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { subDays, startOfDay } from "date-fns";
+import { getHiddenToolSlugs } from "@/lib/hiddenTools";
 
 export interface ResumenData {
   displayName: string;
@@ -38,7 +39,7 @@ export function useResumenData() {
         supabase.from("therapy_prep_notes").select("id, note, created_at").eq("user_id", user.id).gte("created_at", since).order("created_at", { ascending: false }),
         supabase.from("session_notes").select("id, note, session_date").eq("user_id", user.id).gte("created_at", since).order("session_date", { ascending: false }),
         supabase.from("test_results").select("id, test_type, score, severity, created_at").eq("user_id", user.id).gte("created_at", since).order("created_at", { ascending: false }),
-        supabase.from("exercise_sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("created_at", since),
+        supabase.from("exercise_sessions").select("exercise_type").eq("user_id", user.id).gte("created_at", since),
         supabase.from("habit_completions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("created_at", since),
         supabase.from("dbt_emotion_sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("created_at", since),
         supabase.from("thought_records").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("created_at", since),
@@ -48,13 +49,18 @@ export function useResumenData() {
       ]);
 
       const medLogs = medRes.data ?? [];
+      const hidden = await getHiddenToolSlugs();
+      const exerciseCount = ((exRes.data ?? []) as any[]).filter((r) => {
+        const t = String(r.exercise_type ?? "").toLowerCase();
+        return !t || !hidden.has(t);
+      }).length;
       setData({
         displayName: profileRes.data?.display_name || "Paciente",
         checkins: (checkinsRes.data ?? []).map(c => ({ id: c.id, date: c.checkin_date, mood: c.mood_score, note: c.note, emotions: c.emotions })),
         prepNotes: prepRes.data ?? [],
         sessionNotes: sessRes.data ?? [],
         tests: (testsRes.data ?? []).map(t => ({ id: t.id, type: t.test_type, score: t.score, severity: t.severity, created_at: t.created_at! })),
-        exerciseSessions: exRes.count ?? 0,
+        exerciseSessions: exerciseCount,
         habitCompletions: habitRes.count ?? 0,
         dbtSessions: dbtRes.count ?? 0,
         thoughtRecords: thoughtRes.count ?? 0,

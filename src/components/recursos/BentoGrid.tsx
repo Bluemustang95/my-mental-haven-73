@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Zap, Wind, Sparkles, Brain, ShieldCheck, ClipboardList, User, BookOpen, type LucideIcon } from "lucide-react";
 import { readLocalProfile } from "@/lib/clinicalAlgorithm";
+import { supabase } from "@/integrations/supabase/client";
 
 type Tile = {
   slug: string;
@@ -31,13 +32,29 @@ export function BentoGrid() {
   const navigate = useNavigate();
   const profile = useMemo(() => readLocalProfile(), []);
   const priority = profile?.priority;
+  const [hiddenCategorySlugs, setHiddenCategorySlugs] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    supabase
+      .from("resource_categories")
+      .select("slug, is_published")
+      .eq("is_published", false)
+      .then(({ data }) => {
+        setHiddenCategorySlugs(new Set((data ?? []).map((r: any) => String(r.slug ?? "").toLowerCase()).filter(Boolean)));
+      });
+  }, []);
+
+  const visibleTiles = useMemo(
+    () => tiles.filter((t) => !hiddenCategorySlugs.has(t.slug.toLowerCase())),
+    [hiddenCategorySlugs],
+  );
 
   const orderedTiles = useMemo(() => {
-    if (!priority) return tiles;
-    const idx = tiles.findIndex((t) => t.slug === priority);
-    if (idx < 0) return tiles;
-    return [tiles[idx], ...tiles.filter((_, i) => i !== idx)];
-  }, [priority]);
+    if (!priority) return visibleTiles;
+    const idx = visibleTiles.findIndex((t) => t.slug === priority);
+    if (idx < 0) return visibleTiles;
+    return [visibleTiles[idx], ...visibleTiles.filter((_, i) => i !== idx)];
+  }, [priority, visibleTiles]);
 
   return (
     <div className="space-y-3">

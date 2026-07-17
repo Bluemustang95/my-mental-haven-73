@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Search, UserCheck, Clock, BadgeCheck, Phone, UserPlus, FileText, NotebookPen, Pill } from "lucide-react";
+import { Check, Search, UserCheck, Clock, BadgeCheck, Phone, MessageCircle, FileText, NotebookPen, Pill, PartyPopper, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTherapyStatus, BridgeState } from "@/hooks/useTherapyStatus";
 import { ContactConfirmDialog } from "@/components/modals/ContactConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { NextSessionCard } from "./NextSessionCard";
+import { ShareSummaryCard } from "./ShareSummaryCard";
 
 interface Props {
   phone: string;
@@ -31,18 +32,21 @@ export function TherapyMiniTracker({
   const [storedPro, setStoredPro] = useState<{ phone?: string | null; email?: string | null; license?: string | null } | null>(null);
 
   const rawState: BridgeState = status?.state ?? initialState ?? "searching";
-  const state: BridgeState = optimisticConfirmed && (rawState === "assigned" || rawState === "coordinating") ? "coordinating" : rawState;
+  const state: BridgeState = optimisticConfirmed && rawState === "assigned" ? "coordinating" : rawState;
   const pro = status?.professional;
   const proName = pro?.name ?? initialProName ?? storedProName ?? null;
+  const proPhone = pro?.phone ?? storedPro?.phone ?? null;
+  const specialty = (pro as any)?.specialty ?? null;
   const assigned = state === "assigned" || state === "coordinating" || state === "concretized";
   const contactConfirmed = state === "coordinating" || state === "concretized";
+  const concretized = state === "concretized";
+  const failed = state === "failed";
 
-  // 24h gate: only allow "¿Ya te contactó?" once 24h passed since assignment
+  // 24h gate para "¿Ya te contactó?"
   const hoursSinceAssigned = assignedAt ? (Date.now() - assignedAt.getTime()) / 3600000 : 0;
-  const canConfirmContact = assigned && !contactConfirmed && !!assignedAt && hoursSinceAssigned >= 24;
+  const canConfirmContact = state === "assigned" && !!assignedAt && hoursSinceAssigned >= 24;
   const hoursRemaining = assignedAt ? Math.max(0, Math.ceil(24 - hoursSinceAssigned)) : 24;
 
-  // Load assigned_at + persisted pro info; persist first time we see assigned
   useEffect(() => {
     if (!user) return;
     supabase
@@ -72,52 +76,54 @@ export function TherapyMiniTracker({
       });
   }, [assigned, user, proName, pro?.phone, pro?.email, pro?.license, rawState]);
 
-  // Once contact is confirmed → render full professional card (with bento)
-  if (contactConfirmed && assigned) {
-    return (
-      <FullProfessionalCard
-        proName={proName ?? "Tu profesional"}
-        license={pro?.license ?? storedPro?.license ?? null}
-        phone={pro?.phone ?? storedPro?.phone ?? null}
-        email={pro?.email ?? storedPro?.email ?? null}
-        linkedLastName={linkedLastName}
-        onAdd={() => navigate("/configuracion")}
-      />
-    );
-  }
+  // Barra de progreso: 0 → assigned → coordinating → concretized
+  const progress1 = assigned ? 100 : 0;
+  const progress2 = concretized ? 100 : contactConfirmed ? 50 : 0;
 
   return (
     <div className="space-y-2.5">
-      {/* Mini tracker: 2 spheres */}
+      {/* Tracker: 3 esferas */}
       <div className="rounded-[20px] border border-white/70 bg-white/85 p-4 shadow-[0_8px_24px_-18px_rgba(16,25,39,0.22)] backdrop-blur-xl">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-1">
           <Sphere
             label="Buscando"
-            sub="Asignando"
+            sub={assigned ? "Listo" : "Asignando"}
             Icon={Search}
-            active={!assigned}
+            active={state === "searching"}
             done={assigned}
           />
-          <div className="relative h-px flex-1 bg-[#e2e8f0]">
-            <motion.div
-              className="absolute inset-y-0 left-0 bg-[#0e8a92]"
-              initial={{ width: 0 }}
-              animate={{ width: assigned ? "100%" : "0%" }}
-              transition={{ duration: 0.6 }}
-            />
-          </div>
+          <Bar progress={progress1} />
           <Sphere
             label="Asignado"
-            sub={assigned ? "Listo" : "En espera"}
+            sub={contactConfirmed ? "Confirmado" : assigned ? "En espera" : "—"}
             Icon={UserCheck}
-            active={assigned}
+            active={state === "assigned" || state === "coordinating"}
+            done={concretized}
+          />
+          <Bar progress={progress2} />
+          <Sphere
+            label="Concretado"
+            sub={concretized ? "¡Listo!" : "—"}
+            Icon={PartyPopper}
+            active={concretized}
             done={false}
           />
         </div>
       </div>
 
-      {/* Aviso: asignado, esperando 24 hs */}
-      {assigned && !canConfirmContact && (
+      {failed && (
+        <div className="rounded-[18px] border border-rose-200 bg-rose-50 p-3.5">
+          <div className="flex items-start gap-2">
+            <AlertCircle size={15} className="mt-0.5 shrink-0 text-rose-700" />
+            <p className="text-[12px] leading-snug text-rose-900">
+              Hubo un problema con tu derivación. Escribinos por WhatsApp para reactivarla.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Aviso azul: asignado, esperando 24 hs */}
+      {state === "assigned" && !canConfirmContact && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -137,7 +143,7 @@ export function TherapyMiniTracker({
         </motion.div>
       )}
 
-      {/* Aviso amarillo: ya pasaron 24 hs, pedimos confirmación */}
+      {/* Aviso amarillo: pasaron 24 hs */}
       {canConfirmContact && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
@@ -159,17 +165,30 @@ export function TherapyMiniTracker({
         </motion.div>
       )}
 
-      {/* Acceso a herramientas siempre disponible cuando el toggle está activo */}
+      {/* Tarjeta del profesional (coordinating y concretized) */}
+      {contactConfirmed && (
+        <ProfessionalCard
+          proName={proName ?? "Tu profesional"}
+          license={pro?.license ?? storedPro?.license ?? null}
+          phone={proPhone}
+          specialty={specialty}
+          linkedLastName={linkedLastName}
+          concretized={concretized}
+        />
+      )}
+
+      {/* Compartir Resumen Psico — solo en concretized */}
+      {concretized && (
+        <ShareSummaryCard proName={proName} proPhone={proPhone} />
+      )}
+
+      {/* Bento 2x2: Próxima sesión / Medicación / Notas de Sesión / Resumen Psico */}
       <div className="grid grid-cols-2 gap-2.5 pt-1">
         <NextSessionCard />
         <MiniBento icon={<Pill size={26} strokeWidth={2} className="text-[#7cc2c8]" />} bg="#101927" textColor="#ffffff" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
-        <MiniBento icon={<FileText size={26} strokeWidth={2} className="text-[#101927]" />} bg="#facb60" textColor="#101927" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
         <MiniBento icon={<NotebookPen size={26} strokeWidth={2} className="text-white" />} bg="#7c3aed" textColor="#ffffff" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
+        <MiniBento icon={<FileText size={26} strokeWidth={2} className="text-[#101927]" />} bg="#facb60" textColor="#101927" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
       </div>
-
-
-
-
 
       <ContactConfirmDialog
         open={confirmOpen}
@@ -184,11 +203,9 @@ export function TherapyMiniTracker({
   );
 }
 
-function Sphere({
-  label, sub, Icon, active, done,
-}: { label: string; sub: string; Icon: any; active: boolean; done: boolean }) {
+function Sphere({ label, sub, Icon, active, done }: { label: string; sub: string; Icon: any; active: boolean; done: boolean }) {
   return (
-    <div className="flex w-[88px] flex-col items-center gap-1">
+    <div className="flex w-[76px] flex-col items-center gap-1">
       <motion.div
         animate={active ? { scale: [1, 1.06, 1] } : {}}
         transition={{ duration: 2, repeat: active ? Infinity : 0 }}
@@ -202,62 +219,79 @@ function Sphere({
       >
         {done ? <Check size={18} strokeWidth={2.5} /> : <Icon size={18} />}
       </motion.div>
-      <p className={`font-display text-[11px] font-bold ${active || done ? "text-[#0f172a]" : "text-[#94a3b8]"}`}>
+      <p className={`font-display text-[10.5px] font-bold ${active || done ? "text-[#0f172a]" : "text-[#94a3b8]"}`}>
         {label}
       </p>
-      <p className="text-[9.5px] text-[#94a3b8]">{sub}</p>
+      <p className="text-[9px] text-[#94a3b8]">{sub}</p>
     </div>
   );
 }
 
-function FullProfessionalCard({
-  proName, license, phone, email, linkedLastName, onAdd,
+function Bar({ progress }: { progress: number }) {
+  return (
+    <div className="relative h-px flex-1 bg-[#e2e8f0]">
+      <motion.div
+        className="absolute inset-y-0 left-0 bg-[#0e8a92]"
+        initial={{ width: 0 }}
+        animate={{ width: `${progress}%` }}
+        transition={{ duration: 0.6 }}
+      />
+    </div>
+  );
+}
+
+function ProfessionalCard({
+  proName, license, phone, specialty, linkedLastName, concretized,
 }: {
-  proName: string; license: string | null; phone: string | null; email: string | null;
-  linkedLastName?: string | null; onAdd: () => void;
+  proName: string; license: string | null; phone: string | null; specialty: string | null;
+  linkedLastName?: string | null; concretized: boolean;
 }) {
   const initials = proName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-  const navigate = useNavigate();
   return (
-    <div className="space-y-2.5">
-      <div className="rounded-[20px] border border-white/70 bg-white/85 p-3.5 shadow-[0_8px_24px_-18px_rgba(16,25,39,0.22)] backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#101927] to-[#0e8a92] font-display text-[13px] font-bold text-white">
-            {initials}
-            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className="truncate font-display text-[13px] font-bold text-[#0f172a]">{proName}</p>
-              <BadgeCheck size={13} className="shrink-0 text-[#7cc2c8]" />
-            </div>
-            <p className="text-[10.5px] text-[#64748b]">
-              {license ? `M.N. ${license} · ` : ""}Especialista Clínico
-            </p>
-          </div>
-          {phone ? (
-            <a href={`tel:${phone}`} className="flex h-9 w-9 items-center justify-center rounded-full bg-[#101927] text-white">
-              <Phone size={14} />
-            </a>
-          ) : (
-            <button onClick={onAdd} className="flex h-9 w-9 items-center justify-center rounded-full bg-[#101927]/10 text-[#101927]/70">
-              <UserPlus size={14} />
-            </button>
-          )}
+    <div className="rounded-[20px] border border-white/70 bg-white/85 p-3.5 shadow-[0_8px_24px_-18px_rgba(16,25,39,0.22)] backdrop-blur-xl">
+      <div className="flex items-center gap-3">
+        <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#101927] to-[#0e8a92] font-display text-[13px] font-bold text-white">
+          {initials}
+          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
         </div>
-        {linkedLastName && (
-          <p className="mt-2.5 border-t border-[#e2e8f0] pt-2 text-[10.5px] text-[#64748b]">
-            Vinculado a paciente <span className="font-semibold text-[#0f172a]">{linkedLastName}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <p className="truncate font-display text-[13px] font-bold text-[#0f172a]">{proName}</p>
+            <BadgeCheck size={13} className="shrink-0 text-[#7cc2c8]" />
+          </div>
+          <p className="text-[10.5px] text-[#64748b]">
+            {license ? `M.N. ${license} · ` : ""}{specialty ?? "Especialista Clínico"}
           </p>
-        )}
+        </div>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${concretized ? "bg-emerald-100 text-emerald-700" : "bg-[#e0f2fe] text-[#0369a1]"}`}>
+          {concretized ? "Concretado" : "Contactado"}
+        </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5">
-        <NextSessionCard />
-        <MiniBento icon={<Pill size={26} strokeWidth={2} className="text-[#7cc2c8]" />} bg="#101927" textColor="#ffffff" title="Medicación" onClick={() => navigate("/mi-proceso/medicacion")} />
-        <MiniBento icon={<FileText size={26} strokeWidth={2} className="text-[#101927]" />} bg="#facb60" textColor="#101927" title="Resumen Psico" onClick={() => navigate("/mi-proceso/resumen")} />
-        <MiniBento icon={<NotebookPen size={26} strokeWidth={2} className="text-white" />} bg="#7c3aed" textColor="#ffffff" title="Notas de Sesión" onClick={() => navigate("/mi-proceso/terapia")} />
-      </div>
+      {phone && (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <a
+            href={`tel:${phone}`}
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-[#e2e8f0] bg-white py-2 text-[12px] font-semibold text-[#0f172a] transition active:scale-[0.98]"
+          >
+            <Phone size={13} /> Llamar
+          </a>
+          <a
+            href={`https://wa.me/${phone.replace(/[^\d]/g, "")}`}
+            target="_blank"
+            rel="noopener"
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-[#25D366] py-2 text-[12px] font-bold text-white transition active:scale-[0.98]"
+          >
+            <MessageCircle size={13} /> WhatsApp
+          </a>
+        </div>
+      )}
+
+      {linkedLastName && (
+        <p className="mt-2.5 border-t border-[#e2e8f0] pt-2 text-[10.5px] text-[#64748b]">
+          Vinculado a paciente <span className="font-semibold text-[#0f172a]">{linkedLastName}</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -275,4 +309,3 @@ function MiniBento({ icon, bg, textColor, title, onClick }: any) {
     </motion.button>
   );
 }
-
