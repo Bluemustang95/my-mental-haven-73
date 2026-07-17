@@ -1,58 +1,112 @@
-# Corrección crítica: la app NO modifica RESMA+
 
-**Principio inviolable:** Ninguna acción del paciente en la app debe enviar señales, mutaciones ni cambios de estado a RESMA+. La app es **solo lectora** del estado de la derivación. RESMA+ es la única fuente de verdad.
+## Plan app-side (RESMA+ bridge ya arreglado)
 
-## Cambios al plan del Bloque 3 (Tracker de 3 esferas)
+Todo esto es 100% read-only respecto de RESMA+. La app sigue haciendo solo `action: "status"`.
 
-### 1. Eliminar la acción `confirm-contact` del bridge desde la app
+---
 
-- **NO** llamar a `bridge-proxy` con `action: "confirm-contact"`.
-- **NO** setear `coordination_started_at` desde la app.
-- **NO** persistir la respuesta del paciente en `patient_app_profiles` ni en ninguna tabla que sincronice con RESMA+.
-- El estado `coordinating` deja de existir como transición disparable desde la app. Si RESMA+ lo emite por su cuenta (porque el profesional marca contacto en su panel), la app lo refleja pasivamente. Si no, la esfera 2 se queda en "Asignado" hasta que RESMA+ pase a `concretized`.
+### A) Consumir el nuevo contrato del profesional
 
-### 2. Rediseño de `ContactConfirmDialog` — puramente informativo
+**`src/hooks/useTherapyStatus.ts`:**
+- Actualizar el tipo `Professional`:
+  ```ts
+  type Professional = {
+    full_name: string | null;
+    license: string | null;
+    specialty: string | null;
+    phone: string | null;
+    email: string | null;
+  } | null;
+  ```
+- Al recibir `professional` en el response, persistir en `patient_app_profiles`:
+  `therapist_name = full_name`, `therapist_phone = phone`, `therapist_email = email`, `therapist_license = license`. Así la card se pinta en frío en el próximo mount sin esperar al bridge.
+- Consumir tanto en `state === "assigned"` como en `"concretized"`.
 
-El diálogo aparece a las 24 h de `bridge_assigned_at` (lógica local, sin tocar backend). Presenta dos botones que **solo muestran feedback en la UI**, sin efectos colaterales:
+**`src/components/proceso/ProfessionalCard.tsx` (y `TherapyMiniTracker.tsx`):**
+- Leer `full_name` con fallback a `therapist_name` persistido.
+- Si `license` o `specialty` vienen null, ocultar esas líneas (no mostrar "Matrícula: —").
+- Botones "Llamar" y "WhatsApp" solo si `phone` está presente.
+- Botón "Email" solo si `email` está presente.
+- Si `professional` viene null estando en `assigned/concretized`: mostrar solo "Profesional asignado" sin botones (fallback defensivo).
 
-**Botón "Sí, ya me contactó"**
-- Muestra mensaje: *"¡Bien! Ya podés coordinar una sesión con el profesional."*
-- Cierra el diálogo.
-- Guarda en `localStorage` (no en la base) un flag `contactConfirmDialogDismissed:<userId>` para no volver a mostrarlo. Es UI-only, no viaja a RESMA+.
+---
 
-**Botón "Todavía no"**
-- Muestra mensaje: *"Podés comunicarte con nosotros para que te ayudemos."*
-- Abre `https://wa.me/<numero-resma>?text=<mensaje-pre-armado>` en nueva pestaña (número de soporte de RESMA+ — usar el mismo que ya tenemos configurado en la app para soporte; si no existe, dejarlo como constante `RESMA_SUPPORT_WHATSAPP` en `src/lib/constants.ts` con placeholder para que lo confirmes).
-- Cierra el diálogo. También marca dismissed en `localStorage`.
+### B) Mover CTA "Enviar resumen" a `/mi-proceso/resumen`
 
-Ninguna de las dos respuestas envía requests al backend ni al bridge.
+- **Quitar** `ShareSummaryCard` de la vista principal de `/mi-proceso`.
+- En `MiProcesoResumen.tsx` (la pantalla del screenshot con "Enviar al profesional" / "Descargar copia"): el botón "Enviar al profesional" abre el flow WhatsApp pre-armado hacia el `therapist_phone`.
+- **Gating** del botón:
+  - `bridge_last_state === "concretized"`, Y
+  - `next_session_at` está marcada, Y
+  - `now` está dentro de `[next_session_at - 24h, next_session_at]`.
+- Estados del botón:
+  - Habilitado: color primario normal.
+  - Deshabilitado por falta de `next_session_at`: gris + texto "Marcá tu próxima sesión para habilitar el envío 24hs antes."
+  - Deshabilitado por estar fuera de ventana: gris + texto "El envío se habilita 24hs antes de tu próxima sesión ({fecha})."
 
-### 3. Tracker visual — esfera 2 sin badge de "contacto confirmado"
+---
 
-Como la app no sabe (ni debe saber) si el paciente coordinó, la esfera 2 muestra solo **"Asignado"** con los datos del profesional. Se retira el subestado "contacto confirmado ✓" del diseño. La esfera 2 se mantiene activa hasta que RESMA+ emita `concretized`.
+### C) Próxima sesión semanal + notificación 24hs antes
 
-### 4. Limpieza de código
+**Migración `patient_app_profiles`:**
+```sql
+ALTER TABLE public.patient_app_profiles
+  ADD COLUMN IF NOT EXISTS next_session_at timestamptz,
+  ADD COLUMN IF NOT EXISTS session_weekly_recurring boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS session_day_of_week smallint,
+  ADD COLUMN IF NOT EXISTS session_time time,
+  ADD COLUMN IF NOT EXISTS last_session_notification_at timestamptz;
+```
+Sin nuevas policies (la tabla ya tiene RLS por `user_id`). Grants ya existen.
 
-- Quitar cualquier referencia a `confirm-contact` en `useTherapyStatus` / `bridge-proxy` client-side.
-- Quitar el mapeo del estado `coordinating` como algo que la app pueda inducir. Si el bridge lo devuelve, se trata igual que `assigned` visualmente (esfera 2 activa, esfera 3 pendiente).
+**Auto-avance semanal:**
+- Función RPC `public.roll_next_session_forward()` (SECURITY DEFINER) que, para el `auth.uid()` actual, si `session_weekly_recurring = true` y `next_session_at < now()`, suma 7 días hasta quedar en el futuro y resetea `last_session_notification_at = null`.
+- Se llama al montar `/mi-proceso`.
 
-## Lo que se mantiene del plan original
+**UI `NextSessionCard`:**
+- Selector día de la semana + hora.
+- Toggle "Repetir cada semana" (default ON).
+- Muestra: "🔁 Próxima: jueves 15/07 · 15:00 hs".
+- Botón "Editar" / "Cancelar recurrencia".
+- Toast al guardar: "Sesión guardada. Te avisamos 24hs antes."
 
-- Bloque 1 (toggles admin de recursos): sin cambios.
-- Bloque 2 (reordenar bento 2×2 de Mi Proceso): sin cambios.
-- Bloque 3, resto:
-  - Tarjeta del profesional (nombre, matrícula, teléfono) visible cuando el estado es `concretized`.
-  - Botones "Llamar" y "WhatsApp" al profesional.
-  - `ShareSummaryCard` con CTA para enviar link al Resumen Psico por WhatsApp al profesional.
+**Notificación FCM 24hs antes:**
+- Edge function nueva `notify-upcoming-session`:
+  - Query: perfiles con `next_session_at BETWEEN now() + interval '23h45m' AND now() + interval '24h15m'` Y `(last_session_notification_at IS NULL OR last_session_notification_at < next_session_at - interval '24h')`.
+  - Reusa el sender FCM existente (mismo path que otras notificaciones).
+  - Título: "Sesión mañana con {therapist_name}"
+  - Body: "A las {HH:mm}. ¿Preparamos tu resumen para el psico?"
+  - Deep link: `/mi-proceso/resumen`.
+  - Marca `last_session_notification_at = now()`.
+- Cron `pg_cron` cada 15 min invoca la function vía `net.http_post` (patrón ya usado por `cron-push-dispatcher`).
 
-## Archivos afectados por esta corrección
+---
 
-- `src/components/proceso/ContactConfirmDialog.tsx` — reescribir sin llamadas al bridge, solo mensajes + link WhatsApp de soporte.
-- `src/components/proceso/TherapyMiniTracker.tsx` — quitar el badge "contacto confirmado" de la esfera 2.
-- `src/hooks/useTherapyStatus.ts` (o donde esté la llamada) — remover la acción `confirm-contact`.
-- `src/lib/constants.ts` — agregar `RESMA_SUPPORT_WHATSAPP` si no existe.
+### Archivos afectados
 
-## Fuera de alcance
+**Frontend:**
+- `src/hooks/useTherapyStatus.ts` — tipos + persist profesional
+- `src/components/proceso/ProfessionalCard.tsx` — nuevo contrato + campos condicionales
+- `src/components/proceso/TherapyMiniTracker.tsx` — quitar ShareSummaryCard
+- `src/components/proceso/NextSessionCard.tsx` — nuevo/refactor
+- `src/pages/MiProcesoResumen.tsx` (o equivalente) — mover CTA WhatsApp + gating
+- `src/components/proceso/ShareSummaryCard.tsx` — mover/refactor a Resumen
 
-- Cualquier escritura desde la app hacia RESMA+ sobre el estado de la derivación.
-- Persistir la respuesta del paciente en la base de datos compartida.
+**Backend (Lovable Cloud):**
+- Migración: 5 columnas en `patient_app_profiles` + RPC `roll_next_session_forward`
+- Edge function nueva: `notify-upcoming-session`
+- Cron `pg_cron` cada 15 min
+
+**Sin cambios:**
+- `bridge-proxy` (ya lo arregló la otra IA)
+- `ContactConfirmDialog` (queda UI-only)
+- Ninguna llamada nueva app → RESMA+
+
+---
+
+### Fuera de scope
+- Cargar `license` / `specialty` de Sabrina en `profiles` (upstream, del lado RESMA+).
+- Poblar `first_session_date` (upstream).
+- Recurrencias distintas a semanal.
+
+¿Le doy verde y avanzo a implementar?

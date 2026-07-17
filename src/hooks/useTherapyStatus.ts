@@ -9,11 +9,13 @@ export type BridgeState =
   | "failed";
 
 export interface Professional {
+  full_name?: string | null;
+  /** legacy alias, still emitted by bridge for compat */
   name?: string | null;
-  phone?: string | null;
-  email?: string | null;
   license?: string | null;
   specialty?: string | null;
+  phone?: string | null;
+  email?: string | null;
 }
 
 export interface TherapyStatus {
@@ -38,6 +40,7 @@ export function useTherapyStatus(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
+  const lastPersistedRef = useRef<string | null>(null);
 
   const fetchStatus = useCallback(async () => {
     if (!phone) return;
@@ -48,15 +51,43 @@ export function useTherapyStatus(
       });
       if (error) throw error;
       const payload = (res ?? {}) as any;
-      setData({
+      const pro: Professional | null = payload.professional ?? null;
+      const status: TherapyStatus = {
         found: !!payload.found,
         state: payload.state,
-        professional: payload.professional ?? null,
+        professional: pro,
         assignedAt: payload.assigned_at ?? null,
         contactDeadline: payload.contact_deadline ?? null,
         raw: payload,
-      });
+      };
+      setData(status);
       setError(null);
+
+      // Persist professional data + state into patient_app_profiles for cold-render.
+      // ONLY read from bridge; never mutate RESMA+ from here.
+      if (pro && (status.state === "assigned" || status.state === "coordinating" || status.state === "concretized")) {
+        const fullName = pro.full_name ?? pro.name ?? null;
+        const snapshot = JSON.stringify({
+          fullName, phone: pro.phone ?? null, email: pro.email ?? null,
+          license: pro.license ?? null, state: status.state,
+        });
+        if (snapshot !== lastPersistedRef.current) {
+          lastPersistedRef.current = snapshot;
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase
+              .from("patient_app_profiles")
+              .update({
+                bridge_last_state: status.state,
+                therapist_name: fullName,
+                therapist_phone: pro.phone ?? null,
+                therapist_email: pro.email ?? null,
+                therapist_license: pro.license ?? null,
+              })
+              .eq("user_id", user.id);
+          }
+        }
+      }
     } catch (e: any) {
       setError(e?.message ?? "bridge_error");
     } finally {

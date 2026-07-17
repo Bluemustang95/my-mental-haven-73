@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MapPin, Video, X } from "lucide-react";
+import { MapPin, Video, X, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { useHideBottomNav } from "@/hooks/useUiChrome";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export type SessionModality = "presencial" | "virtual";
 
 export interface NextSessionData {
-  date: string; // YYYY-MM-DD
-  time: string; // HH:MM
+  date: string; // YYYY-MM-DD (local)
+  time: string; // HH:MM (24h)
   modality: SessionModality;
   location: string;
+  weeklyRecurring: boolean;
 }
 
 interface Props {
@@ -20,10 +23,16 @@ interface Props {
   onSave: (data: NextSessionData) => void;
 }
 
-const empty: NextSessionData = { date: "", time: "", modality: "presencial", location: "" };
+const empty: NextSessionData = {
+  date: "", time: "", modality: "presencial", location: "", weeklyRecurring: true,
+};
+
+const LOCAL_META_KEY = "resma:next-session:meta"; // keeps modality + location (not stored in DB yet)
 
 export function NextSessionSheet({ open, initial, onClose, onSave }: Props) {
+  const { user } = useAuth();
   const [form, setForm] = useState<NextSessionData>(initial ?? empty);
+  const [saving, setSaving] = useState(false);
   useHideBottomNav(open);
 
   useEffect(() => {
@@ -32,13 +41,58 @@ export function NextSessionSheet({ open, initial, onClose, onSave }: Props) {
 
   const setModality = (m: SessionModality) => setForm((f) => ({ ...f, modality: m }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.date || !form.time) {
       toast.error("Completá fecha y hora");
       return;
     }
+    if (!user) {
+      toast.error("Sesión no iniciada");
+      return;
+    }
+    setSaving(true);
+
+    // Build UTC timestamp from local date+time
+    const localIso = `${form.date}T${form.time}:00`;
+    const dt = new Date(localIso);
+    if (isNaN(dt.getTime())) {
+      toast.error("Fecha u hora inválida");
+      setSaving(false);
+      return;
+    }
+    const nextIso = dt.toISOString();
+    const dow = dt.getDay(); // 0-6 local
+
+    const { error } = await supabase
+      .from("patient_app_profiles")
+      .update({
+        next_session_at: nextIso,
+        session_weekly_recurring: form.weeklyRecurring,
+        session_day_of_week: dow,
+        session_time: form.time + ":00",
+        last_session_notification_at: null,
+      })
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("save next_session_at:", error);
+      toast.error("No se pudo guardar la sesión");
+      setSaving(false);
+      return;
+    }
+
+    // Local-only metadata (modality + location) — not persisted upstream.
+    try {
+      localStorage.setItem(LOCAL_META_KEY, JSON.stringify({
+        modality: form.modality, location: form.location,
+      }));
+    } catch { /* noop */ }
+
     onSave(form);
-    toast.success("✓ Sesión actualizada correctamente", { duration: 3000, position: "top-center" });
+    toast.success("✓ Sesión guardada. Te avisamos 24 hs antes.", {
+      duration: 3200, position: "top-center",
+    });
+    setSaving(false);
     onClose();
   };
 
@@ -73,7 +127,7 @@ export function NextSessionSheet({ open, initial, onClose, onSave }: Props) {
             <h2 className="font-display text-[18px] font-bold text-slate-900">Próxima sesión</h2>
             <p className="mt-0.5 text-[12px] text-slate-500">Configurá los datos de tu próximo encuentro.</p>
 
-            {/* Segmented control */}
+            {/* Modality segmented */}
             <div className="mt-5 flex gap-1.5 rounded-[16px] bg-slate-50 p-1.5">
               {(["presencial", "virtual"] as const).map((m) => {
                 const active = form.modality === m;
@@ -93,7 +147,6 @@ export function NextSessionSheet({ open, initial, onClose, onSave }: Props) {
               })}
             </div>
 
-            {/* Date + time */}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-1.5">
                 <span className="pl-1 text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">Día</span>
@@ -115,7 +168,6 @@ export function NextSessionSheet({ open, initial, onClose, onSave }: Props) {
               </label>
             </div>
 
-            {/* Conditional location */}
             <label className="mt-4 flex flex-col gap-1.5">
               <span className="pl-1 text-[10.5px] font-semibold uppercase tracking-wide text-slate-500">
                 {form.modality === "presencial" ? "Dirección del consultorio" : "Link de la videollamada"}
@@ -133,15 +185,54 @@ export function NextSessionSheet({ open, initial, onClose, onSave }: Props) {
               />
             </label>
 
+            {/* Weekly recurring toggle */}
+            <button
+              type="button"
+              onClick={() => setForm((f) => ({ ...f, weeklyRecurring: !f.weeklyRecurring }))}
+              className={`mt-4 flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition ${
+                form.weeklyRecurring
+                  ? "border-[#7cc2c8]/40 bg-[#7cc2c8]/10"
+                  : "border-slate-100 bg-slate-50"
+              }`}
+            >
+              <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${form.weeklyRecurring ? "bg-[#7cc2c8]/25 text-[#0e7c8a]" : "bg-white text-slate-400"}`}>
+                <Repeat size={16} />
+              </span>
+              <div className="flex-1">
+                <p className="text-[13px] font-semibold text-slate-800">Repetir cada semana</p>
+                <p className="text-[11px] text-slate-500">
+                  Se agenda automáticamente cada 7 días.
+                </p>
+              </div>
+              <span className={`h-5 w-9 rounded-full transition ${form.weeklyRecurring ? "bg-[#7cc2c8]" : "bg-slate-200"} relative`}>
+                <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition ${form.weeklyRecurring ? "left-4" : "left-0.5"}`} />
+              </span>
+            </button>
+
             <button
               onClick={handleSave}
-              className="mt-6 w-full rounded-2xl bg-[#101927] py-4 font-display text-[14px] font-bold text-white transition active:scale-[0.98]"
+              disabled={saving}
+              className="mt-6 w-full rounded-2xl bg-[#101927] py-4 font-display text-[14px] font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
             >
-              Guardar Cambios
+              {saving ? "Guardando…" : "Guardar Cambios"}
             </button>
           </motion.div>
         </>
       )}
     </AnimatePresence>
   );
+}
+
+export function loadLocalMeta(): { modality: SessionModality; location: string } {
+  try {
+    const raw = localStorage.getItem(LOCAL_META_KEY);
+    if (!raw) return { modality: "presencial", location: "" };
+    const parsed = JSON.parse(raw);
+    return {
+      modality: parsed.modality === "virtual" ? "virtual" : "presencial",
+      location: typeof parsed.location === "string" ? parsed.location : "",
+    };
+  } catch {
+    return { modality: "presencial", location: "" };
+  }
 }
