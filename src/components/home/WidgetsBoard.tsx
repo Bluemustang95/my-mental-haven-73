@@ -44,7 +44,7 @@ export const TOOL_IDS: WidgetId[] = [
   "pack_quick",
   "psico_quick",
 ];
-export const MAX_TOOLS = 4;
+export const MAX_TOOLS = 3;
 
 // Mapea cada widget a la categoría de recurso que lo respalda. Cuando el admin
 // oculta una categoría, los widgets del mapa desaparecen de home y del picker.
