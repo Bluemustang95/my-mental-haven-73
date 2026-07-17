@@ -1232,6 +1232,48 @@ export type Database = {
           },
         ]
       }
+      habit_suggestions: {
+        Row: {
+          active: boolean
+          category_key: string
+          color: string
+          created_at: string
+          description: string | null
+          icon: string
+          icon_type: string
+          id: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category_key: string
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          icon_type?: string
+          id?: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category_key?: string
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          icon_type?: string
+          id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       habits: {
         Row: {
           archived_at: string | null
