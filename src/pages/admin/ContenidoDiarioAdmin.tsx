@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Pencil, Check, X, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X, ExternalLink, Star, StarOff, Rss } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AdminCard, AdminButton, AdminPageHeader, AdminTabs } from "@/components/admin/ui/AdminPrimitives";
 
 type Quote = { id: string; text: string; author: string | null; active: boolean; sort_order: number };
-type News = { id: string; title: string; summary: string | null; url: string | null; image_url: string | null; active: boolean; published_at: string };
+type News = {
+  id: string; title: string; summary: string | null; url: string | null; image_url: string | null;
+  active: boolean; published_at: string;
+  source: string | null; author: string | null; tags: string[] | null; featured: boolean; sort_order: number;
+  auto_generated?: boolean;
+};
+type ResearchConfig = {
+  id: number; enabled: boolean; queries: string[]; language: string; country: string;
+  max_per_run: number; auto_publish: boolean;
+  last_run_at: string | null; last_run_summary: Record<string, unknown> | null;
+};
 
 export default function ContenidoDiarioAdmin() {
   const [tab, setTab] = useState<"quotes" | "news">("quotes");
