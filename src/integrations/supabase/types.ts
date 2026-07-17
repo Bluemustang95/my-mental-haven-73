@@ -2205,33 +2205,54 @@ export type Database = {
       psychology_news: {
         Row: {
           active: boolean
+          author: string | null
+          auto_generated: boolean
           created_at: string
+          featured: boolean
           id: string
           image_url: string | null
           published_at: string
+          sort_order: number
+          source: string | null
+          source_url_hash: string | null
           summary: string | null
+          tags: string[]
           title: string
           updated_at: string
           url: string | null
         }
         Insert: {
           active?: boolean
+          author?: string | null
+          auto_generated?: boolean
           created_at?: string
+          featured?: boolean
           id?: string
           image_url?: string | null
           published_at?: string
+          sort_order?: number
+          source?: string | null
+          source_url_hash?: string | null
           summary?: string | null
+          tags?: string[]
           title: string
           updated_at?: string
           url?: string | null
         }
         Update: {
           active?: boolean
+          author?: string | null
+          auto_generated?: boolean
           created_at?: string
+          featured?: boolean
           id?: string
           image_url?: string | null
           published_at?: string
+          sort_order?: number
+          source?: string | null
+          source_url_hash?: string | null
           summary?: string | null
+          tags?: string[]
           title?: string
           updated_at?: string
           url?: string | null
@@ -2265,6 +2286,45 @@ export type Database = {
           user_id?: string
           what_happened?: string | null
           what_i_wished?: string | null
+        }
+        Relationships: []
+      }
+      research_feed_config: {
+        Row: {
+          auto_publish: boolean
+          country: string
+          enabled: boolean
+          id: number
+          language: string
+          last_run_at: string | null
+          last_run_summary: Json | null
+          max_per_run: number
+          queries: string[]
+          updated_at: string
+        }
+        Insert: {
+          auto_publish?: boolean
+          country?: string
+          enabled?: boolean
+          id?: number
+          language?: string
+          last_run_at?: string | null
+          last_run_summary?: Json | null
+          max_per_run?: number
+          queries?: string[]
+          updated_at?: string
+        }
+        Update: {
+          auto_publish?: boolean
+          country?: string
+          enabled?: boolean
+          id?: number
+          language?: string
+          last_run_at?: string | null
+          last_run_summary?: Json | null
+          max_per_run?: number
+          queries?: string[]
+          updated_at?: string
         }
         Relationships: []
       }
