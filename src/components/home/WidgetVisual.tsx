@@ -131,6 +131,36 @@ export const WIDGET_IDENTITY: Record<WidgetId, WidgetIdentity> = {
     border: "rgba(14,59,107,0.26)",
     glyph: "quotes",
   },
+  inventarios_quick: {
+    id: "inventarios_quick",
+    label: "Test e inventarios",
+    tagline: "Evaluación",
+    from: "#d9e6f5",
+    to: "#3b6fa0",
+    ink: "#0e2c4d",
+    border: "rgba(14,44,77,0.28)",
+    glyph: "notepad",
+  },
+  personalidad_quick: {
+    id: "personalidad_quick",
+    label: "Personalidad",
+    tagline: "Big Five",
+    from: "#ecdcff",
+    to: "#9b72cf",
+    ink: "#3b2270",
+    border: "rgba(59,34,112,0.28)",
+    glyph: "rings",
+  },
+  diario_quick: {
+    id: "diario_quick",
+    label: "Diario",
+    tagline: "Escritura íntima",
+    from: "#ffe4c2",
+    to: "#c98a5e",
+    ink: "#5a2f10",
+    border: "rgba(90,47,16,0.28)",
+    glyph: "notepad",
+  },
 };
 
 export function widgetGradient(id: WidgetId) {

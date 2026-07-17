@@ -39,6 +39,9 @@ import {
   PackQuickWidget,
   MindfulnessQuickWidget,
   SleepZoneWidget,
+  InventariosQuickWidget,
+  PersonalidadQuickWidget,
+  DiarioQuickWidget,
 } from "@/components/home/QuickToolWidget";
 import { TOOL_META, type ToolModule } from "@/lib/onboardingAlgorithm";
 
@@ -209,6 +212,12 @@ export default function Dashboard() {
         return <PackQuickWidget />;
       case "psico_quick":
         return <PsicoQuickWidget />;
+      case "inventarios_quick":
+        return <InventariosQuickWidget />;
+      case "personalidad_quick":
+        return <PersonalidadQuickWidget />;
+      case "diario_quick":
+        return <DiarioQuickWidget />;
       default:
         return null;
     }
