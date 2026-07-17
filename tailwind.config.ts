@@ -178,6 +178,9 @@ export default {
         "breath-vagal": "breath-vagal 6s ease-in-out infinite",
         "float-weightless": "float-weightless 5s ease-in-out infinite",
         "cascade-up": "cascade-up 1.2s cubic-bezier(.22,1,.36,1) both",
+        "float-slow": "float-slow 4s ease-in-out infinite",
+        "twinkle": "twinkle 2s ease-in-out infinite",
+
       },
     },
   },
