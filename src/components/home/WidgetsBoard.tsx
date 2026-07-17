@@ -572,6 +572,10 @@ export function ManageWidgetsButton({
         <div className="mt-4 space-y-2 pb-6">
           {widgets
             .filter((w) => TOOL_IDS.includes(w.id))
+            .filter((w) => {
+              const cat = WIDGET_TO_CATEGORY[w.id];
+              return !cat || !hiddenCats.has(cat);
+            })
             .map((w) => {
               const activeCount = widgets.filter(
                 (x) => TOOL_IDS.includes(x.id) && x.enabled && !x.hidden
