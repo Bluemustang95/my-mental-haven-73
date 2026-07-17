@@ -24,15 +24,11 @@ export type WidgetId =
   | "sleep_zone"
   | "pending"
   | "mini_habits"
-  | "gratitude"
-  | "contention_notes"
-  | "daily_quote"
   | "psy_news"
   // Onboarding-seeded quick launchers (deep-link tools):
   | "mindfulness_quick"
   | "pensamientos_quick"
   | "pack_quick"
-  | "diario_quick"
   | "psico_quick";
 
 // Prioridades: siempre visibles en el PriorityStack, no se gestionan como widgets.
