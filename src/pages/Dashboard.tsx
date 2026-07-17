@@ -199,12 +199,6 @@ export default function Dashboard() {
         return <PendingBento />;
       case "mini_habits":
         return <MiniHabitsWidget />;
-      case "gratitude":
-        return <GratitudeWidget />;
-      case "contention_notes":
-        return <ContentionNotesWidget />;
-      case "daily_quote":
-        return <DailyQuoteWidget />;
       case "psy_news":
         return <PsyNewsWidget />;
       case "mindfulness_quick":
@@ -213,8 +207,6 @@ export default function Dashboard() {
         return <PensamientosQuickWidget />;
       case "pack_quick":
         return <PackQuickWidget />;
-      case "diario_quick":
-        return <DiarioQuickWidget />;
       case "psico_quick":
         return <PsicoQuickWidget />;
       default:
