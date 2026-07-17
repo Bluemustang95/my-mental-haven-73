@@ -215,10 +215,10 @@ export default function Dashboard() {
   };
 
   const PRIORITY_ID_SET = new Set<WidgetId>(PRIORITY_IDS);
-  // Herramientas: prioridades siempre fuera. Máximo 4 activas (bento 2x2).
+  // Herramientas: prioridades siempre fuera. Máximo 3 activas (fila única).
   const toolWidgets = widgets.widgets
     .filter((w) => TOOL_IDS.includes(w.id as WidgetId) && w.enabled && !w.hidden && isWidgetAvailable(w.id as WidgetId))
-    .slice(0, 4);
+    .slice(0, 3);
   const gridWidgets = widgets.editMode
     ? widgets.widgets.filter((w) => !PRIORITY_ID_SET.has(w.id as WidgetId) && w.enabled && !w.hidden && isWidgetAvailable(w.id as WidgetId))
     : toolWidgets;
@@ -364,7 +364,7 @@ export default function Dashboard() {
           />
         ) : (
           <div
-            className="relative mx-auto grid max-w-[300px] grid-cols-2 gap-3"
+            className="relative mx-auto grid max-w-[340px] grid-cols-3 gap-3"
             onContextMenu={(e) => {
               e.preventDefault();
               widgets.activateEdit();
@@ -374,8 +374,8 @@ export default function Dashboard() {
               <div key={w.id}>{renderWidget(w.id as WidgetId)}</div>
             ))}
             {gridWidgets.length === 0 && (
-              <div className="col-span-2 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
-                Aún no elegiste herramientas. Tocá <b>+</b> arriba para sumar hasta 4.
+              <div className="col-span-3 rounded-2xl border border-dashed border-foreground/15 bg-white/50 p-5 text-center text-[13px] text-muted-foreground">
+                Aún no elegiste herramientas. Tocá <b>+</b> arriba para sumar hasta 3.
               </div>
             )}
           </div>

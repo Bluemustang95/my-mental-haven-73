@@ -1,28 +1,34 @@
-## Ajustes solicitados
+## Cambios
 
-### 1. Recursos (bento en /herramientas)
-En `src/components/recursos/BentoGrid.tsx`, remover los tiles **Diario** y **Psicoeducación** de la lista visible. Diario ya vive en la BottomNav / atajos del Home, y Psicoeducación pasa a ser accedida desde el widget correspondiente en el Home o desde Resmita.
+### 1) Índice de Recursos (`src/components/recursos/BentoGrid.tsx`)
+Dejar exactamente estos 7 tiles visibles por default, en este orden:
 
-Quedarían visibles en Recursos: Mente & Emoción, Tests e inventarios, Hábitos, Sueño y Plan de Seguridad (5 tiles).
+1. **Test e inventarios** → `/herramientas/inventarios`
+2. **Pensamientos** (renombrar "Mente & Emoción") → `/herramientas/mente-emocion`
+3. **Personalidad** → `/herramientas/personalidad`
+4. **Hábitos** → `/diario-inteligente/gestion-pensamientos/habitos`
+5. **Sueño** → `/herramientas/sueno`
+6. **Diario** → `/diario`
+7. **Psicoeducación** → `/herramientas/psicoeducacion`
 
-### 2. Home — Bento 2x2 un poco más chico
-En `src/pages/Dashboard.tsx` (línea 377) el grid usa `grid-cols-2 gap-4` a todo el ancho del contenedor. Para reducirlo sin romper la simetría:
+- Reagregar tiles Diario (icon `BookOpen`) y Psicoeducación (icon `GraduationCap`) al array.
+- Actualizar `DEFAULT_ON` con esos 7 slugs.
+- Plan de Seguridad, Mindfulness, Pack, Noticias, quedan como off-by-default (solo se muestran si el admin los publica).
 
-- Envolver el grid con un contenedor `max-w-[300px] mx-auto` (aprox. 85% del ancho actual en 390px) y bajar el `gap` a `gap-3`.
-- Esto encoge las cápsulas glass proporcionalmente y deja más aire alrededor, sin tocar `AtomicWidget` ni su `aspect-ratio 1/1`.
+### 2) Home: 3 herramientas en una sola fila
+`src/components/home/WidgetsBoard.tsx`
+- `MAX_TOOLS = 3` (antes 4).
+- Ajustar mensaje del toast al tope.
 
-### 3. Picker "Elegir 4" (WidgetsBoard)
-En `src/components/home/WidgetsBoard.tsx` remover del catálogo estos widgets porque son redundantes con Diario o son placeholders:
+`src/pages/Dashboard.tsx`
+- `.slice(0, 4)` → `.slice(0, 3)`.
+- Grid: `grid-cols-2` → `grid-cols-3`, `max-w-[300px]` → `max-w-[340px]`, `gap-3` (queda).
+- Placeholder "elegí hasta 4" → "hasta 3".
+- Verificar visualmente que el picker respeta el cap de 3 al intentar activar un 4°.
 
-- `gratitude` — "Agradecimiento"
-- `daily_quote` — "Frase del día"
-- `diario_quick` — "Diario íntimo" (lleva a Diario)
-- `contention_notes` — "Notas de contención" (lleva a Diario)
+### Notas
+- No se toca lógica clínica (wellbeing score, notificaciones) — sólo visibilidad y presentación.
+- Los widgets ya elegidos por usuarios que tengan 4 se recortan a 3 automáticamente al renderizar (slice), sin borrarse del storage.
 
-Cambios concretos:
-- Sacarlos de `DEFAULT_WIDGETS` y de `LABELS`.
-- Quitar sus entradas del `WIDGET_TO_CATEGORY` y del `renderWidget` switch en `Dashboard.tsx` (imports `DiarioQuickWidget`, etc.).
-- Migración suave: al leer `home_widgets_v2` de localStorage, filtrar ids desconocidos (el código actual ya hace merge por id, así que los usuarios que los tuvieran elegidos simplemente los pierden del set — quedan con menos de 4 y pueden agregar otros).
-
-### Fuera de alcance
-No se toca lógica de wellbeing score, ni rutas, ni Resmita — solo visibilidad de tiles/widgets y tamaño del grid.
+### Pregunta abierta
+Plan de Seguridad no está en tu lista de 7 — lo dejo oculto por default en Recursos (accesible solo si el admin lo re-publica). Si querés que quede como 8° tile fijo, decime.
