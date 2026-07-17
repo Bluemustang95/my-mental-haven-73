@@ -374,7 +374,7 @@ export default function Dashboard() {
           />
         ) : (
           <div
-            className="relative grid grid-cols-2 gap-4"
+            className="relative mx-auto grid max-w-[300px] grid-cols-2 gap-3"
             onContextMenu={(e) => {
               e.preventDefault();
               widgets.activateEdit();
