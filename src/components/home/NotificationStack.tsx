@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, BookOpen, CheckCircle, Wind, CalendarClock, Pill } from "lucide-react";
+import { X, BookOpen, CheckCircle, Wind, CalendarClock, Pill, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNextSession } from "@/hooks/useNextSession";
@@ -15,7 +15,7 @@ type StackNotif = {
   title: string;
   subtitle?: string;
   to: string;
-  Icon: React.ComponentType<{ size?: number; strokeWidth?: number; color?: string }>;
+  Icon: LucideIcon;
 };
 
 function dismissKey() {
