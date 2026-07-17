@@ -67,6 +67,8 @@ export type HabitInput = {
   time_slot?: string;
   cadence?: string;
   reminders_enabled?: boolean;
+  reminder_time?: string | null;   // "HH:MM"
+  reminder_days?: number[];        // 0=Sun ... 6=Sat
   stack_after_habit_id?: string | null;
 };
 
@@ -136,8 +138,10 @@ export function useHabits() {
       time_slot: input.time_slot ?? "all",
       cadence: input.cadence ?? "every_day",
       reminders_enabled: input.reminders_enabled ?? false,
+      reminder_time: input.reminder_time ?? null,
+      reminder_days: input.reminder_days ?? [0, 1, 2, 3, 4, 5, 6],
       stack_after_habit_id: input.stack_after_habit_id ?? null,
-    }).select().single();
+    } as never).select().single();
     if (data) setHabits(prev => [...prev, data as unknown as Habit]);
   }, [user]);
 
