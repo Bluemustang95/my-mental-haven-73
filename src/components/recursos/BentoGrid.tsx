@@ -158,15 +158,18 @@ export function BentoGrid() {
     // Antes de que llegue la respuesta usamos el default (7 recursos ON).
     if (!publishedSlugs) {
       const DEFAULT_ON = new Set([
-        "mente-emocion",
         "inventarios",
+        "mente-emocion",
+        "personalidad",
         "habitos",
         "sueno",
         "diario",
         "psicoeducacion",
-        "plan-seguridad",
       ]);
       return tiles.filter((t) => DEFAULT_ON.has(t.slug));
+    }
+    return tiles.filter((t) => publishedSlugs.has(t.slug.toLowerCase()));
+  }, [publishedSlugs]);
     }
     return tiles.filter((t) => publishedSlugs.has(t.slug.toLowerCase()));
   }, [publishedSlugs]);
