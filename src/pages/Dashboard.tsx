@@ -39,6 +39,9 @@ import {
   PackQuickWidget,
   MindfulnessQuickWidget,
   SleepZoneWidget,
+  InventariosQuickWidget,
+  PersonalidadQuickWidget,
+  DiarioQuickWidget,
 } from "@/components/home/QuickToolWidget";
 import { TOOL_META, type ToolModule } from "@/lib/onboardingAlgorithm";
 
