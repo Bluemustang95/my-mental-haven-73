@@ -25,8 +25,7 @@ import {
   WIDGET_TO_CATEGORY,
 } from "@/components/home/WidgetsBoard";
 import { useHiddenCategories } from "@/hooks/useHiddenCategories";
-import { MiniHabitsWidget, GratitudeWidget, ContentionNotesWidget } from "@/components/home/OptionalWidgets";
-import { DailyQuoteWidget } from "@/components/home/DailyQuoteWidget";
+import { MiniHabitsWidget } from "@/components/home/OptionalWidgets";
 import { PsyNewsWidget } from "@/components/home/PsyNewsWidget";
 import { PendingBento } from "@/components/home/PendingBento";
 import { PullToRefresh } from "@/components/home/PullToRefresh";
@@ -39,7 +38,6 @@ import {
   PsicoQuickWidget,
   PackQuickWidget,
   MindfulnessQuickWidget,
-  DiarioQuickWidget,
   SleepZoneWidget,
 } from "@/components/home/QuickToolWidget";
 import { TOOL_META, type ToolModule } from "@/lib/onboardingAlgorithm";
