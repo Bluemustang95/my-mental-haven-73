@@ -70,7 +70,10 @@ export default function ResourceDetail() {
       const { error } = await supabase.from("resource_tools").update({ is_published: !tool.is_published }).eq("id", tool.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-tools", category?.id] }),
+    onSuccess: () => {
+      invalidateHiddenToolsCache();
+      qc.invalidateQueries({ queryKey: ["admin-tools", category?.id] });
+    },
   });
 
   const deleteTool = useMutation({
@@ -135,29 +138,48 @@ export default function ResourceDetail() {
           </Button>
         </div>
 
+        <div className="mb-3 flex items-start gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p>
+            Las actividades <span className="font-semibold text-foreground">ocultas</span> no aparecen en Recursos, Home ni Resumen Psico, y no cuentan en el Índice de Bienestar.
+          </p>
+        </div>
+
         <div className="grid gap-3 md:grid-cols-2">
           {tools.map((tool: any) => (
-            <div key={tool.id} className={`rounded-3xl border p-4 ${colorClass}`}>
+            <div key={tool.id} className={`rounded-3xl border p-4 ${colorClass} ${!tool.is_published ? "opacity-70" : ""}`}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
                   <h3 className="font-display font-semibold">{tool.name}</h3>
                   <p className="mt-0.5 text-xs opacity-70">{tool.description}</p>
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <Badge variant="outline">{tool.tool_type}</Badge>
-                    {!tool.is_published && <Badge variant="secondary">Borrador</Badge>}
+                    {!tool.is_published && (
+                      <Badge variant="secondary" className="gap-1">
+                        <EyeOff className="h-3 w-3" /> Oculto
+                      </Badge>
+                    )}
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col items-end gap-2">
                   <Button size="icon" variant="ghost" onClick={() => { setEditingTool(tool); setEditorOpen(true); }}>
                     <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => togglePublish.mutate(tool)}>
-                    {tool.is_published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </Button>
                   <Button size="icon" variant="ghost" onClick={() => { if (confirm("¿Eliminar?")) deleteTool.mutate(tool.id); }}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between rounded-xl border bg-background/50 px-3 py-2">
+                <Label htmlFor={`pub-${tool.id}`} className="cursor-pointer text-xs font-medium">
+                  Visible en la app
+                </Label>
+                <Switch
+                  id={`pub-${tool.id}`}
+                  checked={!!tool.is_published}
+                  onCheckedChange={() => togglePublish.mutate(tool)}
+                />
               </div>
             </div>
           ))}
@@ -168,6 +190,7 @@ export default function ResourceDetail() {
           )}
         </div>
       </section>
+
 
       <ToolEditor
         open={editorOpen}
