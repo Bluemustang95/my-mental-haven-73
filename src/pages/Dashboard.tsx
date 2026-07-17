@@ -315,42 +315,21 @@ export default function Dashboard() {
       ) : (
       <PullToRefresh onRefresh={loadToday}>
       <div className="relative mx-auto max-w-md px-5 pt-5">
-        {/* Header */}
+        {/* Header simétrico: calendario a la izquierda, avatar a la derecha */}
         <div className="flex items-center justify-between">
-          <div className="min-w-0">
-            <p className="flex items-center gap-1 font-sans text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              {greeting} <Sparkles size={10} className="text-resma-gold" />
-            </p>
-            <h1 className="mt-0.5 truncate font-serifElegant text-[22px] font-medium leading-tight text-resma-navy">
-              {name || "Usuario"}
-            </h1>
-          </div>
-          <button
-            onClick={() => navigate("/configuracion")}
-            aria-label="Ajustes"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-resma-navy font-display text-[13px] font-semibold uppercase text-white shadow-[0_8px_20px_-10px_rgba(16,25,39,0.5)] transition active:scale-95"
-          >
-            {name ? name[0].toUpperCase() : "U"}
-          </button>
-        </div>
-
-        {/* Week strip */}
-        <div className="mt-4 flex items-center gap-2">
-          <div className="flex-1 min-w-0">
-            <WeekStrip
-              progressByDate={weekProgress}
-              onSelectDay={(d) => {
-                setHistoryDate(d);
-                setHistoryOpen(true);
-              }}
-            />
-          </div>
           <button
             onClick={() => setMonthOpen(true)}
-            aria-label="Ver calendario completo"
-            className="glass-premium flex h-[60px] w-12 shrink-0 items-center justify-center rounded-[22px] text-resma-navy active:scale-95"
+            aria-label="Abrir calendario"
+            className="glass-premium flex h-11 w-11 items-center justify-center rounded-2xl text-resma-navy active:scale-95"
           >
-            <CalendarDays size={18} />
+            <CalendarDays size={20} strokeWidth={1.5} />
+          </button>
+          <button
+            onClick={() => navigate("/configuracion")}
+            aria-label="Perfil"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-resma-navy font-display text-[13px] font-semibold uppercase text-white shadow-[0_8px_20px_-10px_rgba(16,25,39,0.5)] transition active:scale-95"
+          >
+            {name ? name[0].toUpperCase() : "U"}
           </button>
         </div>
         {/* Notification stack (iOS-style) — reemplaza MorningCallback y pending */}
