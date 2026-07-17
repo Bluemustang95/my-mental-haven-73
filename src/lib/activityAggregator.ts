@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getHiddenToolSlugs, filterOutHidden } from "./hiddenTools";
 
 export type ActivityBreakdown = {
   checkins: number;

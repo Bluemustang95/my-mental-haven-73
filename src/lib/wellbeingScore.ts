@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getHiddenToolSlugs, filterOutHidden } from "./hiddenTools";
 
 export type WellbeingSnapshot = {
   score: number;          // 0-100 (compuesto ponderado y renormalizado)
@@ -62,6 +63,10 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
     supabase.from("medication_logs").select("taken").eq("user_id", user.id).gte("log_date", isoDate(from14)),
   ]);
 
+  // Descarta sesiones de actividades ocultas por admin
+  const hidden = await getHiddenToolSlugs();
+  const exFiltered = filterOutHidden(ex as any[], hidden, "exercise_type");
+
   // ── Trend (últimos 7 días, 0-100) ──
   const trend: number[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -106,7 +111,7 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
   const tests = tScores.length ? Math.round(tScores.reduce((a,b)=>a+b,0) / tScores.length) : null;
 
   // engagement — ampliado: pensamientos + DBT + diario + mindfulness/respiración + reflexiones + pack
-  const mindCount = (ex ?? []).filter((e: any) => {
+  const mindCount = exFiltered.filter((e: any) => {
     const t = (e.exercise_type ?? "").toLowerCase();
     return t.includes("mindful") || t.includes("respir") || t.includes("breath");
   }).length;
