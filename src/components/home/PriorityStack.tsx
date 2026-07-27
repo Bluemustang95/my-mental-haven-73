@@ -290,12 +290,16 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
               className="flex items-center"
             >
               <span
-                className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${phase.chipClass}`}
+                role="button"
+                tabIndex={-1}
+                aria-hidden
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/70 shadow-sm backdrop-blur-md transition"
               >
-                {phase.tag}
+                <ArrowRight size={17} strokeWidth={2.4} style={{ color: phase.dotColor }} />
               </span>
             </motion.div>
           </AnimatePresence>
+
 
           <AnimatePresence mode="wait">
             <motion.div
