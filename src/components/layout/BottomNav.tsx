@@ -34,22 +34,33 @@ export function BottomNav() {
         onClick={() => navigate(tab.path)}
         whileTap={{ scale: 0.85, opacity: 0.7 }}
         aria-label={tab.label}
+        layout
         className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
+          "flex min-w-10 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 transition-colors",
           active
-            ? "bg-white text-primary shadow-sm"
-            : "text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
+            ? "bg-white py-1.5 text-primary shadow-sm"
+            : "h-10 w-10 text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
         )}
       >
         <motion.div
-          animate={active ? { scale: 1.1 } : { scale: 1 }}
+          animate={active ? { scale: 1.05 } : { scale: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
         >
           <Icon size={22} weight={active ? "fill" : "bold"} />
         </motion.div>
+        {active && (
+          <motion.span
+            initial={{ opacity: 0, y: -2 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="font-display text-[9px] font-bold leading-none tracking-wide"
+          >
+            {tab.label}
+          </motion.span>
+        )}
       </motion.button>
     );
   };
+
 
   const psicoActive = location.pathname.startsWith("/psicoeducacion");
   const sosActive = location.pathname.startsWith("/herramientas/plan-seguridad");
