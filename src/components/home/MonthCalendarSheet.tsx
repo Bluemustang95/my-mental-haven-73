@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchActivityDateKeys } from "@/lib/recentActivity";
+import { supabase } from "@/integrations/supabase/client";
 import { localDateStr, cn } from "@/lib/utils";
 import { useTodayCompletion } from "@/hooks/useTodayCompletion";
 import { ATOMIC_COLORS } from "@/components/home/QuickToolWidget";
@@ -48,6 +49,41 @@ export function MonthCalendarSheet({
   }, [cursor]);
 
   const completion = useTodayCompletion(open ? 1 : 0);
+  const [todayCheckin, setTodayCheckin] = useState<{
+    mood_score: number | null;
+    sleep_score: number | null;
+    emotions: string[] | null;
+    day_goal: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!user || !open) return;
+    let alive = true;
+    supabase
+      .from("daily_checkins")
+      .select("mood_score, sleep_score, emotions, day_goal")
+      .eq("user_id", user.id)
+      .eq("checkin_date", localDateStr())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (alive) setTodayCheckin((data ?? [])[0] ?? null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [user, open]);
+
+  const diarioDetail = useMemo(() => {
+    if (!todayCheckin) return null;
+    const parts: string[] = [];
+    if (todayCheckin.mood_score) parts.push(`Ánimo ${todayCheckin.mood_score}/5`);
+    if (todayCheckin.sleep_score) parts.push(`Sueño ${todayCheckin.sleep_score}/5`);
+    const emotions = (todayCheckin.emotions ?? []).filter(Boolean);
+    if (emotions.length) parts.push(emotions.slice(0, 3).join(", "));
+    if (todayCheckin.day_goal) parts.push(todayCheckin.day_goal);
+    return parts.length ? parts.join(" · ") : null;
+  }, [todayCheckin]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -145,23 +181,54 @@ export function MonthCalendarSheet({
               {ACTIVITIES.map((a) => {
                 const done = completion[a.id];
                 const color = (ATOMIC_COLORS as any)[a.id] ?? "#7cc2c8";
+                const detail = a.id === "diario_quick" ? diarioDetail : null;
                 return (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/60 px-4 py-2.5 backdrop-blur-md"
+                    className="flex items-center justify-between rounded-2xl border px-4 py-2.5 backdrop-blur-md transition"
+                    style={
+                      done
+                        ? {
+                            background: `${color}1f`,
+                            borderColor: `${color}59`,
+                            boxShadow: `0 8px 20px -16px ${color}`,
+                          }
+                        : {
+                            background: "rgba(255,255,255,0.6)",
+                            borderColor: "rgba(255,255,255,0.6)",
+                          }
+                    }
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex min-w-0 items-center gap-2.5">
                       <span
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ background: color, opacity: done ? 1 : 0.3 }}
-                      />
-                      <span className={cn("text-[13px]", done ? "font-semibold text-slate-900" : "text-slate-500")}>
-                        {a.label}
+                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2"
+                        style={{
+                          background: done ? color : "transparent",
+                          borderColor: done ? color : "rgba(16,25,39,0.18)",
+                        }}
+                      >
+                        {done && <Check size={11} strokeWidth={3.2} color="#fff" />}
                       </span>
+                      <div className="min-w-0">
+                        <span
+                          className={cn(
+                            "block font-display text-[13px]",
+                            done ? "font-semibold text-slate-900" : "text-slate-500",
+                          )}
+                        >
+                          {a.label}
+                        </span>
+                        {detail && (
+                          <span className="block truncate text-[11px] text-slate-500">{detail}</span>
+                        )}
+                      </div>
                     </div>
                     {done && (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: color }}>
-                        <Check size={12} strokeWidth={3} color="#fff" />
+                      <span
+                        className="ml-2 shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-white"
+                        style={{ background: color }}
+                      >
+                        Hecho
                       </span>
                     )}
                   </div>

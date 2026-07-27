@@ -1,60 +1,96 @@
 import { ArrowRight, Brain, Navigation, ShieldCheck, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { ResmaIsotipo } from "./ResmaIsotipo";
+import { useEffect, useState } from "react";
 import resmitaAsset from "@/assets/resmita-bot.png.asset.json";
+import { ResmaIsotipoMark } from "@/components/brand/ResmaIsotipoMark";
+import { loadLegalLinks, type LegalLinks } from "@/lib/legalLinks";
 
 const TEAL = "#7cc2c8";
 const INK = "#101927";
 
 export function SplashIntro({ onContinue }: { onContinue: () => void }) {
-  const [imgOk, setImgOk] = useState(true);
+  const [legal, setLegal] = useState<LegalLinks>({ privacy: "", terms: "" });
+
+  useEffect(() => {
+    loadLegalLinks().then(setLegal).catch(() => {});
+  }, []);
+
   return (
-    <div className="relative flex flex-1 flex-col items-center pt-6">
+    <div className="relative flex flex-1 flex-col items-center justify-center">
       {/* Aura respiración vagal */}
       <div className="pointer-events-none absolute left-1/2 top-[42%] -z-0 h-[340px] w-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7cc2c8] animate-breath-vagal" />
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
-        {/* Resmita sin tarjeta: PNG con fondo transparente flotando sobre el aura */}
-        <div className="animate-float-weightless">
-          {imgOk ? (
-            <img
-              src={resmitaAsset.url}
-              alt="Resmita"
-              onError={() => setImgOk(false)}
-              className="h-[220px] w-[220px] object-contain drop-shadow-[0_18px_28px_rgba(16,25,39,0.15)]"
-            />
-          ) : (
-            <ResmaIsotipo size={140} />
-          )}
-        </div>
-
-        <p
-          className="mt-8 max-w-[300px] font-serifElegant text-[16px] italic leading-relaxed opacity-0 animate-cascade-up"
-          style={{ color: "rgba(16,25,39,0.72)", animationDelay: "300ms" }}
+        <motion.div
+          initial={{ opacity: 0, y: 22, scale: 0.94 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="animate-float-weightless"
         >
-          {"\u201CTu mente, a tu propio ritmo. Un rincón seguro impulsado por herramientas clínicas basadas en evidencia.\u201D"}
-        </p>
+          <ResmaIsotipoMark size={168} color={TEAL} />
+        </motion.div>
+
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-10 max-w-[300px] font-display text-[17px] font-medium leading-relaxed"
+          style={{ color: "rgba(16,25,39,0.72)" }}
+        >
+          Tu rincón para cuidar tu salud mental, a tu propio ritmo y con apoyo clínico
+        </motion.p>
       </div>
 
-      <button
+      <motion.button
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.65, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         onClick={onContinue}
-        className="relative z-10 mt-8 flex w-full items-center justify-center gap-2 rounded-full py-4 font-display text-[15px] font-bold uppercase tracking-wide transition active:scale-[0.98] opacity-0 animate-cascade-up"
+        className="relative z-10 mt-8 flex w-full items-center justify-center gap-2 rounded-full py-4 font-display text-[15px] font-bold uppercase tracking-wide transition active:scale-[0.98]"
         style={{
           background: "linear-gradient(135deg, #7cc2c8 0%, #a5dcdf 100%)",
           color: INK,
           boxShadow: "0 16px 34px -12px rgba(124,194,200,0.6)",
-          animationDelay: "600ms",
         }}
       >
         Comenzar mi viaje <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
-      </button>
-      <p className="relative z-10 mt-3 text-center text-[11px] font-light text-[#101927]/45">
-        Al continuar aceptás nuestras políticas de privacidad y uso clínico.
-      </p>
+      </motion.button>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.85, duration: 0.6 }}
+        className="relative z-10 mt-3 text-center"
+      >
+        <p className="text-[11px] font-light text-[#101927]/45">
+          Al continuar aceptás nuestras políticas de privacidad y uso clínico.
+        </p>
+        <div className="mt-1.5 flex items-center justify-center gap-2 text-[11px] font-medium">
+          <a
+            href={legal.privacy || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2"
+            style={{ color: TEAL }}
+          >
+            Políticas de Privacidad
+          </a>
+          <span className="text-[#101927]/25">·</span>
+          <a
+            href={legal.terms || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2"
+            style={{ color: TEAL }}
+          >
+            Términos y Condiciones
+          </a>
+        </div>
+      </motion.div>
     </div>
   );
 }
+
 
 type Pillar = {
   title: string;
@@ -93,25 +129,26 @@ const PILLARS: Pillar[] = [
 
 export function ValueSlides({ onContinue }: { onContinue: () => void }) {
   return (
-    <div className="flex flex-1 flex-col justify-center pt-4">
+    <div className="flex flex-1 flex-col justify-center py-8">
       <motion.div
-        className="space-y-3.5"
+        className="space-y-4"
         initial="hidden"
         animate="show"
         variants={{
           hidden: {},
-          show: { transition: { staggerChildren: 0.22, delayChildren: 0.1 } },
+          show: { transition: { staggerChildren: 0.16, delayChildren: 0.15 } },
         }}
       >
         {PILLARS.map(({ Icon, image, title, body, tint }) => (
           <motion.div
             key={title}
             variants={{
-              hidden: { opacity: 0, y: 18 },
+              hidden: { opacity: 0, y: 24, scale: 0.97 },
               show: {
                 opacity: 1,
                 y: 0,
-                transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+                scale: 1,
+                transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] },
               },
             }}
             className="flex items-start gap-3 rounded-[22px] border border-[#101927]/5 bg-white/85 p-3.5 shadow-glass backdrop-blur-xl"
@@ -133,10 +170,10 @@ export function ValueSlides({ onContinue }: { onContinue: () => void }) {
               )}
             </div>
             <div className="min-w-0">
-              <h3 className="font-display text-[14px] font-bold leading-tight text-[#101927]">
+              <h3 className="font-display text-[16px] font-bold leading-tight text-[#101927]">
                 {title}
               </h3>
-              <p className="mt-1 text-[12px] font-light leading-snug text-[#101927]/60">
+              <p className="mt-1 text-[13px] font-light leading-snug text-[#101927]/60">
                 {body}
               </p>
             </div>
@@ -145,7 +182,7 @@ export function ValueSlides({ onContinue }: { onContinue: () => void }) {
       </motion.div>
 
       <motion.div
-        className="mt-auto pt-8"
+        className="pt-8"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

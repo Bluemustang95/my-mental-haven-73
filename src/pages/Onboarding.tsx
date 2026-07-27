@@ -334,7 +334,7 @@ export default function Onboarding() {
             Rompiendo el hielo
           </h1>
           <p
-            className="mt-2 text-center text-[12.5px]"
+            className="mt-2 text-center text-[14px]"
             style={{ color: "rgba(16,25,39,0.6)" }}
           >
             Contanos un poco de vos para personalizar tu rincón.
@@ -373,7 +373,7 @@ export default function Onboarding() {
             ¿Desde dónde nos acompañás?
           </h1>
           <p
-            className="mt-2 text-center text-[12.5px]"
+            className="mt-2 text-center text-[14px]"
             style={{ color: "rgba(16,25,39,0.6)" }}
           >
             Adaptamos el lenguaje y los recursos a tu región.
@@ -398,7 +398,7 @@ export default function Onboarding() {
             ¿Qué brújula guía tu viaje?
           </h1>
           <p
-            className="mt-2 text-center text-[12.5px]"
+            className="mt-2 text-center text-[14px]"
             style={{ color: "rgba(16,25,39,0.6)" }}
           >
             Podés elegir más de una.
@@ -431,7 +431,7 @@ export default function Onboarding() {
             ¿Qué maleta querés aligerar?
           </h1>
           <p
-            className="mt-2 text-center text-[12.5px]"
+            className="mt-2 text-center text-[14px]"
             style={{ color: "rgba(16,25,39,0.6)" }}
           >
             Lo que más pesa hoy en tu mochila.
@@ -464,7 +464,7 @@ export default function Onboarding() {
             ¿Cómo dormís últimamente?
           </h1>
           <p
-            className="mt-2 text-center text-[12.5px]"
+            className="mt-2 text-center text-[14px]"
             style={{ color: "rgba(16,25,39,0.6)" }}
           >
             El sueño marca la base de tu bienestar.
@@ -519,7 +519,7 @@ export default function Onboarding() {
             ¿Cómo te gusta aprender?
           </h1>
           <p
-            className="mt-2 text-center text-[12.5px]"
+            className="mt-2 text-center text-[14px]"
             style={{ color: "rgba(16,25,39,0.6)" }}
           >
             Para servirte el contenido en el formato que más resuena con vos.
@@ -589,7 +589,7 @@ export default function Onboarding() {
             Creá tu rincón
           </h1>
           <p
-            className="mt-2 text-center text-[12.5px]"
+            className="mt-2 text-center text-[14px]"
             style={{ color: "rgba(16,25,39,0.6)" }}
           >
             Guardamos tu plan personalizado para que te espere cada día.

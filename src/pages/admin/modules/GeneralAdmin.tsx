@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader } from "@/components/admin/ui/AdminPrimitives";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Volume2, DollarSign, Plus, Trash2, Play, Music, Pause, Upload, Pencil, Check as CheckIcon, X as XIcon, RotateCcw, Wind } from "lucide-react";
+import { Loader2, Volume2, DollarSign, Plus, Trash2, Play, Music, Pause, Upload, Pencil, Check as CheckIcon, X as XIcon, RotateCcw, Wind, FileText } from "lucide-react";
 import { COUNTRY_OPTIONS, mindfulnessCountry } from "@/lib/countryCodes";
 import { AMBIENT_CATALOG, CATALOG_CATEGORY_LABELS, type CatalogCategory, type CatalogEntry } from "@/lib/ambientCatalog";
 import { invalidateAmbientOverrides } from "@/lib/ambientResolver";
 import { invalidateAmbientCatalog } from "@/hooks/useAmbientCatalog";
+import { LegalTab } from "@/components/admin/general/LegalTab";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
@@ -16,7 +17,7 @@ type VoiceRow = { id?: string; country_code: string; gender: "female" | "male"; 
 type ElevenVoice = { voice_id: string; name: string; labels?: Record<string, string> };
 
 export default function GeneralAdmin() {
-  const [tab, setTab] = useState<"voces" | "audios" | "gasto">("voces");
+  const [tab, setTab] = useState<"voces" | "audios" | "gasto" | "legales">("voces");
   return (
     <>
       <AdminPageHeader title="General" subtitle="Configuración global de voces, audios y gasto de IA" />
@@ -46,10 +47,18 @@ export default function GeneralAdmin() {
           >
             <DollarSign size={14} /> Gasto de IA
           </button>
+          <button
+            onClick={() => setTab("legales")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+              tab === "legales" ? "bg-resma-teal text-white" : "bg-white border border-slate-200 text-slate-600"
+            }`}
+          >
+            <FileText size={14} /> Legales
+          </button>
         </div>
       </div>
       <div className="admin-scroll flex-1 overflow-y-auto px-8 pb-32">
-        {tab === "voces" ? <VoicesTab /> : tab === "audios" ? <AudiosTab /> : <SpendTab />}
+        {tab === "voces" ? <VoicesTab /> : tab === "audios" ? <AudiosTab /> : tab === "gasto" ? <SpendTab /> : <LegalTab />}
       </div>
     </>
   );

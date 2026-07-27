@@ -20,7 +20,6 @@ import { ATOMIC_COLORS } from "@/components/home/QuickToolWidget";
 type Tile = {
   slug: string;
   name: string;
-  desc: string;
   Icon: LucideIcon;
   color: string;
   target: string;
@@ -32,7 +31,6 @@ const tiles: Tile[] = [
   {
     slug: "inventarios",
     name: "Test e inventarios",
-    desc: "BDI, BAI, PHQ-9, GAD-7 y más.",
     Icon: ClipboardList,
     color: ATOMIC_COLORS.psico_quick,
     target: "/herramientas/inventarios",
@@ -40,7 +38,6 @@ const tiles: Tile[] = [
   {
     slug: "mente-emocion",
     name: "Pensamientos",
-    desc: "CBT + Regulación DBT.",
     Icon: Brain,
     color: ATOMIC_COLORS.pensamientos_quick,
     target: "/herramientas/mente-emocion",
@@ -48,7 +45,6 @@ const tiles: Tile[] = [
   {
     slug: "personalidad",
     name: "Personalidad",
-    desc: "Tu perfil Big Five.",
     Icon: User,
     color: "#9b72cf",
     target: "/herramientas/personalidad",
@@ -56,7 +52,6 @@ const tiles: Tile[] = [
   {
     slug: "habitos",
     name: "Hábitos",
-    desc: "Habit Tracker.",
     Icon: Zap,
     color: ATOMIC_COLORS.mini_habits,
     target: "/diario-inteligente/gestion-pensamientos/habitos",
@@ -64,7 +59,6 @@ const tiles: Tile[] = [
   {
     slug: "sueno",
     name: "Sueño",
-    desc: "Higiene y descanso.",
     Icon: Moon,
     color: ATOMIC_COLORS.sleep_zone,
     target: "/herramientas/sueno",
@@ -72,7 +66,6 @@ const tiles: Tile[] = [
   {
     slug: "diario",
     name: "Diario",
-    desc: "Escritura íntima y notas.",
     Icon: BookOpen,
     color: "#c98a5e",
     target: "/diario",
@@ -80,7 +73,6 @@ const tiles: Tile[] = [
   {
     slug: "psicoeducacion",
     name: "Psicoeducación",
-    desc: "Biblioteca clínica.",
     Icon: GraduationCap,
     color: ATOMIC_COLORS.psico_quick,
     target: "/herramientas/psicoeducacion",
@@ -89,7 +81,6 @@ const tiles: Tile[] = [
   {
     slug: "plan-seguridad",
     name: "Plan de Seguridad",
-    desc: "Señales, apoyos y contactos.",
     Icon: ShieldCheck,
     color: "#e24b4a",
     target: "/herramientas/plan-seguridad",
@@ -97,7 +88,6 @@ const tiles: Tile[] = [
   {
     slug: "mindfulness",
     name: "Mindfulness",
-    desc: "Respiración consciente.",
     Icon: Wind,
     color: ATOMIC_COLORS.mindfulness_quick,
     target: "/herramientas/mindfulness",
@@ -105,7 +95,6 @@ const tiles: Tile[] = [
   {
     slug: "pack",
     name: "Pack Actividades",
-    desc: "Programas guiados.",
     Icon: Sparkles,
     color: ATOMIC_COLORS.pack_quick,
     target: "/herramientas/pack",
@@ -113,7 +102,6 @@ const tiles: Tile[] = [
   {
     slug: "noticias",
     name: "Resma Research",
-    desc: "Investigación en psicología.",
     Icon: BookOpen,
     color: ATOMIC_COLORS.mindfulness_quick,
     target: "/herramientas/noticias",
@@ -182,47 +170,35 @@ export function BentoGrid() {
     <div className="grid grid-cols-2 gap-3">
       {orderedTiles.map((t) => {
         const isPriority = t.slug === priority;
-        const halo = hexToRgba(t.color, 0.35);
-        const iconBg = hexToRgba(t.color, 0.15);
         return (
           <button
             key={t.slug}
             onClick={() => navigate(t.target)}
-            className="pressable glass-premium relative flex aspect-square flex-col justify-between overflow-hidden rounded-3xl p-4 text-left transition"
-            style={
-              isPriority
-                ? {
-                    borderColor: hexToRgba(t.color, 0.55),
-                    boxShadow: `0 18px 36px -14px ${hexToRgba(t.color, 0.45)}, inset 0 1px 0 rgba(255,255,255,0.7)`,
-                  }
-                : undefined
-            }
+            className="pressable relative flex aspect-square flex-col items-center justify-center gap-3 overflow-hidden rounded-[26px] p-4 text-center transition"
+            style={{
+              background: t.color,
+              boxShadow: isPriority
+                ? `0 20px 38px -14px ${hexToRgba(t.color, 0.6)}`
+                : `0 12px 26px -16px ${hexToRgba(t.color, 0.7)}`,
+            }}
           >
             <span
               aria-hidden
-              className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-60 blur-2xl"
-              style={{ background: halo }}
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(160deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 55%)",
+              }}
             />
             {isPriority && (
-              <span
-                className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm"
-                style={{ background: t.color }}
-              >
+              <span className="absolute right-2.5 top-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
                 <Sparkles size={9} /> Tu foco
               </span>
             )}
-            <div
-              className="relative flex h-11 w-11 items-center justify-center rounded-2xl"
-              style={{ background: iconBg, color: t.color }}
-            >
-              <t.Icon size={20} strokeWidth={2} />
-            </div>
-            <div className="relative">
-              <h3 className="font-display text-base font-bold leading-tight text-foreground">
-                {t.name}
-              </h3>
-              <p className="mt-1 text-xs text-muted-foreground">{t.desc}</p>
-            </div>
+            <t.Icon size={30} strokeWidth={1.6} className="relative text-white" />
+            <h3 className="relative font-display text-[13.5px] font-semibold leading-tight tracking-tight text-white">
+              {t.name}
+            </h3>
           </button>
         );
       })}

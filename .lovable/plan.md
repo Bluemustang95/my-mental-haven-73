@@ -1,60 +1,41 @@
+## 1. Onboarding
 
-# Rediseño del Índice de Bienestar — Modelo A
+**Layout general (todas las pantallas)**
+- En `OnboardingShell`, centrar verticalmente el contenido (`justify-center` en el contenedor de pasos) manteniendo el header de progreso arriba y el `StickyFooter` abajo.
+- Subir un escalón el tamaño de los subtítulos (13px → 14.5px) en las pantallas de pasos ("Desde dónde nos acompañas", "Qué brújula", "Plan de descanso", etc.).
 
-## Objetivo
-El índice mide **cómo se siente la persona** (outcome auto-reportado). El uso de recursos se separa como "Autocuidado" y no entra al cálculo.
+**Pantalla 1 (Splash)**
+- Subir el isótopo RESMA como asset CDN y recolorearlo a teal `#7cc2c8`; reemplaza a Resmita en el splash.
+- Frase: "Tu rincón para cuidar tu salud mental, a tu propio ritmo y con apoyo clínico", sin itálica, con la tipografía oficial (`font-display`).
+- Animación de entrada: fade + slide escalonado (logo → frase → botón).
+- Debajo del disclaimer: enlaces clickeables "Políticas de Privacidad" y "Términos y Condiciones" (abren en pestaña nueva), leídos de `admin_settings`.
+- Íconos de la app: generar `icon-192.png`, `icon-512.png` y `apple-touch-icon.png` a partir del isótopo teal (fondo crema) y reemplazarlos en `public/`.
 
-## Cálculo (0–100, últimos 7 días)
+**Pantalla 3 (Pilares)**
+- Centrar verticalmente los 4 ítems, bajar el bloque, aumentar el tamaño del título de cada ítem ("Ciencia, no magia" y hermanos) y mantener/reforzar la animación escalonada de entrada.
 
-| Dimensión | Peso | Fuente | Escala |
-|---|---|---|---|
-| Ánimo | 35% | `daily_checkins.mood_score` (1–5) | promedio ×20 |
-| Sueño | 25% | `daily_checkins.sleep_score` (1–5) | promedio ×20 |
-| Despertar | 15% | `daily_checkins.dawn_score` | Excelente=100, Muy bien=80, Normal=60, Mal=30, Pésimo=10 |
-| Balance emocional | 25% | `daily_checkins.emotions[]` en modo `night` | `pos/(pos+neg)` ×100, promedio de noches |
+**Pantalla "Procesando información"**
+- Reemplazar el spinner circular por el isótopo RESMA girando sobre su eje (rotación continua con leve pulso del aura).
+- Extender la duración total de ~2.1s a ~5s, con los mensajes repartidos en ese lapso.
 
-POSITIVAS: Alegría, Calma, Motivado, Cariño.
-NEGATIVAS: Agotamiento, Ansiedad, Enojo, Tristeza, Confuso.
+**Admin**
+- Nueva sección "Legales" en Ajustes generales del admin con dos campos de URL (`legal_privacy_url`, `legal_terms_url`) guardados en `admin_settings` vía `saveSetting`/`loadSetting`. Sin migración de base de datos.
 
-**Renormalización:** si una dimensión no tiene datos, se saca y los pesos restantes se reescalan a 100%. Ausencia no penaliza.
+## 2. Home y navegación
 
-**Umbral:** mínimo 3 días distintos con check-in en la ventana. Bajo eso, no se muestra número — se muestra "Faltan X día(s) de registro para calcular tu bienestar."
+- **Tipografía**: unificar a la fuente oficial (`font-display`) los títulos de Sintonía de la mañana/noche en `PriorityStack` (hoy usan `font-serifElegant`) y revisar el resto de la Home por fuentes sueltas.
+- **Sintonía**: eliminar las etiquetas "Prioridad Mañana"/"Prioridad Noche" y poner en su lugar un botón circular con flecha que dispara la misma acción de la tarjeta.
+- **Notificaciones**: en `NotificationStack` filtrar todo lo que no provenga de un evento real del usuario (p. ej. no mostrar recordatorio de medicación si no hay medicaciones creadas ni logs). Regla: cada tarjeta requiere un dato existente que la respalde.
+- **Navbar**: al estar activo un tab, mostrar el nombre debajo del ícono ("Inicio", "Proceso", "Diario", "Recursos"), con la píldora activa expandiéndose suavemente.
+- **Calendario "Actividades de hoy"**: estado completado visible (círculo relleno, check, título atenuado). Para Diario, el ítem además muestra lo que la persona marcó en el registro diario del día (ánimo/emociones/chips registrados) en lugar de un simple "completado".
 
-**Delta:** solo sobre Ánimo, ventana actual vs. 7 días anteriores. Sin flecha si `|delta| ≤ 2` o sin datos previos.
+## 3. Recursos
 
-**Trend:** array 7d con `mood_score × 20` (0 los días sin check-in, se renderiza como hueco).
+- Rediseño de las tarjetas de `BentoGrid`: quitar todos los subtítulos, dejar solo el título.
+- Nuevo estilo: caja con fondo sólido (color de cada recurso, ya sincronizado con los colores de Home), ícono centrado en el medio y el nombre dentro de la caja, tipografía limpia (`font-display`), esquinas redondeadas y sombra sutil, más finas que las actuales.
 
-**Mensajes:**
-- Sin datos suficientes → "Faltan X día(s)…"
-- ≥ 70 → "Vas muy bien. Sostené las rutinas que te están ayudando."
-- 45–69 → "Semana con altibajos. Es normal que el proceso no sea lineal."
-- < 45 → "Días difíciles. Bajá la exigencia y volvé a lo básico: dormir y respirar."
+## Notas técnicas
 
-## Autocuidado (separado, no entra al índice)
-Se sigue calculando y exponiendo en `snapshot.selfCare` (opcional) para futura UI de correlaciones:
-- `habits`: % días con hábito completado (7d)
-- `engagement`: conteo total (pensamientos + DBT + diario + mindfulness + pack + reflexiones) (7d)
-- `medication`: % tomas `taken=true` (7d, si registra)
-- `tests`: severidad del último test por tipo (excluyendo BFI)
+Archivos principales: `src/components/onboarding/OnboardingShell.tsx`, `IntroScreens.tsx`, `AlgorithmTransition.tsx`, `src/pages/Onboarding.tsx`, nuevo `src/components/brand/ResmaIsotipoMark.tsx`, `src/lib/admin/settings.ts` (consumo), módulo de ajustes del admin, `src/components/home/PriorityStack.tsx`, `NotificationStack.tsx`, `MonthCalendarSheet.tsx`/`Timeline.tsx`, `src/components/layout/BottomNav.tsx`, `src/components/recursos/BentoGrid.tsx`, `public/manifest.webmanifest` + íconos, `index.html`.
 
-## Archivos
-
-**Se reescribe:**
-- `src/lib/wellbeingScore.ts` — nueva `loadWellbeing()`, nuevos `WEIGHTS`, nuevo tipo `WellbeingSnapshot.components = { mood, sleep, dawn, balance }`, `selfCare` opcional, umbral de 3 días.
-
-**Se auditan y ajustan** (solo si leen `components.habits/tests/engagement/medication`):
-- `src/pages/MiProceso.tsx`
-- `src/components/proceso/WellbeingCardV2.tsx`
-- `src/components/proceso/WellbeingAnalysisSheet.tsx`
-
-Si desglosan componentes viejos, se remapean a los nuevos (`mood/sleep/dawn/balance`) o se mueve a la sección `selfCare`. El número, delta, mensaje y trend siguen renderizándose igual.
-
-## Fuera de alcance
-- Sin migraciones de base de datos.
-- No se toca `activityAggregator.ts` ni `WellbeingCard.tsx` legacy.
-- No se cambia UI del Home ni de MiProceso más allá de lo necesario para no romper.
-
-## Validación
-1. `tsgo` limpio.
-2. Preview: usuario con 0/1/2 check-ins → mensaje de umbral, sin número. Con 3+ → número calculado.
-3. Confirmar que agregar/quitar hábitos ya no mueve el número.
+No requiere cambios de base de datos: las URLs legales usan la tabla `admin_settings` existente.

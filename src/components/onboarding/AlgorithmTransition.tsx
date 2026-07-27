@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { ResmaIsotipoMark } from "@/components/brand/ResmaIsotipoMark";
 
 const TEAL = "#7cc2c8";
-const GOLD = "#facb60";
 const INK = "#101927";
 
 const MESSAGES = [
@@ -15,9 +15,10 @@ export function AlgorithmTransition({ onDone }: { onDone: () => void }) {
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
-    const a = setTimeout(() => setIdx(1), 700);
-    const b = setTimeout(() => setIdx(2), 1400);
-    const c = setTimeout(() => onDone(), 2100);
+    // Delay deliberado: transmite que el algoritmo está procesando.
+    const a = setTimeout(() => setIdx(1), 1600);
+    const b = setTimeout(() => setIdx(2), 3400);
+    const c = setTimeout(() => onDone(), 5200);
     return () => {
       clearTimeout(a);
       clearTimeout(b);
@@ -40,29 +41,14 @@ export function AlgorithmTransition({ onDone }: { onDone: () => void }) {
           animate={{ scale: [1, 1.08, 1] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div
-          className="absolute inset-0"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: "linear" }}
-        >
-          <svg viewBox="0 0 100 100" className="h-full w-full">
-            <circle
-              cx="50"
-              cy="50"
-              r="44"
-              stroke={GOLD}
-              strokeWidth="3"
-              strokeLinecap="round"
-              fill="none"
-              strokeDasharray="60 220"
-            />
-          </svg>
-        </motion.div>
-        <div
-          className="absolute inset-0 flex items-center justify-center font-display text-3xl font-extrabold"
-          style={{ color: INK }}
-        >
-          R
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            animate={{ rotateY: 360 }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: "linear" }}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <ResmaIsotipoMark size={74} color={INK} />
+          </motion.div>
         </div>
       </div>
 
