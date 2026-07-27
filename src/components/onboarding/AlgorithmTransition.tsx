@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { ResmaIsotipoMark } from "@/components/brand/ResmaIsotipoMark";
 
 const TEAL = "#7cc2c8";
-const GOLD = "#facb60";
 const INK = "#101927";
 
 const MESSAGES = [
