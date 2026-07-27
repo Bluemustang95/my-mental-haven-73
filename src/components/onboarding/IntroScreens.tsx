@@ -129,25 +129,26 @@ const PILLARS: Pillar[] = [
 
 export function ValueSlides({ onContinue }: { onContinue: () => void }) {
   return (
-    <div className="flex flex-1 flex-col justify-center pt-4">
+    <div className="flex flex-1 flex-col justify-center py-8">
       <motion.div
-        className="space-y-3.5"
+        className="space-y-4"
         initial="hidden"
         animate="show"
         variants={{
           hidden: {},
-          show: { transition: { staggerChildren: 0.22, delayChildren: 0.1 } },
+          show: { transition: { staggerChildren: 0.16, delayChildren: 0.15 } },
         }}
       >
         {PILLARS.map(({ Icon, image, title, body, tint }) => (
           <motion.div
             key={title}
             variants={{
-              hidden: { opacity: 0, y: 18 },
+              hidden: { opacity: 0, y: 24, scale: 0.97 },
               show: {
                 opacity: 1,
                 y: 0,
-                transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+                scale: 1,
+                transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] },
               },
             }}
             className="flex items-start gap-3 rounded-[22px] border border-[#101927]/5 bg-white/85 p-3.5 shadow-glass backdrop-blur-xl"
@@ -169,10 +170,10 @@ export function ValueSlides({ onContinue }: { onContinue: () => void }) {
               )}
             </div>
             <div className="min-w-0">
-              <h3 className="font-display text-[14px] font-bold leading-tight text-[#101927]">
+              <h3 className="font-display text-[16px] font-bold leading-tight text-[#101927]">
                 {title}
               </h3>
-              <p className="mt-1 text-[12px] font-light leading-snug text-[#101927]/60">
+              <p className="mt-1 text-[13px] font-light leading-snug text-[#101927]/60">
                 {body}
               </p>
             </div>
@@ -181,7 +182,7 @@ export function ValueSlides({ onContinue }: { onContinue: () => void }) {
       </motion.div>
 
       <motion.div
-        className="mt-auto pt-8"
+        className="pt-8"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
