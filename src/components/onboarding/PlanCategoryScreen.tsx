@@ -70,7 +70,7 @@ export function PlanCategoryScreen({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="mt-3 text-center text-[13px] leading-relaxed"
+        className="mt-3 text-center text-[14.5px] leading-relaxed"
         style={{ color: "rgba(16,25,39,0.65)" }}
       >
         {content.description}
