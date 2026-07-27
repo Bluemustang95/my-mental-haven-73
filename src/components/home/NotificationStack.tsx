@@ -44,21 +44,27 @@ export function NotificationStack() {
 
   const [prefs, setPrefs] = useState<any | null>(null);
   const [hasHabits, setHasHabits] = useState(false);
+  const [hasMeds, setHasMeds] = useState(false);
+  const [hasJournal, setHasJournal] = useState(false);
   const [dismissed, setDismissed] = useState<string[]>(() => loadDismissed());
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: pref }, { data: hs }] = await Promise.all([
+      const [{ data: pref }, { data: hs }, { data: meds }, { data: journal }] = await Promise.all([
         supabase
           .from("notification_preferences")
           .select("*")
           .eq("user_id", user.id)
           .maybeSingle(),
         supabase.from("habits").select("id").eq("user_id", user.id).limit(1),
+        supabase.from("medications").select("id").eq("user_id", user.id).limit(1),
+        supabase.from("journal_entries").select("id").eq("user_id", user.id).limit(1),
       ]);
       setPrefs(pref ?? {});
       setHasHabits((hs ?? []).length > 0);
+      setHasMeds((meds ?? []).length > 0);
+      setHasJournal((journal ?? []).length > 0);
     })();
   }, [user?.id]);
 
@@ -94,7 +100,8 @@ export function NotificationStack() {
       });
     }
 
-    if (prefs.checkin_enabled !== false && !done.diario_quick) {
+    // Solo si la persona ya usa el diario (evita avisos "fantasma" en cuentas nuevas).
+    if (prefs.checkin_enabled !== false && hasJournal && !done.diario_quick) {
       out.push({
         id: "journal",
         chip: "DIARIO",
@@ -106,7 +113,8 @@ export function NotificationStack() {
       });
     }
 
-    if (prefs.content_enabled !== false && !done.mindfulness_quick) {
+    // Mindfulness es opt-in explícito.
+    if (prefs.content_enabled === true && !done.mindfulness_quick) {
       out.push({
         id: "mindfulness",
         chip: "MINDFULNESS",
@@ -118,7 +126,8 @@ export function NotificationStack() {
       });
     }
 
-    if (prefs.medication_enabled) {
+    // Medicación: solo si hay medicación cargada por la persona.
+    if (prefs.medication_enabled === true && hasMeds) {
       out.push({
         id: "medication",
         chip: "MEDICACIÓN",
@@ -130,7 +139,7 @@ export function NotificationStack() {
     }
 
     return out.filter((n) => !dismissed.includes(n.id));
-  }, [prefs, next, hasHabits, done, dismissed]);
+  }, [prefs, next, hasHabits, hasMeds, hasJournal, done, dismissed]);
 
   const dismiss = (id: string) => {
     const nextList = [...dismissed, id];
