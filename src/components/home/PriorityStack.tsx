@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 export type PriorityCard = {
   id: string;
@@ -311,7 +311,7 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
               className="pr-2"
             >
               <h3
-                className="font-serifElegant text-[26px] font-medium leading-[1.1]"
+                className="font-display text-[24px] font-bold leading-[1.15]"
                 style={{ color: phase.ink }}
               >
                 {card.title}
