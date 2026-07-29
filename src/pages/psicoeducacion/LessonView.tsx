@@ -36,6 +36,14 @@ function youTubeEmbed(url: string) {
 }
 
 export default function LessonView() {
+  return (
+    <RevealGateProvider>
+      <LessonViewInner />
+    </RevealGateProvider>
+  );
+}
+
+function LessonViewInner() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
