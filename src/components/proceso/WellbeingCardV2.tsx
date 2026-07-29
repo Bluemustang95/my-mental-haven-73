@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { TrendingDown } from "lucide-react";
+import { WeekDayBars } from "./WeekDayBars";
+
 
 type Props = {
   score: number;
