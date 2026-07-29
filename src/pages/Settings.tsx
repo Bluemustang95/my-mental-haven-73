@@ -178,29 +178,6 @@ export default function Settings() {
             label="Notificaciones"
             onClick={() => navigate("/configuracion/notificaciones")}
           />
-          <div className="flex items-center justify-between px-4 py-3.5">
-            <div className="flex items-center gap-3">
-              <Mic size={18} />
-              <span className="text-[15px] font-medium">Voz de mindfulness</span>
-            </div>
-            <div className="flex rounded-xl bg-black/5 p-0.5">
-              {(["female", "male"] as const).map((g) => (
-                <button
-                  key={g}
-                  onClick={() => {
-                    setVoiceGender(g);
-                    updateProfile({ voice_gender_preference: g });
-                    toast.success(g === "female" ? "Voz femenina" : "Voz masculina");
-                  }}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
-                    voiceGender === g ? "bg-white shadow text-[#101927]" : "text-[#101927]/60"
-                  }`}
-                >
-                  {g === "female" ? "Femenina" : "Masculina"}
-                </button>
-              ))}
-            </div>
-          </div>
           {bioSupported && (
             <RowToggle
               icon={<Fingerprint size={18} />}
