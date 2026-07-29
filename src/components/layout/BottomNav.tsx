@@ -1,8 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { House, Notebook, Toolbox, ChartLineUp, BookOpen, Lifebuoy } from "@phosphor-icons/react";
+import { House, Notebook, Toolbox, ChartLineUp, BookOpen, Lifebuoy, Plus } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useUiChrome } from "@/hooks/useUiChrome";
+import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import resmitaAssetJson from "@/assets/resmita-bot.png.asset.json";
+
+const resmitaAvatar = resmitaAssetJson.url;
 
 const leftTabs = [
   { path: "/", label: "Inicio", icon: House },
@@ -18,6 +23,7 @@ export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { bottomNavHidden } = useUiChrome();
+  const [dialOpen, setDialOpen] = useState(false);
   if (bottomNavHidden) return null;
 
   const isActive = (path: string) => {
@@ -112,26 +118,84 @@ export function BottomNav() {
         </div>
       </nav>
 
-      {/* Floating SOS button — own fixed layer so it never shifts */}
+      {/* Speed dial: Resmita + Plan de seguridad juntos */}
       {!hideSos && (
-        <motion.button
-          onClick={() => navigate("/herramientas/plan-seguridad")}
-          whileTap={{ scale: 0.85 }}
-          aria-label="Plan de seguridad"
-          className={cn(
-            "flex h-12 w-12 items-center justify-center rounded-full border border-white/30 backdrop-blur-xl shadow-[0_10px_24px_-8px_rgba(220,38,38,0.55)] transition-colors",
-            sosActive ? "bg-red-600 text-white" : "bg-red-500/95 text-white"
-          )}
-          style={{
-            position: "fixed",
-            right: "max(1rem, env(safe-area-inset-right))",
-            bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
-            zIndex: 51,
-          }}
-        >
-          <Lifebuoy size={22} weight={sosActive ? "fill" : "bold"} />
-        </motion.button>
+        <>
+          <AnimatePresence>
+            {dialOpen && (
+              <motion.button
+                aria-label="Cerrar accesos"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setDialOpen(false)}
+                className="fixed inset-0 z-[49] bg-black/20 backdrop-blur-[2px]"
+              />
+            )}
+          </AnimatePresence>
+
+          <div
+            className="flex flex-col items-end gap-2.5"
+            style={{
+              position: "fixed",
+              right: "max(1rem, env(safe-area-inset-right))",
+              bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
+              zIndex: 51,
+            }}
+          >
+            <AnimatePresence>
+              {dialOpen && (
+                <>
+                  <motion.button
+                    key="resmita"
+                    initial={{ opacity: 0, y: 10, scale: 0.85 }}
+                    animate={{ opacity: 1, y: 0, scale: 1, transition: { delay: 0.04 } }}
+                    exit={{ opacity: 0, y: 8, scale: 0.85 }}
+                    onClick={() => {
+                      setDialOpen(false);
+                      window.dispatchEvent(new CustomEvent("open-resmita"));
+                    }}
+                    aria-label="Hablar con Resmita"
+                    className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-[#facb60] shadow-[0_10px_24px_-8px_rgba(250,203,96,0.6)] active:scale-95"
+                  >
+                    <img src={resmitaAvatar} alt="Resmita" className="h-11 w-11 object-contain" />
+                  </motion.button>
+
+                  <motion.button
+                    key="sos"
+                    initial={{ opacity: 0, y: 10, scale: 0.85 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.85 }}
+                    onClick={() => {
+                      setDialOpen(false);
+                      navigate("/herramientas/plan-seguridad");
+                    }}
+                    aria-label="Plan de seguridad"
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-full border border-white/30 text-white shadow-[0_10px_24px_-8px_rgba(220,38,38,0.55)]",
+                      sosActive ? "bg-red-600" : "bg-red-500/95"
+                    )}
+                  >
+                    <Lifebuoy size={22} weight={sosActive ? "fill" : "bold"} />
+                  </motion.button>
+                </>
+              )}
+            </AnimatePresence>
+
+            <motion.button
+              onClick={() => setDialOpen((v) => !v)}
+              whileTap={{ scale: 0.85 }}
+              aria-label={dialOpen ? "Cerrar accesos rápidos" : "Abrir accesos rápidos"}
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-white/75 text-[#0f172a] shadow-[0_12px_28px_-14px_rgba(15,23,42,0.6)] backdrop-blur-xl"
+            >
+              <motion.span animate={{ rotate: dialOpen ? 45 : 0 }} transition={{ duration: 0.2 }}>
+                <Plus size={22} weight="bold" />
+              </motion.span>
+            </motion.button>
+          </div>
+        </>
       )}
+
     </>
   );
 }
