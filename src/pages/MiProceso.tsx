@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, LineChart, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { IOSToggle } from "@/components/ui/IOSToggle";
@@ -12,13 +12,16 @@ import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurvey
 import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
 import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
 import { WellbeingHeroV3 } from "@/components/proceso/WellbeingHeroV3";
-import { PillarGridV3 } from "@/components/proceso/PillarGridV3";
+import { ProcesoSummaryCard } from "@/components/proceso/ProcesoSummaryCard";
+import { PillarDetailGrid } from "@/components/proceso/PillarDetailGrid";
 import { CorrelationInsights } from "@/components/proceso/CorrelationInsights";
 import { useWellbeingV3 } from "@/hooks/useWellbeingV3";
+import { MonthCalendarSheet } from "@/components/home/MonthCalendarSheet";
 
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
+
 
 
 
