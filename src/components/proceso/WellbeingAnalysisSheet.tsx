@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ClipboardList, X } from "lucide-react";
 import type { WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { WellbeingChart } from "./WellbeingChart";
+import { bandFor } from "./WellbeingCardV2";
 import { ActivityBreakdown } from "./ActivityBreakdown";
 import { CorrelationCards } from "./CorrelationCards";
 import { WellbeingHelpPopover } from "./WellbeingHelpPopover";
@@ -13,6 +14,20 @@ import type { Range } from "@/lib/activityAggregator";
 
 type Props = { open: boolean; onClose: () => void; snapshot?: WellbeingSnapshot | null };
 
+const COMPONENTS = [
+  { key: "mood" as const, label: "Ánimo", weight: 35, color: "#7cc2c8" },
+  { key: "sleep" as const, label: "Sueño", weight: 25, color: "#9b72cf" },
+  { key: "balance" as const, label: "Balance emocional", weight: 25, color: "#facb60" },
+  { key: "dawn" as const, label: "Despertar", weight: 15, color: "#c98a5e" },
+];
+
+const SELF_CARE = [
+  { key: "habits" as const, label: "Hábitos" },
+  { key: "medication" as const, label: "Medicación" },
+  { key: "engagement" as const, label: "Uso de recursos" },
+  { key: "tests" as const, label: "Evaluaciones" },
+];
+
 export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
   const { user } = useAuth();
   const [mode, setMode] = useState<"week" | "month">("week");
@@ -21,6 +36,7 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
 
   const score = snapshot?.score ?? 0;
   const delta = snapshot?.delta ?? 0;
+  const band = bandFor(score);
 
   useEffect(() => {
     if (!open || !user || !range) return;
@@ -67,21 +83,104 @@ export function WellbeingAnalysisSheet({ open, onClose, snapshot }: Props) {
               {/* Header con score + delta */}
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-[10.5px] uppercase tracking-widest text-[#94a3b8]">Índice actual</p>
+                  <p className="font-display text-[10.5px] uppercase tracking-widest text-[#94a3b8]">Índice actual</p>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="font-serif text-[44px] font-bold leading-none text-[#0f172a]">{score}</span>
+                    <span className="font-display text-[44px] font-bold leading-none text-[#0f172a]">{score}</span>
                     <span className="text-[11px] text-[#94a3b8]">de 100</span>
                   </div>
+                  <span
+                    className="mt-1.5 inline-block rounded-full px-2 py-0.5 font-display text-[10.5px] font-semibold"
+                    style={{ background: `${band.color}26`, color: band.color }}
+                  >
+                    {band.label}
+                  </span>
                 </div>
-                <span
-                  className="rounded-full px-3 py-1 text-[11px] font-semibold"
-                  style={{
-                    background: delta < 0 ? "rgba(239,68,68,0.12)" : "rgba(34,197,94,0.12)",
-                    color: delta < 0 ? "#dc2626" : "#16a34a",
-                  }}
-                >
-                  {delta > 0 ? "+" : ""}{delta}% vs semana previa
-                </span>
+                {delta !== 0 && (
+                  <span
+                    className="rounded-full px-3 py-1 font-display text-[11px] font-semibold"
+                    style={{
+                      background: delta < 0 ? "rgba(239,68,68,0.12)" : "rgba(34,197,94,0.12)",
+                      color: delta < 0 ? "#dc2626" : "#16a34a",
+                    }}
+                  >
+                    {delta > 0 ? "+" : ""}{delta}% vs semana previa
+                  </span>
+                )}
+              </div>
+
+              {snapshot?.message && (
+                <p className="-mt-2 font-display text-[12.5px] leading-relaxed text-[#64748b]">
+                  {snapshot.message}
+                </p>
+              )}
+
+              {/* Cómo se compone tu índice */}
+              <div>
+                <p className="mb-2 font-display text-[11px] font-medium uppercase tracking-[0.12em] text-[#94a3b8]">
+                  Cómo se compone tu índice
+                </p>
+                <div className="space-y-2.5 rounded-2xl bg-[#f8fafc] p-4">
+                  {COMPONENTS.map((c) => {
+                    const value = snapshot?.components?.[c.key] ?? null;
+                    const applied = snapshot?.appliedWeights?.[c.key] ?? 0;
+                    const renormalized = value !== null && applied !== c.weight;
+                    return (
+                      <div key={c.key}>
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="font-display text-[12.5px] font-medium text-[#0f172a]">
+                            {c.label}{" "}
+                            <span className="text-[10.5px] font-normal text-[#94a3b8]">
+                              {value === null
+                                ? "· sin datos"
+                                : renormalized
+                                  ? `· ${c.weight}% → ${applied}%`
+                                  : `· ${c.weight}%`}
+                            </span>
+                          </p>
+                          <p className="font-display text-[12.5px] font-semibold tabular-nums text-[#0f172a]">
+                            {value === null ? "—" : value}
+                          </p>
+                        </div>
+                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#e2e8f0]">
+                          <div
+                            className="h-full rounded-full transition-[width] duration-700"
+                            style={{ width: `${value ?? 0}%`, background: c.color }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <p className="pt-1 text-[10.5px] leading-relaxed text-[#94a3b8]">
+                    Ventana de los últimos 7 días · mínimo {snapshot?.minDays ?? 3} días con registro.
+                    Si falta un componente, su peso se reparte entre los demás. Fuente: tus check-ins de
+                    Sintonía y Balance nocturno.
+                  </p>
+                </div>
+              </div>
+
+              {/* Autocuidado — no afecta el índice */}
+              <div>
+                <p className="mb-2 font-display text-[11px] font-medium uppercase tracking-[0.12em] text-[#94a3b8]">
+                  Autocuidado · no afecta tu índice
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {SELF_CARE.map((c) => {
+                    const value = snapshot?.selfCare?.[c.key] ?? null;
+                    return (
+                      <div key={c.key} className="rounded-2xl border border-dashed border-[#e2e8f0] bg-white p-3">
+                        <p className="font-display text-[11px] text-[#64748b]">{c.label}</p>
+                        <p className="mt-0.5 font-display text-[18px] font-bold tabular-nums text-[#0f172a]">
+                          {value === null ? "—" : value}
+                          {value !== null && <span className="text-[11px] font-normal text-[#94a3b8]"> /100</span>}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-[10.5px] leading-relaxed text-[#94a3b8]">
+                  Estos indicadores muestran cuánto te estás cuidando, pero se mantienen fuera del cálculo
+                  para que usar la app no infle tu bienestar.
+                </p>
               </div>
 
               {/* Gráfico + rango */}

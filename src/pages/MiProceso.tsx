@@ -119,6 +119,9 @@ export default function MiProceso() {
             delta={snap?.delta ?? 0}
             message={snap?.message ?? "Cargando tu evolución…"}
             trend={snap?.trend ?? [0,0,0,0,0,0,0]}
+            hasEnoughData={snap ? snap.hasEnoughData : true}
+            daysWithCheckin={snap?.daysWithCheckin ?? 0}
+            minDays={snap?.minDays ?? 3}
             onOpen={() => setSheetOpen(true)}
           />
         </div>

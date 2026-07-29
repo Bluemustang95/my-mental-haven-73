@@ -15,6 +15,12 @@ export type WellbeingSnapshot = {
   message: string;
   hasEnoughData: boolean; // true si ≥ 3 días con check-in en la ventana
   daysMissing: number;    // cuántos días faltan para llegar al umbral (0 si ya alcanzó)
+  daysWithCheckin: number; // días distintos con check-in en los últimos 7
+  minDays: number;         // umbral necesario (3)
+  /** Componente presente con el valor más bajo (para el mensaje contextual) */
+  weakestComponent: "mood" | "sleep" | "dawn" | "balance" | null;
+  /** Pesos efectivos tras renormalizar por componentes faltantes (0 si ausente) */
+  appliedWeights: { mood: number; sleep: number; dawn: number; balance: number };
   components: {
     mood: number | null;    // 0-100  (mood_score promedio ×20)
     sleep: number | null;   // 0-100  (sleep_score promedio ×20)
@@ -45,6 +51,10 @@ const EMPTY: WellbeingSnapshot = {
   message: `Faltan ${MIN_DAYS} día(s) de registro para calcular tu bienestar.`,
   hasEnoughData: false,
   daysMissing: MIN_DAYS,
+  daysWithCheckin: 0,
+  minDays: MIN_DAYS,
+  weakestComponent: null,
+  appliedWeights: { mood: 0, sleep: 0, dawn: 0, balance: 0 },
   components: { mood: null, sleep: null, dawn: null, balance: null },
   selfCare: { habits: null, engagement: null, medication: null, tests: null },
 };
@@ -114,6 +124,7 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
       ...EMPTY,
       trend,
       daysMissing: missing,
+      daysWithCheckin,
       message: `Faltan ${missing} día(s) de registro para calcular tu bienestar.`,
     };
   }
@@ -149,10 +160,17 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
   ];
   const present = parts.filter(([, v]) => v !== null) as Array<[keyof typeof WEIGHTS, number]>;
   let score = 0;
+  const appliedWeights = { mood: 0, sleep: 0, dawn: 0, balance: 0 };
   if (present.length) {
     const totalW = present.reduce((s, [k]) => s + WEIGHTS[k], 0);
     score = Math.round(present.reduce((s, [k, v]) => s + v * WEIGHTS[k], 0) / totalW);
+    for (const [k] of present) appliedWeights[k] = Math.round((WEIGHTS[k] / totalW) * 100);
   }
+
+  // Componente más débil (solo entre los presentes)
+  const weakestComponent = present.length
+    ? present.reduce((min, cur) => (cur[1] < min[1] ? cur : min))[0]
+    : null;
 
   // ── Delta: ánimo actual vs. 7 días previos ──
   const prev7 = (ci ?? []).filter((c: any) => c.checkin_date < cutoff);
@@ -211,10 +229,33 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
   const tScores = latestTests.map((t: any) => severityScore(t.severity)).filter((x: number | null): x is number => x !== null);
   const tests = tScores.length ? Math.round(tScores.reduce((a, b) => a + b, 0) / tScores.length) : null;
 
-  const message =
-    score >= 70 ? "Vas muy bien. Sostené las rutinas que te están ayudando."
-    : score >= 45 ? "Semana con altibajos. Es normal que el proceso no sea lineal."
-    : "Días difíciles. Bajá la exigencia y volvé a lo básico: dormir y respirar.";
+  // ── Mensaje contextual: apunta al componente más flojo, no sólo al score ──
+  const WEAK_MESSAGE: Record<"mood" | "sleep" | "dawn" | "balance", string> = {
+    mood: "Tu ánimo es lo que más pesa esta semana. Date margen y buscá momentos amables.",
+    sleep: "Tu descanso es lo que más pesa esta semana. Cuidar el sueño mueve todo lo demás.",
+    dawn: "Los despertares vienen costando. Una rutina suave a la mañana puede ayudarte.",
+    balance: "Las emociones difíciles predominaron en tus noches. Nombrarlas ya es un buen paso.",
+  };
+  const missingComponent = parts.find(([, v]) => v === null)?.[0] ?? null;
+  const MISSING_MESSAGE: Record<"mood" | "sleep" | "dawn" | "balance", string> = {
+    mood: "Sin registros de ánimo esta semana: completá tu Sintonía para afinar el índice.",
+    sleep: "Sin datos de sueño esta semana: sumalos en tu Balance nocturno.",
+    dawn: "Sin datos de despertar esta semana: se calculó con el resto de tus registros.",
+    balance: "Sin emociones registradas de noche: sumalas para ver tu balance emocional.",
+  };
+
+  let message: string;
+  if (score >= 70) {
+    message = "Vas muy bien. Sostené las rutinas que te están ayudando.";
+  } else if (weakestComponent && (present.find(([k]) => k === weakestComponent)?.[1] ?? 100) < 55) {
+    message = WEAK_MESSAGE[weakestComponent];
+  } else if (missingComponent) {
+    message = MISSING_MESSAGE[missingComponent];
+  } else if (score >= 45) {
+    message = "Semana con altibajos. Es normal que el proceso no sea lineal.";
+  } else {
+    message = "Días difíciles. Bajá la exigencia y volvé a lo básico: dormir y respirar.";
+  }
 
   return {
     score,
@@ -223,6 +264,10 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
     message,
     hasEnoughData: true,
     daysMissing: 0,
+    daysWithCheckin,
+    minDays: MIN_DAYS,
+    weakestComponent,
+    appliedWeights,
     components: { mood, sleep, dawn, balance },
     selfCare: { habits, engagement, medication, tests },
   };
