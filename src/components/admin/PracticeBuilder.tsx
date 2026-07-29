@@ -256,7 +256,7 @@ function BlockEditor({
           <Label className="text-xs">Etiqueta del botón</Label>
           <Input
             value={block.label ?? ""}
-            placeholder="Más"
+            placeholder="Continuar"
             onChange={(e) => onChange({ ...block, label: e.target.value })}
           />
           <p className="text-[11px] text-slate-500">
