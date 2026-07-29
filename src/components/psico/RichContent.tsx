@@ -232,16 +232,24 @@ export function RichContent({
   );
   useRegisterReveal(gateId, revealed < sections.length);
 
+  const pendingScroll = useRef<number | null>(null);
+  useEffect(() => {
+    if (pendingScroll.current === null) return;
+    const target = sectionRefs.current[pendingScroll.current] ?? null;
+    pendingScroll.current = null;
+    scrollRevealIntoView(target);
+  }, [revealed]);
+
   if (sections.length === 0) return null;
 
   const cls = size === "sm" ? `${proseClass} prose-sm` : proseClass;
   const hasMore = revealed < sections.length;
 
   const revealNext = () => {
-    const next = revealed + 1;
-    setRevealed(next);
-    scrollRevealIntoView(sectionRefs.current[next - 1] ?? null);
+    pendingScroll.current = revealed;
+    setRevealed((r) => r + 1);
   };
+
 
   return (
     <div>
