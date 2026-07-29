@@ -167,7 +167,7 @@ export function BentoGrid() {
   }, [priority, visibleTiles]);
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-2.5">
       {orderedTiles.map((t, i) => {
         const isPriority = t.slug === priority;
         // Ritmo asimétrico: la primera tarjeta ocupa el ancho completo y luego
@@ -177,8 +177,8 @@ export function BentoGrid() {
           <button
             key={t.slug}
             onClick={() => navigate(t.target)}
-            className={`pressable group relative flex flex-col items-start justify-end overflow-hidden rounded-[28px] p-5 text-left transition-transform duration-200 active:scale-[0.97] ${
-              isWide ? "col-span-2 min-h-[124px]" : "aspect-square"
+            className={`pressable group relative flex flex-col items-start justify-end overflow-hidden rounded-[24px] p-4 text-left transition-transform duration-200 active:scale-[0.97] ${
+              isWide ? "col-span-2 min-h-[92px]" : "aspect-[1/0.82]"
             }`}
             style={{
               background: `linear-gradient(155deg, ${hexToRgba(t.color, 0.16)} 0%, ${hexToRgba(t.color, 0.07)} 100%)`,
@@ -207,13 +207,13 @@ export function BentoGrid() {
               </span>
             )}
             <t.Icon
-              size={isWide ? 30 : 28}
+              size={isWide ? 26 : 24}
               strokeWidth={1.1}
               className="relative mb-auto"
               style={{ color: t.color }}
             />
             <h3
-              className="relative mt-4 font-display text-[14px] font-medium leading-tight tracking-[-0.01em]"
+              className="relative mt-3 font-display text-[13.5px] font-medium leading-tight tracking-[-0.01em]"
               style={{ color: t.color }}
             >
               {t.name}
