@@ -105,6 +105,66 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
   const hidden = await getHiddenToolSlugs();
   const exFiltered = filterOutHidden(ex as any[], hidden, "exercise_type");
 
+  const core = computeCheckinCore((ci ?? []) as any[]);
+
+
+  // ── Autocuidado (no entra al score) ──
+  const habitDays = new Set((hc ?? []).map((h: any) => h.completed_date));
+  const last7 = Array.from({ length: 7 }, (_, i) => isoDate(new Date(today.getTime() - i * 86400000)));
+  const habits = habitDays.size === 0 ? null : Math.round((last7.filter((d) => habitDays.has(d)).length / 7) * 100);
+
+  const mindCount = exFiltered.filter((e: any) => {
+    const t = (e.exercise_type ?? "").toLowerCase();
+    return t.includes("mindful") || t.includes("respir") || t.includes("breath");
+  }).length;
+  const totalEngagement =
+    (th?.length ?? 0) + (dbt?.length ?? 0) + (jr?.length ?? 0) +
+    mindCount + (wr?.length ?? 0) + (bad?.length ?? 0);
+  let engagement: number | null = null;
+  if (totalEngagement >= 10) engagement = 100;
+  else if (totalEngagement >= 6) engagement = 80;
+  else if (totalEngagement >= 3) engagement = 60;
+  else if (totalEngagement >= 1) engagement = 35;
+
+  const medRows = (ml ?? []) as { taken: boolean | null }[];
+  let medication: number | null = null;
+  if (medRows.length > 0) {
+    const taken = medRows.filter((r) => r.taken === true).length;
+    medication = Math.round((taken / medRows.length) * 100);
+  }
+
+  const seenTypes = new Set<string>();
+  const latestTests = (tr ?? []).filter((t: any) => {
+    const code = (t.test_type || "").toUpperCase();
+    if (code === "BIGFIVE" || code === "BIG-FIVE" || code === "BFI") return false;
+    if (seenTypes.has(t.test_type)) return false;
+    seenTypes.add(t.test_type);
+    return true;
+  });
+  const severityScore = (sev?: string | null): number | null => {
+    if (!sev) return null;
+    const s = sev.toLowerCase();
+    if (s.includes("mínim") || s.includes("saludable") || s.includes("bajo") || s.includes("buen")) return 90;
+    if (s.includes("leve") || s.includes("normal")) return 70;
+    if (s.includes("modera")) return 45;
+    if (s.includes("signif") || s.includes("alto")) return 25;
+    if (s.includes("severa") || s.includes("necesita")) return 10;
+    return null;
+  };
+  const tScores = latestTests.map((t: any) => severityScore(t.severity)).filter((x: number | null): x is number => x !== null);
+  const tests = tScores.length ? Math.round(tScores.reduce((a, b) => a + b, 0) / tScores.length) : null;
+
+  return { ...core, selfCare: { habits, engagement, medication, tests } };
+}
+
+/**
+ * Núcleo del índice: sólo depende de las filas de `daily_checkins`
+ * (últimos 14 días). Se usa tanto para el usuario logueado como para la
+ * vista previa de Admin sobre otro paciente.
+ */
+export function computeCheckinCore(ci: any[]): Omit<WellbeingSnapshot, "selfCare"> {
+  const today = startOfDay(new Date());
+
   // Ventana últimos 7 días
   const cutoff = isoDate(new Date(today.getTime() - 6 * 86400000));
   const recent7 = (ci ?? []).filter((c: any) => c.checkin_date >= cutoff);
@@ -121,8 +181,9 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
   const daysWithCheckin = new Set(recent7.map((c: any) => c.checkin_date)).size;
   if (daysWithCheckin < MIN_DAYS) {
     const missing = MIN_DAYS - daysWithCheckin;
+    const { selfCare, ...emptyCore } = EMPTY;
     return {
-      ...EMPTY,
+      ...emptyCore,
       trend,
       daysMissing: missing,
       daysWithCheckin,
@@ -184,52 +245,6 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
     delta = Math.abs(raw) > 2 ? raw : 0;
   }
 
-  // ── Autocuidado (no entra al score) ──
-  const habitDays = new Set((hc ?? []).map((h: any) => h.completed_date));
-  const last7 = Array.from({ length: 7 }, (_, i) => isoDate(new Date(today.getTime() - i * 86400000)));
-  const habits = habitDays.size === 0 ? null : Math.round((last7.filter((d) => habitDays.has(d)).length / 7) * 100);
-
-  const mindCount = exFiltered.filter((e: any) => {
-    const t = (e.exercise_type ?? "").toLowerCase();
-    return t.includes("mindful") || t.includes("respir") || t.includes("breath");
-  }).length;
-  const totalEngagement =
-    (th?.length ?? 0) + (dbt?.length ?? 0) + (jr?.length ?? 0) +
-    mindCount + (wr?.length ?? 0) + (bad?.length ?? 0);
-  let engagement: number | null = null;
-  if (totalEngagement >= 10) engagement = 100;
-  else if (totalEngagement >= 6) engagement = 80;
-  else if (totalEngagement >= 3) engagement = 60;
-  else if (totalEngagement >= 1) engagement = 35;
-
-  const medRows = (ml ?? []) as { taken: boolean | null }[];
-  let medication: number | null = null;
-  if (medRows.length > 0) {
-    const taken = medRows.filter((r) => r.taken === true).length;
-    medication = Math.round((taken / medRows.length) * 100);
-  }
-
-  const seenTypes = new Set<string>();
-  const latestTests = (tr ?? []).filter((t: any) => {
-    const code = (t.test_type || "").toUpperCase();
-    if (code === "BIGFIVE" || code === "BIG-FIVE" || code === "BFI") return false;
-    if (seenTypes.has(t.test_type)) return false;
-    seenTypes.add(t.test_type);
-    return true;
-  });
-  const severityScore = (sev?: string | null): number | null => {
-    if (!sev) return null;
-    const s = sev.toLowerCase();
-    if (s.includes("mínim") || s.includes("saludable") || s.includes("bajo") || s.includes("buen")) return 90;
-    if (s.includes("leve") || s.includes("normal")) return 70;
-    if (s.includes("modera")) return 45;
-    if (s.includes("signif") || s.includes("alto")) return 25;
-    if (s.includes("severa") || s.includes("necesita")) return 10;
-    return null;
-  };
-  const tScores = latestTests.map((t: any) => severityScore(t.severity)).filter((x: number | null): x is number => x !== null);
-  const tests = tScores.length ? Math.round(tScores.reduce((a, b) => a + b, 0) / tScores.length) : null;
-
   // ── Mensaje contextual: apunta al componente más flojo, no sólo al score ──
   const WEAK_MESSAGE: Record<"mood" | "sleep" | "dawn" | "balance", string> = {
     mood: "Tu ánimo es lo que más pesa esta semana. Date margen y buscá momentos amables.",
@@ -270,6 +285,5 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
     weakestComponent,
     appliedWeights,
     components: { mood, sleep, dawn, balance },
-    selfCare: { habits, engagement, medication, tests },
   };
 }
