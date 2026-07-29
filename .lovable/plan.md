@@ -1,28 +1,32 @@
+## Fase 2 — Rituales: Sintonía Diaria y Balance Nocturno
 
-# Fase 1 — Home: tarjeta de Sintonía
+Objetivo: que los dos rituales usen la misma tipografía oficial que el resto de la app, que las emociones queden bien centradas y que la selección de valores sea circular, con ícono, etiqueta abajo y cambio de color al seleccionar (sin cortes visuales).
 
-Archivos: `src/components/home/PriorityStack.tsx`, `src/pages/Dashboard.tsx`.
+### 1. Tipografía unificada
+- Reemplazar todos los usos de `font-serifElegant` y las itálicas decorativas en `SintoniaManana.tsx` y `BalanceNocturno.tsx` por la fuente oficial (`font-display` para títulos, fuente base para cuerpo), igual que Home y Recursos.
+- Normalizar la escala: título de paso ~26px, subtítulo ~14px, cuerpo 13.5–14px, etiquetas en mayúsculas 10px con tracking.
+- Quitar itálicas salvo en las citas clínicas puntuales (se convierten en texto normal con opacidad).
 
-## 1. Flecha en la esquina inferior derecha
+### 2. Paso 2 — Emociones centradas
+- Contenedor con ancho máximo y centrado vertical/horizontal real.
+- Grid simétrico de emociones (chips centrados, mismo alto, ícono + etiqueta alineados al centro).
+- Título, descripción y contador centrados; mismos estilos tipográficos del punto 1.
 
-Hoy la cápsula con la flecha está arriba a la izquierda (bloque `chip-${phaseKey}` dentro del contenedor `flex-col justify-between`).
+### 3. Paso 3 — Valores en formato circular
+- Reemplazar las tarjetas actuales (que se ven cortadas) por un grid de píldoras circulares:
+  - Círculo de ~72px con ícono de trazo fino centrado.
+  - Nombre del valor debajo del círculo, en 2 líneas máximo, centrado.
+  - Estado no seleccionado: vidrio neutro con borde suave.
+  - Estado seleccionado: relleno teñido del color del valor, borde e ícono en el mismo tono, escala táctil al presionar.
+- Corregir el recorte: se elimina el scroll horizontal/overflow que corta las tarjetas y se usa grid de 3 columnas con scroll vertical suave.
 
-- Se saca del flujo superior y se posiciona en absoluto en la **esquina inferior derecha** de la tarjeta (`absolute bottom-5 right-5`), manteniendo el estilo de vidrio (`bg-white/70`, borde blanco, blur) y el color de flecha según la fase.
-- Tamaño levemente mayor (40px) para que sea un target táctil cómodo; conserva la animación de entrada por fase.
-- Los puntos de paginación quedan abajo a la izquierda, sin chocar con la flecha (padding derecho reservado).
-- El título sube al espacio liberado; sigue con `font-display` como el resto de la app.
+### Detalles técnicos
+- Archivos: `src/pages/ritual/SintoniaManana.tsx`, `src/pages/ritual/BalanceNocturno.tsx`, y si hace falta un pequeño componente nuevo `src/components/ritual/ValueBubble.tsx` para la píldora circular.
+- Sin cambios de datos ni de lógica de guardado: sólo presentación y estados visuales de selección.
 
-## 2. Avance automático a la fase nocturna
+### Fases restantes después de esta
+- **Fase 3**: Recursos — Bento Grid asimétrico con tinted glassmorphism e iconografía de trazo fino.
+- **Fase 4**: Índice de Bienestar Modelo A — mensaje contextual, mini-trend de 7 días, autocuidado separado y casos borde.
+- **Fase 5**: FAB Speed Dial en "Mi Proceso" (Sparkles + menú glass con Resmita y SOS).
 
-Hoy `phaseIdx` arranca siempre en 0 (mañana), así que al completar la Sintonía la tarjeta se queda en la fase de mañana.
-
-- La fase inicial pasa a calcularse a partir del estado del día:
-  - Mañana pendiente → fase 0 (mañana)
-  - Mañana completada y noche pendiente → fase 2 (noche)
-  - Ambas completadas → fase 1 (práctica recomendada)
-- Ese cálculo se recalcula cuando cambian los flags `done` de las tarjetas (al volver del ritual y refrescarse la Home), salvo que la persona haya cambiado de fase manualmente en esa sesión (se respeta la elección manual con un flag interno).
-- Se mantiene la persistencia de fases visitadas para el calendario clínico.
-
-## Notas
-
-Solo cambios de UI/estado en la Home; sin tocar base de datos ni la lógica de guardado de los rituales.
+Quedan 3 fases después de la Fase 2.
