@@ -1,41 +1,28 @@
-## 1. Onboarding
 
-**Layout general (todas las pantallas)**
-- En `OnboardingShell`, centrar verticalmente el contenido (`justify-center` en el contenedor de pasos) manteniendo el header de progreso arriba y el `StickyFooter` abajo.
-- Subir un escalón el tamaño de los subtítulos (13px → 14.5px) en las pantallas de pasos ("Desde dónde nos acompañas", "Qué brújula", "Plan de descanso", etc.).
+# Fase 1 — Home: tarjeta de Sintonía
 
-**Pantalla 1 (Splash)**
-- Subir el isótopo RESMA como asset CDN y recolorearlo a teal `#7cc2c8`; reemplaza a Resmita en el splash.
-- Frase: "Tu rincón para cuidar tu salud mental, a tu propio ritmo y con apoyo clínico", sin itálica, con la tipografía oficial (`font-display`).
-- Animación de entrada: fade + slide escalonado (logo → frase → botón).
-- Debajo del disclaimer: enlaces clickeables "Políticas de Privacidad" y "Términos y Condiciones" (abren en pestaña nueva), leídos de `admin_settings`.
-- Íconos de la app: generar `icon-192.png`, `icon-512.png` y `apple-touch-icon.png` a partir del isótopo teal (fondo crema) y reemplazarlos en `public/`.
+Archivos: `src/components/home/PriorityStack.tsx`, `src/pages/Dashboard.tsx`.
 
-**Pantalla 3 (Pilares)**
-- Centrar verticalmente los 4 ítems, bajar el bloque, aumentar el tamaño del título de cada ítem ("Ciencia, no magia" y hermanos) y mantener/reforzar la animación escalonada de entrada.
+## 1. Flecha en la esquina inferior derecha
 
-**Pantalla "Procesando información"**
-- Reemplazar el spinner circular por el isótopo RESMA girando sobre su eje (rotación continua con leve pulso del aura).
-- Extender la duración total de ~2.1s a ~5s, con los mensajes repartidos en ese lapso.
+Hoy la cápsula con la flecha está arriba a la izquierda (bloque `chip-${phaseKey}` dentro del contenedor `flex-col justify-between`).
 
-**Admin**
-- Nueva sección "Legales" en Ajustes generales del admin con dos campos de URL (`legal_privacy_url`, `legal_terms_url`) guardados en `admin_settings` vía `saveSetting`/`loadSetting`. Sin migración de base de datos.
+- Se saca del flujo superior y se posiciona en absoluto en la **esquina inferior derecha** de la tarjeta (`absolute bottom-5 right-5`), manteniendo el estilo de vidrio (`bg-white/70`, borde blanco, blur) y el color de flecha según la fase.
+- Tamaño levemente mayor (40px) para que sea un target táctil cómodo; conserva la animación de entrada por fase.
+- Los puntos de paginación quedan abajo a la izquierda, sin chocar con la flecha (padding derecho reservado).
+- El título sube al espacio liberado; sigue con `font-display` como el resto de la app.
 
-## 2. Home y navegación
+## 2. Avance automático a la fase nocturna
 
-- **Tipografía**: unificar a la fuente oficial (`font-display`) los títulos de Sintonía de la mañana/noche en `PriorityStack` (hoy usan `font-serifElegant`) y revisar el resto de la Home por fuentes sueltas.
-- **Sintonía**: eliminar las etiquetas "Prioridad Mañana"/"Prioridad Noche" y poner en su lugar un botón circular con flecha que dispara la misma acción de la tarjeta.
-- **Notificaciones**: en `NotificationStack` filtrar todo lo que no provenga de un evento real del usuario (p. ej. no mostrar recordatorio de medicación si no hay medicaciones creadas ni logs). Regla: cada tarjeta requiere un dato existente que la respalde.
-- **Navbar**: al estar activo un tab, mostrar el nombre debajo del ícono ("Inicio", "Proceso", "Diario", "Recursos"), con la píldora activa expandiéndose suavemente.
-- **Calendario "Actividades de hoy"**: estado completado visible (círculo relleno, check, título atenuado). Para Diario, el ítem además muestra lo que la persona marcó en el registro diario del día (ánimo/emociones/chips registrados) en lugar de un simple "completado".
+Hoy `phaseIdx` arranca siempre en 0 (mañana), así que al completar la Sintonía la tarjeta se queda en la fase de mañana.
 
-## 3. Recursos
+- La fase inicial pasa a calcularse a partir del estado del día:
+  - Mañana pendiente → fase 0 (mañana)
+  - Mañana completada y noche pendiente → fase 2 (noche)
+  - Ambas completadas → fase 1 (práctica recomendada)
+- Ese cálculo se recalcula cuando cambian los flags `done` de las tarjetas (al volver del ritual y refrescarse la Home), salvo que la persona haya cambiado de fase manualmente en esa sesión (se respeta la elección manual con un flag interno).
+- Se mantiene la persistencia de fases visitadas para el calendario clínico.
 
-- Rediseño de las tarjetas de `BentoGrid`: quitar todos los subtítulos, dejar solo el título.
-- Nuevo estilo: caja con fondo sólido (color de cada recurso, ya sincronizado con los colores de Home), ícono centrado en el medio y el nombre dentro de la caja, tipografía limpia (`font-display`), esquinas redondeadas y sombra sutil, más finas que las actuales.
+## Notas
 
-## Notas técnicas
-
-Archivos principales: `src/components/onboarding/OnboardingShell.tsx`, `IntroScreens.tsx`, `AlgorithmTransition.tsx`, `src/pages/Onboarding.tsx`, nuevo `src/components/brand/ResmaIsotipoMark.tsx`, `src/lib/admin/settings.ts` (consumo), módulo de ajustes del admin, `src/components/home/PriorityStack.tsx`, `NotificationStack.tsx`, `MonthCalendarSheet.tsx`/`Timeline.tsx`, `src/components/layout/BottomNav.tsx`, `src/components/recursos/BentoGrid.tsx`, `public/manifest.webmanifest` + íconos, `index.html`.
-
-No requiere cambios de base de datos: las URLs legales usan la tabla `admin_settings` existente.
+Solo cambios de UI/estado en la Home; sin tocar base de datos ni la lógica de guardado de los rituales.
