@@ -28,8 +28,6 @@ export function ResmitaFAB() {
   const { bottomNavHidden } = useUiChrome();
   const { prefs, update: updatePrefs } = useResmitaPrivacy();
   const snapshot = useResmitaSnapshot(prefs.shareSnapshot && prefs.contextConsent);
-  // Índice de Bienestar v3 (se carga sólo con consentimiento y cuando el chat está abierto).
-  const wellbeingSummary = useWellbeingSummary(open && prefs.shareSnapshot && prefs.contextConsent);
   const hiddenCats = useHiddenCategories();
   const enabledResources = useMemo(() => {
     const ALL = [
@@ -39,6 +37,8 @@ export function ResmitaFAB() {
     return ALL.filter((s) => !hiddenCats.has(s));
   }, [hiddenCats]);
   const [open, setOpen] = useState(false);
+  // Índice de Bienestar v3 (se carga sólo con consentimiento y cuando el chat está abierto).
+  const wellbeingSummary = useWellbeingSummary(open && prefs.shareSnapshot && prefs.contextConsent);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
