@@ -55,6 +55,8 @@ function LessonViewInner() {
   const reachedEndRef = useRef(false);
   const timeReachedRef = useRef(false);
   const endSentinelRef = useRef<HTMLDivElement | null>(null);
+  const gate = useRevealGate();
+  const allRevealed = gate?.allRevealed ?? true;
 
   useEffect(() => {
     if (!id) return;
