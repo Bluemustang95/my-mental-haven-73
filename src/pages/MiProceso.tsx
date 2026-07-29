@@ -124,7 +124,9 @@ export default function MiProceso() {
             minDays={snap?.minDays ?? 3}
             onOpen={() => setSheetOpen(true)}
           />
+          <SubIndexGrid snapshot={snap} />
         </div>
+
 
         <div className="my-6 h-px bg-black/[0.06]" />
 
