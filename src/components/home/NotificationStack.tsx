@@ -171,7 +171,7 @@ export function NotificationStack() {
     }
 
     return out.filter((n) => !dismissed.includes(n.id));
-  }, [prefs, next, hasHabits, hasMeds, hasJournal, done, dismissed]);
+  }, [prefs, next, hasHabits, hasMeds, hasJournal, checkedInToday, done, dismissed]);
 
   const dismiss = (id: string) => {
     const nextList = [...dismissed, id];
