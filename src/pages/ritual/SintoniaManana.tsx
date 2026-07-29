@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Check,
   Sparkles,
-  Leaf,
   Plus,
   Moon,
   Feather,
@@ -626,4 +625,3 @@ function EmotionOrb({
   );
 }
 
-// Rama con 4 hojas: 2 izquierda, 2 derecha
