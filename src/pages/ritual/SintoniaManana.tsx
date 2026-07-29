@@ -21,6 +21,8 @@ import { localDateStr } from "@/lib/utils";
 import { toast } from "sonner";
 import { RitualShell } from "@/components/ritual/RitualShell";
 import { PlanContextHint } from "@/components/ritual/PlanContextHint";
+import { ValueBubble } from "@/components/ritual/ValueBubble";
+
 
 // ---------- Datos ----------
 const EMOCIONES = [
