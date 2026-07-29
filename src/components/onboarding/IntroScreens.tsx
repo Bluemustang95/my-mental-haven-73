@@ -37,7 +37,7 @@ function ZenIllustration() {
       />
 
       {/* sol cálido */}
-      <circle cx="196" cy="98" r="34" fill={SUN} opacity="0.85" className="animate-pulse-aura" />
+      <circle cx="204" cy="86" r="32" fill={SUN} opacity="1" className="animate-pulse-aura" />
 
       {/* colinas suaves */}
       <path
@@ -74,7 +74,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   return (
-    <div className="relative flex flex-1 flex-col items-center">
+    <div className="relative flex flex-1 flex-col items-center justify-center">
       {/* Fondo pastel orgánico a pantalla completa */}
       <div
         aria-hidden
@@ -88,7 +88,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center gap-2 rounded-full border border-[#7cc2c8]/40 bg-white/90 px-3.5 py-1.5 shadow-sm backdrop-blur-md"
       >
-        <ResmaIsotipoMark size={16} color={TEAL_DEEP} />
+        <ResmaIsotipoMark size={18} color={TEAL_DEEP} />
         <span className="font-serif text-[13px] font-bold uppercase tracking-[0.16em] text-slate-800">
           RESMA
         </span>
@@ -181,7 +181,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-auto max-w-[320px] text-center font-display text-base font-medium leading-relaxed text-slate-800 sm:text-lg"
+        className="mt-10 max-w-[320px] text-center font-display text-base font-medium leading-relaxed text-slate-800 sm:text-lg"
       >
         Tu rincón para cuidar tu salud mental, a tu propio ritmo y con apoyo clínico
       </motion.p>
