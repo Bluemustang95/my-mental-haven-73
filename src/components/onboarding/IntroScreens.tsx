@@ -75,32 +75,26 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center">
+    <div className="relative flex flex-1 flex-col items-center">
       {/* Fondo pastel orgánico a pantalla completa */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-[#f3fafb] via-white to-[#e6f4f5]"
       />
 
-      {/* Header: píldora de marca */}
+      {/* Header: solo el isotipo */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="flex items-center gap-2 rounded-full border border-[#7cc2c8]/40 bg-white/90 px-3.5 py-1.5 shadow-sm backdrop-blur-md"
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-[#7cc2c8]/40 bg-white/90 shadow-sm backdrop-blur-md"
       >
-        <ResmaIsotipoMark size={20} color={TEAL_DEEP} />
-        <span className="font-serif text-[13px] font-bold uppercase tracking-[0.16em] text-slate-800">
-          RESMA
-        </span>
-        <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        </span>
+        <ResmaIsotipoMark size={28} color={TEAL_DEEP} />
       </motion.div>
 
+
       {/* Área visual híbrida */}
-      <div className="relative mt-6 h-[280px] w-full">
+      <div className="relative mt-auto h-[280px] w-full">
         {/* aura ambiental */}
         <div
           aria-hidden
@@ -182,7 +176,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-10 max-w-[320px] text-center font-display text-base font-medium leading-relaxed text-slate-800 sm:text-lg"
+        className="mt-auto max-w-[320px] text-center font-display text-base font-medium leading-relaxed text-slate-800 sm:text-lg"
       >
         Tu rincón para cuidar tu salud mental, a tu propio ritmo y con apoyo clínico
       </motion.p>
@@ -207,7 +201,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.85, duration: 0.6 }}
-        className="mt-3 text-center"
+        className="mt-3 pb-2 text-center"
       >
         <p className="text-[10px] text-slate-600">
           Al continuar aceptás nuestras políticas de privacidad y uso clínico.
