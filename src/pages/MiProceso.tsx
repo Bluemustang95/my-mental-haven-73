@@ -93,6 +93,13 @@ export default function MiProceso() {
     setMonthOpen(true);
   };
 
+  // Compatibilidad: otras tarjetas piden "ver el análisis" → abrimos el calendario v3.
+  useEffect(() => {
+    const h = () => openMonth("wellbeing");
+    window.addEventListener("open-wellbeing-sheet", h);
+    return () => window.removeEventListener("open-wellbeing-sheet", h);
+  }, []);
+
   const updateTherapy = async (v: boolean) => {
     if (v) return setSyncOpen(true);
     setInTherapy(false);
