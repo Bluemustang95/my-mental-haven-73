@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminCard } from "@/components/admin/ui/AdminPrimitives";
 import { loadWellbeingV3Admin } from "@/lib/wellbeing/fetch";
+import { loadWellbeingConfig } from "@/lib/wellbeing/config";
 import type { WellbeingSnapshotV3 } from "@/lib/wellbeing/types";
 import { WELLBEING_WEIGHTS, CARE_WEIGHTS } from "@/lib/wellbeing/types";
 import { WellbeingHeroV3 } from "@/components/proceso/WellbeingHeroV3";
@@ -53,7 +54,7 @@ export default function WellbeingPreview() {
     setLoading(true);
     setSnapshot(null);
     try {
-      setSnapshot(await loadWellbeingV3Admin(userId));
+      setSnapshot(await loadWellbeingV3Admin(userId, await loadWellbeingConfig()));
     } catch (e: any) {
       toast.error(e?.message ?? "No se pudo calcular el índice");
     } finally {
