@@ -10,6 +10,7 @@ import { TherapyStatusHelp } from "@/components/proceso/TherapyStatusHelp";
 
 import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
 import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
+import { ProcesoSpeedDial } from "@/components/proceso/ProcesoSpeedDial";
 import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
 import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
@@ -187,6 +188,8 @@ export default function MiProceso() {
         )}
       </div>
 
+
+      <ProcesoSpeedDial inTherapy={inTherapy} />
 
       <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} snapshot={snap} />
       <TherapySyncModal open={syncOpen} onClose={() => setSyncOpen(false)} onSynced={handleSynced} />
