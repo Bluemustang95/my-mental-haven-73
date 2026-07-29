@@ -27,11 +27,11 @@ export function SleepHygiene({ onBack }: { onBack: () => void }) {
       if (!user) return;
       const { data } = await supabase
         .from("sleep_hygiene_audits")
-        .select("answers")
+        .select("items")
         .eq("user_id", user.id)
         .eq("audit_date", localDateStr())
         .maybeSingle();
-      const answers = (data as any)?.answers;
+      const answers = (data as any)?.items;
       if (Array.isArray(answers)) setChecked(new Set(answers as string[]));
     })();
   }, []);
@@ -57,7 +57,7 @@ export function SleepHygiene({ onBack }: { onBack: () => void }) {
         user_id: user.id,
         audit_date: localDateStr(),
         score: Math.round(pct),
-        answers: Array.from(checked),
+        items: Array.from(checked),
       } as any,
       { onConflict: "user_id,audit_date" },
     );
