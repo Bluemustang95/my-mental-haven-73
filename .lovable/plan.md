@@ -1,16 +1,32 @@
-## Ajustes a la pantalla splash del onboarding
+## Objetivo
 
-Archivo: `src/components/onboarding/IntroScreens.tsx` (componente `SplashIntro`).
+En Psicoeducación (lecciones teóricas y prácticas):
 
-**1. Header — solo el logo**
-- Quitar el texto "RESMA" y el punto verde con animación `ping` de la píldora.
-- Dejar únicamente el isotipo RESMA (`ResmaIsotipoMark`), un poco más grande (~28px) para que se lea bien solo, dentro de la misma píldora glass (`bg-white/90 backdrop-blur-md rounded-full border-[#7cc2c8]/40`) con padding ajustado a un contenedor circular.
+1. Renombrar el botón "Más" a **"Continuar"**.
+2. El botón final fijo abajo ("Entendido, continuar" / "Guardar y finalizar") **no se muestra** hasta que el usuario haya abierto todos los "Continuar" de la pantalla.
+3. Al tocar "Continuar", la vista **se desplaza sola** hasta la nueva sección revelada, sin que el usuario tenga que scrollear.
 
-**2. Logo más arriba**
-- Sacar el `justify-center` del contenedor y anclar el header al tope: el bloque de marca queda pegado arriba (`mt-0`) en lugar de centrado verticalmente con el resto.
+## Cambios
 
-**3. Botón "Comenzar mi viaje" más abajo**
-- Empujar el CTA y el footer legal al fondo de la pantalla con `mt-auto`, dejando el área visual + frase centradas en el espacio restante.
-- Mantener el footer legal justo debajo del botón, con un pequeño respiro inferior (`pb-2`) para no chocar con el borde seguro del dispositivo.
+### 1. `src/components/psico/RichContent.tsx`
+- `MoreButton`: label por defecto `"Continuar"`.
+- Nuevo contexto ligero **RevealGate** (`RevealGateProvider` + `useRevealGate`): cada bloque con reveals pendientes se registra con un id; el provider expone `allRevealed` (true cuando ningún bloque tiene pendientes).
+- `RichContent` se registra en el gate: reporta `revealed < sections.length`.
+- Al revelar: tras la animación (~350 ms) hacer `scrollIntoView({ behavior: "smooth", block: "start" })` sobre la sección nueva, con un offset para el header sticky, de modo que el texto nuevo quede arriba de la pantalla.
 
-No se toca ningún otro contenido: ilustración, tarjetas flotantes, frase central, textos ni links legales quedan igual.
+### 2. `src/pages/psicoeducacion/LessonView.tsx`
+- Envolver el contenido en `RevealGateProvider`.
+- Ocultar la barra fija inferior mientras `allRevealed === false` (fade-in cuando se completa). Se conserva el auto-marcado de leído por scroll + 20 s.
+- Ajustar el `pb-28` para que no quede un hueco vacío cuando la barra está oculta.
+
+### 3. `src/pages/psicoeducacion/PracticeView.tsx`
+- Envolver en el mismo `RevealGateProvider`; los bloques `more` de la práctica y los `RichContent` internos (Instrucciones / Ejemplo) se registran automáticamente.
+- Botón "Guardar y finalizar" oculto hasta que todos los "Continuar" estén abiertos.
+- Mismo auto-scroll al revelar cada sección de bloques.
+
+### 4. Editor admin (`src/components/admin/RichTextEditor.tsx`)
+- Cambiar la etiqueta del botón de la toolbar de "Más" a "Continuar" (el marcador guardado sigue siendo `[[more]]`, sin migración de datos).
+
+## Notas técnicas
+- El marcador en la base de datos no cambia (`[[more]]`), sólo el texto visible.
+- El estado de reveals sigue persistiendo en `localStorage`; si un usuario ya abrió todo, el botón final aparece de inmediato al volver a entrar.
