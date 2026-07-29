@@ -28,7 +28,7 @@ export default function Sleep() {
     >
       <NightAuras />
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-28 pt-10">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-40 pt-10">
         <AnimatePresence mode="wait">
           {view === "dashboard" && (
             <motion.div
