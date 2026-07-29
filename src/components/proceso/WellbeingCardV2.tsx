@@ -68,46 +68,6 @@ function ScoreRing({
   );
 }
 
-/** Sparkline de 7 días; los días sin check-in quedan como hueco, no como cero. */
-function Sparkline({ trend, color }: { trend: number[]; color: string }) {
-  const W = 78;
-  const H = 26;
-  const step = trend.length > 1 ? W / (trend.length - 1) : W;
-  const pts = trend.map((v, i) => ({
-    x: i * step,
-    y: H - (Math.max(0, Math.min(100, v)) / 100) * (H - 4) - 2,
-    empty: !v,
-  }));
-
-  // Segmentos continuos, cortados en los huecos
-  const segments: string[] = [];
-  let current: string[] = [];
-  for (const p of pts) {
-    if (p.empty) {
-      if (current.length > 1) segments.push(current.join(" "));
-      current = [];
-    } else {
-      current.push(`${current.length ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`);
-    }
-  }
-  if (current.length > 1) segments.push(current.join(" "));
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-[26px] w-[78px]" aria-hidden>
-      {segments.map((d, i) => (
-        <path key={i} d={d} fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-      ))}
-      {pts.map((p, i) =>
-        p.empty ? (
-          <circle key={i} cx={p.x} cy={H - 2} r="1" fill="rgba(255,255,255,0.25)" />
-        ) : (
-          <circle key={i} cx={p.x} cy={p.y} r="1.5" fill={color} opacity={i === pts.length - 1 ? 1 : 0.5} />
-        ),
-      )}
-    </svg>
-  );
-}
-
 export function WellbeingCardV2({
   score,
   delta,
