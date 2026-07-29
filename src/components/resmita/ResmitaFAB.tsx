@@ -49,6 +49,13 @@ export function ResmitaFAB() {
 
   useHideBottomNav(open);
 
+  // El botón vive dentro del speed dial del BottomNav; se abre por evento.
+  useEffect(() => {
+    const h = () => setOpen(true);
+    window.addEventListener("open-resmita", h);
+    return () => window.removeEventListener("open-resmita", h);
+  }, []);
+
   // Only send screen context if user allowed it
   const outboundCtx = useMemo(() => {
     if (!prefs.shareScreen) return { route, screenTitle: undefined, screenPurpose: undefined };
@@ -224,6 +231,8 @@ export function ResmitaFAB() {
         // (bottom-left) se pisa con la mini-navbar interna. Reubicamos a
         // bottom-right, por encima de esa mini-navbar, donde vivía el bot azul.
         const isZen = /^\/herramientas\/mindfulness|^\/herramientas\/regulacion-dbt/.test(route);
+        // Fuera de modo zen el acceso a Resmita vive en el speed dial del BottomNav.
+        if (!isZen) return null;
         const posStyle: React.CSSProperties = isZen
           ? {
               right: "max(1rem, env(safe-area-inset-right))",
