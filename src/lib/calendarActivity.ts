@@ -123,5 +123,15 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     });
   });
 
+  hygiene.data?.forEach((h: any) => {
+    const count = Array.isArray(h.items) ? h.items.length : null;
+    activities.push({
+      type: "sleep",
+      label: "Psicohigiene del sueño",
+      detail: count != null ? `${count}/6 pautas · ${h.score ?? 0}%` : `${h.score ?? 0}% cumplido`,
+      time: h.created_at ? format(new Date(h.created_at), "HH:mm") : "00:00",
+    });
+  });
+
   return activities.sort((a, b) => a.time.localeCompare(b.time));
 }
