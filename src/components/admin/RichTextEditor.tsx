@@ -80,16 +80,24 @@ function Toolbar({ editor }: { editor: Editor }) {
         .toLowerCase();
     const safeAlign = ["left", "center", "right"].includes(align) ? align : "center";
 
-    const path = `lottie-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`;
     const toastId = toast.loading("Subiendo animación…");
-    const { error } = await supabase.storage
-      .from("lottie-animations")
-      .upload(path, new Blob([text], { type: "application/json" }), {
-        contentType: "application/json",
-        upsert: false,
-      });
-    if (error) {
-      toast.error(`No se pudo subir: ${error.message}`, { id: toastId });
+    const { data, error } = await supabase.functions.invoke("upload-lottie", {
+      body: { filename: file.name, content: text },
+    });
+    let path: string | undefined = (data as any)?.path;
+    if (error || !path) {
+      let detail = error?.message ?? "Error desconocido";
+      try {
+        const ctx = (error as any)?.context;
+        if (ctx?.text) {
+          const raw = await ctx.text();
+          const parsedErr = JSON.parse(raw);
+          if (parsedErr?.error) detail = parsedErr.error;
+        }
+      } catch {
+        /* noop */
+      }
+      toast.error(`No se pudo subir: ${detail}`, { id: toastId });
       return;
     }
     editor
