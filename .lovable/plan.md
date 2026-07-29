@@ -1,36 +1,66 @@
-## Objetivo
+## Primero: ¿participan estas variables en el Índice de Bienestar?
 
-Dividir `/mi-proceso` en dos estados de vista (`dashboard` y `detail`) en lugar de la vista apilada actual, donde hero + pilares + correlaciones se renderizan todos juntos.
+Sí, y ya están conectadas hoy (verificado en `src/lib/wellbeing/normalize.ts` y `compute.ts`). Entran dentro del pilar **Sueño (35% del Bienestar / SENTIR)**, que se compone internamente de:
 
-## Estado actual (verificado)
+- **S0 — calidad de sueño**: `daily_checkins.sleep_score` + `sleep_log.score`.
+- **S1 — psicohigiene + sueños**: `sleep_hygiene_audits.score` ×0.5 + puntaje de pesadillas (`dream_log.themes/emotions` con palabras "pesadilla/terror/angustia") ×0.3 + cobertura de registro de sueños ×0.2, renormalizado si falta alguno.
+- **S2 — despertar**: `dawn_score` de la Sintonía.
 
-`src/pages/MiProceso.tsx` renderiza en secuencia `WellbeingHeroV3`, `PillarGridV3` y `CorrelationInsights`, seguido del bloque de Terapia. No existe estado de navegación entre vistas ni tarjeta hero con anillos; el hero actual es una tarjeta oscura con número grande + barras de 7 días. El modal de calendario existe (`src/components/home/MonthCalendarSheet.tsx`) pero hoy solo lo usa `Dashboard.tsx`.
+Consecuencia práctica del rediseño: el checklist de Psicohigiene sigue guardando en `sleep_hygiene_audits.score` (ahora % de 6 hábitos, 0-100), así que **sigue alimentando el índice sin tocar el algoritmo**. El Diario de Sueño y el Protocolo de Pesadillas también siguen alimentando S1 vía `dream_log`. Nada de esto entra en "Cuidado (HACER)". No propongo cambiar pesos en esta tarea.
 
-## Vista 1 — Dashboard (`view === 'dashboard'`)
+---
 
-Contenido único:
-1. Header "Mi Proceso" + subtítulo "Estado emocional y compromiso" + badge de estado ("Al día") a la derecha.
-2. Tarjeta hero oscura nueva `ProcesoSummaryCard`:
-   - Título "RESUMEN GENERAL" con link "Ver Desglose ›".
-   - Dos anillos SVG: BIENESTAR (Sentir: Ánimo/Sueño) y CUIDADO (Hacer: Uso/Tratamiento), con los valores de `snapshot.wellbeingScore` y `snapshot.careScore`.
-   - Si `hasEnoughData === false`: tarjeta punteada de progreso (días registrados / mínimo) + CTA a Sintonía, en vez de los anillos.
-   - Toda la tarjeta es clickeable → `setView('detail')`.
-3. Bloque "TERAPIA & MEDICACIÓN" existente (toggle de terapia, próxima sesión, mini tracker, encuesta), sin cambios de lógica.
+## 1. Limpieza del dashboard (lo tachado con X)
 
-No se renderizan pilares ni correlaciones aquí.
+En `src/pages/Sleep.tsx`:
+- Eliminar el título grande "Santuario del Sueño" y el subtítulo "Tu espacio seguro para descansar."
+- Eliminar la tarjeta "Tracker de descanso" (fila L-M-X-J-V-S-D) del dashboard.
+- Dejar solo: botón volver + ícono de calendario (acceso al tracker) + las 3 tarjetas.
 
-## Vista 2 — Detalle (`view === 'detail'`)
+## 2. Tracker → Calendario nocturno
 
-1. Botón superior "← Volver a Mi Proceso" → `setView('dashboard')`.
-2. `WellbeingHeroV3` en variante clara de detalle: número grande "78 / 100 Bienestar", línea "Cuidado y Adherencia: NN pts", barras de 7 días y botón "Ver calendario mensual completo" que abre `MonthCalendarSheet`.
-3. "DESGLOSE POR PILARES": grilla 2x2 con `PillarGridV3` reorganizado en 4 tarjetas (Ánimo y Balance, Sueño y Descanso, Uso de Recursos, Tratamiento), cada una con ícono, score, y etiqueta de peso ("Bienestar 45%" / "Cuidado 60%"). Tocar una tarjeta abre el modal de calendario del mes.
-4. Box plegable "INSIGHT CLÍNICO (SPEARMAN)" con `CorrelationInsights` dentro, con botón Ocultar/Mostrar.
+Nueva vista/sheet `SleepCalendarSheet` (dentro del módulo sueño, estilo Obsidian, no reusar el sheet claro de Home):
+- Grilla mensual con navegación mes anterior/siguiente.
+- Cada día se pinta según registro nocturno: punto índigo si hay sueño anotado, punto amatista/rojo si hay pesadilla (detectada por `themes`/`emotions`), tenue si no hay nada.
+- Al tocar un día se abre el detalle inferior con: sueños anotados ese día (`dream_log.description`, emociones, temas, lucidez), marca de pesadilla, y el % de psicohigiene de esa fecha (`sleep_hygiene_audits`).
+- Datos: query a `dream_log` (por `dream_date`) y `sleep_hygiene_audits` del mes visible.
 
-## Detalles técnicos
+## 3. Estética Deep Night Obsidian
 
-- Estado local `const [view, setView] = useState<'dashboard'|'detail'>('dashboard')` en `MiProceso.tsx`; scroll al tope al cambiar de vista.
-- Nuevos archivos: `src/components/proceso/ProcesoSummaryCard.tsx` (tarjeta oscura con anillos) y `src/components/proceso/PillarDetailGrid.tsx` (o refactor de `PillarGridV3` a 4 tarjetas con íconos y agrupación por índice).
-- `WellbeingHeroV3` recibe una prop `variant?: 'detail'` para el layout claro con calendario; se mantiene el cálculo actual sin tocar `src/lib/wellbeing/*`.
-- Reutilizar `MonthCalendarSheet` en Mi Proceso con el mismo contrato que en `Dashboard.tsx`.
-- Ánimo y Balance se muestran combinados en una sola tarjeta (promedio ponderado por sus pesos actuales) para lograr la grilla 2x2 del mockup; los sub-ítems siguen visibles dentro de la tarjeta.
-- Sin cambios en backend, hooks de datos ni tests de cálculo; solo capa de presentación.
+- Fondo `#070b14` (base) con degradado hacia `#030712`.
+- Auras radiales difuminadas: índigo, amatista y azul abisal, blur alto, opacidad baja.
+- Tarjetas: `bg-slate-950/65 backdrop-blur-[30px] border border-white/12`, radios grandes.
+- Tarjetas del menú principal: **sin subtítulos**, solo ícono en cápsula tintada + título serif ("Diario de Sueño", "Psicohigiene del Sueño", "Protocolo de Pesadillas"), apiladas verticalmente como en la captura de referencia.
+- Íconos lucide (sin emojis): pluma/cuaderno (índigo), check (esmeralda), escudo (amatista).
+
+## 4. Diario de Sueño
+
+Mantener la funcionalidad actual, ajustando estética Obsidian:
+- Textarea de descarga/registro.
+- Chips disparadores: "¿Por qué soñé esto?", "¿Qué pasó hoy?", etc.
+- Panel de contexto nocturno: emociones y conductas previas.
+- Guarda en `dream_log`.
+
+## 5. Psicohigiene del Sueño (renombra "Laboratorio")
+
+Reescribir la vista `Lab`:
+- Cabecera con **gráfico circular SVG animado** (stroke-dasharray/offset con transición) mostrando 0-100% de cumplimiento en vivo.
+- Lista vertical de 6 hábitos en paneles de vidrio fino, texto analítico sin emojis, círculo de selección a la derecha:
+  1. Mantener el cuarto fresco, ventilado y oscuro.
+  2. Desconexión total de pantallas digitales 1 hora antes.
+  3. Evitar cafeína y estimulantes después de las 16:00 hs.
+  4. Cenar ligero al menos dos horas antes de acostarse.
+  5. Establecer un horario constante para despertarse.
+  6. Reservar el uso de la cama exclusivamente para dormir.
+- **Eliminar por completo el bloque de SOS Nocturno** de esta vista.
+- Guardar `score = round(marcados/6*100)` en `sleep_hygiene_audits` (upsert por `audit_date`), preservando el aporte al índice.
+
+## 6. Protocolo de Pesadillas
+
+Se mantiene el flujo IRT/DBT por pasos, solo re-skin a la estética Obsidian y encabezado consistente.
+
+## Notas técnicas
+
+- Todo el trabajo es de presentación + queries de lectura; no se modifica el motor `src/lib/wellbeing/*` ni se crean migraciones (las tablas `dream_log`, `sleep_hygiene_audits`, `sleep_log` ya existen con las columnas necesarias).
+- Archivo principal: `src/pages/Sleep.tsx` (791 líneas) — se divide en componentes bajo `src/components/sleep/` (`SleepCalendarSheet.tsx`, `SleepHygiene.tsx`, `DreamDiary.tsx`, `NightmareProtocol.tsx`, `SleepGlass.tsx`) para mantenerlo manejable.
+- Riesgo bajo: si un usuario tenía auditorías previas con escala 1-5, `normalizeAuditScore` ya soporta ambas escalas.
