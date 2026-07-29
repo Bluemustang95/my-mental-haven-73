@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { TrendingDown } from "lucide-react";
+import { WeekDayBars } from "./WeekDayBars";
+
 
 type Props = {
   score: number;
@@ -63,46 +65,6 @@ function ScoreRing({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">{children}</div>
     </div>
-  );
-}
-
-/** Sparkline de 7 días; los días sin check-in quedan como hueco, no como cero. */
-function Sparkline({ trend, color }: { trend: number[]; color: string }) {
-  const W = 78;
-  const H = 26;
-  const step = trend.length > 1 ? W / (trend.length - 1) : W;
-  const pts = trend.map((v, i) => ({
-    x: i * step,
-    y: H - (Math.max(0, Math.min(100, v)) / 100) * (H - 4) - 2,
-    empty: !v,
-  }));
-
-  // Segmentos continuos, cortados en los huecos
-  const segments: string[] = [];
-  let current: string[] = [];
-  for (const p of pts) {
-    if (p.empty) {
-      if (current.length > 1) segments.push(current.join(" "));
-      current = [];
-    } else {
-      current.push(`${current.length ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`);
-    }
-  }
-  if (current.length > 1) segments.push(current.join(" "));
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-[26px] w-[78px]" aria-hidden>
-      {segments.map((d, i) => (
-        <path key={i} d={d} fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-      ))}
-      {pts.map((p, i) =>
-        p.empty ? (
-          <circle key={i} cx={p.x} cy={H - 2} r="1" fill="rgba(255,255,255,0.25)" />
-        ) : (
-          <circle key={i} cx={p.x} cy={p.y} r="1.5" fill={color} opacity={i === pts.length - 1 ? 1 : 0.5} />
-        ),
-      )}
-    </svg>
   );
 }
 
@@ -182,7 +144,7 @@ export function WellbeingCardV2({
               >
                 <TrendingDown size={10} className={negative ? "" : "rotate-180"} />
                 {delta > 0 ? "+" : ""}
-                {delta}%
+                {delta}% ánimo
               </span>
             )}
           </div>
@@ -190,14 +152,18 @@ export function WellbeingCardV2({
             <p className="mt-1.5 line-clamp-2 font-display text-[11.5px] leading-snug text-white/55">{message}</p>
           )}
         </div>
-
-        {trend.length > 0 && (
-          <div className="flex shrink-0 flex-col items-end gap-1">
-            <Sparkline trend={trend} color={band.color} />
-            <span className="text-[8.5px] uppercase tracking-[0.12em] text-white/30">7 días</span>
-          </div>
-        )}
       </div>
+
+      {trend.length > 0 && (
+        <div className="mt-3.5 border-t border-white/[0.07] pt-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[8.5px] uppercase tracking-[0.14em] text-white/30">Últimos 7 días</span>
+            <span className="text-[8.5px] uppercase tracking-[0.14em] text-white/30">Ánimo diario</span>
+          </div>
+          <WeekDayBars trend={trend} color="rgba(255,255,255,0.16)" />
+        </div>
+      )}
     </button>
   );
 }
+

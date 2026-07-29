@@ -12,6 +12,8 @@ import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurvey
 import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
 import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
 import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
+import { SubIndexGrid } from "@/components/proceso/SubIndexGrid";
+
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
@@ -124,7 +126,9 @@ export default function MiProceso() {
             minDays={snap?.minDays ?? 3}
             onOpen={() => setSheetOpen(true)}
           />
+          <SubIndexGrid snapshot={snap} />
         </div>
+
 
         <div className="my-6 h-px bg-black/[0.06]" />
 
