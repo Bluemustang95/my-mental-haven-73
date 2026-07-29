@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader, AdminTabs, AdminToggle } from "@/components/admin/ui/AdminPrimitives";
 import { loadSetting, saveSetting } from "@/lib/admin/settings";
 import { toast } from "sonner";
-import { Sliders, ClipboardList, User, ShieldAlert, SearchCheck, FlaskConical, Eye } from "lucide-react";
+import { Sliders, ClipboardList, User, ShieldAlert, SearchCheck, FlaskConical, Eye, Settings2 } from "lucide-react";
 import { TestsCrudPanel } from "@/components/admin/tests/TestsCrudPanel";
 import WellbeingSchema from "@/components/admin/wellbeing/WellbeingSchema";
 import WellbeingAudit from "@/components/admin/wellbeing/WellbeingAudit";
@@ -19,7 +19,7 @@ const DEFAULT_PROTOCOLS: Protocol[] = [
   { id: "therapist", name: "Aviso al terapeuta", description: "Enviar notificación al profesional vinculado.", enabled: true },
 ];
 
-type Tab = "index" | "vista" | "auditoria" | "prueba" | "evaluaciones" | "personalidad" | "risk";
+type Tab = "index" | "config" | "vista" | "auditoria" | "prueba" | "evaluaciones" | "personalidad" | "risk";
 
 export default function ProgresoAdmin() {
   const [tab, setTab] = useState<Tab>("index");
@@ -36,6 +36,7 @@ export default function ProgresoAdmin() {
         <AdminTabs<Tab>
           tabs={[
             { id: "index", label: "Índice de Bienestar", icon: <Sliders size={14} /> },
+            { id: "config", label: "Configuración del algoritmo", icon: <Settings2 size={14} /> },
             { id: "vista", label: "Ver índice de un paciente", icon: <Eye size={14} /> },
             { id: "auditoria", label: "Auditoría de datos", icon: <SearchCheck size={14} /> },
             { id: "prueba", label: "Datos de prueba", icon: <FlaskConical size={14} /> },
@@ -48,6 +49,7 @@ export default function ProgresoAdmin() {
       </div>
       <div className="admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32">
         {tab === "index" && <WellbeingSchema />}
+        {tab === "config" && <WellbeingConfigPanel />}
         {tab === "vista" && <WellbeingPreview />}
         {tab === "auditoria" && <WellbeingAudit />}
         {tab === "prueba" && <WellbeingSeeder />}
