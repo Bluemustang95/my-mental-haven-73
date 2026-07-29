@@ -8,6 +8,7 @@ import WellbeingSchema from "@/components/admin/wellbeing/WellbeingSchema";
 import WellbeingAudit from "@/components/admin/wellbeing/WellbeingAudit";
 import WellbeingSeeder from "@/components/admin/wellbeing/WellbeingSeeder";
 import WellbeingPreview from "@/components/admin/wellbeing/WellbeingPreview";
+import WellbeingConfigPanel from "@/components/admin/wellbeing/WellbeingConfigPanel";
 
 type Protocol = { id: string; name: string; description: string; enabled: boolean };
 
