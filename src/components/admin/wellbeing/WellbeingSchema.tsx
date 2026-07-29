@@ -229,6 +229,48 @@ export default function WellbeingSchema() {
 
       <AdminCard className="p-6">
         <div className="mb-1 flex items-center gap-2">
+          <Info size={16} className="text-slate-400" />
+          <h3 className="text-base font-semibold text-resma-navy">Variables que NO entran al índice</h3>
+        </div>
+        <p className="mb-4 text-xs text-slate-500">
+          Todo lo que la persona hace en la app y hoy pesa <strong>0%</strong> en el número.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wide text-slate-400">
+                <th className="py-2 pr-3">Pantalla / función</th>
+                <th className="py-2 pr-3">Dónde impacta hoy</th>
+                <th className="py-2">Por qué no suma</th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-600">
+              {[
+                ["Tests e inventarios (PHQ-9, GAD-7)", "Autocuidado → Tests", "Decisión de Modelo A: el índice es auto-reporte diario, no psicometría"],
+                ["Personalidad / Big Five", "Excluido explícitamente", "Es un rasgo estable, no un estado semanal"],
+                ["Pensamientos automáticos", "Autocuidado → Engagement (conteo)", "Se cuenta el uso, no la intensidad emocional registrada"],
+                ["Diario / Diario inteligente", "Autocuidado → Engagement (conteo)", "Texto libre sin puntaje normalizable"],
+                ["Hábitos", "Autocuidado → Hábitos", "Es conducta, no cómo se siente la persona"],
+                ["Registro de sueños y pesadillas", "No se lee en el índice", "No cruzado con sleep_score todavía"],
+                ["Psicoeducación", "No se lee en el índice", "Consumo de contenido = engagement puro"],
+                ["Regulación emocional DBT", "Autocuidado → Engagement (conteo)", "Se cuenta la sesión, no el resultado"],
+                ["Medicación", "Autocuidado → Medicación", "Adherencia, no estado afectivo"],
+                ["Plan de seguridad / Crisis", "No se lee en el índice", "Uso puntual, no serie temporal"],
+              ].map(([a, b, c]) => (
+                <tr key={a} className="border-b border-slate-100 align-top">
+                  <td className="py-2.5 pr-3 font-semibold text-resma-navy">{a}</td>
+                  <td className="py-2.5 pr-3">{b}</td>
+                  <td className="py-2.5">{c}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </AdminCard>
+
+      <AdminCard className="p-6">
+
+        <div className="mb-1 flex items-center gap-2">
           <HeartPulse size={16} className="text-rose-400" />
           <h3 className="text-base font-semibold text-resma-navy">Autocuidado — se muestra, no suma</h3>
         </div>
