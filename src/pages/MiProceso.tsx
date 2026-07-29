@@ -10,9 +10,11 @@ import { TherapyStatusHelp } from "@/components/proceso/TherapyStatusHelp";
 
 import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
 import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
-import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
 import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
-import { SubIndexGrid } from "@/components/proceso/SubIndexGrid";
+import { WellbeingHeroV3 } from "@/components/proceso/WellbeingHeroV3";
+import { PillarGridV3 } from "@/components/proceso/PillarGridV3";
+import { CorrelationInsights } from "@/components/proceso/CorrelationInsights";
+import { useWellbeingV3 } from "@/hooks/useWellbeingV3";
 
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
