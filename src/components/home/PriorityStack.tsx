@@ -299,28 +299,7 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
         </div>
 
         {/* Content */}
-        <div className="relative flex h-full flex-col justify-between p-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`chip-${phaseKey}`}
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.5 }}
-              className="flex items-center"
-            >
-              <span
-                role="button"
-                tabIndex={-1}
-                aria-hidden
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/60 bg-white/70 shadow-sm backdrop-blur-md transition"
-              >
-                <ArrowRight size={17} strokeWidth={2.4} style={{ color: phase.dotColor }} />
-              </span>
-            </motion.div>
-          </AnimatePresence>
-
-
+        <div className="relative flex h-full flex-col justify-end p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={`title-${phaseKey}-${card.id}`}
@@ -328,7 +307,7 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.5 }}
-              className="pr-2"
+              className="pr-14"
             >
               <h3
                 className="font-display text-[24px] font-bold leading-[1.15]"
@@ -356,7 +335,7 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
           </AnimatePresence>
 
           {/* Pagination dots */}
-          <div className="flex items-center gap-1.5">
+          <div className="mt-5 flex items-center gap-1.5 pr-14">
             {trio.map((_, i) => {
               const active = i === idx;
               const pk = PHASE_ORDER[i] ?? "morning";
@@ -365,6 +344,7 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
                   key={i}
                   onClick={(e) => {
                     e.stopPropagation();
+                    setManual(true);
                     setPhaseIdx(i);
                   }}
                   aria-label={`Ir a fase ${i + 1}`}
@@ -383,6 +363,22 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
             })}
           </div>
         </div>
+
+        {/* Flecha — esquina inferior derecha */}
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={`arrow-${phaseKey}`}
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.4 }}
+            aria-hidden
+            className="pointer-events-none absolute bottom-5 right-5 flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/70 shadow-sm backdrop-blur-md"
+          >
+            <ArrowRight size={18} strokeWidth={2.4} style={{ color: phase.dotColor }} />
+          </motion.span>
+        </AnimatePresence>
+
       </button>
     </section>
   );
