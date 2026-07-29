@@ -323,12 +323,18 @@ function PracticeBlocks({
             {isNext && (
               <MoreButton
                 label={section.label}
-                onClick={() => setRevealed((r) => r + 1)}
+                onClick={() => {
+                  pendingScroll.current = idx + 1;
+                  setRevealed((r) => r + 1);
+                }}
               />
             )}
             <AnimatePresence initial={false}>
               {isRevealed && (
                 <motion.div
+                  ref={(el) => {
+                    sectionRefs.current[idx + 1] = el as HTMLDivElement | null;
+                  }}
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
