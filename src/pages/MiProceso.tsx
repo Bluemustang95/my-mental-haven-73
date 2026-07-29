@@ -48,9 +48,13 @@ export default function MiProceso() {
   const { shouldShow: surveyAvailable, dismiss: dismissSurvey, recheck: recheckSurvey } = useSatisfactionSurveyTrigger();
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [view, setView] = useState<"dashboard" | "detail">("dashboard");
+  const [monthOpen, setMonthOpen] = useState(false);
+  const [insightOpen, setInsightOpen] = useState(true);
 
   const [snap, setSnap] = useState<WellbeingSnapshot | null>(null);
   const { snapshot: v3, correlations } = useWellbeingV3();
+
 
 
   useEffect(() => {
@@ -104,7 +108,72 @@ export default function MiProceso() {
     setBridgeLastState("searching");
   };
 
+  if (view === "detail") {
+    return (
+      <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f9f9fb]">
+        <div className="pointer-events-none absolute -top-32 -left-20 h-72 w-72 rounded-full bg-[#7cc2c8]/20 blur-3xl animate-blob-a" />
+        <div className="relative mx-auto w-full max-w-md flex-1 px-5 pt-4 pb-24">
+          <button
+            onClick={() => setView("dashboard")}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 font-display text-[12.5px] font-semibold text-[#0f172a] shadow-sm transition active:scale-95"
+          >
+            <ArrowLeft size={15} /> Volver a Mi Proceso
+          </button>
 
+          <div className="mt-4">
+            <WellbeingHeroV3
+              snapshot={v3}
+              variant="detail"
+              onOpen={() => setSheetOpen(true)}
+              onOpenCalendar={() => setMonthOpen(true)}
+            />
+          </div>
+
+          <div className="mt-5 flex items-baseline justify-between gap-3">
+            <p className="font-[Montserrat] text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#64748b]">
+              Desglose por pilares
+            </p>
+            <span className="text-[10px] text-[#94a3b8]">Tocá una tarjeta para ver el mes</span>
+          </div>
+          <PillarDetailGrid snapshot={v3} onOpenMonth={() => setMonthOpen(true)} />
+
+          <div className="mt-5 rounded-[20px] border border-black/[0.06] bg-white p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8b5cf6]/12 text-[#7c3aed]">
+                  <LineChart size={15} />
+                </span>
+                <div>
+                  <p className="font-[Montserrat] text-[10.5px] font-bold uppercase tracking-[0.12em] text-[#7c3aed]">
+                    Insight clínico (Spearman)
+                  </p>
+                  <p className="text-[11px] text-[#64748b]">Correlaciones entre tus registros</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setInsightOpen((v) => !v)}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#8b5cf6]/10 px-2.5 py-1.5 text-[11px] font-semibold text-[#7c3aed]"
+              >
+                {insightOpen ? "Ocultar" : "Mostrar"}
+                {insightOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              </button>
+            </div>
+            {insightOpen && <CorrelationInsights report={correlations} />}
+          </div>
+        </div>
+
+        <MonthCalendarSheet
+          open={monthOpen}
+          onOpenChange={setMonthOpen}
+          onPickDay={(d) => {
+            setMonthOpen(false);
+            navigate(`/calendario/${d.toISOString().slice(0, 10)}`);
+          }}
+        />
+        <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} snapshot={snap} />
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f9f9fb]">
@@ -112,8 +181,16 @@ export default function MiProceso() {
       <div className="pointer-events-none absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-[#facb60]/15 blur-3xl animate-blob-b" />
 
       <div className="relative mx-auto w-full max-w-md flex-1 px-5 pt-4 pb-24">
-        <div className="flex items-baseline justify-between gap-3">
-          <h1 className="font-serif text-[17px] font-medium leading-tight text-[#0f172a]">Mi Proceso</h1>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="font-serif text-[22px] font-semibold leading-tight text-[#0f172a]">Mi Proceso</h1>
+            <p className="mt-0.5 text-[12px] text-[#64748b]">Estado emocional y compromiso</p>
+          </div>
+          {v3?.hasEnoughData && (
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[11.5px] font-semibold text-emerald-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Al día
+            </span>
+          )}
         </div>
 
         {isAdmin && overrideCountry && (
@@ -122,15 +199,13 @@ export default function MiProceso() {
           </div>
         )}
 
-        <div className="mt-3">
-          <WellbeingHeroV3 snapshot={v3} onOpen={() => setSheetOpen(true)} />
-          <PillarGridV3 snapshot={v3} />
-          <CorrelationInsights report={correlations} />
+        <div className="mt-4">
+          <ProcesoSummaryCard snapshot={v3} onOpenDetail={() => setView("detail")} />
         </div>
 
-
-
         <div className="my-6 h-px bg-black/[0.06]" />
+
+
 
 
         {(!country || country === "AR") ? (
