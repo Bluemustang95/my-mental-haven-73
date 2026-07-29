@@ -44,7 +44,7 @@ export function useTodayCompletion(refreshKey: number = 0) {
     const startISO = new Date(`${today}T00:00:00`).toISOString();
 
     (async () => {
-      const [sleep, habits, journal, mindful, thoughts, pack, psico] = await Promise.all([
+      const [sleepLog, dreams, hygiene, habits, journal, mindful, thoughts, pack, psico] = await Promise.all([
         has(
           supabase
             .from("sleep_log")
@@ -53,6 +53,23 @@ export function useTodayCompletion(refreshKey: number = 0) {
             .eq("log_date", today)
             .limit(1) as any,
         ),
+        has(
+          supabase
+            .from("dream_log")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("dream_date", today)
+            .limit(1) as any,
+        ),
+        has(
+          supabase
+            .from("sleep_hygiene_audits")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("audit_date", today)
+            .limit(1) as any,
+        ),
+
         has(
           supabase
             .from("habit_completions")
