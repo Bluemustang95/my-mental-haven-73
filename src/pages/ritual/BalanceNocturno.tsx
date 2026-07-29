@@ -175,7 +175,7 @@ export default function BalanceNocturno() {
           <div className="mt-8 flex items-center justify-center">
             <NightSky value={energy} state={energyState} />
           </div>
-          <p className="mt-6 text-center font-serifElegant text-[17px] italic text-resma-navy/80">
+          <p className="mt-6 text-center font-display text-[17px] text-resma-navy/80">
             {energyState.label}
           </p>
 
@@ -233,7 +233,7 @@ export default function BalanceNocturno() {
                     }`}
                   >
                     <EmotionOrb em={em} active={on} />
-                    <p className="mt-4 font-serifElegant text-[16px] font-semibold text-resma-navy">
+                    <p className="mt-4 font-display text-[16px] font-semibold text-resma-navy">
                       {em.label}
                     </p>
                     <p className="mt-1 text-center text-[11px] leading-snug text-muted-foreground">
@@ -259,7 +259,7 @@ export default function BalanceNocturno() {
             </p>
             <div className="mt-3 flex min-h-[64px] flex-wrap items-center gap-3">
               {emotions.length === 0 && (
-                <p className="text-[12px] italic text-muted-foreground/70">
+                <p className="text-[12px] text-muted-foreground/70">
                   Sumá tus emociones para dibujar la nebulosa…
                 </p>
               )}
@@ -365,7 +365,7 @@ export default function BalanceNocturno() {
           sub="Marcá los que hoy sí honraste"
         >
           {morningValues.length === 0 ? (
-            <div className="mt-6 rounded-2xl border border-white/60 bg-white/60 p-4 text-center text-[13px] italic leading-relaxed text-muted-foreground backdrop-blur">
+            <div className="mt-6 rounded-2xl border border-white/60 bg-white/60 p-4 text-center text-[13px] leading-relaxed text-muted-foreground backdrop-blur">
               Hoy no registraste una sintonía matutina.<br />
               Aun así, podés dejar tu intención para mañana en el próximo paso.
             </div>
@@ -380,7 +380,7 @@ export default function BalanceNocturno() {
                         Tus intenciones de esta mañana
                       </p>
                       {morningGoals.map((g, i) => (
-                        <p key={i} className="mt-0.5 text-[13px] italic leading-snug text-resma-navy/85">
+                        <p key={i} className="mt-0.5 text-[13px] leading-snug text-resma-navy/85">
                           "{g}"
                         </p>
                       ))}
@@ -443,7 +443,7 @@ export default function BalanceNocturno() {
           >
             <Moon size={40} strokeWidth={2} className="text-white" />
           </motion.div>
-          <h2 className="mt-8 font-serifElegant text-[26px] font-medium text-resma-navy">
+          <h2 className="mt-8 font-display text-[26px] font-medium text-resma-navy">
             Tu día quedó sellado
           </h2>
           <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
@@ -475,7 +475,7 @@ export default function BalanceNocturno() {
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                   Mañana quiero mejorar
                 </p>
-                <p className="mt-1 font-serifElegant text-[15px] italic text-resma-navy/85">
+                <p className="mt-1 font-display text-[15px] text-resma-navy/85">
                   "{improve}"
                 </p>
               </div>
@@ -504,7 +504,7 @@ function StepHeader({
       <p className="text-center text-[10px] font-bold uppercase tracking-[0.22em] text-resma-gold">
         {kicker}
       </p>
-      <h1 className="mt-2 text-center font-serifElegant text-[28px] font-medium leading-tight text-resma-navy">
+      <h1 className="mt-2 text-center font-display text-[28px] font-medium leading-tight text-resma-navy">
         {title}
       </h1>
       {sub && <p className="mt-2 text-center text-[13px] text-muted-foreground">{sub}</p>}

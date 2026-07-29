@@ -229,7 +229,7 @@ export default function SintoniaManana() {
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-700/80">
                 Ayer notaste este cambio
               </p>
-              <p className="mt-1 text-[13px] italic leading-snug text-resma-navy/85">
+              <p className="mt-1 text-[13px] leading-snug text-resma-navy/85">
                 "{shiftFromYesterday}"
               </p>
             </motion.div>
@@ -237,7 +237,7 @@ export default function SintoniaManana() {
           <div className="mt-8 flex items-center justify-center">
             <SleepOrb value={sleep} state={sleepState} />
           </div>
-          <p className="mt-6 text-center font-serifElegant text-[17px] italic text-resma-navy/80">
+          <p className="mt-6 text-center font-display text-[17px] text-resma-navy/80">
             {sleepState.label}
           </p>
 
@@ -336,7 +336,7 @@ export default function SintoniaManana() {
                     }`}
                   >
                     <EmotionOrb em={em} active={on} />
-                    <p className="mt-4 font-serifElegant text-[16px] font-semibold text-resma-navy">
+                    <p className="mt-4 font-display text-[16px] font-semibold text-resma-navy">
                       {em.label}
                     </p>
                     <p className="mt-1 text-center text-[11px] leading-snug text-muted-foreground">
@@ -363,7 +363,7 @@ export default function SintoniaManana() {
             </p>
             <div className="relative mt-3 flex min-h-[64px] flex-wrap items-center gap-3">
               {emotions.length === 0 && (
-                <p className="text-[12px] italic text-muted-foreground/70">
+                <p className="text-[12px] text-muted-foreground/70">
                   Elegí una emoción para empezar a formarla…
                 </p>
               )}
@@ -414,7 +414,7 @@ export default function SintoniaManana() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700">
                     Anoche quisiste mejorar
                   </p>
-                  <p className="mt-0.5 text-[13px] italic leading-snug text-resma-navy/85">
+                  <p className="mt-0.5 text-[13px] leading-snug text-resma-navy/85">
                     "{improveFromYesterday}"
                   </p>
                 </div>
@@ -507,7 +507,7 @@ export default function SintoniaManana() {
           >
             <Check size={44} strokeWidth={3} className="text-white" />
           </motion.div>
-          <h2 className="mt-8 font-serifElegant text-[26px] font-medium text-resma-navy">
+          <h2 className="mt-8 font-display text-[26px] font-medium text-resma-navy">
             Estás en sintonía
           </h2>
           <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
@@ -536,7 +536,7 @@ export default function SintoniaManana() {
                   );
                 })
               ) : (
-                <span className="text-[12.5px] italic text-muted-foreground">
+                <span className="text-[12.5px] text-muted-foreground">
                   Sin valores elegidos hoy.
                 </span>
               )}
@@ -544,7 +544,7 @@ export default function SintoniaManana() {
             {goals.filter((g) => g.trim()).length > 0 && (
               <div className="mt-4 space-y-2 border-t border-foreground/5 pt-3">
                 {goals.filter((g) => g.trim()).map((g, i) => (
-                  <p key={i} className="font-serifElegant text-[14.5px] italic leading-snug text-resma-navy/85">
+                  <p key={i} className="font-display text-[14.5px] leading-snug text-resma-navy/85">
                     "{g}"
                   </p>
                 ))}
@@ -574,7 +574,7 @@ function StepHeader({
       <p className="text-center text-[10px] font-bold uppercase tracking-[0.22em] text-resma-teal">
         {kicker}
       </p>
-      <h1 className="mt-2 text-center font-serifElegant text-[28px] font-medium leading-tight text-resma-navy">
+      <h1 className="mt-2 text-center font-display text-[28px] font-medium leading-tight text-resma-navy">
         {title}
       </h1>
       {sub && <p className="mt-2 text-center text-[13px] text-muted-foreground">{sub}</p>}
@@ -776,7 +776,7 @@ function ValuePicker({
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-resma-teal">
                   Herbario de valores
                 </p>
-                <h3 className="mt-0.5 font-serifElegant text-[20px] text-resma-navy">
+                <h3 className="mt-0.5 font-display text-[20px] text-resma-navy">
                   Elegir un valor
                 </h3>
               </div>
@@ -807,7 +807,7 @@ function ValuePicker({
                   >
                     <div className="flex items-center gap-1.5">
                       <Leaf size={12} className="text-resma-teal" />
-                      <p className="font-serifElegant text-[15px] font-semibold text-resma-navy">
+                      <p className="font-display text-[15px] font-semibold text-resma-navy">
                         {v.label}
                       </p>
                     </div>
