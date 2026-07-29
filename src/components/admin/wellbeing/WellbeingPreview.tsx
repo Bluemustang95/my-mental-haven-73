@@ -1,27 +1,35 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminCard } from "@/components/admin/ui/AdminPrimitives";
-import { computeCheckinCore, WEIGHTS, type WellbeingSnapshot } from "@/lib/wellbeingScore";
-import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
-import { SubIndexGrid } from "@/components/proceso/SubIndexGrid";
+import { loadWellbeingV3Admin } from "@/lib/wellbeing/fetch";
+import type { WellbeingSnapshotV3 } from "@/lib/wellbeing/types";
+import { WELLBEING_WEIGHTS, CARE_WEIGHTS } from "@/lib/wellbeing/types";
+import { WellbeingHeroV3 } from "@/components/proceso/WellbeingHeroV3";
+import { PillarDetailGrid } from "@/components/proceso/PillarDetailGrid";
 import { Eye, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 
 type Patient = { user_id: string; email: string | null; display_name: string | null };
-type Row = {
-  checkin_date: string;
-  mood_score: number | null;
-  sleep_score: number | null;
-  dawn_score: string | null;
-  emotions: string[] | null;
-  mode: string | null;
+
+const SUB_LABELS: Record<string, string> = {
+  A1: "A1 · Ánimo consolidado",
+  A1Delta: "A1Δ · Delta intradía (informativo)",
+  B1: "B1 · Balance emocional nocturno",
+  S0: "S0 · Calidad de sueño",
+  S1: "S1 · Higiene y sueños",
+  S2: "S2 · Sensación al despertar",
+  R1: "R1 · Uso de recursos",
+  T1A: "T1A · Asistencia a terapia",
+  T1B: "T1B · Adherencia a medicación",
+  T1C: "T1C · Notas de sesión",
+  T1D: "T1D · Notas compartidas",
 };
 
 export default function WellbeingPreview() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
-  const [rows, setRows] = useState<Row[]>([]);
+  const [snapshot, setSnapshot] = useState<WellbeingSnapshotV3 | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -43,17 +51,15 @@ export default function WellbeingPreview() {
   async function load(userId: string) {
     setSelected(userId);
     setLoading(true);
-    const { data, error } = await supabase.rpc("admin_wellbeing_checkins", { _user_id: userId });
-    setLoading(false);
-    if (error) { toast.error(error.message); setRows([]); return; }
-    setRows((data ?? []) as Row[]);
+    setSnapshot(null);
+    try {
+      setSnapshot(await loadWellbeingV3Admin(userId));
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo calcular el índice");
+    } finally {
+      setLoading(false);
+    }
   }
-
-  const snapshot: WellbeingSnapshot | null = useMemo(() => {
-    if (!selected) return null;
-    const core = computeCheckinCore(rows as any[]);
-    return { ...core, selfCare: { habits: null, engagement: null, medication: null, tests: null } };
-  }, [rows, selected]);
 
   const current = patients.find((p) => p.user_id === selected);
 
@@ -100,7 +106,7 @@ export default function WellbeingPreview() {
                 {current ? `Índice de ${current.display_name || current.email}` : "Vista del paciente"}
               </h3>
               <p className="mt-0.5 text-[11px] text-slate-500">
-                Exactamente lo que la persona ve en “Mi proceso”, calculado con la misma fórmula.
+                Índice v3: mismos datos, misma fórmula y mismos componentes que ve la persona en “Mi Proceso”.
               </p>
             </div>
             {selected && (
@@ -118,61 +124,102 @@ export default function WellbeingPreview() {
               Seleccioná un paciente de la lista para ver su índice.
             </p>
           ) : (
-            <div className="mx-auto w-full max-w-[380px] rounded-[28px] bg-[#FDFCFB] p-4 shadow-[0_20px_50px_-30px_rgba(16,25,39,0.6)]">
-              <WellbeingCardV2
-                score={snapshot?.score ?? 0}
-                delta={snapshot?.delta ?? 0}
-                message={snapshot?.message}
-                trend={snapshot?.trend ?? []}
-                hasEnoughData={snapshot?.hasEnoughData}
-                daysWithCheckin={snapshot?.daysWithCheckin}
-                minDays={snapshot?.minDays}
-                onOpen={() => {}}
-              />
-              <SubIndexGrid snapshot={snapshot} />
+            <div className="mx-auto w-full max-w-[400px] rounded-[28px] bg-[#f9f9fb] p-4 shadow-[0_20px_50px_-30px_rgba(16,25,39,0.6)]">
+              <WellbeingHeroV3 snapshot={snapshot} variant="detail" onOpen={() => {}} />
+              <PillarDetailGrid snapshot={snapshot} onOpenMonth={() => {}} />
             </div>
           )}
         </AdminCard>
 
-        {selected && (
-          <AdminCard className="p-6">
-            <h3 className="mb-3 text-sm font-semibold text-resma-navy">Datos crudos usados (14 días)</h3>
-            {rows.length === 0 ? (
-              <p className="text-xs text-slate-400">Este paciente no tiene check-ins en los últimos 14 días.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wide text-slate-400">
-                      <th className="py-2 pr-3">Fecha</th>
-                      <th className="py-2 pr-3">Momento</th>
-                      <th className="py-2 pr-3">Ánimo</th>
-                      <th className="py-2 pr-3">Sueño</th>
-                      <th className="py-2 pr-3">Despertar</th>
-                      <th className="py-2">Emociones</th>
+        {selected && snapshot && (
+          <>
+            <AdminCard className="p-6">
+              <h4 className="text-sm font-semibold text-resma-navy">Auditoría del cálculo</h4>
+              <p className="mt-0.5 text-[11px] text-slate-500">
+                Umbral {snapshot.minDays}/7 días · registrados: {snapshot.daysWithCheckin} ·{" "}
+                {snapshot.hasEnoughData ? "índice calculado" : `faltan ${snapshot.daysMissing} día(s)`}
+              </p>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <Metric label="Bienestar (SENTIR)" value={snapshot.wellbeingScore} />
+                <Metric label="Bienestar sin modulador" value={snapshot.wellbeingRaw} />
+                <Metric label="Cuidado (HACER)" value={snapshot.careScore} />
+              </div>
+
+              <div className="mt-4 rounded-xl bg-slate-50 p-3 text-[11px] text-slate-600">
+                <p className="font-semibold text-resma-navy">Modulador clínico</p>
+                {snapshot.modulator.penalty > 0 ? (
+                  <p className="mt-1">
+                    {snapshot.modulator.testType} · severidad {snapshot.modulator.severity} ·{" "}
+                    {snapshot.modulator.ageDays} días → −{snapshot.modulator.penalty} pts
+                  </p>
+                ) : (
+                  <p className="mt-1">
+                    Sin penalización{snapshot.modulator.stale ? " (test vencido, >45 días)" : ""}.
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+                <table className="w-full text-left text-[11px]">
+                  <thead className="bg-slate-50 text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Pilar</th>
+                      <th className="px-3 py-2 font-semibold">Índice</th>
+                      <th className="px-3 py-2 font-semibold">Score</th>
+                      <th className="px-3 py-2 font-semibold">Peso base</th>
+                      <th className="px-3 py-2 font-semibold">Peso aplicado</th>
                     </tr>
                   </thead>
-                  <tbody className="text-slate-600">
-                    {rows.map((r, i) => (
-                      <tr key={`${r.checkin_date}-${r.mode}-${i}`} className="border-b border-slate-100">
-                        <td className="py-2 pr-3 font-semibold text-resma-navy">{r.checkin_date}</td>
-                        <td className="py-2 pr-3">{r.mode ?? "—"}</td>
-                        <td className="py-2 pr-3 tabular-nums">{r.mood_score ?? "—"}</td>
-                        <td className="py-2 pr-3 tabular-nums">{r.sleep_score ?? "—"}</td>
-                        <td className="py-2 pr-3">{r.dawn_score ?? "—"}</td>
-                        <td className="py-2">{(r.emotions ?? []).join(", ") || "—"}</td>
+                  <tbody className="divide-y divide-slate-100">
+                    {Object.values(snapshot.pillars).map((p) => (
+                      <tr key={p.key}>
+                        <td className="px-3 py-2 font-medium text-resma-navy">{p.key}</td>
+                        <td className="px-3 py-2 text-slate-500">
+                          {p.key in WELLBEING_WEIGHTS ? "Bienestar" : p.key in CARE_WEIGHTS ? "Cuidado" : "—"}
+                        </td>
+                        <td className="px-3 py-2 tabular-nums">{p.score === null ? "sin datos" : Math.round(p.score)}</td>
+                        <td className="px-3 py-2 tabular-nums text-slate-500">{p.baseWeight}%</td>
+                        <td className="px-3 py-2 tabular-nums font-semibold">
+                          {p.appliedWeight}%
+                          {p.appliedWeight !== p.baseWeight && (
+                            <span className="ml-1 text-[10px] font-normal text-amber-600">renormalizado</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
-            <p className="mt-3 text-[11px] text-slate-500">
-              Pesos base: Ánimo {WEIGHTS.mood}% · Sueño {WEIGHTS.sleep}% · Balance {WEIGHTS.balance}% · Despertar {WEIGHTS.dawn}%.
-            </p>
-          </AdminCard>
+            </AdminCard>
+
+            <AdminCard className="p-6">
+              <h4 className="text-sm font-semibold text-resma-navy">Sub-ítems crudos</h4>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {Object.entries(snapshot.subItems).map(([k, v]) => (
+                  <div key={k} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-[11px]">
+                    <span className="text-slate-600">{SUB_LABELS[k] ?? k}</span>
+                    <span className={`tabular-nums font-semibold ${v === null ? "text-slate-400" : "text-resma-navy"}`}>
+                      {v === null ? "sin datos" : Math.round(v as number)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </AdminCard>
+          </>
         )}
       </div>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: number | null }) {
+  return (
+    <div className="rounded-xl border border-slate-200 p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 text-2xl font-bold tabular-nums text-resma-navy">
+        {value === null ? "—" : Math.round(value)}
+      </p>
     </div>
   );
 }

@@ -3462,6 +3462,10 @@ export type Database = {
           sleep_score: number
         }[]
       }
+      admin_wellbeing_raw: {
+        Args: { _days?: number; _user_id: string }
+        Returns: Json
+      }
       admin_wellbeing_stats: { Args: { _user_id?: string }; Returns: Json }
       get_daily_quote: {
         Args: never

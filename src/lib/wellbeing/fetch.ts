@@ -81,3 +81,46 @@ export async function loadWellbeingV3(
   const raw = await loadWellbeingRaw(userId);
   return computeWellbeingV3(raw, config);
 }
+
+// ── Modo admin ──────────────────────────────────────────────────────────────
+// Usa la RPC `admin_wellbeing_raw` (security definer) para traer exactamente los
+// mismos datos crudos que el paciente, y los computa con el mismo pipeline v3.
+
+export async function loadWellbeingRawAdmin(userId: string): Promise<WellbeingRaw> {
+  const today = startOfDay(new Date());
+  const { data, error } = await supabase.rpc("admin_wellbeing_raw" as any, {
+    _user_id: userId,
+    _days: SERIES_DAYS,
+  });
+  if (error || !data) return { today, ...EMPTY_RAW };
+
+  const d = data as any;
+  const hidden = await getHiddenToolSlugs();
+  const activities: RawActivity[] = filterOutHidden(
+    (d.activities ?? []) as any[],
+    hidden,
+    "exercise_type",
+  ).map((a: any) => ({ date: a.date, kind: a.kind }));
+
+  return {
+    today,
+    checkins: (d.checkins ?? []) as any[],
+    sleepLogs: (d.sleepLogs ?? []) as any[],
+    hygieneAudits: (d.hygieneAudits ?? []) as any[],
+    dreams: (d.dreams ?? []) as any[],
+    activities,
+    medLogs: (d.medLogs ?? []) as any[],
+    sessionNotes: (d.sessionNotes ?? []) as any[],
+    prepNotes: (d.prepNotes ?? []) as any[],
+    tests: (d.tests ?? []) as any[],
+    inTherapy: !!d.inTherapy,
+    hasMedications: !!d.hasMedications,
+  };
+}
+
+export async function loadWellbeingV3Admin(
+  userId: string,
+  config: WellbeingConfig = DEFAULT_CONFIG,
+): Promise<WellbeingSnapshotV3> {
+  return computeWellbeingV3(await loadWellbeingRawAdmin(userId), config);
+}
