@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { localDateStr, cn } from "@/lib/utils";
 import { useTodayCompletion } from "@/hooks/useTodayCompletion";
 import { ATOMIC_COLORS } from "@/components/home/QuickToolWidget";
+import type { DailyPoint } from "@/lib/wellbeing/types";
+import { BANDS, FOCUS_LABELS, bandFor, focusValue, indexSeries, type FocusKey } from "@/lib/wellbeing/bands";
 
 const ACTIVITIES: { id: keyof ReturnType<typeof useTodayCompletion>; label: string }[] = [
   { id: "diario_quick", label: "Diario" },
@@ -23,10 +25,16 @@ export function MonthCalendarSheet({
   open,
   onOpenChange,
   onPickDay,
+  series,
+  focus = "wellbeing",
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onPickDay: (d: Date) => void;
+  /** Serie diaria del Índice de Bienestar v3 (30 días). Si se pasa, pinta cada día por banda. */
+  series?: DailyPoint[];
+  /** Métrica a pintar en el calendario. */
+  focus?: FocusKey;
 }) {
   const { user } = useAuth();
   const [cursor, setCursor] = useState(new Date());
@@ -47,6 +55,9 @@ export function MonthCalendarSheet({
     for (let d = start; d <= end; d = addDays(d, 1)) days.push(d);
     return days;
   }, [cursor]);
+
+  const scoreByDate = useMemo(() => indexSeries(series), [series]);
+  const showScores = (series?.length ?? 0) > 0;
 
   const completion = useTodayCompletion(open ? 1 : 0);
   const [todayCheckin, setTodayCheckin] = useState<{
@@ -108,7 +119,7 @@ export function MonthCalendarSheet({
             </button>
             <div className="text-center">
               <p className="font-[Montserrat] text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                Tu actividad
+                {showScores ? FOCUS_LABELS[focus] : "Tu actividad"}
               </p>
               <h2 className="font-serif text-[20px] font-medium capitalize text-resma-navy">
                 {format(cursor, "MMMM yyyy", { locale: es })}
@@ -139,6 +150,8 @@ export function MonthCalendarSheet({
               const inMonth = isSameMonth(d, cursor);
               const isToday = isSameDay(d, today);
               const disabled = isFuture(d);
+              const score = showScores ? focusValue(scoreByDate.get(key), focus) : null;
+              const band = bandFor(score);
               return (
                 <button
                   key={key}
@@ -151,12 +164,22 @@ export function MonthCalendarSheet({
                     "relative flex aspect-square flex-col items-center justify-center rounded-2xl text-[13px] font-sans font-semibold transition",
                     inMonth ? "text-foreground/80" : "text-foreground/25",
                     isToday && "bg-resma-navy text-white shadow-[0_8px_18px_-10px_rgba(16,25,39,0.6)]",
-                    !isToday && has && "bg-white shadow-sm",
+                    !isToday && !band && has && "bg-white shadow-sm",
                     disabled && "opacity-30",
                   )}
+                  style={
+                    !isToday && band
+                      ? { background: `${band.color}33`, boxShadow: `inset 0 0 0 1.5px ${band.color}80` }
+                      : undefined
+                  }
                 >
                   <span>{format(d, "d")}</span>
-                  {has && (
+                  {band && (
+                    <span className="text-[9px] font-bold tabular-nums" style={{ color: isToday ? "#fff" : "#0f172a" }}>
+                      {Math.round(score as number)}
+                    </span>
+                  )}
+                  {!band && has && (
                     <span
                       className={cn(
                         "absolute bottom-1 h-1 w-1 rounded-full",
@@ -168,6 +191,18 @@ export function MonthCalendarSheet({
               );
             })}
           </div>
+
+          {showScores && (
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+              {BANDS.map((b) => (
+                <span key={b.id} className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: b.color }} />
+                  {b.label}
+                </span>
+              ))}
+              <span className="text-[10px] text-muted-foreground/70">Sin color = sin datos ese día</span>
+            </div>
+          )}
 
           <p className="mt-4 text-center text-[11px] text-muted-foreground">
             Tocá un día para ver toda tu actividad de esa fecha.
