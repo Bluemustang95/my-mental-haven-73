@@ -1,9 +1,72 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Lottie from "lottie-react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { stripDefaultBlackColor } from "@/lib/richTextSanitize";
 import { supabase } from "@/integrations/supabase/client";
+
+/* ---------------- Reveal gate ----------------
+   Any block with pending "Continuar" reveals registers itself here so the
+   page can hide its final action button until everything has been opened. */
+
+type RevealGateCtx = {
+  allRevealed: boolean;
+  setPending: (id: string, pending: boolean) => void;
+};
+
+const RevealGateContext = createContext<RevealGateCtx | null>(null);
+
+export function RevealGateProvider({ children }: { children: React.ReactNode }) {
+  const [pendingIds, setPendingIds] = useState<string[]>([]);
+
+  const setPending = useCallback((id: string, pending: boolean) => {
+    setPendingIds((prev) => {
+      const has = prev.includes(id);
+      if (pending === has) return prev;
+      return pending ? [...prev, id] : prev.filter((p) => p !== id);
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({ allRevealed: pendingIds.length === 0, setPending }),
+    [pendingIds.length, setPending]
+  );
+
+  return <RevealGateContext.Provider value={value}>{children}</RevealGateContext.Provider>;
+}
+
+export function useRevealGate() {
+  return useContext(RevealGateContext);
+}
+
+/** Registers pending state for one block in the gate (no-op outside a provider). */
+export function useRegisterReveal(id: string, pending: boolean) {
+  const gate = useContext(RevealGateContext);
+  const setPending = gate?.setPending;
+  useEffect(() => {
+    if (!setPending) return;
+    setPending(id, pending);
+    return () => setPending(id, false);
+  }, [id, pending, setPending]);
+}
+
+/** Smoothly brings a freshly revealed section into view under the sticky header. */
+export function scrollRevealIntoView(el: HTMLElement | null, delay = 380) {
+  if (!el) return;
+  window.setTimeout(() => {
+    const top = el.getBoundingClientRect().top + window.scrollY - 84;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }, delay);
+}
+
 
 type Part =
   | { type: "html"; data: string }
@@ -110,7 +173,7 @@ const proseClass =
 // Shared "Más ⌄" pill — used by RichContent and by PracticeView between blocks.
 export function MoreButton({
   onClick,
-  label = "Más",
+  label = "Continuar",
 }: {
   onClick: () => void;
   label?: string;
@@ -162,11 +225,31 @@ export function RichContent({
 }) {
   const sections = useMemo(() => parse(html), [html]);
   const [revealed, setRevealed] = usePersistedReveal(storageKey, sections.length);
+  const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const gateId = useMemo(
+    () => storageKey ?? `rich-${Math.random().toString(36).slice(2)}`,
+    [storageKey]
+  );
+  useRegisterReveal(gateId, revealed < sections.length);
+
+  const pendingScroll = useRef<number | null>(null);
+  useEffect(() => {
+    if (pendingScroll.current === null) return;
+    const target = sectionRefs.current[pendingScroll.current] ?? null;
+    pendingScroll.current = null;
+    scrollRevealIntoView(target);
+  }, [revealed]);
 
   if (sections.length === 0) return null;
 
   const cls = size === "sm" ? `${proseClass} prose-sm` : proseClass;
   const hasMore = revealed < sections.length;
+
+  const revealNext = () => {
+    pendingScroll.current = revealed;
+    setRevealed((r) => r + 1);
+  };
+
 
   return (
     <div>
@@ -187,6 +270,9 @@ export function RichContent({
           <AnimatePresence key={idx} initial={false}>
             {isRevealed && (
               <motion.div
+                ref={(el) => {
+                  sectionRefs.current[idx + 1] = el as HTMLDivElement | null;
+                }}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
@@ -208,7 +294,8 @@ export function RichContent({
         );
       })}
 
-      {hasMore && <MoreButton onClick={() => setRevealed((r) => r + 1)} />}
+      {hasMore && <MoreButton onClick={revealNext} />}
     </div>
+
   );
 }

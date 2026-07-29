@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MoreButton, usePersistedReveal } from "@/components/psico/RichContent";
+import {
+  MoreButton,
+  usePersistedReveal,
+  RevealGateProvider,
+  useRevealGate,
+  useRegisterReveal,
+  scrollRevealIntoView,
+} from "@/components/psico/RichContent";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,9 +32,19 @@ type Content = {
 };
 
 export default function PracticeView() {
+  return (
+    <RevealGateProvider>
+      <PracticeViewInner />
+    </RevealGateProvider>
+  );
+}
+
+function PracticeViewInner() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const gate = useRevealGate();
+  const allRevealed = gate?.allRevealed ?? true;
 
   const [content, setContent] = useState<Content | null>(null);
   const [categoryTitle, setCategoryTitle] = useState("");
@@ -156,16 +173,18 @@ export default function PracticeView() {
         />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-black/5 bg-[#FDFCFB]/90 p-4 backdrop-blur-md">
-        <div className="mx-auto max-w-md">
-          <button
-            onClick={finish}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7cc2c8] py-4 font-display text-sm font-semibold text-[#0f172a] transition active:scale-[0.98]"
-          >
-            <CheckCircle2 size={16} /> Guardar y finalizar
-          </button>
+      {allRevealed && (
+        <div className="fixed bottom-0 left-0 right-0 z-20 animate-fade-in border-t border-black/5 bg-[#FDFCFB]/90 p-4 backdrop-blur-md">
+          <div className="mx-auto max-w-md">
+            <button
+              onClick={finish}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7cc2c8] py-4 font-display text-sm font-semibold text-[#0f172a] transition active:scale-[0.98]"
+            >
+              <CheckCircle2 size={16} /> Guardar y finalizar
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -183,10 +202,10 @@ function PracticeBlocks({
 }) {
   // Split blocks into sections around `more` markers.
   const sections = useMemo(() => {
-    const out: { label: string; items: PracticeBlock[] }[] = [{ label: "Más", items: [] }];
+    const out: { label: string; items: PracticeBlock[] }[] = [{ label: "Continuar", items: [] }];
     for (const b of blocks) {
       if (b.type === "more") {
-        out.push({ label: b.label?.trim() || "Más", items: [] });
+        out.push({ label: b.label?.trim() || "Continuar", items: [] });
       } else {
         out[out.length - 1].items.push(b);
       }
@@ -198,6 +217,16 @@ function PracticeBlocks({
     `${contentId}:practice`,
     sections.length
   );
+  useRegisterReveal(`${contentId}:practice`, revealed < sections.length);
+
+  const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const pendingScroll = useRef<number | null>(null);
+  useEffect(() => {
+    if (pendingScroll.current === null) return;
+    const target = sectionRefs.current[pendingScroll.current] ?? null;
+    pendingScroll.current = null;
+    scrollRevealIntoView(target);
+  }, [revealed]);
 
   if (blocks.length === 0) {
     return (
@@ -294,12 +323,18 @@ function PracticeBlocks({
             {isNext && (
               <MoreButton
                 label={section.label}
-                onClick={() => setRevealed((r) => r + 1)}
+                onClick={() => {
+                  pendingScroll.current = idx + 1;
+                  setRevealed((r) => r + 1);
+                }}
               />
             )}
             <AnimatePresence initial={false}>
               {isRevealed && (
                 <motion.div
+                  ref={(el) => {
+                    sectionRefs.current[idx + 1] = el as HTMLDivElement | null;
+                  }}
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}

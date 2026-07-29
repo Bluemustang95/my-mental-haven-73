@@ -4,7 +4,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { RichContent } from "@/components/psico/RichContent";
+import { RichContent, RevealGateProvider, useRevealGate } from "@/components/psico/RichContent";
 
 type Lesson = {
   id: string;
@@ -36,6 +36,14 @@ function youTubeEmbed(url: string) {
 }
 
 export default function LessonView() {
+  return (
+    <RevealGateProvider>
+      <LessonViewInner />
+    </RevealGateProvider>
+  );
+}
+
+function LessonViewInner() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -47,6 +55,8 @@ export default function LessonView() {
   const reachedEndRef = useRef(false);
   const timeReachedRef = useRef(false);
   const endSentinelRef = useRef<HTMLDivElement | null>(null);
+  const gate = useRevealGate();
+  const allRevealed = gate?.allRevealed ?? true;
 
   useEffect(() => {
     if (!id) return;
@@ -163,9 +173,14 @@ export default function LessonView() {
   }
 
   const url = lesson.media_url ?? lesson.content_url ?? "";
+  const showFooter = lesson.content_type !== "text" || allRevealed;
 
   return (
-    <div className="resma-bg-gradient relative min-h-screen overflow-hidden pb-28 safe-area-top">
+    <div
+      className={`resma-bg-gradient relative min-h-screen overflow-hidden safe-area-top ${
+        showFooter ? "pb-28" : "pb-10"
+      }`}
+    >
       <div className="glow-blob" style={{ background: "#7cc2c8", width: 260, height: 260, top: -80, left: -80, opacity: 0.3 }} />
       <div className="glow-blob" style={{ background: "#facb60", width: 240, height: 240, top: 220, right: -80, opacity: 0.25 }} />
 
@@ -243,24 +258,25 @@ export default function LessonView() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-black/5 bg-[#FDFCFB]/90 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md">
-        <div className="mx-auto max-w-md">
-          <button
-            onClick={markDone}
-            className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-sm font-semibold transition active:scale-[0.98] ${
-              alreadyRead ? "bg-[#7cc2c8] text-[#0f172a]" : "bg-[#7cc2c8] text-[#0f172a]"
-            }`}
-          >
-            {alreadyRead ? (
-              <>
-                <Check size={16} strokeWidth={3} /> Leído · Volver
-              </>
-            ) : (
-              "Entendido, continuar"
-            )}
-          </button>
+      {showFooter && (
+        <div className="fixed bottom-0 left-0 right-0 z-20 animate-fade-in border-t border-black/5 bg-[#FDFCFB]/90 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md">
+          <div className="mx-auto max-w-md">
+            <button
+              onClick={markDone}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7cc2c8] py-4 font-display text-sm font-semibold text-[#0f172a] transition active:scale-[0.98]"
+            >
+              {alreadyRead ? (
+                <>
+                  <Check size={16} strokeWidth={3} /> Leído · Volver
+                </>
+              ) : (
+                "Entendido, continuar"
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
     </div>
   );
 }
