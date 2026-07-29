@@ -37,7 +37,8 @@ function ZenIllustration() {
       />
 
       {/* sol cálido */}
-      <circle cx="204" cy="86" r="32" fill={SUN} opacity="1" className="animate-pulse-aura" />
+      <circle cx="204" cy="86" r="42" fill={SUN} opacity="0.35" className="animate-pulse-aura" />
+      <circle cx="204" cy="86" r="30" fill="#fde68a" opacity="0.95" />
 
       {/* colinas suaves */}
       <path
@@ -88,7 +89,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center gap-2 rounded-full border border-[#7cc2c8]/40 bg-white/90 px-3.5 py-1.5 shadow-sm backdrop-blur-md"
       >
-        <ResmaIsotipoMark size={18} color={TEAL_DEEP} />
+        <ResmaIsotipoMark size={20} color={TEAL_DEEP} />
         <span className="font-serif text-[13px] font-bold uppercase tracking-[0.16em] text-slate-800">
           RESMA
         </span>
