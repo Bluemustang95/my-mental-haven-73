@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminCard, AdminButton } from "@/components/admin/ui/AdminPrimitives";
-import { WEIGHTS } from "@/lib/wellbeingScore";
+import { WELLBEING_WEIGHTS, SLEEP_INNER } from "@/lib/wellbeing/types";
+
+// Peso efectivo de cada dato dentro del Índice de Bienestar v3.
+// "Despertar" (S2) no es un pilar propio: aporta el 30% del pilar Sueño.
+const WEIGHTS: Record<"mood" | "sleep" | "dawn" | "balance", number> = {
+  mood: WELLBEING_WEIGHTS.mood,
+  sleep: WELLBEING_WEIGHTS.sleep,
+  balance: WELLBEING_WEIGHTS.balance,
+  dawn: Math.round((WELLBEING_WEIGHTS.sleep * SLEEP_INNER.S2) / 100),
+};
 import { AlertTriangle, CheckCircle2, RefreshCw, Users } from "lucide-react";
 
 type Audit = {

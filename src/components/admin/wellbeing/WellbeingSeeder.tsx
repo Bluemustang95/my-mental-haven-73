@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminCard, AdminButton } from "@/components/admin/ui/AdminPrimitives";
-import { MIN_DAYS } from "@/lib/wellbeingScore";
+import { MIN_DAYS } from "@/lib/wellbeing/types";
 import { toast } from "sonner";
 import { FlaskConical, Trash2, ExternalLink, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
