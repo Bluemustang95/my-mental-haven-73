@@ -168,18 +168,26 @@ export function BentoGrid() {
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      {orderedTiles.map((t) => {
+      {orderedTiles.map((t, i) => {
         const isPriority = t.slug === priority;
+        // Ritmo asimétrico: la primera tarjeta ocupa el ancho completo y luego
+        // se alternan pares cuadrados (Bento estilo Apple).
+        const isWide = i === 0;
         return (
           <button
             key={t.slug}
             onClick={() => navigate(t.target)}
-            className="pressable relative flex aspect-square flex-col items-center justify-center gap-3 overflow-hidden rounded-[26px] p-4 text-center transition"
+            className={`pressable group relative flex flex-col items-start justify-end overflow-hidden rounded-[28px] p-5 text-left transition-transform duration-200 active:scale-[0.97] ${
+              isWide ? "col-span-2 min-h-[124px]" : "aspect-square"
+            }`}
             style={{
-              background: t.color,
+              background: `linear-gradient(155deg, ${hexToRgba(t.color, 0.16)} 0%, ${hexToRgba(t.color, 0.07)} 100%)`,
+              border: `1px solid ${hexToRgba(t.color, 0.18)}`,
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
               boxShadow: isPriority
-                ? `0 20px 38px -14px ${hexToRgba(t.color, 0.6)}`
-                : `0 12px 26px -16px ${hexToRgba(t.color, 0.7)}`,
+                ? `0 18px 34px -20px ${hexToRgba(t.color, 0.55)}`
+                : `0 10px 24px -20px ${hexToRgba(t.color, 0.45)}`,
             }}
           >
             <span
@@ -187,16 +195,27 @@ export function BentoGrid() {
               className="pointer-events-none absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(160deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 55%)",
+                  "linear-gradient(150deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 45%)",
               }}
             />
             {isPriority && (
-              <span className="absolute right-2.5 top-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
-                <Sparkles size={9} /> Tu foco
+              <span
+                className="absolute right-4 top-4 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em]"
+                style={{ background: hexToRgba(t.color, 0.14), color: t.color }}
+              >
+                <Sparkles size={9} strokeWidth={1.4} /> Tu foco
               </span>
             )}
-            <t.Icon size={30} strokeWidth={1.6} className="relative text-white" />
-            <h3 className="relative font-display text-[13.5px] font-semibold leading-tight tracking-tight text-white">
+            <t.Icon
+              size={isWide ? 30 : 28}
+              strokeWidth={1.1}
+              className="relative mb-auto"
+              style={{ color: t.color }}
+            />
+            <h3
+              className="relative mt-4 font-display text-[14px] font-medium leading-tight tracking-[-0.01em]"
+              style={{ color: t.color }}
+            >
               {t.name}
             </h3>
           </button>
@@ -205,3 +224,4 @@ export function BentoGrid() {
     </div>
   );
 }
+
