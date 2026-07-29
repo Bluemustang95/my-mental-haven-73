@@ -424,7 +424,7 @@ export default function SintoniaManana() {
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between px-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Intenciones de hoy (opcional)
+                ¿Qué vas a hacer para cumplir estos valores?
               </p>
               <span className="text-[10px] font-semibold text-muted-foreground/70">
                 {goals.filter((g) => g.trim()).length}/{MAX_GOALS}
@@ -440,9 +440,10 @@ export default function SintoniaManana() {
                     }
                     placeholder={
                       i === 0
-                        ? "Una frase corta que oriente tu día…"
-                        : `Otra intención (${i + 1}/${MAX_GOALS})`
+                        ? "Una acción concreta y chica para hoy…"
+                        : `Otra acción (${i + 1}/${MAX_GOALS})`
                     }
+
                     rows={2}
                     className="w-full resize-y rounded-2xl border border-resma-gold/40 bg-white px-3.5 py-3 pr-9 text-[13.5px] leading-relaxed focus:border-resma-gold focus:outline-none"
                     style={{ minHeight: 60 }}
