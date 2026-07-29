@@ -8,6 +8,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { localDateStr } from "@/lib/utils";
+import { getWellbeingSummary } from "@/hooks/useWellbeingSummary";
+import { pillarLabel } from "@/lib/wellbeing/summary";
 
 export type EvaluatedNotif = {
   id: string;             // `${category}.${trigger_key}`
@@ -86,6 +88,7 @@ export async function evaluateNextNotification(): Promise<EvaluatedNotif | null>
     if (cat === "psicometria" && key === "test_vencido") return "tests_due_enabled";
     if (cat === "hibernacion" && key === "re_engagement") return "reengagement_enabled";
     if (cat === "vinculo") return "therapist_enabled";
+    if (cat === "bienestar") return "reengagement_enabled";
     return null;
   };
   const isCategoryEnabled = (cat: string, key: string): boolean => {
@@ -145,6 +148,19 @@ export async function evaluateNextNotification(): Promise<EvaluatedNotif | null>
 
   const hour = new Date().getHours();
 
+  // Índice de Bienestar v3: sólo se calcula si hay una regla activa que lo use.
+  const weakRule = rules.find((r) => r.category === "bienestar" && r.trigger_key === "pilar_debil");
+  let weakestLabel: string | null = null;
+  let weakScore: number | null = null;
+  if (weakRule && !alreadyShownToday("bienestar.pilar_debil")) {
+    const wb = await getWellbeingSummary();
+    if (wb?.snapshot?.hasEnoughData) {
+      weakestLabel = pillarLabel(wb.snapshot.weakestPillar);
+      const weakest = wb.snapshot.weakestPillar ? wb.snapshot.pillars[wb.snapshot.weakestPillar] : null;
+      weakScore = weakest?.score ?? null;
+    }
+  }
+
   // Priority order: circadiana > vinculo > recaida > test_vencido > re_engagement.
   const find = (cat: string, key: string) => rules.find((r) => r.category === cat && r.trigger_key === key);
 
@@ -173,6 +189,12 @@ export async function evaluateNextNotification(): Promise<EvaluatedNotif | null>
       ok: daysSinceTest >= 14 && !inQuietHours(),
       title: "Actualicemos tus síntomas 📊",
     },
+    // Pilar más débil del Índice de Bienestar v3 (score < 45 y datos suficientes).
+    {
+      rule: weakRule,
+      ok: !!weakestLabel && weakScore !== null && weakScore < 45 && !inQuietHours(),
+      title: "Un punto para cuidar 🎯",
+    },
     // Re-engagement: 5+ days without any check-in.
     {
       rule: find("hibernacion", "re_engagement"),
@@ -187,10 +209,13 @@ export async function evaluateNextNotification(): Promise<EvaluatedNotif | null>
     const id = `${c.rule.category}.${c.rule.trigger_key}`;
     if (alreadyShownToday(id)) continue;
     // Interpolate variables like {{dias}} in copy_text.
-    const body = (c.rule.copy_text ?? "").replace(/\{\{\s*dias\s*\}\}/gi, () => {
+    const body = (c.rule.copy_text ?? "")
+      .replace(/\{\{\s*pilar\s*\}\}/gi, () => weakestLabel ?? "tu bienestar")
+      .replace(/\{\{\s*dias\s*\}\}/gi, () => {
       if (c.rule!.category === "psicometria") return String(daysSinceTest);
       if (c.rule!.category === "hibernacion") return String(daysSinceCheckin);
       if (c.rule!.category === "habitos") return String(daysSinceHabit);
+      if (c.rule!.category === "bienestar") return weakestLabel ?? "tu bienestar";
       return "algunos";
     });
     return { id, category: c.rule.category, title: c.title, body };
