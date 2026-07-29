@@ -44,7 +44,20 @@ const VALORES = [
   { id: "trabajo",      label: "Trabajo",      hint: "Aporte con oficio" },
   { id: "libertad",     label: "Libertad",     hint: "Espacio propio" },
   { id: "gratitud",     label: "Gratitud",     hint: "Reconocer lo que hay" },
+  { id: "familia",      label: "Familia",      hint: "Los míos, cerca" },
+  { id: "amistad",      label: "Amistad",      hint: "Sostener y ser sostenido" },
+  { id: "ocio",         label: "Ocio",         hint: "Jugar, disfrutar" },
+  { id: "descanso",     label: "Descanso",     hint: "Bajar un cambio" },
+  { id: "orden",        label: "Orden",        hint: "Claridad y estructura" },
+  { id: "coraje",       label: "Coraje",       hint: "Hacer lo difícil" },
+  { id: "honestidad",   label: "Honestidad",   hint: "Decir la verdad" },
+  { id: "amabilidad",   label: "Amabilidad",   hint: "Gestos que cuidan" },
+  { id: "espiritualidad", label: "Espiritualidad", hint: "Sentido y trascendencia" },
+  { id: "contribucion", label: "Contribución", hint: "Aportar a otros" },
+  { id: "naturaleza",   label: "Naturaleza",   hint: "Aire, tierra, afuera" },
+  { id: "crecimiento",  label: "Crecimiento",  hint: "Un paso más" },
 ];
+
 
 // Paleta por slot — cada hoja se pinta distinto al elegirse
 
