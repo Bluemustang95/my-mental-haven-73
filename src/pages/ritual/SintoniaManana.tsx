@@ -335,44 +335,6 @@ export default function SintoniaManana() {
             })}
           </div>
 
-
-          {/* Nebulosa emocional — siempre visible */}
-          <div className="mt-6 rounded-2xl border border-white/60 bg-white/60 p-4 backdrop-blur">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Tu nebulosa emocional
-            </p>
-            <div className="relative mt-3 flex min-h-[64px] flex-wrap items-center gap-3">
-              {emotions.length === 0 && (
-                <p className="text-[12px] text-muted-foreground/70">
-                  Elegí una emoción para empezar a formarla…
-                </p>
-              )}
-              <AnimatePresence>
-                {emotions.map((id) => {
-                  const em = EMOCIONES.find((x) => x.id === id)!;
-                  return (
-                    <motion.div
-                      key={id}
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                      className="flex items-center gap-1.5"
-                    >
-                      <span
-                        className="inline-block h-5 w-5 rounded-full"
-                        style={{
-                          background: `radial-gradient(circle at 32% 30%, #ffffffcc, ${em.color} 65%)`,
-                          boxShadow: `0 0 14px ${em.color}`,
-                        }}
-                      />
-                      <span className="text-[12px] font-medium text-resma-navy">{em.label}</span>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          </div>
         </StepHeader>
       )}
 
