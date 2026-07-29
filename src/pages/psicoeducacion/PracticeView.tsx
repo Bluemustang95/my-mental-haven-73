@@ -32,9 +32,19 @@ type Content = {
 };
 
 export default function PracticeView() {
+  return (
+    <RevealGateProvider>
+      <PracticeViewInner />
+    </RevealGateProvider>
+  );
+}
+
+function PracticeViewInner() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const gate = useRevealGate();
+  const allRevealed = gate?.allRevealed ?? true;
 
   const [content, setContent] = useState<Content | null>(null);
   const [categoryTitle, setCategoryTitle] = useState("");
