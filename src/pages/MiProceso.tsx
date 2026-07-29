@@ -273,7 +273,16 @@ export default function MiProceso() {
       </div>
 
 
-      <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} snapshot={snap} />
+      <MonthCalendarSheet
+        open={monthOpen}
+        onOpenChange={setMonthOpen}
+        series={v3?.series}
+        focus={monthFocus}
+        onPickDay={(d) => {
+          setMonthOpen(false);
+          navigate(`/calendario/${d.toISOString().slice(0, 10)}`);
+        }}
+      />
       <TherapySyncModal open={syncOpen} onClose={() => setSyncOpen(false)} onSynced={handleSynced} />
       <SatisfactionSurveySheet
         open={surveyOpen}
