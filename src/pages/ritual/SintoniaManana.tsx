@@ -399,7 +399,7 @@ export default function SintoniaManana() {
         <StepHeader
           kicker="Paso 3 · Intención"
           title="¿Qué valores riegan tu día?"
-          sub="Tocá una hoja para cultivarla"
+          sub={`Elegí hasta ${MAX_VALUES} valores para hoy`}
         >
           {improveFromYesterday && (
             <motion.div
@@ -421,18 +421,24 @@ export default function SintoniaManana() {
             </motion.div>
           )}
 
-          <div className="mt-6">
-            <ValueBranch
-              selected={values}
-              onSlot={(idx) => setPickerSlot(idx)}
-              onClear={clearSlot}
-              valueLabel={(id) => VALORES.find((v) => v.id === id)?.label ?? ""}
-            />
+          <div className="mx-auto mt-6 grid max-w-[320px] grid-cols-3 gap-x-3 gap-y-5">
+            {VALORES.map((v) => (
+              <ValueBubble
+                key={v.id}
+                value={v}
+                active={values.includes(v.id)}
+                disabled={values.length >= MAX_VALUES}
+                onToggle={() => toggleValue(v.id)}
+              />
+            ))}
           </div>
 
-          <div className="mt-4 rounded-2xl border border-white/60 bg-white/60 p-3 text-center text-[12.5px] leading-relaxed text-muted-foreground backdrop-blur">
-            Presioná una hoja punteada para <b className="text-resma-navy">elegir un valor</b> y cultivar tus intenciones de hoy 🌱
+          <div className="mt-6 rounded-2xl border border-white/60 bg-white/60 p-3 text-center text-[12.5px] leading-relaxed text-muted-foreground backdrop-blur">
+            {values.length
+              ? `${values.length}/${MAX_VALUES} valores elegidos para hoy 🌱`
+              : "Tocá un valor para cultivarlo hoy 🌱"}
           </div>
+
 
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between px-1">
