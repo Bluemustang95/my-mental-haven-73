@@ -827,6 +827,7 @@ export type Database = {
           emotions: string[] | null
           goal_completed: string | null
           id: string
+          is_test_seed: boolean
           mode: string | null
           mood_score: number | null
           note: string | null
@@ -847,6 +848,7 @@ export type Database = {
           emotions?: string[] | null
           goal_completed?: string | null
           id?: string
+          is_test_seed?: boolean
           mode?: string | null
           mood_score?: number | null
           note?: string | null
@@ -867,6 +869,7 @@ export type Database = {
           emotions?: string[] | null
           goal_completed?: string | null
           id?: string
+          is_test_seed?: boolean
           mode?: string | null
           mood_score?: number | null
           note?: string | null
@@ -3447,6 +3450,7 @@ export type Database = {
             Returns: undefined
           }
       admin_stats_overview: { Args: never; Returns: Json }
+      admin_wellbeing_audit: { Args: { _days?: number }; Returns: Json }
       admin_wellbeing_stats: { Args: { _user_id?: string }; Returns: Json }
       get_daily_quote: {
         Args: never

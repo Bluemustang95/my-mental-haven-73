@@ -37,14 +37,15 @@ export type WellbeingSnapshot = {
 };
 
 // Pesos base — se renormalizan si algún componente es null
-const WEIGHTS = {
+export const WEIGHTS = {
   mood: 35,
   sleep: 25,
   balance: 25,
   dawn: 15,
 } as const;
 
-const MIN_DAYS = 3;
+export const MIN_DAYS = 3;
+export const WINDOW_DAYS = 7;
 
 const EMPTY: WellbeingSnapshot = {
   score: 0, delta: 0, trend: [0,0,0,0,0,0,0],
@@ -59,10 +60,10 @@ const EMPTY: WellbeingSnapshot = {
   selfCare: { habits: null, engagement: null, medication: null, tests: null },
 };
 
-const POSITIVE_EMOTIONS = new Set(["Calma", "Alegría", "Energía", "Motivado", "Cariño"]);
-const NEGATIVE_EMOTIONS = new Set(["Ansiedad", "Tristeza", "Enojo", "Agotamiento", "Confuso"]);
+export const POSITIVE_EMOTIONS = new Set(["Calma", "Alegría", "Energía", "Motivado", "Cariño"]);
+export const NEGATIVE_EMOTIONS = new Set(["Ansiedad", "Tristeza", "Enojo", "Agotamiento", "Confuso"]);
 
-const DAWN_MAP: Record<string, number> = {
+export const DAWN_MAP: Record<string, number> = {
   "Excelente": 100,
   "Muy bien": 80,
   "Normal": 60,
