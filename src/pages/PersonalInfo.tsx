@@ -148,7 +148,7 @@ export default function PersonalInfo() {
             </div>
 
             <button
-              onClick={() => navigate("/vincular-profesional")}
+              onClick={() => navigate("/vincular")}
               className="mt-4 w-full rounded-2xl bg-white px-4 py-3.5 text-left text-[15px] font-medium text-[#101927] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
             >
               Vincular con un profesional
