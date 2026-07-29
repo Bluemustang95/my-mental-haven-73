@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MoreButton, usePersistedReveal } from "@/components/psico/RichContent";
+import {
+  MoreButton,
+  usePersistedReveal,
+  RevealGateProvider,
+  useRevealGate,
+  useRegisterReveal,
+  scrollRevealIntoView,
+} from "@/components/psico/RichContent";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
