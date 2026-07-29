@@ -47,6 +47,8 @@ export default function MiProceso() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const [snap, setSnap] = useState<WellbeingSnapshot | null>(null);
+  const { snapshot: v3, correlations } = useWellbeingV3();
+
 
   useEffect(() => {
     if (location.hash === "#suscripcion") {
