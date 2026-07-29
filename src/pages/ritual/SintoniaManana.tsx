@@ -232,13 +232,22 @@ export default function SintoniaManana() {
               className="w-full"
               style={{ accentColor: sleepState.color, touchAction: "pan-x" }}
             />
-            <div className="flex justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
-              <span>Poco · 0%</span>
-              <span className="text-resma-navy" style={{ color: sleepState.color }}>
-                {sleep}%
+            <div className="flex items-end justify-between">
+              <span className="pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+                Poco · 0%
               </span>
-              <span>Profundo · 100%</span>
+              <span
+                className="font-display text-4xl font-bold leading-none"
+                style={{ color: sleepState.color }}
+              >
+                {sleep}
+                <span className="text-xl">%</span>
+              </span>
+              <span className="pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+                Profundo · 100%
+              </span>
             </div>
+
           </div>
 
           {sleep < 40 && (
