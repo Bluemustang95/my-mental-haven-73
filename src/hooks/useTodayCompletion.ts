@@ -143,7 +143,7 @@ export function useTodayCompletion(refreshKey: number = 0) {
 
       if (cancelled) return;
       setState({
-        sleep_zone: sleep,
+        sleep_zone: sleepLog || dreams || hygiene,
         mini_habits: habits,
         diario_quick: journal,
         mindfulness_quick: mindful,
