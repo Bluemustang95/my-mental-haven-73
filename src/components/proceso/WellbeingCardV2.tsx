@@ -139,7 +139,7 @@ export function WellbeingCardV2({
               Necesitamos {minDays} días de registro para calcularlo.
             </p>
             <button
-              onClick={() => navigate("/ritual/sintonia")}
+              onClick={() => navigate("/sintonia-manana")}
               className="pressable mt-2.5 rounded-full bg-[#7cc2c8] px-3.5 py-1.5 font-display text-[11.5px] font-semibold text-[#0b1220] active:scale-95"
             >
               Registrar mi Sintonía de hoy
@@ -192,7 +192,7 @@ export function WellbeingCardV2({
         </div>
 
         {trend.length > 0 && (
-          <div className="hidden shrink-0 flex-col items-end gap-1 xs:flex">
+          <div className="flex shrink-0 flex-col items-end gap-1">
             <Sparkline trend={trend} color={band.color} />
             <span className="text-[8.5px] uppercase tracking-[0.12em] text-white/30">7 días</span>
           </div>
