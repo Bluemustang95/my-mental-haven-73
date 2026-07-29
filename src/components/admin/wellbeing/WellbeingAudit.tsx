@@ -55,15 +55,21 @@ export default function WellbeingAudit() {
   if (error) return <AdminCard className="p-6 text-sm text-rose-600">No se pudo cargar la auditoría: {error}</AdminCard>;
   if (!data) return null;
 
+  // Si nadie llegó al umbral de 3 días, la cobertura por usuario no es informativa:
+  // caemos a la cobertura por fila de check-in.
+  const byUser = data.users_enough_data > 0;
+  const cov = byUser ? data.user_coverage : data.coverage;
   const keys = (Object.keys(LABELS) as (keyof Audit["coverage"])[])
-    .sort((a, b) => data.user_coverage[a] - data.user_coverage[b]);
+    .sort((a, b) => cov[a] - cov[b]);
 
   const alerts: string[] = [];
   for (const k of keys) {
-    const cov = data.user_coverage[k];
-    if (cov < 60) {
+    const v = cov[k];
+    if (v < 60) {
       alerts.push(
-        `${LABELS[k]}: sólo el ${cov}% de los usuarios con datos suficientes lo registra → su ${WEIGHTS[k]}% se redistribuye en el resto de los factores.`
+        byUser
+          ? `${LABELS[k]}: sólo el ${v}% de los usuarios con datos suficientes lo registra → su ${WEIGHTS[k]}% se redistribuye en el resto de los factores.`
+          : `${LABELS[k]}: presente en sólo el ${v}% de los check-ins → su ${WEIGHTS[k]}% se redistribuye en el resto de los factores.`
       );
     }
   }
@@ -73,7 +79,9 @@ export default function WellbeingAudit() {
     if (nightShare < 35) alerts.push(`El ritual nocturno representa sólo el ${nightShare}% de los check-ins: Sueño y Balance quedan sub-representados.`);
     if (nightShare > 65) alerts.push(`El ritual de la mañana representa sólo el ${100 - nightShare}% de los check-ins: Ánimo y Despertar quedan sub-representados.`);
   }
-  if (data.users_with_any_checkin > 0 && pct(data.users_enough_data, data.users_with_any_checkin) < 50) {
+  if (data.users_enough_data === 0 && data.users_with_any_checkin > 0) {
+    alerts.push(`Nadie alcanzó los 3 días de registro en los últimos ${data.window_days} días: hoy ningún usuario ve un número de índice.`);
+  } else if (data.users_with_any_checkin > 0 && pct(data.users_enough_data, data.users_with_any_checkin) < 50) {
     alerts.push("Más de la mitad de quienes registran algo no llegan al mínimo de 3 días: la mayoría no ve número de índice.");
   }
 
@@ -118,7 +126,10 @@ export default function WellbeingAudit() {
       <AdminCard className="p-6">
         <h3 className="mb-1 text-base font-semibold text-resma-navy">Cobertura por variable</h3>
         <p className="mb-5 text-xs text-slate-500">
-          Sobre usuarios con datos suficientes en los últimos {data.window_days} días. Ordenado del más ausente al más presente.
+          {byUser
+            ? `Sobre usuarios con datos suficientes en los últimos ${data.window_days} días.`
+            : `Nadie llegó a ${3} días de registro, así que se muestra la cobertura por fila de check-in.`}{" "}
+          Ordenado del más ausente al más presente.
         </p>
         <div className="space-y-4">
           {keys.map((k) => (
@@ -127,10 +138,10 @@ export default function WellbeingAudit() {
                 <span className="font-medium text-resma-navy">
                   {LABELS[k]} <span className="text-xs font-normal text-slate-400">· peso {WEIGHTS[k]}%</span>
                 </span>
-                <span className="font-bold tabular-nums" style={{ color: COLORS[k] }}>{data.user_coverage[k]}%</span>
+                <span className="font-bold tabular-nums" style={{ color: COLORS[k] }}>{cov[k]}%</span>
               </div>
               <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full" style={{ width: `${data.user_coverage[k]}%`, background: COLORS[k] }} />
+                <div className="h-full rounded-full" style={{ width: `${cov[k]}%`, background: COLORS[k] }} />
               </div>
               <div className="mt-1 text-[11px] text-slate-400">
                 {data.coverage[k]}% de las filas de check-in traen este dato
