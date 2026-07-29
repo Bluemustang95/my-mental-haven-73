@@ -11,6 +11,7 @@ import { useHideBottomNav, useUiChrome } from "@/hooks/useUiChrome";
 import { useHiddenCategories } from "@/hooks/useHiddenCategories";
 import { useResmitaPrivacy } from "@/hooks/useResmitaPrivacy";
 import { useResmitaSnapshot, buildSnapshotSummary } from "@/hooks/useResmitaSnapshot";
+import { useWellbeingSummary } from "@/hooks/useWellbeingSummary";
 import { logResmitaEvent, newSessionId } from "@/lib/resmitaTelemetry";
 import { ResmitaSnapshotConsentModal } from "@/components/resmita/ResmitaSnapshotConsentModal";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,8 @@ export function ResmitaFAB() {
   const { bottomNavHidden } = useUiChrome();
   const { prefs, update: updatePrefs } = useResmitaPrivacy();
   const snapshot = useResmitaSnapshot(prefs.shareSnapshot && prefs.contextConsent);
+  // Índice de Bienestar v3 (se carga sólo con consentimiento y cuando el chat está abierto).
+  const wellbeingSummary = useWellbeingSummary(open && prefs.shareSnapshot && prefs.contextConsent);
   const hiddenCats = useHiddenCategories();
   const enabledResources = useMemo(() => {
     const ALL = [
@@ -133,7 +136,10 @@ export function ResmitaFAB() {
         body: JSON.stringify({
           messages: nextMessages,
           context: { ...outboundCtx, enabledResources },
-          userSummary: prefs.shareSnapshot && prefs.contextConsent ? buildSnapshotSummary(snapshot) : null,
+          userSummary:
+            prefs.shareSnapshot && prefs.contextConsent
+              ? [buildSnapshotSummary(snapshot), wellbeingSummary].filter(Boolean).join(" · ") || null
+              : null,
           sessionId,
         }),
       });

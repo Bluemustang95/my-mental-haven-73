@@ -1,8 +1,9 @@
 import { BookOpen, Heart, Moon, Pill } from "lucide-react";
 import type { PillarResult, WellbeingSnapshotV3 } from "@/lib/wellbeing/types";
+import type { FocusKey } from "@/lib/wellbeing/bands";
 
 type Tile = {
-  id: string;
+  id: FocusKey;
   title: string;
   value: number | null;
   caption: string;
@@ -57,7 +58,7 @@ export function PillarDetailGrid({
   onOpenMonth,
 }: {
   snapshot: WellbeingSnapshotV3 | null;
-  onOpenMonth: () => void;
+  onOpenMonth: (focus: FocusKey) => void;
 }) {
   if (!snapshot) {
     return (
@@ -113,7 +114,7 @@ export function PillarDetailGrid({
   return (
     <div className="mt-2 grid grid-cols-2 gap-3">
       {tiles.map((t) => (
-        <PillarTile key={t.id} tile={t} onOpen={onOpenMonth} />
+        <PillarTile key={t.id} tile={t} onOpen={() => onOpenMonth(t.id)} />
       ))}
     </div>
   );

@@ -10,15 +10,14 @@ import { TherapyStatusHelp } from "@/components/proceso/TherapyStatusHelp";
 
 import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
 import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
-import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
 import { WellbeingHeroV3 } from "@/components/proceso/WellbeingHeroV3";
 import { ProcesoSummaryCard } from "@/components/proceso/ProcesoSummaryCard";
 import { PillarDetailGrid } from "@/components/proceso/PillarDetailGrid";
 import { CorrelationInsights } from "@/components/proceso/CorrelationInsights";
 import { useWellbeingV3 } from "@/hooks/useWellbeingV3";
 import { MonthCalendarSheet } from "@/components/home/MonthCalendarSheet";
+import type { FocusKey } from "@/lib/wellbeing/bands";
 
-import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { getCountryOverride, subscribeCountryOverride } from "@/lib/countryOverride";
 
@@ -47,12 +46,11 @@ export default function MiProceso() {
   const [surveyOpen, setSurveyOpen] = useState(false);
   const { shouldShow: surveyAvailable, dismiss: dismissSurvey, recheck: recheckSurvey } = useSatisfactionSurveyTrigger();
 
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [view, setView] = useState<"dashboard" | "detail">("dashboard");
   const [monthOpen, setMonthOpen] = useState(false);
+  const [monthFocus, setMonthFocus] = useState<FocusKey>("wellbeing");
   const [insightOpen, setInsightOpen] = useState(true);
 
-  const [snap, setSnap] = useState<WellbeingSnapshot | null>(null);
   const { snapshot: v3, correlations } = useWellbeingV3();
 
 
@@ -78,7 +76,6 @@ export default function MiProceso() {
         setTherapistName(data?.therapist_name ?? null);
         setRealCountry((data?.country ?? "").toUpperCase() || null);
       });
-    loadWellbeing().then(setSnap);
   }, [user]);
 
   useEffect(() => {
@@ -91,8 +88,14 @@ export default function MiProceso() {
 
 
 
+  const openMonth = (focus: FocusKey = "wellbeing") => {
+    setMonthFocus(focus);
+    setMonthOpen(true);
+  };
+
+  // Compatibilidad: otras tarjetas piden "ver el análisis" → abrimos el calendario v3.
   useEffect(() => {
-    const h = () => setSheetOpen(true);
+    const h = () => openMonth("wellbeing");
     window.addEventListener("open-wellbeing-sheet", h);
     return () => window.removeEventListener("open-wellbeing-sheet", h);
   }, []);
@@ -130,8 +133,8 @@ export default function MiProceso() {
             <WellbeingHeroV3
               snapshot={v3}
               variant="detail"
-              onOpen={() => setSheetOpen(true)}
-              onOpenCalendar={() => setMonthOpen(true)}
+              onOpen={() => openMonth("wellbeing")}
+              onOpenCalendar={() => openMonth("wellbeing")}
             />
           </div>
 
@@ -141,7 +144,7 @@ export default function MiProceso() {
             </p>
             <span className="text-[10px] text-[#94a3b8]">Tocá una tarjeta para ver el mes</span>
           </div>
-          <PillarDetailGrid snapshot={v3} onOpenMonth={() => setMonthOpen(true)} />
+          <PillarDetailGrid snapshot={v3} onOpenMonth={(focus) => openMonth(focus)} />
 
           <div className="mt-5 rounded-[20px] border border-black/[0.06] bg-white p-4">
             <div className="flex items-start justify-between gap-3">
@@ -171,12 +174,13 @@ export default function MiProceso() {
         <MonthCalendarSheet
           open={monthOpen}
           onOpenChange={setMonthOpen}
+          series={v3?.series}
+          focus={monthFocus}
           onPickDay={(d) => {
             setMonthOpen(false);
             navigate(`/calendario/${d.toISOString().slice(0, 10)}`);
           }}
         />
-        <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} snapshot={snap} />
       </div>
     );
   }
@@ -276,7 +280,16 @@ export default function MiProceso() {
       </div>
 
 
-      <WellbeingAnalysisSheet open={sheetOpen} onClose={() => setSheetOpen(false)} snapshot={snap} />
+      <MonthCalendarSheet
+        open={monthOpen}
+        onOpenChange={setMonthOpen}
+        series={v3?.series}
+        focus={monthFocus}
+        onPickDay={(d) => {
+          setMonthOpen(false);
+          navigate(`/calendario/${d.toISOString().slice(0, 10)}`);
+        }}
+      />
       <TherapySyncModal open={syncOpen} onClose={() => setSyncOpen(false)} onSynced={handleSynced} />
       <SatisfactionSurveySheet
         open={surveyOpen}
