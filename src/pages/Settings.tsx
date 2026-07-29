@@ -148,8 +148,9 @@ export default function Settings() {
           <Row
             icon={<UserIcon size={18} />}
             label="Información personal"
-            onClick={() => navigate("/perfil")}
+            onClick={() => navigate("/configuracion/datos-personales")}
           />
+
           <Row
             icon={<History size={18} />}
             label="Historial de actividad"
