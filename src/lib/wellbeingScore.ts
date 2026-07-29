@@ -105,84 +105,8 @@ export async function loadWellbeing(): Promise<WellbeingSnapshot> {
   const hidden = await getHiddenToolSlugs();
   const exFiltered = filterOutHidden(ex as any[], hidden, "exercise_type");
 
-  // Ventana últimos 7 días
-  const cutoff = isoDate(new Date(today.getTime() - 6 * 86400000));
-  const recent7 = (ci ?? []).filter((c: any) => c.checkin_date >= cutoff);
+  const core = computeCheckinCore((ci ?? []) as any[]);
 
-  // ── Trend (últimos 7 días — mood ×20) ──
-  const trend: number[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const ds = isoDate(new Date(today.getTime() - i * 86400000));
-    const row = recent7.find((c: any) => c.checkin_date === ds && (c.mood_score ?? 0) > 0);
-    trend.push(row?.mood_score ? Math.round((row.mood_score / 5) * 100) : 0);
-  }
-
-  // Umbral: días distintos con al menos un check-in
-  const daysWithCheckin = new Set(recent7.map((c: any) => c.checkin_date)).size;
-  if (daysWithCheckin < MIN_DAYS) {
-    const missing = MIN_DAYS - daysWithCheckin;
-    return {
-      ...EMPTY,
-      trend,
-      daysMissing: missing,
-      daysWithCheckin,
-      message: `Faltan ${missing} día(s) de registro para calcular tu bienestar.`,
-    };
-  }
-
-  // ── Componentes ──
-  const moods = recent7.map((c: any) => c.mood_score).filter((x: any): x is number => typeof x === "number" && x > 0);
-  const mood = moods.length ? Math.round((moods.reduce((a: number, b: number) => a + b, 0) / moods.length / 5) * 100) : null;
-
-  const sleeps = recent7.map((c: any) => c.sleep_score).filter((x: any): x is number => typeof x === "number" && x > 0);
-  const sleep = sleeps.length ? Math.round((sleeps.reduce((a: number, b: number) => a + b, 0) / sleeps.length / 5) * 100) : null;
-
-  const dawnScores = recent7
-    .map((c: any) => (c.dawn_score ? DAWN_MAP[c.dawn_score] ?? null : null))
-    .filter((x: number | null): x is number => x !== null);
-  const dawn = dawnScores.length ? Math.round(dawnScores.reduce((a, b) => a + b, 0) / dawnScores.length) : null;
-
-  // Balance emocional — solo check-ins de noche con emotions
-  const nightRows = recent7.filter((c: any) => (c.mode === "night" || c.mode === null) && Array.isArray(c.emotions) && c.emotions.length > 0);
-  const perNightBalance: number[] = [];
-  for (const row of nightRows) {
-    let pos = 0, neg = 0;
-    for (const e of row.emotions as string[]) {
-      if (POSITIVE_EMOTIONS.has(e)) pos++;
-      else if (NEGATIVE_EMOTIONS.has(e)) neg++;
-    }
-    if (pos + neg > 0) perNightBalance.push((pos / (pos + neg)) * 100);
-  }
-  const balance = perNightBalance.length ? Math.round(perNightBalance.reduce((a, b) => a + b, 0) / perNightBalance.length) : null;
-
-  // ── Score compuesto — renormalización ──
-  const parts: Array<[keyof typeof WEIGHTS, number | null]> = [
-    ["mood", mood], ["sleep", sleep], ["dawn", dawn], ["balance", balance],
-  ];
-  const present = parts.filter(([, v]) => v !== null) as Array<[keyof typeof WEIGHTS, number]>;
-  let score = 0;
-  const appliedWeights = { mood: 0, sleep: 0, dawn: 0, balance: 0 };
-  if (present.length) {
-    const totalW = present.reduce((s, [k]) => s + WEIGHTS[k], 0);
-    score = Math.round(present.reduce((s, [k, v]) => s + v * WEIGHTS[k], 0) / totalW);
-    for (const [k] of present) appliedWeights[k] = Math.round((WEIGHTS[k] / totalW) * 100);
-  }
-
-  // Componente más débil (solo entre los presentes)
-  const weakestComponent = present.length
-    ? present.reduce((min, cur) => (cur[1] < min[1] ? cur : min))[0]
-    : null;
-
-  // ── Delta: ánimo actual vs. 7 días previos ──
-  const prev7 = (ci ?? []).filter((c: any) => c.checkin_date < cutoff);
-  const prevMoods = prev7.map((c: any) => c.mood_score).filter((x: any): x is number => typeof x === "number" && x > 0);
-  const prevAvg = prevMoods.length ? (prevMoods.reduce((a: number, b: number) => a + b, 0) / prevMoods.length / 5) * 100 : 0;
-  const curAvg = mood ?? 0;
-  let delta = 0;
-  if (prevAvg > 0) {
-    const raw = Math.round(((curAvg - prevAvg) / prevAvg) * 100);
-    delta = Math.abs(raw) > 2 ? raw : 0;
-  }
 
   // ── Autocuidado (no entra al score) ──
   const habitDays = new Set((hc ?? []).map((h: any) => h.completed_date));
