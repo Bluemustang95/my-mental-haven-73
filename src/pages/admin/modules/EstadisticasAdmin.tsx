@@ -123,7 +123,9 @@ function BienestarTab({ g }: { g: Global | null }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Distribución de bienestar (últimos 30d)</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Distribución por ánimo promedio (30d)</p>
+          <p className="mt-0.5 text-[10px] text-slate-400">Basado en el ánimo auto-reportado, no en el Índice de Bienestar v3 (ver Progreso → Ver índice de un paciente).</p>
+
           <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
