@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { AdminButton, AdminCard, AdminPageHeader, AdminTabs, AdminToggle } from "@/components/admin/ui/AdminPrimitives";
 import { loadSetting, saveSetting } from "@/lib/admin/settings";
 import { toast } from "sonner";
-import { Sliders, ClipboardList, User, ShieldAlert, SearchCheck, FlaskConical } from "lucide-react";
+import { Sliders, ClipboardList, User, ShieldAlert, SearchCheck, FlaskConical, Eye } from "lucide-react";
 import { TestsCrudPanel } from "@/components/admin/tests/TestsCrudPanel";
 import WellbeingSchema from "@/components/admin/wellbeing/WellbeingSchema";
 import WellbeingAudit from "@/components/admin/wellbeing/WellbeingAudit";
 import WellbeingSeeder from "@/components/admin/wellbeing/WellbeingSeeder";
+import WellbeingPreview from "@/components/admin/wellbeing/WellbeingPreview";
 
 type Protocol = { id: string; name: string; description: string; enabled: boolean };
 
