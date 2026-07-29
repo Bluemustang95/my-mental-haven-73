@@ -75,7 +75,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center">
+    <div className="relative flex flex-1 flex-col items-center">
       {/* Fondo pastel orgánico a pantalla completa */}
       <div
         aria-hidden
@@ -94,7 +94,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
 
 
       {/* Área visual híbrida */}
-      <div className="relative mt-6 h-[280px] w-full">
+      <div className="relative mt-auto h-[280px] w-full">
         {/* aura ambiental */}
         <div
           aria-hidden
@@ -176,7 +176,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-10 max-w-[320px] text-center font-display text-base font-medium leading-relaxed text-slate-800 sm:text-lg"
+        className="mt-auto max-w-[320px] text-center font-display text-base font-medium leading-relaxed text-slate-800 sm:text-lg"
       >
         Tu rincón para cuidar tu salud mental, a tu propio ritmo y con apoyo clínico
       </motion.p>
@@ -201,7 +201,7 @@ export function SplashIntro({ onContinue }: { onContinue: () => void }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.85, duration: 0.6 }}
-        className="mt-3 text-center"
+        className="mt-3 pb-2 text-center"
       >
         <p className="text-[10px] text-slate-600">
           Al continuar aceptás nuestras políticas de privacidad y uso clínico.
