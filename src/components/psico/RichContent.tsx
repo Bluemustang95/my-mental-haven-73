@@ -173,7 +173,7 @@ const proseClass =
 // Shared "Más ⌄" pill — used by RichContent and by PracticeView between blocks.
 export function MoreButton({
   onClick,
-  label = "Más",
+  label = "Continuar",
 }: {
   onClick: () => void;
   label?: string;
