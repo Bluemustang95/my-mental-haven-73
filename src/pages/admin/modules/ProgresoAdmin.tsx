@@ -35,6 +35,7 @@ export default function ProgresoAdmin() {
         <AdminTabs<Tab>
           tabs={[
             { id: "index", label: "Índice de Bienestar", icon: <Sliders size={14} /> },
+            { id: "vista", label: "Ver índice de un paciente", icon: <Eye size={14} /> },
             { id: "auditoria", label: "Auditoría de datos", icon: <SearchCheck size={14} /> },
             { id: "prueba", label: "Datos de prueba", icon: <FlaskConical size={14} /> },
             { id: "evaluaciones", label: "Evaluaciones y Psicometría", icon: <ClipboardList size={14} /> },
