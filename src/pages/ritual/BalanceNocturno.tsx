@@ -218,40 +218,39 @@ export default function BalanceNocturno() {
           title="¿Qué emociones te habitaron?"
           sub="Sumá todas las que aparecieron"
         >
-          <div className="mt-6 -mx-5 overflow-x-auto no-scrollbar">
-            <div className="flex snap-x snap-mandatory gap-4 px-5 pb-2">
-              {EMOCIONES.map((em) => {
-                const on = emotions.includes(em.id);
-                return (
-                  <button
-                    key={em.id}
-                    onClick={() => toggleEmotion(em.id)}
-                    className={`relative flex w-[150px] shrink-0 snap-center flex-col items-center rounded-3xl border p-4 transition ${
-                      on
-                        ? "border-white/90 bg-white/80 shadow-[0_18px_44px_-18px_rgba(16,25,39,0.28)]"
-                        : "border-white/50 bg-white/45"
-                    }`}
-                  >
-                    <EmotionOrb em={em} active={on} />
-                    <p className="mt-4 font-display text-[16px] font-semibold text-resma-navy">
-                      {em.label}
-                    </p>
-                    <p className="mt-1 text-center text-[11px] leading-snug text-muted-foreground">
-                      {em.desc}
-                    </p>
-                    {on && (
-                      <span
-                        className="mt-3 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.1em]"
-                        style={{ background: `${em.color}22`, color: em.color }}
-                      >
-                        <Check size={10} strokeWidth={3} /> Vivida
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="mx-auto mt-6 grid max-w-[330px] grid-cols-2 justify-items-center gap-3">
+            {EMOCIONES.map((em) => {
+              const on = emotions.includes(em.id);
+              return (
+                <button
+                  key={em.id}
+                  onClick={() => toggleEmotion(em.id)}
+                  className={`relative flex h-full w-full flex-col items-center justify-start rounded-3xl border px-3 py-4 text-center transition ${
+                    on
+                      ? "border-white/90 bg-white/80 shadow-[0_18px_44px_-18px_rgba(16,25,39,0.28)]"
+                      : "border-white/50 bg-white/45"
+                  }`}
+                >
+                  <EmotionOrb em={em} active={on} />
+                  <p className="mt-3 font-display text-[15px] font-semibold text-resma-navy">
+                    {em.label}
+                  </p>
+                  <p className="mt-1 text-center text-[11px] leading-snug text-muted-foreground">
+                    {em.desc}
+                  </p>
+                  {on && (
+                    <span
+                      className="mt-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.1em]"
+                      style={{ background: `${em.color}22`, color: em.color }}
+                    >
+                      <Check size={10} strokeWidth={3} /> Vivida
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
+
 
           <div className="mt-6 rounded-2xl border border-white/60 bg-white/60 p-4 backdrop-blur">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
