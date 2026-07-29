@@ -115,10 +115,23 @@ export default function Settings() {
     navigate("/onboarding");
   };
 
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
   const handleDelete = async () => {
-    if (!confirm("¿Eliminar cuenta? Esta acción no se puede deshacer.")) return;
-    toast.error("Contactá soporte para eliminar definitivamente tu cuenta.");
+    setDeleting(true);
+    const { error } = await supabase.functions.invoke("delete-account");
+    setDeleting(false);
+    if (error) {
+      toast.error("No pudimos eliminar la cuenta. Intentá de nuevo.");
+      return;
+    }
+    toast.success("Cuenta eliminada");
+    await supabase.auth.signOut();
+    navigate("/onboarding");
   };
+
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] pb-32">
