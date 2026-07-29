@@ -47,6 +47,7 @@ export default function ProgresoAdmin() {
       </div>
       <div className="admin-scroll flex-1 overflow-y-auto px-8 py-6 pb-32">
         {tab === "index" && <WellbeingSchema />}
+        {tab === "vista" && <WellbeingPreview />}
         {tab === "auditoria" && <WellbeingAudit />}
         {tab === "prueba" && <WellbeingSeeder />}
 
