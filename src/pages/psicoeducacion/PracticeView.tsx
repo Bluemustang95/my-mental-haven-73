@@ -217,6 +217,16 @@ function PracticeBlocks({
     `${contentId}:practice`,
     sections.length
   );
+  useRegisterReveal(`${contentId}:practice`, revealed < sections.length);
+
+  const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const pendingScroll = useRef<number | null>(null);
+  useEffect(() => {
+    if (pendingScroll.current === null) return;
+    const target = sectionRefs.current[pendingScroll.current] ?? null;
+    pendingScroll.current = null;
+    scrollRevealIntoView(target);
+  }, [revealed]);
 
   if (blocks.length === 0) {
     return (
