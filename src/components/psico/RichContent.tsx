@@ -225,11 +225,23 @@ export function RichContent({
 }) {
   const sections = useMemo(() => parse(html), [html]);
   const [revealed, setRevealed] = usePersistedReveal(storageKey, sections.length);
+  const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const gateId = useMemo(
+    () => storageKey ?? `rich-${Math.random().toString(36).slice(2)}`,
+    [storageKey]
+  );
+  useRegisterReveal(gateId, revealed < sections.length);
 
   if (sections.length === 0) return null;
 
   const cls = size === "sm" ? `${proseClass} prose-sm` : proseClass;
   const hasMore = revealed < sections.length;
+
+  const revealNext = () => {
+    const next = revealed + 1;
+    setRevealed(next);
+    scrollRevealIntoView(sectionRefs.current[next - 1] ?? null);
+  };
 
   return (
     <div>
@@ -250,6 +262,9 @@ export function RichContent({
           <AnimatePresence key={idx} initial={false}>
             {isRevealed && (
               <motion.div
+                ref={(el) => {
+                  sectionRefs.current[idx + 1] = el as HTMLDivElement | null;
+                }}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
@@ -271,7 +286,8 @@ export function RichContent({
         );
       })}
 
-      {hasMore && <MoreButton onClick={() => setRevealed((r) => r + 1)} />}
+      {hasMore && <MoreButton onClick={revealNext} />}
     </div>
+
   );
 }
