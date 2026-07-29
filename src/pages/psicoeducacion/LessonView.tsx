@@ -173,9 +173,14 @@ function LessonViewInner() {
   }
 
   const url = lesson.media_url ?? lesson.content_url ?? "";
+  const showFooter = lesson.content_type !== "text" || allRevealed;
 
   return (
-    <div className="resma-bg-gradient relative min-h-screen overflow-hidden pb-28 safe-area-top">
+    <div
+      className={`resma-bg-gradient relative min-h-screen overflow-hidden safe-area-top ${
+        showFooter ? "pb-28" : "pb-10"
+      }`}
+    >
       <div className="glow-blob" style={{ background: "#7cc2c8", width: 260, height: 260, top: -80, left: -80, opacity: 0.3 }} />
       <div className="glow-blob" style={{ background: "#facb60", width: 240, height: 240, top: 220, right: -80, opacity: 0.25 }} />
 
