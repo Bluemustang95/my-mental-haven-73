@@ -173,16 +173,18 @@ function PracticeViewInner() {
         />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-black/5 bg-[#FDFCFB]/90 p-4 backdrop-blur-md">
-        <div className="mx-auto max-w-md">
-          <button
-            onClick={finish}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7cc2c8] py-4 font-display text-sm font-semibold text-[#0f172a] transition active:scale-[0.98]"
-          >
-            <CheckCircle2 size={16} /> Guardar y finalizar
-          </button>
+      {allRevealed && (
+        <div className="fixed bottom-0 left-0 right-0 z-20 animate-fade-in border-t border-black/5 bg-[#FDFCFB]/90 p-4 backdrop-blur-md">
+          <div className="mx-auto max-w-md">
+            <button
+              onClick={finish}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7cc2c8] py-4 font-display text-sm font-semibold text-[#0f172a] transition active:scale-[0.98]"
+            >
+              <CheckCircle2 size={16} /> Guardar y finalizar
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
