@@ -184,7 +184,7 @@ export function WellbeingCardV2({
               >
                 <TrendingDown size={10} className={negative ? "" : "rotate-180"} />
                 {delta > 0 ? "+" : ""}
-                {delta}%
+                {delta}% ánimo
               </span>
             )}
           </div>
@@ -192,14 +192,18 @@ export function WellbeingCardV2({
             <p className="mt-1.5 line-clamp-2 font-display text-[11.5px] leading-snug text-white/55">{message}</p>
           )}
         </div>
-
-        {trend.length > 0 && (
-          <div className="flex shrink-0 flex-col items-end gap-1">
-            <Sparkline trend={trend} color={band.color} />
-            <span className="text-[8.5px] uppercase tracking-[0.12em] text-white/30">7 días</span>
-          </div>
-        )}
       </div>
+
+      {trend.length > 0 && (
+        <div className="mt-3.5 border-t border-white/[0.07] pt-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[8.5px] uppercase tracking-[0.14em] text-white/30">Últimos 7 días</span>
+            <span className="text-[8.5px] uppercase tracking-[0.14em] text-white/30">Ánimo diario</span>
+          </div>
+          <WeekDayBars trend={trend} color="rgba(255,255,255,0.16)" />
+        </div>
+      )}
     </button>
   );
 }
+
