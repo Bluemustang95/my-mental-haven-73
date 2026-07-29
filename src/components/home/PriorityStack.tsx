@@ -174,9 +174,25 @@ function persistVisited(ids: number[]) {
 }
 
 export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
-  const [phaseIdx, setPhaseIdx] = useState(0);
-
   const trio = useMemo(() => cards.slice(0, 3), [cards]);
+
+  // Fase sugerida según el estado del día: mañana pendiente → mañana;
+  // mañana hecha y noche pendiente → noche; ambas hechas → práctica recomendada.
+  const suggestedIdx = useMemo(() => {
+    const morningDone = trio[0]?.done ?? false;
+    const nightDone = trio[2]?.done ?? false;
+    if (!morningDone) return 0;
+    if (!nightDone) return Math.min(2, trio.length - 1);
+    return Math.min(1, trio.length - 1);
+  }, [trio]);
+
+  const [phaseIdx, setPhaseIdx] = useState(suggestedIdx);
+  const [manual, setManual] = useState(false);
+
+  // Mientras la persona no elija manualmente una fase, seguimos la sugerida.
+  useEffect(() => {
+    if (!manual) setPhaseIdx(suggestedIdx);
+  }, [suggestedIdx, manual]);
 
   // Persistir fases visitadas para que el calendario clínico las liste.
   useEffect(() => {
@@ -194,7 +210,10 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
   const phase = PHASES[phaseKey];
   const Graphic = GRAPHIC[phaseKey];
 
-  const advance = () => setPhaseIdx((i) => (i + 1) % trio.length);
+  const advance = () => {
+    setManual(true);
+    setPhaseIdx((i) => (i + 1) % trio.length);
+  };
 
   const handleTap = () => {
     if (card.done) {
@@ -203,6 +222,7 @@ export function PriorityStack({ cards }: { cards: PriorityCard[] }) {
       card.onAction();
     }
   };
+
 
   return (
     <section className="relative mt-4">
