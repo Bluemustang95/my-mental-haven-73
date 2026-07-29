@@ -10,9 +10,11 @@ import { TherapyStatusHelp } from "@/components/proceso/TherapyStatusHelp";
 
 import { SatisfactionSurveySheet } from "@/components/proceso/SatisfactionSurveySheet";
 import { useSatisfactionSurveyTrigger } from "@/hooks/useSatisfactionSurveyTrigger";
-import { WellbeingCardV2 } from "@/components/proceso/WellbeingCardV2";
 import { WellbeingAnalysisSheet } from "@/components/proceso/WellbeingAnalysisSheet";
-import { SubIndexGrid } from "@/components/proceso/SubIndexGrid";
+import { WellbeingHeroV3 } from "@/components/proceso/WellbeingHeroV3";
+import { PillarGridV3 } from "@/components/proceso/PillarGridV3";
+import { CorrelationInsights } from "@/components/proceso/CorrelationInsights";
+import { useWellbeingV3 } from "@/hooks/useWellbeingV3";
 
 import { loadWellbeing, type WellbeingSnapshot } from "@/lib/wellbeingScore";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -45,6 +47,8 @@ export default function MiProceso() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const [snap, setSnap] = useState<WellbeingSnapshot | null>(null);
+  const { snapshot: v3, correlations } = useWellbeingV3();
+
 
   useEffect(() => {
     if (location.hash === "#suscripcion") {
@@ -116,18 +120,11 @@ export default function MiProceso() {
         )}
 
         <div className="mt-3">
-          <WellbeingCardV2
-            score={snap?.score ?? 0}
-            delta={snap?.delta ?? 0}
-            message={snap?.message ?? "Cargando tu evolución…"}
-            trend={snap?.trend ?? [0,0,0,0,0,0,0]}
-            hasEnoughData={snap ? snap.hasEnoughData : true}
-            daysWithCheckin={snap?.daysWithCheckin ?? 0}
-            minDays={snap?.minDays ?? 3}
-            onOpen={() => setSheetOpen(true)}
-          />
-          <SubIndexGrid snapshot={snap} />
+          <WellbeingHeroV3 snapshot={v3} onOpen={() => setSheetOpen(true)} />
+          <PillarGridV3 snapshot={v3} />
+          <CorrelationInsights report={correlations} />
         </div>
+
 
 
         <div className="my-6 h-px bg-black/[0.06]" />
