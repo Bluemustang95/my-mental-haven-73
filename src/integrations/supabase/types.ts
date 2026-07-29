@@ -3451,6 +3451,17 @@ export type Database = {
           }
       admin_stats_overview: { Args: never; Returns: Json }
       admin_wellbeing_audit: { Args: { _days?: number }; Returns: Json }
+      admin_wellbeing_checkins: {
+        Args: { _user_id: string }
+        Returns: {
+          checkin_date: string
+          dawn_score: string
+          emotions: string[]
+          mode: string
+          mood_score: number
+          sleep_score: number
+        }[]
+      }
       admin_wellbeing_stats: { Args: { _user_id?: string }; Returns: Json }
       get_daily_quote: {
         Args: never
