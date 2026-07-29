@@ -202,10 +202,10 @@ function PracticeBlocks({
 }) {
   // Split blocks into sections around `more` markers.
   const sections = useMemo(() => {
-    const out: { label: string; items: PracticeBlock[] }[] = [{ label: "Más", items: [] }];
+    const out: { label: string; items: PracticeBlock[] }[] = [{ label: "Continuar", items: [] }];
     for (const b of blocks) {
       if (b.type === "more") {
-        out.push({ label: b.label?.trim() || "Más", items: [] });
+        out.push({ label: b.label?.trim() || "Continuar", items: [] });
       } else {
         out[out.length - 1].items.push(b);
       }
