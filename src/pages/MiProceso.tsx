@@ -118,18 +118,11 @@ export default function MiProceso() {
         )}
 
         <div className="mt-3">
-          <WellbeingCardV2
-            score={snap?.score ?? 0}
-            delta={snap?.delta ?? 0}
-            message={snap?.message ?? "Cargando tu evolución…"}
-            trend={snap?.trend ?? [0,0,0,0,0,0,0]}
-            hasEnoughData={snap ? snap.hasEnoughData : true}
-            daysWithCheckin={snap?.daysWithCheckin ?? 0}
-            minDays={snap?.minDays ?? 3}
-            onOpen={() => setSheetOpen(true)}
-          />
-          <SubIndexGrid snapshot={snap} />
+          <WellbeingHeroV3 snapshot={v3} onOpen={() => setSheetOpen(true)} />
+          <PillarGridV3 snapshot={v3} />
+          <CorrelationInsights report={correlations} />
         </div>
+
 
 
         <div className="my-6 h-px bg-black/[0.06]" />
