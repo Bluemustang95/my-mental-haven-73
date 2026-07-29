@@ -34,6 +34,6 @@ export function buildWellbeingSummary(
     parts.push(`modulador clínico activo por ${snapshot.modulator.testType} (${snapshot.modulator.severity})`);
   }
   const top = report?.insights?.[0];
-  if (top) parts.push(`asociación observada: ${top.text ?? ""}`.trim());
+  if (top) parts.push(`asociación observada: ${top.message}`);
   return parts.length ? parts.join(" · ") : null;
 }
