@@ -119,28 +119,15 @@ export default function SintoniaManana() {
   const toggleEmotion = (id: string) =>
     setEmotions((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
-  const pickValueForSlot = (valueId: string) => {
+  const toggleValue = (valueId: string) =>
     setValues((prev) => {
-      if (pickerSlot == null) return prev;
-      // Si ya está en otro slot, no duplicar
-      if (prev.includes(valueId) && prev[pickerSlot] !== valueId) return prev;
-      const next = [...prev];
-      while (next.length <= pickerSlot) next.push("");
-      next[pickerSlot] = valueId;
-      return next;
+      if (prev.includes(valueId)) return prev.filter((v) => v !== valueId);
+      if (prev.length >= MAX_VALUES) return prev;
+      return [...prev, valueId];
     });
-    setPickerSlot(null);
-  };
-
-  const clearSlot = (slotIdx: number) => {
-    setValues((prev) => {
-      const next = [...prev];
-      next[slotIdx] = "";
-      return next;
-    });
-  };
 
   const filledValues = values.filter(Boolean);
+
 
   const save = async () => {
     if (!user) return;
