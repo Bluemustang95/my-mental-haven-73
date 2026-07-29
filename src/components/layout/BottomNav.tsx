@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { House, Notebook, Toolbox, ChartLineUp, BookOpen, Lifebuoy, Plus } from "@phosphor-icons/react";
+import { House, Notebook, Toolbox, ChartLineUp, BookOpen, Lifebuoy, Sparkle, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useUiChrome } from "@/hooks/useUiChrome";
@@ -139,7 +139,8 @@ export function BottomNav() {
             style={{
               position: "fixed",
               right: "max(1rem, env(safe-area-inset-right))",
-              bottom: "max(1.35rem, calc(env(safe-area-inset-bottom) + 0.35rem))",
+              // Alineado con el centro vertical de la barra de navegación.
+              bottom: "calc(max(1rem, env(safe-area-inset-bottom)) + 0.375rem)",
               zIndex: 51,
             }}
           >
@@ -186,10 +187,11 @@ export function BottomNav() {
               onClick={() => setDialOpen((v) => !v)}
               whileTap={{ scale: 0.85 }}
               aria-label={dialOpen ? "Cerrar accesos rápidos" : "Abrir accesos rápidos"}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-white/75 text-[#0f172a] shadow-[0_12px_28px_-14px_rgba(15,23,42,0.6)] backdrop-blur-xl"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-white/50 text-white shadow-[0_14px_30px_-14px_rgba(124,194,200,0.8)]"
+              style={{ background: "linear-gradient(155deg, #7cc2c8 0%, #5aa7ae 100%)" }}
             >
-              <motion.span animate={{ rotate: dialOpen ? 45 : 0 }} transition={{ duration: 0.2 }}>
-                <Plus size={22} weight="bold" />
+              <motion.span animate={{ rotate: dialOpen ? 90 : 0 }} transition={{ duration: 0.2 }}>
+                {dialOpen ? <X size={20} weight="bold" /> : <Sparkle size={20} weight="fill" />}
               </motion.span>
             </motion.button>
           </div>
