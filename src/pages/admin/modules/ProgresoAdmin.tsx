@@ -18,7 +18,7 @@ const DEFAULT_PROTOCOLS: Protocol[] = [
   { id: "therapist", name: "Aviso al terapeuta", description: "Enviar notificación al profesional vinculado.", enabled: true },
 ];
 
-type Tab = "index" | "auditoria" | "prueba" | "evaluaciones" | "personalidad" | "risk";
+type Tab = "index" | "vista" | "auditoria" | "prueba" | "evaluaciones" | "personalidad" | "risk";
 
 export default function ProgresoAdmin() {
   const [tab, setTab] = useState<Tab>("index");
