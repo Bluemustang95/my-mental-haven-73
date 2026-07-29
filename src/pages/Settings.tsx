@@ -335,7 +335,7 @@ export default function Settings() {
           </button>
           <div className="ml-12 h-px bg-black/[0.06]" />
           <button
-            onClick={handleDelete}
+            onClick={() => { setDeleteText(""); setDeleteOpen(true); }}
             className="flex w-full items-center justify-between px-4 py-3.5 active:bg-black/[0.03]"
           >
             <div className="flex items-center gap-3">
@@ -344,6 +344,43 @@ export default function Settings() {
             </div>
           </button>
         </Group>
+
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent className="rounded-3xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminar tu cuenta</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-left">
+                  <p>
+                    Se borrarán de forma permanente tu perfil y todos tus registros
+                    (check-ins, diario, sueño, hábitos, tests, medicación y notas).
+                    Esta acción no se puede deshacer.
+                  </p>
+                  <p className="text-[13px]">
+                    Escribí <strong>ELIMINAR</strong> para confirmar:
+                  </p>
+                  <input
+                    value={deleteText}
+                    onChange={(e) => setDeleteText(e.target.value)}
+                    placeholder="ELIMINAR"
+                    className="w-full rounded-xl border border-black/10 px-3 py-2 text-[15px] focus:border-[#B91C1C] focus:outline-none"
+                  />
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deleting || deleteText.trim().toUpperCase() !== "ELIMINAR"}
+                onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                className="bg-[#B91C1C] hover:bg-[#991B1B]"
+              >
+                {deleting ? <Loader2 className="animate-spin" size={16} /> : "Eliminar definitivamente"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
 
         {/* Admin access — only visible for real admins */}
         {isAdmin && (
