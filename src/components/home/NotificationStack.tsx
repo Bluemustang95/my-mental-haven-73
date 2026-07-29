@@ -39,48 +39,78 @@ function saveDismissed(ids: string[]) {
 export function NotificationStack() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const done = useTodayCompletion();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const done = useTodayCompletion(refreshKey);
   const next = useNextSession();
 
   const [prefs, setPrefs] = useState<any | null>(null);
   const [hasHabits, setHasHabits] = useState(false);
   const [hasMeds, setHasMeds] = useState(false);
   const [hasJournal, setHasJournal] = useState(false);
+  const [checkedInToday, setCheckedInToday] = useState(false);
   const [dismissed, setDismissed] = useState<string[]>(() => loadDismissed());
+
+  // Revalidar al volver a la app / a la home (evita avisos de algo ya hecho).
+  useEffect(() => {
+    const bump = () => {
+      if (document.visibilityState === "visible") setRefreshKey((k) => k + 1);
+    };
+    document.addEventListener("visibilitychange", bump);
+    window.addEventListener("focus", bump);
+    return () => {
+      document.removeEventListener("visibilitychange", bump);
+      window.removeEventListener("focus", bump);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: pref }, { data: hs }, { data: meds }, { data: journal }] = await Promise.all([
-        supabase
-          .from("notification_preferences")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        supabase.from("habits").select("id").eq("user_id", user.id).limit(1),
-        supabase.from("medications").select("id").eq("user_id", user.id).limit(1),
-        supabase.from("journal_entries").select("id").eq("user_id", user.id).limit(1),
-      ]);
+      const [{ data: pref }, { data: hs }, { data: meds }, { data: journal }, { data: checkins }] =
+        await Promise.all([
+          supabase
+            .from("notification_preferences")
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle(),
+          supabase.from("habits").select("id").eq("user_id", user.id).limit(1),
+          supabase.from("medications").select("id").eq("user_id", user.id).limit(1),
+          supabase.from("journal_entries").select("id").eq("user_id", user.id).limit(1),
+          supabase
+            .from("daily_checkins")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("checkin_date", localDateStr())
+            .limit(1),
+        ]);
       setPrefs(pref ?? {});
       setHasHabits((hs ?? []).length > 0);
       setHasMeds((meds ?? []).length > 0);
       setHasJournal((journal ?? []).length > 0);
+      setCheckedInToday((checkins ?? []).length > 0);
     })();
-  }, [user?.id]);
+  }, [user?.id, refreshKey]);
 
   const notifications = useMemo<StackNotif[]>(() => {
     if (!prefs) return [];
     const out: StackNotif[] = [];
 
-    // Sesión de terapia en <24h.
-    if (prefs.therapist_enabled !== false && next?.nextSessionAt) {
+    // Sesión de terapia en <24h — solo si la persona declaró estar en terapia.
+    if (prefs.therapist_enabled !== false && next?.inTherapy && next?.nextSessionAt) {
       const diffH = (next.nextSessionAt.getTime() - Date.now()) / 3_600_000;
       if (diffH > 0 && diffH < 24) {
+        const sameDay = localDateStr(next.nextSessionAt) === localDateStr();
+        const hora = next.nextSessionAt.toLocaleTimeString("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
         out.push({
           id: "session",
           chip: "SESIÓN",
           chipColor: "#3b6fa0",
-          title: "Sesión con tu psicólogo mañana",
+          title: sameDay
+            ? `Sesión con tu psicólogo hoy ${hora}`
+            : `Sesión con tu psicólogo mañana ${hora}`,
           subtitle: "Prepará tus notas",
           to: "/mi-proceso",
           Icon: CalendarClock,
@@ -100,8 +130,8 @@ export function NotificationStack() {
       });
     }
 
-    // Solo si la persona ya usa el diario (evita avisos "fantasma" en cuentas nuevas).
-    if (prefs.checkin_enabled !== false && hasJournal && !done.diario_quick) {
+    // Solo si la persona ya usa el diario y no registró nada hoy (diario o check-in).
+    if (prefs.checkin_enabled !== false && hasJournal && !done.diario_quick && !checkedInToday) {
       out.push({
         id: "journal",
         chip: "DIARIO",
@@ -112,6 +142,8 @@ export function NotificationStack() {
         Icon: BookOpen,
       });
     }
+
+
 
     // Mindfulness es opt-in explícito.
     if (prefs.content_enabled === true && !done.mindfulness_quick) {
@@ -139,7 +171,7 @@ export function NotificationStack() {
     }
 
     return out.filter((n) => !dismissed.includes(n.id));
-  }, [prefs, next, hasHabits, hasMeds, hasJournal, done, dismissed]);
+  }, [prefs, next, hasHabits, hasMeds, hasJournal, checkedInToday, done, dismissed]);
 
   const dismiss = (id: string) => {
     const nextList = [...dismissed, id];

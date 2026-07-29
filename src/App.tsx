@@ -49,6 +49,7 @@ import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
 import TreatmentRequest from "@/pages/TreatmentRequest";
 import LinkProfessional from "@/pages/LinkProfessional";
+import PersonalInfo from "@/pages/PersonalInfo";
 import Favorites from "@/pages/Favorites";
 import SelfCare from "@/pages/SelfCare";
 import Sleep from "@/pages/Sleep";
@@ -263,6 +264,7 @@ const App = () => (
               <Route path="/perfil" element={<Profile />} />
               <Route path="/tratamiento" element={<TreatmentRequest />} />
               <Route path="/vincular" element={<LinkProfessional />} />
+              <Route path="/configuracion/datos-personales" element={<PersonalInfo />} />
             </Route>
             <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
               <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

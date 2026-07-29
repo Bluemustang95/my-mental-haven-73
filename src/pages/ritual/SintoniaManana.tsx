@@ -44,7 +44,20 @@ const VALORES = [
   { id: "trabajo",      label: "Trabajo",      hint: "Aporte con oficio" },
   { id: "libertad",     label: "Libertad",     hint: "Espacio propio" },
   { id: "gratitud",     label: "Gratitud",     hint: "Reconocer lo que hay" },
+  { id: "familia",      label: "Familia",      hint: "Los míos, cerca" },
+  { id: "amistad",      label: "Amistad",      hint: "Sostener y ser sostenido" },
+  { id: "ocio",         label: "Ocio",         hint: "Jugar, disfrutar" },
+  { id: "descanso",     label: "Descanso",     hint: "Bajar un cambio" },
+  { id: "orden",        label: "Orden",        hint: "Claridad y estructura" },
+  { id: "coraje",       label: "Coraje",       hint: "Hacer lo difícil" },
+  { id: "honestidad",   label: "Honestidad",   hint: "Decir la verdad" },
+  { id: "amabilidad",   label: "Amabilidad",   hint: "Gestos que cuidan" },
+  { id: "espiritualidad", label: "Espiritualidad", hint: "Sentido y trascendencia" },
+  { id: "contribucion", label: "Contribución", hint: "Aportar a otros" },
+  { id: "naturaleza",   label: "Naturaleza",   hint: "Aire, tierra, afuera" },
+  { id: "crecimiento",  label: "Crecimiento",  hint: "Un paso más" },
 ];
+
 
 // Paleta por slot — cada hoja se pinta distinto al elegirse
 
@@ -232,13 +245,22 @@ export default function SintoniaManana() {
               className="w-full"
               style={{ accentColor: sleepState.color, touchAction: "pan-x" }}
             />
-            <div className="flex justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
-              <span>Poco · 0%</span>
-              <span className="text-resma-navy" style={{ color: sleepState.color }}>
-                {sleep}%
+            <div className="flex items-end justify-between">
+              <span className="pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+                Poco · 0%
               </span>
-              <span>Profundo · 100%</span>
+              <span
+                className="font-display text-4xl font-bold leading-none"
+                style={{ color: sleepState.color }}
+              >
+                {sleep}
+                <span className="text-xl">%</span>
+              </span>
+              <span className="pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+                Profundo · 100%
+              </span>
             </div>
+
           </div>
 
           {sleep < 40 && (
@@ -335,44 +357,6 @@ export default function SintoniaManana() {
             })}
           </div>
 
-
-          {/* Nebulosa emocional — siempre visible */}
-          <div className="mt-6 rounded-2xl border border-white/60 bg-white/60 p-4 backdrop-blur">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Tu nebulosa emocional
-            </p>
-            <div className="relative mt-3 flex min-h-[64px] flex-wrap items-center gap-3">
-              {emotions.length === 0 && (
-                <p className="text-[12px] text-muted-foreground/70">
-                  Elegí una emoción para empezar a formarla…
-                </p>
-              )}
-              <AnimatePresence>
-                {emotions.map((id) => {
-                  const em = EMOCIONES.find((x) => x.id === id)!;
-                  return (
-                    <motion.div
-                      key={id}
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                      className="flex items-center gap-1.5"
-                    >
-                      <span
-                        className="inline-block h-5 w-5 rounded-full"
-                        style={{
-                          background: `radial-gradient(circle at 32% 30%, #ffffffcc, ${em.color} 65%)`,
-                          boxShadow: `0 0 14px ${em.color}`,
-                        }}
-                      />
-                      <span className="text-[12px] font-medium text-resma-navy">{em.label}</span>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          </div>
         </StepHeader>
       )}
 
@@ -424,7 +408,7 @@ export default function SintoniaManana() {
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between px-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Intenciones de hoy (opcional)
+                ¿Qué vas a hacer para cumplir estos valores?
               </p>
               <span className="text-[10px] font-semibold text-muted-foreground/70">
                 {goals.filter((g) => g.trim()).length}/{MAX_GOALS}
@@ -440,9 +424,10 @@ export default function SintoniaManana() {
                     }
                     placeholder={
                       i === 0
-                        ? "Una frase corta que oriente tu día…"
-                        : `Otra intención (${i + 1}/${MAX_GOALS})`
+                        ? "Una acción concreta y chica para hoy…"
+                        : `Otra acción (${i + 1}/${MAX_GOALS})`
                     }
+
                     rows={2}
                     className="w-full resize-y rounded-2xl border border-resma-gold/40 bg-white px-3.5 py-3 pr-9 text-[13.5px] leading-relaxed focus:border-resma-gold focus:outline-none"
                     style={{ minHeight: 60 }}

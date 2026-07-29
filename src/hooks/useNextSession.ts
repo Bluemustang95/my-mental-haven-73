@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 export interface NextSessionInfo {
   nextSessionAt: Date | null;
   weeklyRecurring: boolean;
+  /** true only if the person declared they are in therapy. */
+  inTherapy: boolean;
   loading: boolean;
 }
 
@@ -16,6 +18,7 @@ export function useNextSession(): NextSessionInfo {
   const { user } = useAuth();
   const [nextSessionAt, setNextSessionAt] = useState<Date | null>(null);
   const [weeklyRecurring, setWeeklyRecurring] = useState(false);
+  const [inTherapy, setInTherapy] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,19 +28,21 @@ export function useNextSession(): NextSessionInfo {
       try { await supabase.rpc("roll_next_session_forward" as any); } catch { /* noop */ }
       const { data } = await supabase
         .from("patient_app_profiles")
-        .select("next_session_at, session_weekly_recurring")
+        .select("next_session_at, session_weekly_recurring, in_therapy")
         .eq("user_id", user.id)
         .maybeSingle();
       if (cancelled) return;
       setNextSessionAt(data?.next_session_at ? new Date(data.next_session_at) : null);
       setWeeklyRecurring(!!data?.session_weekly_recurring);
+      setInTherapy(!!(data as any)?.in_therapy);
       setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [user]);
 
-  return { nextSessionAt, weeklyRecurring, loading };
+  return { nextSessionAt, weeklyRecurring, inTherapy, loading };
 }
+
 
 export interface SendWindow {
   /** true if now is within [next - 24h, next]. */

@@ -26,7 +26,7 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
   const dayEnd = `${nextDayStr}T03:00:00Z`;
   const activities: CalendarActivity[] = [];
 
-  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap, readings, dbt, meds, sleep, habitDone, tFollowups, tFollowupLogs] = await Promise.all([
+  const [journals, thoughts, tests, exercises, dreams, achievements, checkins, completedGoals, bodyMap, readings, dbt, meds, sleep, habitDone, tFollowups, tFollowupLogs, hygiene] = await Promise.all([
     supabase.from("journal_entries").select("id, created_at, content").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("thought_records").select("id, created_at, situation, emotion").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
     supabase.from("test_results").select("id, created_at, test_type, score, severity").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd).order("created_at"),
@@ -43,7 +43,9 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
     supabase.from("habit_completions").select("id, created_at, completed_date, habits(name, icon)").eq("user_id", userId).eq("completed_date", ds).order("created_at"),
     supabase.from("thought_followups").select("id, title, type, due_date, status, created_at, completed_at").eq("user_id", userId).eq("due_date", ds),
     supabase.from("thought_followup_logs").select("id, followup_id, did_it, suds_before, suds_after, achieved, note, created_at, thought_followups!inner(title, type, user_id)").eq("user_id", userId).gte("created_at", dayStart).lt("created_at", dayEnd),
+    supabase.from("sleep_hygiene_audits").select("id, created_at, score, items").eq("user_id", userId).eq("audit_date", ds),
   ]);
+
 
   journals.data?.forEach((j: any) => activities.push({ type: "journal", label: "Entrada de diario", detail: j.content?.slice(0, 100) || "", time: format(new Date(j.created_at), "HH:mm") }));
   thoughts.data?.forEach((t: any) => activities.push({ type: "thought", label: "Registro de pensamiento", detail: t.situation?.slice(0, 100) || "", time: format(new Date(t.created_at), "HH:mm") }));
@@ -118,6 +120,16 @@ export async function fetchCalendarActivities(userId: string, day: Date): Promis
       label: l.did_it ? "Tarea completada" : "Tarea no realizada",
       detail: `${title}${sudsPart}${achievedPart}${l.note ? ` · ${l.note.slice(0, 60)}` : ""}`,
       time: l.created_at ? format(new Date(l.created_at), "HH:mm") : "00:00",
+    });
+  });
+
+  hygiene.data?.forEach((h: any) => {
+    const count = Array.isArray(h.items) ? h.items.length : null;
+    activities.push({
+      type: "sleep",
+      label: "Psicohigiene del sueño",
+      detail: count != null ? `${count}/6 pautas · ${h.score ?? 0}%` : `${h.score ?? 0}% cumplido`,
+      time: h.created_at ? format(new Date(h.created_at), "HH:mm") : "00:00",
     });
   });
 

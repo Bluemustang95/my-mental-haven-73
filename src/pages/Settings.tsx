@@ -115,10 +115,23 @@ export default function Settings() {
     navigate("/onboarding");
   };
 
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
   const handleDelete = async () => {
-    if (!confirm("¿Eliminar cuenta? Esta acción no se puede deshacer.")) return;
-    toast.error("Contactá soporte para eliminar definitivamente tu cuenta.");
+    setDeleting(true);
+    const { error } = await supabase.functions.invoke("delete-account");
+    setDeleting(false);
+    if (error) {
+      toast.error("No pudimos eliminar la cuenta. Intentá de nuevo.");
+      return;
+    }
+    toast.success("Cuenta eliminada");
+    await supabase.auth.signOut();
+    navigate("/onboarding");
   };
+
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] pb-32">
@@ -148,8 +161,9 @@ export default function Settings() {
           <Row
             icon={<UserIcon size={18} />}
             label="Información personal"
-            onClick={() => navigate("/perfil")}
+            onClick={() => navigate("/configuracion/datos-personales")}
           />
+
           <Row
             icon={<History size={18} />}
             label="Historial de actividad"
@@ -178,29 +192,6 @@ export default function Settings() {
             label="Notificaciones"
             onClick={() => navigate("/configuracion/notificaciones")}
           />
-          <div className="flex items-center justify-between px-4 py-3.5">
-            <div className="flex items-center gap-3">
-              <Mic size={18} />
-              <span className="text-[15px] font-medium">Voz de mindfulness</span>
-            </div>
-            <div className="flex rounded-xl bg-black/5 p-0.5">
-              {(["female", "male"] as const).map((g) => (
-                <button
-                  key={g}
-                  onClick={() => {
-                    setVoiceGender(g);
-                    updateProfile({ voice_gender_preference: g });
-                    toast.success(g === "female" ? "Voz femenina" : "Voz masculina");
-                  }}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
-                    voiceGender === g ? "bg-white shadow text-[#101927]" : "text-[#101927]/60"
-                  }`}
-                >
-                  {g === "female" ? "Femenina" : "Masculina"}
-                </button>
-              ))}
-            </div>
-          </div>
           {bioSupported && (
             <RowToggle
               icon={<Fingerprint size={18} />}
@@ -344,7 +335,7 @@ export default function Settings() {
           </button>
           <div className="ml-12 h-px bg-black/[0.06]" />
           <button
-            onClick={handleDelete}
+            onClick={() => { setDeleteText(""); setDeleteOpen(true); }}
             className="flex w-full items-center justify-between px-4 py-3.5 active:bg-black/[0.03]"
           >
             <div className="flex items-center gap-3">
@@ -353,6 +344,43 @@ export default function Settings() {
             </div>
           </button>
         </Group>
+
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent className="rounded-3xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminar tu cuenta</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 text-left">
+                  <p>
+                    Se borrarán de forma permanente tu perfil y todos tus registros
+                    (check-ins, diario, sueño, hábitos, tests, medicación y notas).
+                    Esta acción no se puede deshacer.
+                  </p>
+                  <p className="text-[13px]">
+                    Escribí <strong>ELIMINAR</strong> para confirmar:
+                  </p>
+                  <input
+                    value={deleteText}
+                    onChange={(e) => setDeleteText(e.target.value)}
+                    placeholder="ELIMINAR"
+                    className="w-full rounded-xl border border-black/10 px-3 py-2 text-[15px] focus:border-[#B91C1C] focus:outline-none"
+                  />
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deleting || deleteText.trim().toUpperCase() !== "ELIMINAR"}
+                onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                className="bg-[#B91C1C] hover:bg-[#991B1B]"
+              >
+                {deleting ? <Loader2 className="animate-spin" size={16} /> : "Eliminar definitivamente"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
 
         {/* Admin access — only visible for real admins */}
         {isAdmin && (

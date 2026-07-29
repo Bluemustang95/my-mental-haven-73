@@ -90,7 +90,7 @@ export function SleepHygiene({ onBack }: { onBack: () => void }) {
         </div>
       </GlassPanel>
 
-      <div className="mt-4 space-y-2.5">
+      <div className="mt-4 space-y-3">
         {HYGIENE_RULES.map((r) => {
           const on = checked.has(r.id);
           return (
@@ -99,22 +99,24 @@ export function SleepHygiene({ onBack }: { onBack: () => void }) {
               whileTap={{ scale: 0.985 }}
               onClick={() => toggle(r.id)}
               className={cn(
-                "flex w-full items-center gap-4 rounded-[22px] border p-4 text-left transition",
+                "flex w-full items-center gap-4 rounded-full border py-3.5 pl-4 pr-5 text-left transition",
                 on
-                  ? "border-[#7cc2c8]/40 bg-[#7cc2c8]/[0.08]"
+                  ? "border-[#7cc2c8]/45 bg-[#7cc2c8]/[0.1]"
                   : "border-white/[0.09] bg-white/[0.03]",
               )}
             >
-              <span className={cn("flex-1 text-[13.5px] leading-relaxed", on ? "text-slate-100" : "text-slate-300")}>
-                {r.text}
-              </span>
               <span
                 className={cn(
-                  "grid h-7 w-7 shrink-0 place-items-center rounded-full border transition",
-                  on ? "border-[#7cc2c8] bg-[#7cc2c8] text-slate-900" : "border-white/20",
+                  "grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 transition",
+                  on
+                    ? "border-[#7cc2c8] bg-[#7cc2c8] text-slate-900"
+                    : "border-white/25 bg-white/[0.04]",
                 )}
               >
-                {on && <Check size={15} strokeWidth={3} />}
+                {on && <Check size={17} strokeWidth={3} />}
+              </span>
+              <span className={cn("flex-1 text-[13.5px] leading-snug", on ? "text-slate-100" : "text-slate-300")}>
+                {r.text}
               </span>
             </motion.button>
           );
@@ -125,10 +127,11 @@ export function SleepHygiene({ onBack }: { onBack: () => void }) {
         whileTap={{ scale: 0.97 }}
         disabled={saving}
         onClick={save}
-        className="mt-5 grid h-14 w-full place-items-center rounded-full bg-[#7cc2c8] font-semibold text-slate-900 shadow-[0_0_24px_rgba(124,194,200,0.3)] disabled:opacity-60"
+        className="mb-10 mt-6 grid h-14 w-full place-items-center rounded-full bg-[#7cc2c8] font-semibold text-slate-900 shadow-[0_0_24px_rgba(124,194,200,0.3)] disabled:opacity-60"
       >
         {saving ? <Loader2 className="animate-spin" size={18} /> : "Guardar verificación"}
       </motion.button>
+
     </motion.div>
   );
 }
