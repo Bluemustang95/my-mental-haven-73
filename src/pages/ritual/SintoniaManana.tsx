@@ -490,15 +490,6 @@ export default function SintoniaManana() {
             </div>
           </div>
 
-          {/* Picker propio (evita colisión de z-index con RitualShell) */}
-          <ValuePicker
-            open={pickerSlot != null}
-            onClose={() => setPickerSlot(null)}
-            values={VALORES}
-            disabledIds={values.filter((v, i) => v && i !== pickerSlot)}
-            currentId={pickerSlot != null ? values[pickerSlot] : undefined}
-            onPick={pickValueForSlot}
-          />
         </StepHeader>
       )}
 
