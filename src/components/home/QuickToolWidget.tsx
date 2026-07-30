@@ -53,7 +53,7 @@ const ROUTES = {
   mindfulness_quick: "/herramientas/mindfulness",
   pensamientos_quick: "/herramientas/mente-emocion",
   pack_quick: "/herramientas/pack",
-  psico_quick: "/herramientas/psicoeducacion",
+  psico_quick: "/psicoeducacion",
   inventarios_quick: "/herramientas/inventarios",
   personalidad_quick: "/herramientas/personalidad",
   gratitude: "/diario",
