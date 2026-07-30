@@ -75,7 +75,7 @@ const tiles: Tile[] = [
     name: "Psicoeducación",
     Icon: GraduationCap,
     color: ATOMIC_COLORS.psico_quick,
-    target: "/herramientas/psicoeducacion",
+    target: "/psicoeducacion",
   },
   // Off por default (visibles solo si admin los publica)
   {
