@@ -81,8 +81,15 @@ function Toolbar({ editor }: { editor: Editor }) {
     const safeAlign = ["left", "center", "right"].includes(align) ? align : "center";
 
     const toastId = toast.loading("Subiendo animación…");
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      toast.error("Tu sesión expiró. Iniciá sesión de nuevo.", { id: toastId });
+      return;
+    }
     const { data, error } = await supabase.functions.invoke("upload-lottie", {
       body: { filename: file.name, content: text },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     let path: string | undefined = (data as any)?.path;
     if (error || !path) {
