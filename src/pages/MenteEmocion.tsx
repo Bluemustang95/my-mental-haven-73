@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, HeartPulse } from "lucide-react";
+import { ArrowLeft, Brain, HeartPulse, ShieldHalf } from "lucide-react";
 import { motion } from "framer-motion";
 import PensamientosRecentHistory from "@/components/pensamientos/RecentHistory";
 
@@ -20,12 +20,20 @@ export default function MenteEmocion() {
       to2: "#facb60",
     },
     {
-      to: "/herramientas/regulacion-emocional",
+      to: "/herramientas/regulacion-dbt",
       icon: HeartPulse,
       title: "Regulá tus emociones",
-      desc: "5–8 min · STOP, TIP y técnicas DBT",
+      desc: "Ficha DBT · acción opuesta y 5 pasos",
       from: "#F472B6",
       to2: "#A78BFA",
+    },
+    {
+      to: "/herramientas/regulacion-emocional",
+      icon: ShieldHalf,
+      title: "Tolerá el malestar",
+      desc: "STOP y TIPP · frená el impulso",
+      from: "#60A5FA",
+      to2: "#7cc2c8",
     },
   ];
 
