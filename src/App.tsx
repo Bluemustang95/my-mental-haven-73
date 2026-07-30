@@ -211,6 +211,7 @@ const App = () => (
               {/* Herramientas (tab 4) — only techniques */}
               <Route path="/herramientas" element={<Tools />} />
               <Route path="/herramientas/intro/:slug" element={<ResourceIntro />} />
+              <Route path="/herramientas/psicoeducacion" element={<Navigate to="/psicoeducacion" replace />} />
               
               <Route path="/herramientas/grounding" element={<Grounding />} />
               <Route path="/herramientas/mindfulness" element={<Navigate to="/herramientas/mindfulness/respiracion" replace />} />
